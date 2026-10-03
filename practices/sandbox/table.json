@@ -1,0 +1,47 @@
+{
+  "schema": "amatista.practice/1",
+  "id": "sandbox.table",
+  "title": "Construir una mesa",
+  "level": 1,
+  "targets": [
+    {
+      "id": "cubierta",
+      "title": "Crear una cubierta",
+      "validator": "role.count",
+      "params": {
+        "role": "cubierta",
+        "equals": 1
+      },
+      "weight": 25
+    },
+    {
+      "id": "patas",
+      "title": "Crear cuatro patas",
+      "validator": "role.count",
+      "params": {
+        "role": "pata",
+        "equals": 4
+      },
+      "weight": 50
+    },
+    {
+      "id": "grosor",
+      "title": "Mantener un grosor razonable",
+      "validator": "dimension.range",
+      "params": {
+        "role": "cubierta",
+        "axis": "z",
+        "min": 0.05,
+        "max": 0.3
+      },
+      "weight": 15
+    },
+    {
+      "id": "guardar",
+      "title": "Guardar el archivo",
+      "validator": "file.saved",
+      "params": {},
+      "weight": 10
+    }
+  ]
+}
