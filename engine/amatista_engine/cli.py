@@ -288,9 +288,12 @@ def plan(completadas: Sequence[str]) -> int:
     for curso in curriculo.courses:
         print(f"  {curso.title} [{curso.difficulty}, {curso.status}]")
         for m in curso.modules:
-            marca = {"completado": "✓", "disponible": "▶", "bloqueado": "🔒", "proximamente": "…"}.get(
-                estado.get(m.practice, ""), "·")
-            print(f"    {marca} Módulo {m.number}: {m.title}" + (f"  ({m.practice})" if m.practice else ""))
+            print(f"    Módulo {m.number}: {m.title}")
+            for pid in m.sequence:
+                marca = {"completado": "✓", "disponible": "▶", "bloqueado": "🔒", "proximamente": "…"}.get(
+                    estado.get(pid, ""), "·")
+                tipo = "exploración" if pid == m.explore else "cierre"
+                print(f"      {marca} {tipo}: {pid}")
     problemas = revisar_plan(curriculo)
     for problema in problemas:
         print(_color(f"  error: {problema}", ROJO))
@@ -307,16 +310,15 @@ def revisar_plan(curriculo) -> List[str]:
     problemas = []
     for curso in curriculo.courses:
         for m in curso.modules:
-            if not m.practice:
-                continue
-            datos = practicas.get(m.practice)
-            if datos is None:
-                problemas.append(f"{curso.id} módulo {m.number}: no existe la práctica {m.practice}")
-                continue
-            lugar = datos.get("course") or {}
-            if lugar.get("id") != curso.id or lugar.get("module") != m.number:
-                problemas.append(f"{m.practice}: su «course» dice {lugar.get('id')} módulo {lugar.get('module')}, "
-                                 f"pero cursos.json la pone en {curso.id} módulo {m.number}")
+            for pid in m.sequence:
+                datos = practicas.get(pid)
+                if datos is None:
+                    problemas.append(f"{curso.id} módulo {m.number}: no existe la práctica {pid}")
+                    continue
+                lugar = datos.get("course") or {}
+                if lugar.get("id") != curso.id or lugar.get("module") != m.number:
+                    problemas.append(f"{pid}: su «course» dice {lugar.get('id')} módulo {lugar.get('module')}, "
+                                     f"pero cursos.json la pone en {curso.id} módulo {m.number}")
     return problemas
 
 

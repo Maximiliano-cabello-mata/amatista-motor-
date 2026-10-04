@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "3.0.0"
+VERSION_ADDON = "3.1.0"
 CARPETA = Path(__file__).resolve().parent
 
 

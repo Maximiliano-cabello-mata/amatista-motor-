@@ -1,0 +1,204 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bp.m1.explora",
+  "version": 1,
+  "title": "Explora la vista 3D",
+  "level": 1,
+  "description": "Tu primer contacto con Blender conectado a Amatista: agregas formas, las mueves, giras y escalas mientras Amatista registra cada paso.",
+  "intro": "Antes de armar el tren, date una vuelta por Blender: Amatista te acompaña y registra lo que haces.",
+  "completion": "¡Ya te mueves por Blender! Vuelve a la plataforma: la siguiente lección te explica G, R y S a fondo.",
+  "estimatedMinutes": 8,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-navegar-vista",
+    "bl-agregar-primitivas",
+    "bl-transformar"
+  ],
+  "tags": [
+    "exploracion",
+    "principiante",
+    "modulo-1"
+  ],
+  "course": {
+    "id": "blender_principiante",
+    "module": 1,
+    "lesson": "bp1_blender",
+    "next": "blender.bp.m1.tren"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera). Es una exploración corta: tu avance queda registrado."
+  },
+  "tools": {
+    "allowed": [
+      "view.navigate",
+      "object.add",
+      "transform.move",
+      "transform.rotate",
+      "transform.scale"
+    ]
+  },
+  "pills": [
+    {
+      "id": "zonas",
+      "title": "Tres zonas",
+      "text": "La vista 3D al centro, el Outliner arriba a la derecha (la lista de objetos) y las Propiedades debajo. Todo lo demás se abre cuando lo necesitas.",
+      "trigger": {
+        "on": "start"
+      },
+      "check": {
+        "question": "¿Dónde ves la lista de todos tus objetos?",
+        "options": [
+          "En el Outliner",
+          "En la línea de tiempo",
+          "En la barra de menús"
+        ],
+        "answer": 0
+      }
+    },
+    {
+      "id": "orbitar",
+      "title": "Gira alrededor",
+      "text": "Rueda presionada para orbitar, Shift + rueda para desplazarte y rueda para acercarte. Mover la vista no cambia tu escena.",
+      "keys": [
+        "Rueda",
+        "Shift"
+      ],
+      "trigger": {
+        "on": "start"
+      }
+    },
+    {
+      "id": "agregar",
+      "title": "Shift + A",
+      "text": "Shift + A abre el menú Agregar: Malla › Cubo o Esfera. La forma aparece donde está el cursor 3D.",
+      "keys": [
+        "Shift",
+        "A"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "target",
+        "target": "cubo"
+      }
+    },
+    {
+      "id": "grs",
+      "title": "G, R y S",
+      "text": "G mueve, R gira y S escala. Después pulsa Z para usar solo el eje hacia arriba.",
+      "keys": [
+        "G",
+        "R",
+        "S"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "selection"
+      },
+      "check": {
+        "question": "¿Qué tecla gira un objeto?",
+        "options": [
+          "G",
+          "R",
+          "S"
+        ],
+        "answer": 1
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "cubo",
+      "title": "Agrega un cubo",
+      "validator": "object.exists",
+      "params": {
+        "primitive": "cube"
+      },
+      "weight": 20,
+      "tip": "Shift+A › Malla › Cubo.",
+      "hints": [
+        "Con el ratón sobre la vista 3D pulsa Shift+A.",
+        "Elige Malla y después Cubo."
+      ]
+    },
+    {
+      "id": "cubo-arriba",
+      "title": "Súbelo",
+      "validator": "object.position",
+      "params": {
+        "primitive": "cube",
+        "axis": "z",
+        "min": 1,
+        "max": 10
+      },
+      "weight": 20,
+      "requires": [
+        "cubo"
+      ],
+      "tip": "G, Z y mueve el ratón hacia arriba (o escribe 2 y Enter).",
+      "hints": [
+        "Selecciona el cubo con clic.",
+        "G, Z, 2, Enter lo sube dos metros."
+      ]
+    },
+    {
+      "id": "cubo-girado",
+      "title": "Gíralo",
+      "validator": "object.rotation",
+      "params": {
+        "primitive": "cube",
+        "axis": "z",
+        "min": 20,
+        "max": 340
+      },
+      "weight": 20,
+      "requires": [
+        "cubo"
+      ],
+      "tip": "R, Z, 45, Enter.",
+      "hints": [
+        "R gira; Z elige el eje hacia arriba.",
+        "Escribe 45 y confirma con Enter."
+      ]
+    },
+    {
+      "id": "esfera",
+      "title": "Agrega una esfera",
+      "validator": "object.exists",
+      "params": {
+        "primitive": "sphere"
+      },
+      "weight": 20,
+      "requires": [
+        "cubo-arriba"
+      ],
+      "tip": "Shift+A › Malla › Esfera UV.",
+      "hints": [
+        "Shift+A otra vez.",
+        "Malla › Esfera UV."
+      ]
+    },
+    {
+      "id": "esfera-grande",
+      "title": "Hazla más grande",
+      "validator": "dimension.range",
+      "params": {
+        "primitive": "sphere",
+        "axis": "x",
+        "min": 3,
+        "max": 20
+      },
+      "weight": 20,
+      "requires": [
+        "esfera"
+      ],
+      "tip": "S, 2, Enter: el doble de grande.",
+      "hints": [
+        "Selecciona la esfera.",
+        "S escala; escribe 2 y Enter."
+      ]
+    }
+  ]
+}

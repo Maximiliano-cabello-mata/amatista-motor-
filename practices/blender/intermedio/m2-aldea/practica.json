@@ -1,0 +1,218 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bi.m2.aldea",
+  "version": 1,
+  "title": "Una aldea ordenada",
+  "level": 3,
+  "description": "Levantas una aldea de tres casas con techo, cada una con su material, todo ordenado en colecciones y guardado.",
+  "intro": "Tu puente ya cruza el río: del otro lado nace la aldea. Constrúyela y mantenla en orden.",
+  "completion": "¡Una aldea que cualquiera puede entender y editar! Se abre el Módulo 3: tu diorama en la galería.",
+  "estimatedMinutes": 25,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-colecciones",
+    "bl-materiales",
+    "bl-ensamblar"
+  ],
+  "tags": [
+    "intermedio",
+    "modulo-2",
+    "proyecto"
+  ],
+  "course": {
+    "id": "blender_intermedio",
+    "module": 2,
+    "lesson": "bi2_practica",
+    "next": "blender.bi.m3.explora"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."
+  },
+  "roles": {
+    "casa": {
+      "label": "Casa",
+      "description": "Un cubo: el cuerpo de la casa."
+    },
+    "techo": {
+      "label": "Techo",
+      "description": "Un cono de 4 lados sobre la casa."
+    }
+  },
+  "tools": {
+    "allowed": [
+      "object.add",
+      "object.duplicate",
+      "object.rename",
+      "collection.move",
+      "material.principled",
+      "file.save"
+    ]
+  },
+  "pills": [
+    {
+      "id": "carpetas",
+      "title": "Colecciones = carpetas",
+      "text": "Casas en «Casas», techos en «Techos». Ocultas una colección con el ojo del Outliner y trabajas sin estorbos.",
+      "trigger": {
+        "on": "start"
+      }
+    },
+    {
+      "id": "compartir",
+      "title": "Materiales que se comparten",
+      "text": "Ctrl+L › Vincular materiales copia el material del objeto activo a los seleccionados: cambias uno y cambian todos.",
+      "keys": [
+        "Ctrl",
+        "L"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "target",
+        "target": "colores"
+      },
+      "check": {
+        "question": "¿Qué atajo copia el material a otros objetos seleccionados?",
+        "options": [
+          "Ctrl + L",
+          "Ctrl + C",
+          "M"
+        ],
+        "answer": 0
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "casas",
+      "title": "Tres casas",
+      "validator": "role.count",
+      "params": {
+        "role": "casa",
+        "min": 3
+      },
+      "weight": 15,
+      "tip": "Cubos con el rol «Casa».",
+      "hints": [
+        "Haz una casa y duplícala con Shift+D (el rol se copia)."
+      ]
+    },
+    {
+      "id": "techos",
+      "title": "Un techo por casa",
+      "validator": "object.count",
+      "params": {
+        "role": "techo",
+        "primitive": "cone",
+        "min": 3
+      },
+      "weight": 15,
+      "requires": [
+        "casas"
+      ],
+      "tip": "Conos de 4 lados con el rol «Techo».",
+      "hints": [
+        "Shift+A › Cono y en el panel abajo a la izquierda pon Vértices = 4.",
+        "R Z 45 lo alinea con la casa."
+      ]
+    },
+    {
+      "id": "techos-encima",
+      "title": "Techos sobre las casas",
+      "validator": "spatial.touching",
+      "params": {
+        "role": "techo",
+        "reference_role": "casa",
+        "tolerance": 0.15
+      },
+      "weight": 15,
+      "requires": [
+        "techos"
+      ],
+      "tip": "Cada techo toca la parte de arriba de su casa.",
+      "hints": [
+        "G Z para subir el techo.",
+        "Vista de frente (1)."
+      ]
+    },
+    {
+      "id": "en-coleccion",
+      "title": "Casas en «Casas»",
+      "validator": "collection.contains",
+      "params": {
+        "collection": "Casas",
+        "role": "casa",
+        "min": 3
+      },
+      "weight": 20,
+      "requires": [
+        "casas"
+      ],
+      "tip": "Selecciona las casas, M › Nueva colección «Casas».",
+      "hints": [
+        "Haz clic en una casa y Shift+clic en las otras.",
+        "M › + Nueva colección."
+      ]
+    },
+    {
+      "id": "techos-coleccion",
+      "title": "Techos en «Techos»",
+      "validator": "collection.contains",
+      "params": {
+        "collection": "Techos",
+        "role": "techo",
+        "min": 3
+      },
+      "weight": 15,
+      "requires": [
+        "techos"
+      ],
+      "tip": "Lo mismo con los techos en una colección «Techos».",
+      "hints": [
+        "M › + Nueva colección › Techos."
+      ]
+    },
+    {
+      "id": "colores",
+      "title": "Tres materiales distintos",
+      "validator": "material.distinct",
+      "params": {
+        "role": "casa",
+        "min": 3
+      },
+      "weight": 10,
+      "requires": [
+        "casas"
+      ],
+      "tip": "Cada casa con su material.",
+      "hints": [
+        "Pestaña Material › Nuevo y cambia el Color base."
+      ]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda tu aldea",
+      "validator": "file.named",
+      "params": {
+        "contains": "aldea"
+      },
+      "weight": 10,
+      "requires": [
+        "en-coleccion",
+        "techos-coleccion",
+        "colores",
+        "techos-encima"
+      ],
+      "tip": "Ctrl+Shift+S: mi_aldea.blend.",
+      "hints": [
+        "Archivo › Guardar como."
+      ]
+    }
+  ],
+  "review": [
+    "blender.bi.m2.explora#m",
+    "blender.bpi.m1.explora#perillas"
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bpi.m2.explora",
+  "version": 1,
+  "title": "Calentamiento: una luz y una cámara",
+  "level": 2,
+  "description": "Agregas una luz de Área y una cámara, y sacas una foto rápida con F12. Amatista registra tu primer render.",
+  "intro": "Antes de la iluminación de tres puntos, enciende una luz y toma una foto.",
+  "completion": "¡Tu primera foto en Blender! La siguiente lección te enseña a iluminar como fotógrafo.",
+  "estimatedMinutes": 8,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-iluminacion",
+    "bl-camara",
+    "bl-render"
+  ],
+  "tags": [
+    "exploracion",
+    "principiante-intermedio",
+    "modulo-2"
+  ],
+  "course": {
+    "id": "blender_principiante_intermedio",
+    "module": 2,
+    "lesson": "bpi2_blender",
+    "next": "blender.bpi.m2.tres-puntos"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera). Es una exploración corta: tu avance queda registrado."
+  },
+  "tools": {
+    "allowed": [
+      "object.add",
+      "light.add",
+      "camera.add",
+      "render.f12"
+    ]
+  },
+  "pills": [
+    {
+      "id": "luz",
+      "title": "Sin luz no hay foto",
+      "text": "Shift + A › Luz › Área: una luz suave como una ventana. La cámara es lo que ve el render.",
+      "keys": [
+        "Shift",
+        "A"
+      ],
+      "trigger": {
+        "on": "start"
+      }
+    },
+    {
+      "id": "f12",
+      "title": "F12 toma la foto",
+      "text": "F12 hace el render desde la cámara activa. Cierra la ventana y sigue trabajando.",
+      "keys": [
+        "F12"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "target",
+        "target": "foto"
+      },
+      "check": {
+        "question": "¿Qué tecla hace el render?",
+        "options": [
+          "F12",
+          "F2",
+          "Ctrl + S"
+        ],
+        "answer": 0
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "modelo",
+      "title": "Algo que fotografiar",
+      "validator": "object.count",
+      "params": {
+        "type": "MESH",
+        "min": 1
+      },
+      "weight": 15,
+      "tip": "Shift+A › Malla › Mono (Suzanne) o un cubo.",
+      "hints": [
+        "Shift+A › Malla.",
+        "Suzanne es la mona de Blender."
+      ]
+    },
+    {
+      "id": "luz-area",
+      "title": "Una luz de Área",
+      "validator": "scene.light_exists",
+      "params": {
+        "light_type": "AREA",
+        "min": 1
+      },
+      "weight": 25,
+      "requires": [
+        "modelo"
+      ],
+      "tip": "Shift+A › Luz › Área.",
+      "hints": [
+        "Shift+A › Luz.",
+        "Elige Área y súbela con G Z."
+      ]
+    },
+    {
+      "id": "camara",
+      "title": "Una cámara activa",
+      "validator": "camera.active",
+      "weight": 25,
+      "requires": [
+        "modelo"
+      ],
+      "tip": "Shift+A › Cámara y luego Ctrl+Numpad 0.",
+      "hints": [
+        "Shift+A › Cámara.",
+        "Ctrl+0 del teclado numérico la hace activa."
+      ]
+    },
+    {
+      "id": "foto",
+      "title": "Toma la foto (F12)",
+      "validator": "render.done",
+      "params": {
+        "min": 1
+      },
+      "weight": 35,
+      "requires": [
+        "luz-area",
+        "camara"
+      ],
+      "tip": "F12.",
+      "hints": [
+        "Pulsa F12 y espera a que termine."
+      ]
+    }
+  ],
+  "review": [
+    "blender.bpi.m1.explora#perillas"
+  ]
+}

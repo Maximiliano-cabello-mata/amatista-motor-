@@ -1,0 +1,123 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bi.m1.puente",
+  "casos": [
+    {
+      "nombre": "Escena vacía",
+      "construir": [],
+      "espera": {
+        "completada": false,
+        "progreso_max": 0,
+        "actual": "tablero",
+        "pildoras": [
+          "medidas"
+        ]
+      }
+    },
+    {
+      "nombre": "Tablero sin Array",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Tablero",
+            "dims": [
+              8,
+              2,
+              0.2
+            ],
+            "loc": [
+              0,
+              0,
+              3
+            ],
+            "rol": "tablero"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "tablones"
+      }
+    },
+    {
+      "nombre": "Solución: puente completo",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Tablero",
+            "dims": [
+              8,
+              2,
+              0.2
+            ],
+            "loc": [
+              0,
+              0,
+              3.1
+            ],
+            "rol": "tablero"
+          }
+        },
+        {
+          "modificador": {
+            "objeto": "Tablero",
+            "tipo": "ARRAY"
+          }
+        },
+        {
+          "cilindro": {
+            "nombre": "Pilar",
+            "dims": [
+              0.6,
+              0.6,
+              3
+            ],
+            "loc": [
+              -3,
+              0,
+              1.5
+            ],
+            "rol": "pilar"
+          }
+        },
+        {
+          "modificador": {
+            "objeto": "Pilar",
+            "tipo": "BEVEL"
+          }
+        },
+        {
+          "cilindro": {
+            "nombre": "Pilar.001",
+            "dims": [
+              0.6,
+              0.6,
+              3
+            ],
+            "loc": [
+              3,
+              0,
+              1.5
+            ],
+            "rol": "pilar"
+          }
+        },
+        {
+          "modificador": {
+            "objeto": "Pilar.001",
+            "tipo": "BEVEL"
+          }
+        },
+        {
+          "guardado": {
+            "archivo": "mi_puente.blend"
+          }
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

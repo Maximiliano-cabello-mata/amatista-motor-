@@ -1,0 +1,109 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bi.m3.diorama",
+  "casos": [
+    {
+      "nombre": "Sin rol de diorama",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Casa"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "diorama",
+        "pildoras": [
+          "composicion"
+        ]
+      }
+    },
+    {
+      "nombre": "Solución: diorama de portafolio",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Aldea",
+            "dims": [
+              3,
+              4,
+              1
+            ],
+            "loc": [
+              0,
+              0,
+              0.5
+            ],
+            "rol": "diorama"
+          }
+        },
+        {
+          "plano": {
+            "nombre": "Piso"
+          }
+        },
+        {
+          "camara": {
+            "loc": [
+              0,
+              -10,
+              4
+            ]
+          }
+        },
+        {
+          "luz": {
+            "nombre": "Principal",
+            "tipo": "AREA",
+            "loc": [
+              -4,
+              -5,
+              4
+            ],
+            "energia": 500
+          }
+        },
+        {
+          "luz": {
+            "nombre": "Relleno",
+            "tipo": "AREA",
+            "loc": [
+              4,
+              -5,
+              3
+            ],
+            "energia": 200
+          }
+        },
+        {
+          "luz": {
+            "nombre": "Contraluz",
+            "tipo": "SPOT",
+            "loc": [
+              0,
+              5,
+              5
+            ],
+            "energia": 800
+          }
+        },
+        {
+          "motor": "CYCLES"
+        },
+        {
+          "renders": 1
+        },
+        {
+          "guardado": {
+            "archivo": "mi_diorama.blend"
+          }
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bi.m1.explora",
+  "casos": [
+    {
+      "nombre": "Cubo sin estirar",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "tabla",
+        "pildoras": [
+          "array"
+        ]
+      }
+    },
+    {
+      "nombre": "Tabla sin Array",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube",
+            "dims": [
+              6,
+              1,
+              0.2
+            ]
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "repetida"
+      }
+    },
+    {
+      "nombre": "Solución: tabla con Array y Bisel",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube",
+            "dims": [
+              6,
+              1,
+              0.2
+            ]
+          }
+        },
+        {
+          "modificador": {
+            "objeto": "Cube",
+            "tipo": "ARRAY"
+          }
+        },
+        {
+          "modificador": {
+            "objeto": "Cube",
+            "tipo": "BEVEL"
+          }
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

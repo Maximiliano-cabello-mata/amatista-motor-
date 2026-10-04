@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m3.nave",
-  "version": 1,
+  "version": 2,
   "title": "Nave espacial simétrica",
   "level": 2,
   "description": "Modela solo la mitad de una nave y deja que los modificadores Espejo y Subdivisión hagan el resto, sin destruir tu malla.",
@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-modificadores", "bl-espejo", "bl-subdivision", "bl-aplicar-escala", "bl-malla-limpia"],
   "tags": ["principiante", "modulo-3", "modificadores"],
-  "course": {"id": "blender_principiante", "module": 3, "lesson": "bp3_practica", "next": "blender.bpi.m1.pinta-nave"},
+  "course": {"id": "blender_principiante", "module": 3, "lesson": "bp3_practica", "next": "blender.bpi.m1.explora"},
   "review": ["blender.bp.m2.espada#extruir", "blender.bp.m2.espada#fusionar", "blender.bp.m2.espada#modos"],
   "roles": {
     "nave": {"label": "Nave", "description": "El cuerpo de tu nave: un solo objeto con sus modificadores."}

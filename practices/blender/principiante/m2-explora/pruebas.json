@@ -1,0 +1,55 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bp.m2.explora",
+  "casos": [
+    {
+      "nombre": "Cubo intacto: falta extruir",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "extruida",
+        "pildoras": [
+          "tab"
+        ]
+      }
+    },
+    {
+      "nombre": "Extruido pero sin corte",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube",
+            "vertices": 12,
+            "caras": 10
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "cortada"
+      }
+    },
+    {
+      "nombre": "Solución: extruido y cortado",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube",
+            "vertices": 16,
+            "caras": 14
+          }
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

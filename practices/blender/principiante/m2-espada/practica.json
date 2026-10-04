@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m2.espada",
-  "version": 1,
+  "version": 2,
   "title": "Espada low-poly",
   "level": 2,
   "description": "Modela una espada (o una taza) low-poly en Modo Edición: extruye con E, corta con Ctrl+R y mantén la malla limpia.",
@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-modo-edicion", "bl-extruir", "bl-corte-bucle", "bl-malla-limpia", "bl-guardar-archivo"],
   "tags": ["principiante", "modulo-2", "modelado"],
-  "course": {"id": "blender_principiante", "module": 2, "lesson": "bp2_practica", "next": "blender.bp.m3.nave"},
+  "course": {"id": "blender_principiante", "module": 2, "lesson": "bp2_practica", "next": "blender.bp.m3.explora"},
   "review": ["blender.bp.m1.tren#grs", "blender.bp.m1.tren#agregar"],
   "roles": {
     "modelo": {"label": "Modelo", "description": "Tu espada (o taza): un solo objeto que modelas en Edición."}

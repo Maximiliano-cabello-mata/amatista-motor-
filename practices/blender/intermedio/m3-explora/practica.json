@@ -1,0 +1,127 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bi.m3.explora",
+  "version": 1,
+  "title": "Calentamiento: tu primer render en Cycles",
+  "level": 3,
+  "description": "Cambias el motor a Cycles, pones una cámara y haces un render. Amatista registra el motor y tu render.",
+  "intro": "EEVEE es rápido; Cycles calcula la luz rebotando como en la vida real. Compáralos tú.",
+  "completion": "¡Ya renderizas con luz real! La siguiente lección te enseña a elegir motor y a componer la foto.",
+  "estimatedMinutes": 8,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-render",
+    "bl-cycles"
+  ],
+  "tags": [
+    "intermedio",
+    "modulo-3",
+    "exploracion"
+  ],
+  "course": {
+    "id": "blender_intermedio",
+    "module": 3,
+    "lesson": "bi3_blender",
+    "next": "blender.bi.m3.diorama"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."
+  },
+  "tools": {
+    "allowed": [
+      "object.add",
+      "camera.add",
+      "light.add",
+      "render.f12"
+    ]
+  },
+  "pills": [
+    {
+      "id": "motores",
+      "title": "EEVEE o Cycles",
+      "text": "EEVEE dibuja en tiempo real, como un videojuego. Cycles traza rayos de luz: tarda más y se ve más real. Se cambia en Propiedades › Render.",
+      "visual": "tab:RENDER",
+      "trigger": {
+        "on": "start"
+      },
+      "check": {
+        "question": "¿Qué motor simula la luz rebotando como en la realidad?",
+        "options": [
+          "Cycles",
+          "EEVEE",
+          "Workbench"
+        ],
+        "answer": 0
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "modelo",
+      "title": "Algo que fotografiar",
+      "validator": "object.count",
+      "params": {
+        "type": "MESH",
+        "min": 1
+      },
+      "weight": 15,
+      "tip": "Shift+A › Malla › Mono.",
+      "hints": [
+        "Suzanne es la mona de Blender."
+      ]
+    },
+    {
+      "id": "cycles",
+      "title": "Motor Cycles",
+      "validator": "render.engine",
+      "params": {
+        "engine": "CYCLES"
+      },
+      "weight": 30,
+      "requires": [
+        "modelo"
+      ],
+      "tip": "Propiedades › Render › Motor: Cycles.",
+      "hints": [
+        "Busca la cámara de fotos trasera en Propiedades.",
+        "Cambia «Motor de render» a Cycles."
+      ]
+    },
+    {
+      "id": "camara",
+      "title": "Una cámara activa",
+      "validator": "camera.active",
+      "weight": 20,
+      "requires": [
+        "modelo"
+      ],
+      "tip": "Shift+A › Cámara y Ctrl+Numpad 0.",
+      "hints": [
+        "Ctrl+Alt+0 la lleva a lo que ves."
+      ]
+    },
+    {
+      "id": "foto",
+      "title": "Render con F12",
+      "validator": "render.done",
+      "params": {
+        "min": 1
+      },
+      "weight": 35,
+      "requires": [
+        "cycles",
+        "camara"
+      ],
+      "tip": "F12 y espera a que se limpie el ruido.",
+      "hints": [
+        "Si tarda, baja las muestras de render a 64."
+      ]
+    }
+  ],
+  "review": [
+    "blender.bpi.m2.explora#f12"
+  ]
+}

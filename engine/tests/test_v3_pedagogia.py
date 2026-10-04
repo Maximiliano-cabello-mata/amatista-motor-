@@ -96,3 +96,16 @@ def test_desbloqueo_del_plan():
     assert estado == {"p1": COMPLETADO, "p2": DISPONIBLE, "p3": BLOQUEADO, "q1": DISPONIBLE, "r1": PROXIMAMENTE}
     assert next_practice(plan, ["p1"]) == "p2"
     assert next_practice(plan, ["p1", "p2", "p3", "q1"]) is None
+
+
+def test_desbloqueo_con_exploracion_a_mitad_del_modulo():
+    plan = load_curriculum({
+        "schema": "amatista.curriculum/1", "route": "blender", "title": "Ruta",
+        "courses": [{"id": "a", "title": "A", "difficulty": "principiante", "modules": [
+            {"number": 1, "title": "1", "explore": "e1", "practice": "p1"},
+            {"number": 2, "title": "2", "explore": "e2", "practice": "p2"}]}],
+    })
+    assert plan.practices() == ("e1", "p1", "e2", "p2")
+    assert unlock_state(plan, []) == {"e1": DISPONIBLE, "p1": BLOQUEADO, "e2": BLOQUEADO, "p2": BLOQUEADO}
+    assert next_practice(plan, ["e1"]) == "p1"
+    assert next_practice(plan, ["e1", "p1"]) == "e2"

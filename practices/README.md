@@ -8,16 +8,30 @@ Las prácticas guiadas de Blender del plan de estudios, en formato [`amatista.pr
 | `blender/<curso>/m<n>-<nombre>/` | `practica.json` (la práctica), `pruebas.json` (sus casos) e imágenes de sus píldoras. Van dentro del add-on (sin `pruebas.json`) y se registran en Oracle con `python herramientas/contenido.py practicas` (desde `backend/`) o con Admin › Prácticas de Blender › Registrar las del repositorio. |
 | `archivo/v2/` | Las prácticas anteriores al motor v3 (mesa, podio y el ejemplo `table.json`). No se empaquetan ni se registran; el add-on las muestra solo en modo Desarrollador. |
 
-Prácticas actuales:
+Prácticas actuales (18: en cada módulo, una exploración corta y una práctica de cierre, intercaladas con la teoría):
 
 | Id | Carpeta | Curso › módulo | Lección |
 |---|---|---|---|
-| `blender.bp.m1.tren` | `blender/principiante/m1-tren/` | Principiante › 1 | `bp1_practica` |
-| `blender.bp.m2.espada` | `blender/principiante/m2-espada/` | Principiante › 2 | `bp2_practica` |
-| `blender.bp.m3.nave` | `blender/principiante/m3-nave/` | Principiante › 3 | `bp3_practica` |
-| `blender.bpi.m1.pinta-nave` | `blender/principiante-intermedio/m1-pinta-nave/` | Principiante-Intermedio › 1 | `bpi1_practica` |
-| `blender.bpi.m2.tres-puntos` | `blender/principiante-intermedio/m2-tres-puntos/` | Principiante-Intermedio › 2 | `bpi2_practica` |
-| `blender.bpi.m3.pelota` | `blender/principiante-intermedio/m3-pelota/` | Principiante-Intermedio › 3 | `bpi3_practica` |
+| `blender.bp.m1.explora` | `blender/principiante/m1-explora/` | Principiante › 1 · exploración | `bp1_blender` |
+| `blender.bp.m1.tren` | `blender/principiante/m1-tren/` | Principiante › 1 · cierre | `bp1_practica` |
+| `blender.bp.m2.explora` | `blender/principiante/m2-explora/` | Principiante › 2 · exploración | `bp2_blender` |
+| `blender.bp.m2.espada` | `blender/principiante/m2-espada/` | Principiante › 2 · cierre | `bp2_practica` |
+| `blender.bp.m3.explora` | `blender/principiante/m3-explora/` | Principiante › 3 · exploración | `bp3_blender` |
+| `blender.bp.m3.nave` | `blender/principiante/m3-nave/` | Principiante › 3 · cierre | `bp3_practica` |
+| `blender.bpi.m1.explora` | `blender/principiante-intermedio/m1-explora/` | Principiante-Intermedio › 1 · exploración | `bpi1_blender` |
+| `blender.bpi.m1.pinta-nave` | `blender/principiante-intermedio/m1-pinta-nave/` | Principiante-Intermedio › 1 · cierre | `bpi1_practica` |
+| `blender.bpi.m2.explora` | `blender/principiante-intermedio/m2-explora/` | Principiante-Intermedio › 2 · exploración | `bpi2_blender` |
+| `blender.bpi.m2.tres-puntos` | `blender/principiante-intermedio/m2-tres-puntos/` | Principiante-Intermedio › 2 · cierre | `bpi2_practica` |
+| `blender.bpi.m3.explora` | `blender/principiante-intermedio/m3-explora/` | Principiante-Intermedio › 3 · exploración | `bpi3_blender` |
+| `blender.bpi.m3.pelota` | `blender/principiante-intermedio/m3-pelota/` | Principiante-Intermedio › 3 · cierre | `bpi3_practica` |
+| `blender.bi.m1.explora` | `blender/intermedio/m1-explora/` | Intermedio › 1 · exploración | `bi1_blender` |
+| `blender.bi.m1.puente` | `blender/intermedio/m1-puente/` | Intermedio › 1 · cierre | `bi1_practica` |
+| `blender.bi.m2.explora` | `blender/intermedio/m2-explora/` | Intermedio › 2 · exploración | `bi2_blender` |
+| `blender.bi.m2.aldea` | `blender/intermedio/m2-aldea/` | Intermedio › 2 · cierre | `bi2_practica` |
+| `blender.bi.m3.explora` | `blender/intermedio/m3-explora/` | Intermedio › 3 · exploración | `bi3_blender` |
+| `blender.bi.m3.diorama` | `blender/intermedio/m3-diorama/` | Intermedio › 3 · cierre | `bi3_practica` |
+
+El curso Avanzado está bloqueado y todavía no tiene prácticas ([ruta de aprendizaje](../docs/cursos/03_ruta_de_aprendizaje_blender.md)).
 
 Una práctica nueva:
 

@@ -1,0 +1,85 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bpi.m3.explora",
+  "casos": [
+    {
+      "nombre": "Cubo quieto",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "claves",
+        "pildoras": [
+          "clave"
+        ]
+      }
+    },
+    {
+      "nombre": "Dos claves en el mismo lugar",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        },
+        {
+          "animar": {
+            "objeto": "Cube",
+            "propiedad": "location",
+            "eje": "x",
+            "claves": [
+              [
+                1,
+                0
+              ],
+              [
+                24,
+                0.5
+              ]
+            ]
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "se-mueve"
+      }
+    },
+    {
+      "nombre": "Solución: cruza 4 metros",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        },
+        {
+          "animar": {
+            "objeto": "Cube",
+            "propiedad": "location",
+            "eje": "x",
+            "claves": [
+              [
+                1,
+                0
+              ],
+              [
+                24,
+                4
+              ]
+            ]
+          }
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

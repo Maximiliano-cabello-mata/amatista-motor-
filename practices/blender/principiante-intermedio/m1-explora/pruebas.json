@@ -1,0 +1,67 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bpi.m1.explora",
+  "casos": [
+    {
+      "nombre": "Esfera sin material",
+      "construir": [
+        {
+          "esfera": {
+            "nombre": "Sphere"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "material",
+        "pildoras": [
+          "vista-material"
+        ]
+      }
+    },
+    {
+      "nombre": "Material mate",
+      "construir": [
+        {
+          "esfera": {
+            "nombre": "Sphere"
+          }
+        },
+        {
+          "material": {
+            "objeto": "Sphere",
+            "nombre": "Material",
+            "metal": 0,
+            "rugosidad": 0.5
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "metal"
+      }
+    },
+    {
+      "nombre": "Solución: metal pulido",
+      "construir": [
+        {
+          "esfera": {
+            "nombre": "Sphere"
+          }
+        },
+        {
+          "material": {
+            "objeto": "Sphere",
+            "nombre": "Cromo",
+            "metal": 1,
+            "rugosidad": 0.15
+          }
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

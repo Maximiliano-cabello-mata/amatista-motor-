@@ -2,7 +2,9 @@
 
 practices/blender/cursos.json (formato amatista.curriculum/1) dice qué
 cursos hay (Principiante, Principiante-Intermedio, Intermedio, Avanzado),
-qué módulos tiene cada uno y qué práctica cierra cada módulo. El add-on lo
+qué módulos tiene cada uno y qué prácticas tiene cada módulo: la de
+exploración («explore», a mitad del módulo, entre teoría y teoría) y la que
+lo cierra («practice»). Teoría y Blender se intercalan. El add-on lo
 usa para dibujar el mapa del curso y decidir qué se desbloquea; la
 plataforma usa los mismos ids.
 
@@ -31,6 +33,12 @@ class ModuleEntry:
     title: str
     practice: str  # id de la práctica que lo cierra ('' si aún no existe)
     project: str = ""
+    explore: str = ""  # práctica corta de exploración a mitad del módulo ('' si no tiene)
+
+    @property
+    def sequence(self) -> Tuple[str, ...]:
+        """Prácticas del módulo en el orden en que se hacen: exploración y cierre."""
+        return tuple(p for p in (self.explore, self.practice) if p)
 
 
 @dataclass(frozen=True)
@@ -54,12 +62,12 @@ class Curriculum:
         return next((c for c in self.courses if c.id == course_id), None)
 
     def practices(self) -> Tuple[str, ...]:
-        return tuple(m.practice for c in self.courses for m in c.modules if m.practice)
+        return tuple(p for c in self.courses for m in c.modules for p in m.sequence)
 
     def locate(self, practice_id: str) -> Optional[Tuple[CourseEntry, ModuleEntry]]:
         for c in self.courses:
             for m in c.modules:
-                if m.practice == practice_id:
+                if practice_id in m.sequence:
                     return c, m
         return None
 
@@ -72,7 +80,8 @@ def load_curriculum(data: Dict[str, Any]) -> Curriculum:
         if c.get("difficulty") not in DIFICULTADES:
             raise InvalidPracticeError(f"Curso {c.get('id')}: dificultad inválida (usa {', '.join(DIFICULTADES)})")
         modulos = tuple(
-            ModuleEntry(int(m["number"]), str(m["title"]), str(m.get("practice") or ""), str(m.get("project") or ""))
+            ModuleEntry(int(m["number"]), str(m["title"]), str(m.get("practice") or ""), str(m.get("project") or ""),
+                        str(m.get("explore") or ""))
             for m in c.get("modules") or []
         )
         cursos.append(CourseEntry(
@@ -95,16 +104,14 @@ def unlock_state(plan: Curriculum, completadas: Iterable[str]) -> Dict[str, str]
     estado: Dict[str, str] = {}
     for curso in plan.courses:
         abierto = curso.status != PROXIMAMENTE
-        for modulo in curso.modules:
-            if not modulo.practice:
-                continue
-            if modulo.practice in hechas:
-                estado[modulo.practice] = COMPLETADO
+        for practica in (p for modulo in curso.modules for p in modulo.sequence):
+            if practica in hechas:
+                estado[practica] = COMPLETADO
             elif abierto:
-                estado[modulo.practice] = DISPONIBLE
+                estado[practica] = DISPONIBLE
                 abierto = False
             else:
-                estado[modulo.practice] = BLOQUEADO if curso.status != PROXIMAMENTE else PROXIMAMENTE
+                estado[practica] = BLOQUEADO if curso.status != PROXIMAMENTE else PROXIMAMENTE
     return estado
 
 

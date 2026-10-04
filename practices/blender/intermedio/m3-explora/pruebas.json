@@ -1,0 +1,48 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bi.m3.explora",
+  "casos": [
+    {
+      "nombre": "Modelo en EEVEE",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "cycles",
+        "pildoras": [
+          "motores"
+        ]
+      }
+    },
+    {
+      "nombre": "Solución: Cycles, cámara y render",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        },
+        {
+          "motor": "CYCLES"
+        },
+        {
+          "camara": {
+            "nombre": "Camera"
+          }
+        },
+        {
+          "renders": 1
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

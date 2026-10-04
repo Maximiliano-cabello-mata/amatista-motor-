@@ -10,9 +10,9 @@
       "status": "disponible",
       "description": "Para quien nunca abrió Blender: te mueves en 3D, modelas tu primera malla y usas modificadores.",
       "modules": [
-        {"number": 1, "title": "La interfaz y navegación 3D", "practice": "blender.bp.m1.tren", "project": "Tren de juguete"},
-        {"number": 2, "title": "Modelado poligonal básico", "practice": "blender.bp.m2.espada", "project": "Espada low-poly"},
-        {"number": 3, "title": "Modificadores", "practice": "blender.bp.m3.nave", "project": "Nave espacial simétrica"}
+        {"number": 1, "title": "La interfaz y navegación 3D", "explore": "blender.bp.m1.explora", "practice": "blender.bp.m1.tren", "project": "Tren de juguete"},
+        {"number": 2, "title": "Modelado poligonal básico", "explore": "blender.bp.m2.explora", "practice": "blender.bp.m2.espada", "project": "Espada low-poly"},
+        {"number": 3, "title": "Modificadores", "explore": "blender.bp.m3.explora", "practice": "blender.bp.m3.nave", "project": "Nave espacial simétrica"}
       ]
     },
     {
@@ -23,19 +23,23 @@
       "requires": "blender_principiante",
       "description": "Pintas, iluminas, haces render y animas: cierras el ciclo completo de una pieza 3D.",
       "modules": [
-        {"number": 1, "title": "Materiales y sombreado", "practice": "blender.bpi.m1.pinta-nave", "project": "Pinta tu nave"},
-        {"number": 2, "title": "Iluminación y cámara", "practice": "blender.bpi.m2.tres-puntos", "project": "Tres luces y tu primer render"},
-        {"number": 3, "title": "Animación básica", "practice": "blender.bpi.m3.pelota", "project": "La pelota que rebota"}
+        {"number": 1, "title": "Materiales y sombreado", "explore": "blender.bpi.m1.explora", "practice": "blender.bpi.m1.pinta-nave", "project": "Pinta tu nave"},
+        {"number": 2, "title": "Iluminación y cámara", "explore": "blender.bpi.m2.explora", "practice": "blender.bpi.m2.tres-puntos", "project": "Tres luces y tu primer render"},
+        {"number": 3, "title": "Animación básica", "explore": "blender.bpi.m3.explora", "practice": "blender.bpi.m3.pelota", "project": "La pelota que rebota"}
       ]
     },
     {
       "id": "blender_intermedio",
       "title": "Blender Intermedio",
       "difficulty": "intermedio",
-      "status": "proximamente",
+      "status": "disponible",
       "requires": "blender_principiante_intermedio",
-      "description": "Próximamente.",
-      "modules": []
+      "description": "Trabajas como en un estudio: precisión con Array y Bisel, una escena ordenada en colecciones y tu diorama iluminado para el portafolio.",
+      "modules": [
+        {"number": 1, "title": "Modelado con precisión", "explore": "blender.bi.m1.explora", "practice": "blender.bi.m1.puente", "project": "Un puente de madera"},
+        {"number": 2, "title": "Organiza tu escena", "explore": "blender.bi.m2.explora", "practice": "blender.bi.m2.aldea", "project": "Una aldea ordenada"},
+        {"number": 3, "title": "Render de portafolio", "explore": "blender.bi.m3.explora", "practice": "blender.bi.m3.diorama", "project": "Tu diorama en la galería"}
+      ]
     },
     {
       "id": "blender_avanzado",
@@ -43,7 +47,7 @@
       "difficulty": "avanzado",
       "status": "proximamente",
       "requires": "blender_intermedio",
-      "description": "Próximamente.",
+      "description": "Bloqueado: necesita más teoría (topología, UV, nodos, rigging) antes de abrirse. Ver docs/cursos/03_ruta_de_aprendizaje_blender.md.",
       "modules": []
     }
   ]

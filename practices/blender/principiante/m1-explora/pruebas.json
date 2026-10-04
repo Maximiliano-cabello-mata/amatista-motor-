@@ -1,0 +1,72 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bp.m1.explora",
+  "casos": [
+    {
+      "nombre": "Escena vacía: primero un cubo",
+      "construir": [],
+      "espera": {
+        "completada": false,
+        "progreso_max": 0,
+        "actual": "cubo",
+        "pildoras": [
+          "zonas",
+          "orbitar"
+        ]
+      }
+    },
+    {
+      "nombre": "Cubo en el suelo: falta subirlo",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube"
+          }
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "cubo-arriba"
+      }
+    },
+    {
+      "nombre": "Solución: cubo arriba y girado, esfera grande",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube",
+            "loc": [
+              0,
+              0,
+              2
+            ],
+            "rot": [
+              0,
+              0,
+              45
+            ]
+          }
+        },
+        {
+          "esfera": {
+            "nombre": "Sphere",
+            "loc": [
+              3,
+              0,
+              1
+            ],
+            "dims": [
+              4,
+              4,
+              4
+            ]
+          }
+        }
+      ],
+      "espera": {
+        "completada": true,
+        "progreso_min": 100
+      }
+    }
+  ]
+}

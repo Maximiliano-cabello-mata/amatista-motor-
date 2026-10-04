@@ -167,7 +167,10 @@ def probar_v3(contexto):
     catalogo = practicas.catalogo()
     aprendizaje.ESTADO["avance"] = {"completadas": [], "pildoras_vistas": {}, "repaso": {}}
     revisar(aprendizaje.plan() is not None and len(aprendizaje.plan().courses) == 4, "mapa: 4 cursos")
-    revisar(aprendizaje.siguiente() == "blender.bp.m1.tren", "mapa: la primera práctica es el tren")
+    revisar(aprendizaje.siguiente() == "blender.bp.m1.explora", "mapa: la primera práctica es la exploración")
+    revisar(aprendizaje.estados()["blender.bp.m1.tren"] == "bloqueado", "mapa: el tren espera a la exploración")
+    aprendizaje.marcar_completada("blender.bp.m1.explora")
+    revisar(aprendizaje.siguiente() == "blender.bp.m1.tren", "mapa: después de explorar sigue el tren")
     revisar(aprendizaje.estados()["blender.bp.m2.espada"] == "bloqueado", "mapa: la espada empieza bloqueada")
 
     # Tren: la escena de inicio se vacía y la primera píldora es la de los ejes.
@@ -186,7 +189,10 @@ def probar_v3(contexto):
     revisar(any(k.endswith("#" + principal.id) for k in aprendizaje.avance()["repaso"]) == (principal.check is not None),
             "la píldora con pregunta entra al repaso")
     aprendizaje.marcar_completada("blender.bp.m1.tren")
-    revisar(aprendizaje.estados()["blender.bp.m2.espada"] == "disponible", "mapa: terminar el tren abre la espada")
+    revisar(aprendizaje.estados()["blender.bp.m2.explora"] == "disponible", "mapa: terminar el tren abre la exploración del módulo 2")
+    revisar(aprendizaje.estados()["blender.bp.m2.espada"] == "bloqueado", "mapa: la espada espera a su exploración")
+    aprendizaje.marcar_completada("blender.bp.m2.explora")
+    revisar(aprendizaje.estados()["blender.bp.m2.espada"] == "disponible", "mapa: explorar el módulo 2 abre la espada")
 
     # Espada: repaso de lo anterior y vigilante de malla limpia.
     for item in aprendizaje.avance()["repaso"].values():
@@ -382,7 +388,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "3.0.0", "el intento lleva la versión 3 del add-on")
+    revisar(datos["version_addon"] == "3.1.0", "el intento lleva la versión 3.1 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"

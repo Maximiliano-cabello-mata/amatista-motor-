@@ -485,6 +485,7 @@ def dibujar_mapa(layout, context, solo_siguiente=False):
         fila.operator("amatista.pestana", text="Ver el mapa del curso", icon="OUTLINER_COLLECTION").pestana = "curso"
         return True
     for curso in plan.courses:
+        # Un módulo cuenta como hecho cuando su práctica de cierre está completada.
         hechas = sum(1 for m in curso.modules if estados.get(m.practice) == "completado")
         cuerpo = estilo.tarjeta(
             layout, curso.title, icon="OUTLINER_COLLECTION",
@@ -499,22 +500,22 @@ def dibujar_mapa(layout, context, solo_siguiente=False):
         if curso.modules:
             estilo.barra(cuerpo, hechas / len(curso.modules), f"{hechas} de {len(curso.modules)} módulos")
         for modulo in curso.modules:
-            estado = estados.get(modulo.practice, "bloqueado")
-            propio, icono = ICONO_PLAN.get(estado, ("pendiente", None))
-            fila = cuerpo.row(align=True)
-            texto = f"{modulo.number}. {modulo.title}"
-            if propio:
-                fila.label(text=texto, icon_value=estilo.icono(propio))
-            else:
-                fila.label(text=texto, icon=icono)
-            if estado in ("disponible", "completado") and modulo.practice:
-                op = fila.operator("amatista.abrir_practica", text="Repetir" if estado == "completado" else "Empezar",
-                                   icon="FILE_REFRESH" if estado == "completado" else "PLAY")
-                op.practica_id = modulo.practice
-            if modulo.project:
-                sub = cuerpo.row()
-                sub.active = False
-                sub.label(text=f"Proyecto: {modulo.project}", icon="BLANK1")
+            fila = cuerpo.row()
+            fila.label(text=f"{modulo.number}. {modulo.title}")
+            # Teoría y Blender se intercalan: exploración a mitad del módulo y práctica de cierre.
+            for practica_id in modulo.sequence:
+                estado = estados.get(practica_id, "bloqueado")
+                propio, icono = ICONO_PLAN.get(estado, ("pendiente", None))
+                fila = cuerpo.row(align=True)
+                texto = "Exploración" if practica_id == modulo.explore else (modulo.project or "Práctica de cierre")
+                if propio:
+                    fila.label(text=texto, icon_value=estilo.icono(propio))
+                else:
+                    fila.label(text=texto, icon=icono)
+                if estado in ("disponible", "completado"):
+                    op = fila.operator("amatista.abrir_practica", text="Repetir" if estado == "completado" else "Empezar",
+                                       icon="FILE_REFRESH" if estado == "completado" else "PLAY")
+                    op.practica_id = practica_id
     return True
 
 

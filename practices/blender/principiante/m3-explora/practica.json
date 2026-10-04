@@ -1,0 +1,148 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bp.m3.explora",
+  "version": 1,
+  "title": "Calentamiento: tu primer modificador",
+  "level": 2,
+  "description": "Estiras un cubo, aplicas su escala y le pones Subdivisión: ves en vivo cómo un modificador cambia la forma sin tocar la malla.",
+  "intro": "Un modificador es un filtro que no rompe nada. Pruébalo antes de la teoría.",
+  "completion": "¡Tu cubo ya es una píldora suave! La siguiente lección explica Espejo y Subdivisión a fondo.",
+  "estimatedMinutes": 8,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-modificadores",
+    "bl-aplicar-escala"
+  ],
+  "tags": [
+    "exploracion",
+    "principiante",
+    "modulo-3"
+  ],
+  "course": {
+    "id": "blender_principiante",
+    "module": 3,
+    "lesson": "bp3_blender",
+    "next": "blender.bp.m3.nave"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera). Es una exploración corta: tu avance queda registrado."
+  },
+  "tools": {
+    "allowed": [
+      "object.add",
+      "transform.scale",
+      "modifier.subdivision"
+    ]
+  },
+  "pills": [
+    {
+      "id": "filtro",
+      "title": "Un filtro encima",
+      "text": "Los modificadores viven en la pestaña de la llave inglesa. Cambian cómo se ve la pieza sin borrar nada: los apagas y vuelve la original.",
+      "visual": "tab:MODIFIER",
+      "trigger": {
+        "on": "start"
+      },
+      "check": {
+        "question": "¿Un modificador borra tu malla original?",
+        "options": [
+          "Sí",
+          "No, se puede apagar"
+        ],
+        "answer": 1
+      }
+    },
+    {
+      "id": "escala",
+      "title": "Ctrl + A › Escala",
+      "text": "Después de escalar, Ctrl + A › Escala deja la escala en 1 sin cambiar el tamaño. Así los modificadores calculan bien.",
+      "keys": [
+        "Ctrl",
+        "A"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "target",
+        "target": "escala-aplicada"
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "cubo",
+      "title": "Agrega un cubo",
+      "validator": "object.exists",
+      "params": {
+        "primitive": "cube"
+      },
+      "weight": 15,
+      "tip": "Shift+A › Malla › Cubo.",
+      "hints": [
+        "Shift+A sobre la vista 3D.",
+        "Malla › Cubo."
+      ]
+    },
+    {
+      "id": "estirado",
+      "title": "Estíralo a lo largo",
+      "validator": "dimension.range",
+      "params": {
+        "primitive": "cube",
+        "axis": "x",
+        "min": 3,
+        "max": 20
+      },
+      "weight": 20,
+      "requires": [
+        "cubo"
+      ],
+      "tip": "S, X, 2, Enter.",
+      "hints": [
+        "S escala; X lo limita al eje rojo.",
+        "Escribe 2 y Enter."
+      ]
+    },
+    {
+      "id": "escala-aplicada",
+      "title": "Aplica la escala",
+      "validator": "transform.scale_applied",
+      "params": {
+        "primitive": "cube"
+      },
+      "weight": 25,
+      "requires": [
+        "estirado"
+      ],
+      "tip": "Ctrl+A › Escala.",
+      "hints": [
+        "Con el cubo seleccionado pulsa Ctrl+A.",
+        "En el menú elige Escala."
+      ]
+    },
+    {
+      "id": "subdividido",
+      "title": "Ponle Subdivisión",
+      "validator": "modifier.configured",
+      "params": {
+        "primitive": "cube",
+        "modifier": "SUBSURF",
+        "min_levels": 2
+      },
+      "weight": 40,
+      "requires": [
+        "escala-aplicada"
+      ],
+      "tip": "Llave inglesa › Agregar modificador › Generar › Subdivisión de superficie, niveles 2.",
+      "hints": [
+        "Atajo: Ctrl+2 pone Subdivisión con 2 niveles.",
+        "Revisa «Niveles Viewport» en 2."
+      ]
+    }
+  ],
+  "review": [
+    "blender.bp.m2.explora#tab"
+  ]
+}

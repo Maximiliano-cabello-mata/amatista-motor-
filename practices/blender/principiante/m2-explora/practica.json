@@ -1,0 +1,184 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bp.m2.explora",
+  "version": 1,
+  "title": "Calentamiento: entra al Modo Edición",
+  "level": 2,
+  "description": "Entras al cubo con Tab, extruyes una cara y haces un corte en bucle. Amatista registra cada cambio de la malla.",
+  "intro": "Antes de la teoría de extruir y cortar, tócalo con tus manos: un cubo, una extrusión y un corte.",
+  "completion": "¡Ya modificaste una malla por dentro! La siguiente lección te explica por qué funciona así.",
+  "estimatedMinutes": 8,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-modo-edicion",
+    "bl-extruir"
+  ],
+  "tags": [
+    "exploracion",
+    "principiante",
+    "modulo-2"
+  ],
+  "course": {
+    "id": "blender_principiante",
+    "module": 2,
+    "lesson": "bp2_blender",
+    "next": "blender.bp.m2.espada"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera). Es una exploración corta: tu avance queda registrado."
+  },
+  "tools": {
+    "allowed": [
+      "object.add",
+      "mesh.edit",
+      "mesh.extrude",
+      "mesh.loopcut",
+      "mesh.merge"
+    ]
+  },
+  "pills": [
+    {
+      "id": "tab",
+      "title": "Tab: entra y sal",
+      "text": "Tab cambia entre Modo Objeto (la pieza entera) y Modo Edición (sus vértices, aristas y caras). 1, 2 y 3 eligen qué seleccionar.",
+      "keys": [
+        "Tab",
+        "1",
+        "2",
+        "3"
+      ],
+      "visual": "mode",
+      "trigger": {
+        "on": "start"
+      },
+      "check": {
+        "question": "¿Qué tecla te lleva al Modo Edición?",
+        "options": [
+          "Tab",
+          "Ctrl + R",
+          "E"
+        ],
+        "answer": 0
+      }
+    },
+    {
+      "id": "extruir",
+      "title": "E saca caras nuevas",
+      "text": "Selecciona una cara (tecla 3 y clic) y pulsa E: la cara sale y deja paredes nuevas detrás.",
+      "keys": [
+        "E"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "target",
+        "target": "extruida"
+      }
+    },
+    {
+      "id": "corte",
+      "title": "Ctrl + R corta en bucle",
+      "text": "Ctrl + R dibuja un anillo de aristas alrededor de la pieza. Clic para aceptar y clic derecho para dejarlo centrado.",
+      "keys": [
+        "Ctrl",
+        "R"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "target",
+        "target": "cortada"
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "cubo",
+      "title": "Un cubo para practicar",
+      "validator": "object.exists",
+      "params": {
+        "primitive": "cube"
+      },
+      "weight": 20,
+      "tip": "Shift+A › Malla › Cubo.",
+      "hints": [
+        "Shift+A sobre la vista 3D.",
+        "Malla › Cubo."
+      ]
+    },
+    {
+      "id": "extruida",
+      "title": "Extruye una cara",
+      "validator": "mesh.face_count",
+      "params": {
+        "primitive": "cube",
+        "min": 10
+      },
+      "weight": 35,
+      "requires": [
+        "cubo"
+      ],
+      "tip": "Tab, 3, clic en una cara, E y mueve el ratón.",
+      "hints": [
+        "Tab entra al Modo Edición.",
+        "3 selecciona caras; clic en la de arriba.",
+        "E y sube el ratón; clic para aceptar."
+      ]
+    },
+    {
+      "id": "cortada",
+      "title": "Haz un corte en bucle",
+      "validator": "mesh.vertex_count",
+      "params": {
+        "primitive": "cube",
+        "min": 16
+      },
+      "weight": 35,
+      "requires": [
+        "extruida"
+      ],
+      "tip": "Ctrl+R sobre una arista, clic y clic derecho.",
+      "hints": [
+        "Pasa el ratón sobre una arista vertical.",
+        "Ctrl+R muestra el anillo amarillo: clic y clic derecho."
+      ]
+    },
+    {
+      "id": "salir",
+      "title": "Vuelve al Modo Objeto",
+      "validator": "object.exists",
+      "params": {
+        "primitive": "cube"
+      },
+      "weight": 10,
+      "requires": [
+        "cortada"
+      ],
+      "tip": "Tab para salir: así Blender guarda la malla.",
+      "hints": [
+        "Pulsa Tab una vez."
+      ]
+    }
+  ],
+  "review": [
+    "blender.bp.m1.explora#grs"
+  ],
+  "guards": [
+    {
+      "id": "malla-limpia",
+      "title": "Malla sin vértices encimados",
+      "validator": "mesh.no_duplicates",
+      "params": {
+        "primitive": "cube"
+      },
+      "fix": {
+        "action": "merge_by_distance",
+        "label": "Fusionar por distancia conmigo"
+      },
+      "messages": {
+        "fail": "Quedaron caras encimadas (pasa al cancelar una extrusión con clic derecho). Límpialas antes de seguir."
+      }
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bi.m2.explora",
+  "version": 1,
+  "title": "Calentamiento: ordena en colecciones",
+  "level": 3,
+  "description": "Agregas varias piezas y las guardas en una colección con nombre. Amatista registra cómo organizas tu escena.",
+  "intro": "Una escena ordenada se trabaja el doble de rápido. Prueba las colecciones con tres cubos.",
+  "completion": "¡Tu escena ya tiene orden! La siguiente lección explica nombres, colecciones y materiales compartidos.",
+  "estimatedMinutes": 8,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-colecciones",
+    "bl-organizar"
+  ],
+  "tags": [
+    "intermedio",
+    "modulo-2",
+    "exploracion"
+  ],
+  "course": {
+    "id": "blender_intermedio",
+    "module": 2,
+    "lesson": "bi2_blender",
+    "next": "blender.bi.m2.aldea"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."
+  },
+  "tools": {
+    "allowed": [
+      "object.add",
+      "object.duplicate",
+      "object.rename",
+      "collection.move"
+    ]
+  },
+  "pills": [
+    {
+      "id": "m",
+      "title": "M mueve a una colección",
+      "text": "Selecciona objetos y pulsa M › Nueva colección. En el Outliner las colecciones son como carpetas.",
+      "keys": [
+        "M"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "start"
+      },
+      "check": {
+        "question": "¿Qué tecla manda objetos a una colección?",
+        "options": [
+          "M",
+          "C",
+          "Tab"
+        ],
+        "answer": 0
+      }
+    },
+    {
+      "id": "f2",
+      "title": "F2 cambia el nombre",
+      "text": "F2 renombra el objeto activo. «Casa_roja» se encuentra; «Cube.047» no.",
+      "keys": [
+        "F2"
+      ],
+      "visual": "keys",
+      "trigger": {
+        "on": "target",
+        "target": "coleccion"
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "cubos",
+      "title": "Tres piezas",
+      "validator": "object.count",
+      "params": {
+        "type": "MESH",
+        "min": 3
+      },
+      "weight": 30,
+      "tip": "Agrega un cubo y duplícalo dos veces con Shift+D.",
+      "hints": [
+        "Shift+A › Malla › Cubo.",
+        "Shift+D y mueve la copia."
+      ]
+    },
+    {
+      "id": "coleccion",
+      "title": "En la colección «Casas»",
+      "validator": "collection.contains",
+      "params": {
+        "collection": "Casas",
+        "min": 3
+      },
+      "weight": 70,
+      "requires": [
+        "cubos"
+      ],
+      "tip": "Selecciona las tres piezas, M › Nueva colección, y llámala Casas.",
+      "hints": [
+        "A selecciona todo; Shift+clic quita la luz y la cámara.",
+        "M › + Nueva colección › escribe Casas."
+      ]
+    }
+  ],
+  "review": [
+    "blender.bi.m1.explora#bisel"
+  ]
+}

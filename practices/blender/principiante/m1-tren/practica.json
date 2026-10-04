@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m1.tren",
-  "version": 1,
+  "version": 2,
   "title": "Tren de juguete",
   "level": 1,
   "description": "Construye un tren con cubos y cilindros: agrégalos con Shift+A, escálalos con S, gíralos con R y ensámblalos con G.",
@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-navegar-vista", "bl-agregar-primitivas", "bl-transformar", "bl-guardar-archivo"],
   "tags": ["principiante", "modulo-1", "ensamblar"],
-  "course": {"id": "blender_principiante", "module": 1, "lesson": "bp1_practica", "next": "blender.bp.m2.espada"},
+  "course": {"id": "blender_principiante", "module": 1, "lesson": "bp1_practica", "next": "blender.bp.m2.explora"},
   "starter": {"scene": "empty", "note": "Empieza con la escena vacía: el cubo, la luz y la cámara de inicio se quitan (puedes deshacer con Ctrl+Z)."},
   "roles": {
     "vagon": {"label": "Vagón", "description": "Un cubo estirado: el cuerpo de cada vagón o de la locomotora."},

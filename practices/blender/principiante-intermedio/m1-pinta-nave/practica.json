@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bpi.m1.pinta-nave",
-  "version": 1,
+  "version": 2,
   "title": "Pinta tu nave",
   "level": 2,
   "description": "Dale materiales a tu nave con el Principled BSDF: cristal en la cabina, metal brillante y metal quemado en los motores.",
@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-materiales", "bl-principled", "bl-asignar-material", "bl-vista-material"],
   "tags": ["principiante-intermedio", "modulo-1", "materiales"],
-  "course": {"id": "blender_principiante_intermedio", "module": 1, "lesson": "bpi1_practica", "next": "blender.bpi.m2.tres-puntos"},
+  "course": {"id": "blender_principiante_intermedio", "module": 1, "lesson": "bpi1_practica", "next": "blender.bpi.m2.explora"},
   "review": ["blender.bp.m3.nave#llave", "blender.bp.m3.nave#subdivision", "blender.bp.m2.espada#componentes"],
   "starter": {"scene": "empty", "from_practice": "blender.bp.m3.nave", "build": "nave_basica",
               "note": "Abre tu mi_nave.blend del curso anterior. Si no lo tienes, Amatista arma una nave básica para empezar."},

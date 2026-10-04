@@ -1,0 +1,127 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bi.m1.explora",
+  "version": 1,
+  "title": "Calentamiento: repite con Array",
+  "level": 3,
+  "description": "Una tabla, un modificador Array y un Bisel: repites piezas sin copiarlas a mano. Amatista registra cada modificador.",
+  "intro": "En el nivel Intermedio trabajas como en un estudio: menos clics, más control. Prueba el Array.",
+  "completion": "¡Repetiste sin copiar! La siguiente lección explica el ajuste por medidas y el Snap.",
+  "estimatedMinutes": 10,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-modificadores",
+    "bl-array"
+  ],
+  "tags": [
+    "intermedio",
+    "modulo-1",
+    "exploracion"
+  ],
+  "course": {
+    "id": "blender_intermedio",
+    "module": 1,
+    "lesson": "bi1_blender",
+    "next": "blender.bi.m1.puente"
+  },
+  "starter": {
+    "scene": "empty",
+    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."
+  },
+  "tools": {
+    "allowed": [
+      "object.add",
+      "transform.scale",
+      "modifier.array",
+      "modifier.bevel"
+    ]
+  },
+  "pills": [
+    {
+      "id": "array",
+      "title": "Array: copias vivas",
+      "text": "El modificador Array repite el objeto en fila. Cambias la pieza original y todas las copias cambian con ella.",
+      "visual": "tab:MODIFIER",
+      "trigger": {
+        "on": "start"
+      },
+      "check": {
+        "question": "Si editas la pieza original de un Array, ¿qué pasa con las copias?",
+        "options": [
+          "Cambian también",
+          "Se quedan igual"
+        ],
+        "answer": 0
+      }
+    },
+    {
+      "id": "bisel",
+      "title": "Bisel: bordes que atrapan luz",
+      "text": "Ningún objeto real tiene aristas perfectas. Un Bisel pequeño redondea los bordes y el render se ve más creíble.",
+      "visual": "tab:MODIFIER",
+      "trigger": {
+        "on": "target",
+        "target": "biselada"
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "tabla",
+      "title": "Una tabla alargada",
+      "validator": "shape.proportion",
+      "params": {
+        "primitive": "cube",
+        "axis": "x",
+        "min_ratio": 2
+      },
+      "weight": 20,
+      "tip": "Agrega un cubo y estíralo: S X 3.",
+      "hints": [
+        "Shift+A › Malla › Cubo.",
+        "S, X, 3, Enter."
+      ]
+    },
+    {
+      "id": "repetida",
+      "title": "Repítela con Array",
+      "validator": "modifier.exists",
+      "params": {
+        "primitive": "cube",
+        "modifier": "ARRAY"
+      },
+      "weight": 40,
+      "requires": [
+        "tabla"
+      ],
+      "tip": "Llave inglesa › Agregar modificador › Generar › Array.",
+      "hints": [
+        "Con la tabla seleccionada, abre la pestaña de la llave.",
+        "Sube «Cantidad» a 6."
+      ]
+    },
+    {
+      "id": "biselada",
+      "title": "Redondea con Bisel",
+      "validator": "modifier.exists",
+      "params": {
+        "primitive": "cube",
+        "modifier": "BEVEL"
+      },
+      "weight": 40,
+      "requires": [
+        "repetida"
+      ],
+      "tip": "Agrega también un modificador Bisel.",
+      "hints": [
+        "Agregar modificador › Generar › Bisel.",
+        "Baja la «Cantidad» a 0.05."
+      ]
+    }
+  ],
+  "review": [
+    "blender.bpi.m3.explora#clave"
+  ]
+}
