@@ -1,0 +1,824 @@
+{
+  "schema": "amatista.practice/1",
+  "id": "blender.n1.podio",
+  "version": 1,
+  "title": "Construye un podio con medidas precisas",
+  "level": 1,
+  "description": "Tres cubos, tres alturas y una composición ordenada: mide, ubica, aplica escala y guarda.",
+  "intro": "Usa una escena nueva guardada aparte, Modo Objeto y unidades sin sistema (None/Ninguno). Mantén los orígenes en el centro de los cubos, rotación cero y objetos sin padres ni modificadores. Crea tres cubos con un único rol cada uno. Los 25 controles breves revisan valores de la tabla del módulo; no certifican la topología ni la estética.",
+  "completion": "¡Podio revisado! Guarda esta entrega antes de experimentar. Explica por qué Z es la mitad de la altura de cada bloque.",
+  "estimatedMinutes": 15,
+  "blender": {
+    "min": "4.2"
+  },
+  "skills": [
+    "bl-transformar",
+    "bl-duplicar",
+    "bl-proporciones",
+    "bl-guardar-archivo"
+  ],
+  "roles": {
+    "centro": {
+      "label": "Centro",
+      "description": "Bloque centro visto desde el frente, con X horizontal."
+    },
+    "izquierda": {
+      "label": "Izquierda",
+      "description": "Bloque izquierda visto desde el frente, con X horizontal."
+    },
+    "derecha": {
+      "label": "Derecha",
+      "description": "Bloque derecha visto desde el frente, con X horizontal."
+    }
+  },
+  "targets": [
+    {
+      "id": "centro",
+      "title": "Identifica el bloque centro",
+      "validator": "role.count",
+      "params": {
+        "role": "centro",
+        "equals": 1
+      },
+      "weight": 4,
+      "requires": [],
+      "tip": "Selecciona solo ese cubo y asigna el rol «Centro».",
+      "guide": {
+        "why": "Los roles permiten evaluar objetos sin depender de su nombre.",
+        "steps": [
+          {
+            "text": "Selecciona el cubo centro y abre N → Amatista."
+          },
+          {
+            "text": "Asigna «Centro». Si viene de una copia, esta asignación reemplaza el rol heredado."
+          }
+        ]
+      },
+      "hints": [
+        "Comprueba qué objeto está seleccionado.",
+        "Debe existir exactamente un objeto con rol «Centro».",
+        "Si duplicaste un cubo, revisa los roles heredados antes de asignar «Centro»."
+      ]
+    },
+    {
+      "id": "centro_medida_x",
+      "title": "Centro: Dimensiones X = 1",
+      "validator": "dimension.range",
+      "params": {
+        "role": "centro",
+        "axis": "x",
+        "min": 0.99,
+        "max": 1.01
+      },
+      "weight": 4,
+      "requires": [
+        "centro"
+      ],
+      "tip": "En N → Elemento, escribe 1 en Dimensiones X.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque centro en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → X: escribe 1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1; se admite un margen de 0.01.",
+        "Comprueba que editas X del bloque centro."
+      ]
+    },
+    {
+      "id": "centro_medida_y",
+      "title": "Centro: Dimensiones Y = 1",
+      "validator": "dimension.range",
+      "params": {
+        "role": "centro",
+        "axis": "y",
+        "min": 0.99,
+        "max": 1.01
+      },
+      "weight": 4,
+      "requires": [
+        "centro_medida_x"
+      ],
+      "tip": "En N → Elemento, escribe 1 en Dimensiones Y.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque centro en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → Y: escribe 1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1; se admite un margen de 0.01.",
+        "Comprueba que editas Y del bloque centro."
+      ]
+    },
+    {
+      "id": "centro_medida_z",
+      "title": "Centro: Dimensiones Z = 1.5",
+      "validator": "dimension.range",
+      "params": {
+        "role": "centro",
+        "axis": "z",
+        "min": 1.49,
+        "max": 1.51
+      },
+      "weight": 4,
+      "requires": [
+        "centro_medida_y"
+      ],
+      "tip": "En N → Elemento, escribe 1.5 en Dimensiones Z.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque centro en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → Z: escribe 1.5 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1.5; se admite un margen de 0.01.",
+        "Comprueba que editas Z del bloque centro."
+      ]
+    },
+    {
+      "id": "centro_posicion_x",
+      "title": "Centro: Ubicación X = 0",
+      "validator": "object.position",
+      "params": {
+        "role": "centro",
+        "axis": "x",
+        "min": -0.01,
+        "max": 0.01
+      },
+      "weight": 4,
+      "requires": [
+        "centro_medida_z"
+      ],
+      "tip": "En N → Elemento, escribe 0 en Ubicación X.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque centro en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → X: escribe 0 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 0; se admite un margen de 0.01.",
+        "Comprueba que editas X del bloque centro."
+      ]
+    },
+    {
+      "id": "centro_posicion_y",
+      "title": "Centro: Ubicación Y = 0",
+      "validator": "object.position",
+      "params": {
+        "role": "centro",
+        "axis": "y",
+        "min": -0.01,
+        "max": 0.01
+      },
+      "weight": 4,
+      "requires": [
+        "centro_posicion_x"
+      ],
+      "tip": "En N → Elemento, escribe 0 en Ubicación Y.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque centro en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → Y: escribe 0 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 0; se admite un margen de 0.01.",
+        "Comprueba que editas Y del bloque centro."
+      ]
+    },
+    {
+      "id": "centro_posicion_z",
+      "title": "Centro: Ubicación Z = 0.75",
+      "validator": "object.position",
+      "params": {
+        "role": "centro",
+        "axis": "z",
+        "min": 0.74,
+        "max": 0.76
+      },
+      "weight": 4,
+      "requires": [
+        "centro_posicion_y"
+      ],
+      "tip": "En N → Elemento, escribe 0.75 en Ubicación Z.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque centro en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → Z: escribe 0.75 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 0.75; se admite un margen de 0.01.",
+        "Comprueba que editas Z del bloque centro."
+      ]
+    },
+    {
+      "id": "centro_escala",
+      "title": "Aplica la escala de centro",
+      "validator": "transform.scale_applied",
+      "params": {
+        "role": "centro"
+      },
+      "weight": 4,
+      "requires": [
+        "centro_posicion_z"
+      ],
+      "tip": "En Modo Objeto: Objeto → Aplicar → Escala.",
+      "guide": {
+        "why": "Aplicar escala conserva el tamaño visible y deja los factores de escala en 1.",
+        "steps": [
+          {
+            "text": "Selecciona solo el bloque centro."
+          },
+          {
+            "text": "Abre Objeto → Aplicar → Escala (Ctrl+A → Escala con el mapa de teclado predeterminado)."
+          },
+          {
+            "text": "Comprueba Escala = 1, 1, 1 y que las Dimensiones no cambiaron."
+          }
+        ]
+      },
+      "hints": [
+        "Selecciona el bloque y asegúrate de estar en Modo Objeto.",
+        "Aplicar escala es distinto de borrar escala.",
+        "Usa Objeto → Aplicar → Escala; no Alt+S ni Borrar escala."
+      ]
+    },
+    {
+      "id": "izquierda",
+      "title": "Identifica el bloque izquierda",
+      "validator": "role.count",
+      "params": {
+        "role": "izquierda",
+        "equals": 1
+      },
+      "weight": 4,
+      "requires": [
+        "centro_escala"
+      ],
+      "tip": "Selecciona solo ese cubo y asigna el rol «Izquierda».",
+      "guide": {
+        "why": "Los roles permiten evaluar objetos sin depender de su nombre.",
+        "steps": [
+          {
+            "text": "Selecciona el cubo izquierda y abre N → Amatista."
+          },
+          {
+            "text": "Asigna «Izquierda». Si viene de una copia, esta asignación reemplaza el rol heredado."
+          }
+        ]
+      },
+      "hints": [
+        "Comprueba qué objeto está seleccionado.",
+        "Debe existir exactamente un objeto con rol «Izquierda».",
+        "Si duplicaste un cubo, revisa los roles heredados antes de asignar «Izquierda»."
+      ]
+    },
+    {
+      "id": "izquierda_medida_x",
+      "title": "Izquierda: Dimensiones X = 1",
+      "validator": "dimension.range",
+      "params": {
+        "role": "izquierda",
+        "axis": "x",
+        "min": 0.99,
+        "max": 1.01
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda"
+      ],
+      "tip": "En N → Elemento, escribe 1 en Dimensiones X.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque izquierda en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → X: escribe 1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1; se admite un margen de 0.01.",
+        "Comprueba que editas X del bloque izquierda."
+      ]
+    },
+    {
+      "id": "izquierda_medida_y",
+      "title": "Izquierda: Dimensiones Y = 1",
+      "validator": "dimension.range",
+      "params": {
+        "role": "izquierda",
+        "axis": "y",
+        "min": 0.99,
+        "max": 1.01
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda_medida_x"
+      ],
+      "tip": "En N → Elemento, escribe 1 en Dimensiones Y.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque izquierda en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → Y: escribe 1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1; se admite un margen de 0.01.",
+        "Comprueba que editas Y del bloque izquierda."
+      ]
+    },
+    {
+      "id": "izquierda_medida_z",
+      "title": "Izquierda: Dimensiones Z = 1",
+      "validator": "dimension.range",
+      "params": {
+        "role": "izquierda",
+        "axis": "z",
+        "min": 0.99,
+        "max": 1.01
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda_medida_y"
+      ],
+      "tip": "En N → Elemento, escribe 1 en Dimensiones Z.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque izquierda en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → Z: escribe 1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1; se admite un margen de 0.01.",
+        "Comprueba que editas Z del bloque izquierda."
+      ]
+    },
+    {
+      "id": "izquierda_posicion_x",
+      "title": "Izquierda: Ubicación X = -1.1",
+      "validator": "object.position",
+      "params": {
+        "role": "izquierda",
+        "axis": "x",
+        "min": -1.11,
+        "max": -1.09
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda_medida_z"
+      ],
+      "tip": "En N → Elemento, escribe -1.1 en Ubicación X.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque izquierda en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → X: escribe -1.1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es -1.1; se admite un margen de 0.01.",
+        "Comprueba que editas X del bloque izquierda."
+      ]
+    },
+    {
+      "id": "izquierda_posicion_y",
+      "title": "Izquierda: Ubicación Y = 0",
+      "validator": "object.position",
+      "params": {
+        "role": "izquierda",
+        "axis": "y",
+        "min": -0.01,
+        "max": 0.01
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda_posicion_x"
+      ],
+      "tip": "En N → Elemento, escribe 0 en Ubicación Y.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque izquierda en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → Y: escribe 0 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 0; se admite un margen de 0.01.",
+        "Comprueba que editas Y del bloque izquierda."
+      ]
+    },
+    {
+      "id": "izquierda_posicion_z",
+      "title": "Izquierda: Ubicación Z = 0.5",
+      "validator": "object.position",
+      "params": {
+        "role": "izquierda",
+        "axis": "z",
+        "min": 0.49,
+        "max": 0.51
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda_posicion_y"
+      ],
+      "tip": "En N → Elemento, escribe 0.5 en Ubicación Z.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque izquierda en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → Z: escribe 0.5 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 0.5; se admite un margen de 0.01.",
+        "Comprueba que editas Z del bloque izquierda."
+      ]
+    },
+    {
+      "id": "izquierda_escala",
+      "title": "Aplica la escala de izquierda",
+      "validator": "transform.scale_applied",
+      "params": {
+        "role": "izquierda"
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda_posicion_z"
+      ],
+      "tip": "En Modo Objeto: Objeto → Aplicar → Escala.",
+      "guide": {
+        "why": "Aplicar escala conserva el tamaño visible y deja los factores de escala en 1.",
+        "steps": [
+          {
+            "text": "Selecciona solo el bloque izquierda."
+          },
+          {
+            "text": "Abre Objeto → Aplicar → Escala (Ctrl+A → Escala con el mapa de teclado predeterminado)."
+          },
+          {
+            "text": "Comprueba Escala = 1, 1, 1 y que las Dimensiones no cambiaron."
+          }
+        ]
+      },
+      "hints": [
+        "Selecciona el bloque y asegúrate de estar en Modo Objeto.",
+        "Aplicar escala es distinto de borrar escala.",
+        "Usa Objeto → Aplicar → Escala; no Alt+S ni Borrar escala."
+      ]
+    },
+    {
+      "id": "derecha",
+      "title": "Identifica el bloque derecha",
+      "validator": "role.count",
+      "params": {
+        "role": "derecha",
+        "equals": 1
+      },
+      "weight": 4,
+      "requires": [
+        "izquierda_escala"
+      ],
+      "tip": "Selecciona solo ese cubo y asigna el rol «Derecha».",
+      "guide": {
+        "why": "Los roles permiten evaluar objetos sin depender de su nombre.",
+        "steps": [
+          {
+            "text": "Selecciona el cubo derecha y abre N → Amatista."
+          },
+          {
+            "text": "Asigna «Derecha». Si viene de una copia, esta asignación reemplaza el rol heredado."
+          }
+        ]
+      },
+      "hints": [
+        "Comprueba qué objeto está seleccionado.",
+        "Debe existir exactamente un objeto con rol «Derecha».",
+        "Si duplicaste un cubo, revisa los roles heredados antes de asignar «Derecha»."
+      ]
+    },
+    {
+      "id": "derecha_medida_x",
+      "title": "Derecha: Dimensiones X = 1",
+      "validator": "dimension.range",
+      "params": {
+        "role": "derecha",
+        "axis": "x",
+        "min": 0.99,
+        "max": 1.01
+      },
+      "weight": 4,
+      "requires": [
+        "derecha"
+      ],
+      "tip": "En N → Elemento, escribe 1 en Dimensiones X.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque derecha en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → X: escribe 1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1; se admite un margen de 0.01.",
+        "Comprueba que editas X del bloque derecha."
+      ]
+    },
+    {
+      "id": "derecha_medida_y",
+      "title": "Derecha: Dimensiones Y = 1",
+      "validator": "dimension.range",
+      "params": {
+        "role": "derecha",
+        "axis": "y",
+        "min": 0.99,
+        "max": 1.01
+      },
+      "weight": 4,
+      "requires": [
+        "derecha_medida_x"
+      ],
+      "tip": "En N → Elemento, escribe 1 en Dimensiones Y.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque derecha en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → Y: escribe 1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 1; se admite un margen de 0.01.",
+        "Comprueba que editas Y del bloque derecha."
+      ]
+    },
+    {
+      "id": "derecha_medida_z",
+      "title": "Derecha: Dimensiones Z = 0.5",
+      "validator": "dimension.range",
+      "params": {
+        "role": "derecha",
+        "axis": "z",
+        "min": 0.49,
+        "max": 0.51
+      },
+      "weight": 4,
+      "requires": [
+        "derecha_medida_y"
+      ],
+      "tip": "En N → Elemento, escribe 0.5 en Dimensiones Z.",
+      "guide": {
+        "why": "Dimensiones expresa el tamaño final; Escala es un factor.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque derecha en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Dimensiones → Z: escribe 0.5 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Dimensiones, no otro grupo de valores.",
+        "El valor de referencia es 0.5; se admite un margen de 0.01.",
+        "Comprueba que editas Z del bloque derecha."
+      ]
+    },
+    {
+      "id": "derecha_posicion_x",
+      "title": "Derecha: Ubicación X = 1.1",
+      "validator": "object.position",
+      "params": {
+        "role": "derecha",
+        "axis": "x",
+        "min": 1.09,
+        "max": 1.11
+      },
+      "weight": 4,
+      "requires": [
+        "derecha_medida_z"
+      ],
+      "tip": "En N → Elemento, escribe 1.1 en Ubicación X.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque derecha en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → X: escribe 1.1 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 1.1; se admite un margen de 0.01.",
+        "Comprueba que editas X del bloque derecha."
+      ]
+    },
+    {
+      "id": "derecha_posicion_y",
+      "title": "Derecha: Ubicación Y = 0",
+      "validator": "object.position",
+      "params": {
+        "role": "derecha",
+        "axis": "y",
+        "min": -0.01,
+        "max": 0.01
+      },
+      "weight": 4,
+      "requires": [
+        "derecha_posicion_x"
+      ],
+      "tip": "En N → Elemento, escribe 0 en Ubicación Y.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque derecha en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → Y: escribe 0 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 0; se admite un margen de 0.01.",
+        "Comprueba que editas Y del bloque derecha."
+      ]
+    },
+    {
+      "id": "derecha_posicion_z",
+      "title": "Derecha: Ubicación Z = 0.25",
+      "validator": "object.position",
+      "params": {
+        "role": "derecha",
+        "axis": "z",
+        "min": 0.24,
+        "max": 0.26
+      },
+      "weight": 4,
+      "requires": [
+        "derecha_posicion_y"
+      ],
+      "tip": "En N → Elemento, escribe 0.25 en Ubicación Z.",
+      "guide": {
+        "why": "La ubicación del cubo se mide desde su origen central; para apoyarlo en Z = 0 usamos la mitad de su altura.",
+        "steps": [
+          {
+            "text": "Selecciona el bloque derecha en Modo Objeto."
+          },
+          {
+            "text": "N → Elemento → Ubicación → Z: escribe 0.25 y confirma. Usa unidades de Blender, sin sufijo m."
+          }
+        ]
+      },
+      "hints": [
+        "Revisa Ubicación, no otro grupo de valores.",
+        "El valor de referencia es 0.25; se admite un margen de 0.01.",
+        "Comprueba que editas Z del bloque derecha."
+      ]
+    },
+    {
+      "id": "derecha_escala",
+      "title": "Aplica la escala de derecha",
+      "validator": "transform.scale_applied",
+      "params": {
+        "role": "derecha"
+      },
+      "weight": 4,
+      "requires": [
+        "derecha_posicion_z"
+      ],
+      "tip": "En Modo Objeto: Objeto → Aplicar → Escala.",
+      "guide": {
+        "why": "Aplicar escala conserva el tamaño visible y deja los factores de escala en 1.",
+        "steps": [
+          {
+            "text": "Selecciona solo el bloque derecha."
+          },
+          {
+            "text": "Abre Objeto → Aplicar → Escala (Ctrl+A → Escala con el mapa de teclado predeterminado)."
+          },
+          {
+            "text": "Comprueba Escala = 1, 1, 1 y que las Dimensiones no cambiaron."
+          }
+        ]
+      },
+      "hints": [
+        "Selecciona el bloque y asegúrate de estar en Modo Objeto.",
+        "Aplicar escala es distinto de borrar escala.",
+        "Usa Objeto → Aplicar → Escala; no Alt+S ni Borrar escala."
+      ]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda el podio terminado",
+      "validator": "file.saved",
+      "weight": 4,
+      "requires": [
+        "centro_escala",
+        "izquierda_escala",
+        "derecha_escala"
+      ],
+      "tip": "Archivo → Guardar como: mi_podio.blend. Guarda otra vez después de cualquier cambio.",
+      "guide": {
+        "why": "La entrega debe conservar los últimos cambios.",
+        "steps": [
+          {
+            "text": "Guarda la escena como mi_podio.blend."
+          },
+          {
+            "text": "Si editas después, vuelve a guardar antes de comprobar."
+          }
+        ]
+      },
+      "hints": [
+        "Un archivo con cambios pendientes todavía no está guardado.",
+        "Usa Archivo → Guardar como la primera vez.",
+        "Después de la última edición, usa Archivo → Guardar."
+      ]
+    }
+  ]
+}
