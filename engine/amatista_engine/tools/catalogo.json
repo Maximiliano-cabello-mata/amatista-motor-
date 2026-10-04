@@ -1,0 +1,29 @@
+{
+  "schema": "amatista.tools/1",
+  "tools": [
+    {"id": "view.navigate", "name": "Navegar la vista", "shortcut": "Botón central · Shift+botón central", "minimumLevel": 1, "category": "vista", "description": "Gira y desplaza la vista sin mover los objetos."},
+    {"id": "object.add", "name": "Añadir objeto", "shortcut": "Shift+A", "minimumLevel": 1, "category": "objeto", "description": "Agrega una primitiva (cubo, cilindro, esfera...) en el cursor 3D."},
+    {"id": "transform.move", "name": "Mover", "shortcut": "G", "minimumLevel": 1, "category": "transformación", "description": "Cambia la posición de un objeto. G y luego X, Y o Z para limitarlo a un eje."},
+    {"id": "transform.rotate", "name": "Rotar", "shortcut": "R", "minimumLevel": 1, "category": "transformación", "description": "Gira un objeto. R y luego un eje y los grados (R Z 90)."},
+    {"id": "transform.scale", "name": "Escalar", "shortcut": "S", "minimumLevel": 1, "category": "transformación", "description": "Cambia el tamaño. S y luego Z para cambiar solo la altura."},
+    {"id": "object.duplicate", "name": "Duplicar", "shortcut": "Shift+D", "minimumLevel": 1, "category": "objeto", "description": "Crea una copia del objeto seleccionado y la deja lista para moverla."},
+    {"id": "object.delete", "name": "Eliminar", "shortcut": "X", "minimumLevel": 1, "category": "objeto", "description": "Borra el objeto seleccionado."},
+    {"id": "object.rename", "name": "Renombrar", "shortcut": "F2", "minimumLevel": 1, "category": "organización", "description": "Cambia el nombre del objeto activo."},
+    {"id": "collection.move", "name": "Mover a colección", "shortcut": "M", "minimumLevel": 1, "category": "organización", "description": "Organiza los objetos en colecciones."},
+    {"id": "file.save", "name": "Guardar", "shortcut": "Ctrl+S", "minimumLevel": 1, "category": "archivo", "description": "Guarda el archivo .blend."},
+    {"id": "material.basic", "name": "Color básico", "shortcut": "Propiedades › Material", "minimumLevel": 1, "category": "material", "description": "Asigna un material con un color.", "detect": {"material": true}},
+    {"id": "mesh.edit", "name": "Modo edición", "shortcut": "Tab", "minimumLevel": 2, "category": "malla", "description": "Edita vértices, aristas y caras de la malla.", "detect": {"mode": "EDIT"}},
+    {"id": "modifier.bevel", "name": "Biselar (modificador)", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Redondea los bordes sin editar la malla.", "detect": {"modifier": "BEVEL"}},
+    {"id": "modifier.mirror", "name": "Espejo", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Refleja la malla en un eje.", "detect": {"modifier": "MIRROR"}},
+    {"id": "modifier.array", "name": "Matriz", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Repite el objeto en fila.", "detect": {"modifier": "ARRAY"}},
+    {"id": "modifier.solidify", "name": "Solidificar", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Da grosor a una superficie.", "detect": {"modifier": "SOLIDIFY"}},
+    {"id": "modifier.subdivision", "name": "Subdivisión", "shortcut": "Ctrl+1", "minimumLevel": 2, "category": "modificador", "description": "Suaviza la malla agregando geometría.", "detect": {"modifier": "SUBSURF"}},
+    {"id": "modifier.boolean", "name": "Booleano", "shortcut": "Propiedades › Modificadores", "minimumLevel": 3, "category": "modificador", "description": "Suma, resta o intersecta mallas.", "detect": {"modifier": "BOOLEAN"}},
+    {"id": "object.curve", "name": "Curvas", "shortcut": "Shift+A › Curva", "minimumLevel": 3, "category": "objeto", "description": "Objetos definidos por curvas en vez de malla.", "detect": {"object_type": "CURVE"}},
+    {"id": "sculpt", "name": "Escultura", "shortcut": "Espacio de trabajo Sculpting", "minimumLevel": 3, "category": "malla", "description": "Modela la malla como si fuera arcilla.", "detect": {"mode": "SCULPT"}},
+    {"id": "geometry_nodes", "name": "Nodos de geometría", "shortcut": "Espacio de trabajo Geometry Nodes", "minimumLevel": 4, "category": "procedural", "description": "Genera geometría con nodos.", "detect": {"modifier": "NODES"}},
+    {"id": "armature", "name": "Esqueleto (rigging)", "shortcut": "Shift+A › Armadura", "minimumLevel": 4, "category": "animación", "description": "Huesos para animar personajes.", "detect": {"object_type": "ARMATURE"}},
+    {"id": "physics.cloth", "name": "Simulación de tela", "shortcut": "Propiedades › Física", "minimumLevel": 5, "category": "simulación", "description": "Simula telas que caen y se arrugan.", "detect": {"modifier": "CLOTH"}},
+    {"id": "particles", "name": "Partículas", "shortcut": "Propiedades › Partículas", "minimumLevel": 5, "category": "simulación", "description": "Emite partículas o cabello.", "detect": {"modifier": "PARTICLE_SYSTEM"}}
+  ]
+}

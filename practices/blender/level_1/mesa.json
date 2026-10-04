@@ -1,0 +1,115 @@
+{
+  "schema": "amatista.practice/1",
+  "id": "blender.n1.mesa",
+  "version": 1,
+  "title": "Construir una mesa",
+  "level": 1,
+  "description": "Tu primera práctica dentro de Blender: con cinco cubos construyes una mesa, la revisas con Amatista y la guardas.",
+  "intro": "Vas a construir una mesa con una cubierta y cuatro patas. Puedes nombrar tus objetos como quieras: lo importante es decirle a Amatista qué es cada uno con «Asignar rol».",
+  "completion": "¡Mesa terminada! Ya sabes crear, escalar, duplicar y ubicar objetos. Intenta una variación: una mesa alta, una mesita de centro o una banca.",
+  "estimatedMinutes": 20,
+  "blender": {"min": "4.2"},
+  "skills": ["bl-transformar", "bl-duplicar", "bl-proporciones", "bl-guardar-archivo"],
+  "roles": {
+    "cubierta": {"label": "Cubierta", "description": "La tabla plana de arriba."},
+    "pata": {"label": "Pata", "description": "Cada uno de los cuatro soportes."}
+  },
+  "tools": {
+    "allowed": ["object.add", "transform.move", "transform.scale", "object.duplicate", "file.save", "material.basic"],
+    "warn": ["modifier.boolean", "geometry_nodes", "sculpt"]
+  },
+  "targets": [
+    {
+      "id": "cubierta",
+      "title": "Crea la cubierta",
+      "validator": "role.count",
+      "params": {"role": "cubierta", "equals": 1},
+      "weight": 15,
+      "tip": "Empieza con el cubo de la escena o agrega uno con Shift+A › Malla › Cubo.",
+      "hints": [
+        "Una mesa empieza por su tabla: selecciona un cubo y dile a Amatista que es la cubierta.",
+        "Con el cubo seleccionado, en el panel Amatista elige «Cubierta» y pulsa «Asignar rol».",
+        "Clic sobre el cubo › barra lateral (N) › pestaña Amatista › Rol: Cubierta › Asignar rol."
+      ],
+      "messages": {"pass": "Ya tienes la cubierta de tu mesa."}
+    },
+    {
+      "id": "grosor",
+      "title": "Hazla delgada",
+      "validator": "dimension.range",
+      "params": {"role": "cubierta", "axis": "z", "min": 0.05, "max": 0.3},
+      "weight": 15,
+      "requires": ["cubierta"],
+      "tip": "Una cubierta real es ancha y delgada. Cambia solo su altura.",
+      "hints": [
+        "Revisa el grosor de la cubierta: debe medir entre 0.05 y 0.30 en Z.",
+        "Puedes modificar solamente su altura con Escalar restringido al eje Z.",
+        "Selecciona la cubierta y pulsa S, luego Z, y escribe 0.1. Enter para confirmar."
+      ]
+    },
+    {
+      "id": "patas",
+      "title": "Agrega cuatro patas",
+      "validator": "role.count",
+      "params": {"role": "pata", "equals": 4},
+      "weight": 30,
+      "requires": ["cubierta"],
+      "tip": "Crea una pata, dale el rol «Pata» y duplícala: las copias conservan el rol.",
+      "hints": [
+        "Revisa cuántos soportes tiene tu mesa.",
+        "La cubierta necesita cuatro puntos de apoyo: uno en cada esquina.",
+        "Puedes duplicar una pata con Shift+D: la copia ya tiene el rol «Pata».",
+        "Selecciona una pata › Shift+D › mueve con el ratón › clic. Repite hasta tener cuatro."
+      ]
+    },
+    {
+      "id": "debajo",
+      "title": "Coloca las patas debajo",
+      "validator": "spatial.below",
+      "params": {"role": "pata", "reference_role": "cubierta", "tolerance": 0.02},
+      "weight": 20,
+      "requires": ["patas", "grosor"],
+      "tip": "Cada pata debe quedar bajo la cubierta, sin atravesarla.",
+      "hints": [
+        "Mira la mesa desde el frente (1 del teclado numérico) y revisa dónde termina cada pata.",
+        "La parte de arriba de cada pata debe tocar la parte de abajo de la cubierta.",
+        "Selecciona una pata y muévela solo en Z con G, luego Z, hasta que quede bajo la tabla."
+      ]
+    },
+    {
+      "id": "altura",
+      "title": "Dales una altura de mesa",
+      "validator": "dimension.range",
+      "params": {"role": "pata", "axis": "z", "min": 0.4, "max": 1.2},
+      "weight": 10,
+      "requires": ["patas"],
+      "tip": "Una mesa de comedor mide unos 0.75 m de alto.",
+      "hints": [
+        "Compara la altura de las patas con una mesa real.",
+        "Escala las patas solo en Z (S, Z) hasta que midan entre 0.4 y 1.2."
+      ]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda tu archivo",
+      "validator": "file.saved",
+      "weight": 10,
+      "requires": ["debajo"],
+      "tip": "Guarda con un nombre que reconozcas, por ejemplo mi_mesa.blend.",
+      "hints": [
+        "Los cambios sin guardar se pierden si Blender se cierra.",
+        "Archivo › Guardar como (Shift+Ctrl+S) la primera vez; después basta con Ctrl+S."
+      ]
+    },
+    {
+      "id": "color",
+      "title": "Extra: dale color a la cubierta",
+      "validator": "material.exists",
+      "params": {"role": "cubierta"},
+      "weight": 0,
+      "optional": true,
+      "tip": "Propiedades › Material › Nuevo, y cambia el color base.",
+      "hints": ["Selecciona la cubierta y en Propiedades (pestaña de esfera roja) pulsa «Nuevo»."]
+    }
+  ]
+}
