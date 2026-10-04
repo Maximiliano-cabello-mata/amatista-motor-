@@ -1,0 +1,36 @@
+AMATISTA PARA BLENDER  ·  versión {{VERSION}}
+==============================================
+
+Instalar (1 minuto)
+-------------------
+1. Descomprime esta carpeta (clic derecho › Extraer todo).
+2. Abre «{{LANZADOR}}».
+   - Windows: si aparece «Windows protegió su PC», pulsa «Más información»
+     y luego «Ejecutar de todas formas».
+   - macOS: si dice que no se puede abrir, haz clic derecho › Abrir › Abrir.
+   - Linux: en una terminal, bash {{LANZADOR}}
+3. El instalador busca tu Blender, comprueba que sea 4.2 o más nuevo e
+   instala Amatista. Cuando diga «Listo», abre Blender.
+4. En Blender pulsa N y elige la pestaña «Amatista».
+
+Si descargaste el paquete desde tu cuenta, Amatista ya queda conectado con
+la plataforma. Si no, pulsa «Vincular con mi cuenta» en la pestaña y escribe
+el código en la página que se abre.
+
+Qué cambia en tu Blender
+------------------------
+- Se instala la extensión «Amatista» (Preferencias › Extensiones).
+- Se activa «Permitir acceso en línea» (Preferencias › Sistema › Red), que
+  Amatista usa para guardar tu progreso. Si lo apagas, Amatista sigue
+  funcionando y envía tu avance cuando lo vuelvas a activar.
+
+Instalar a mano (si el instalador no encuentra Blender)
+-------------------------------------------------------
+1. Abre Blender (4.2 o más nuevo).
+2. Arrastra el archivo amatista-{{VERSION}}.zip sobre la ventana de Blender
+   y confirma, o ve a Editar › Preferencias › Extensiones › ⌄ › Instalar
+   desde el disco… y elige ese archivo.
+
+Desinstalar
+-----------
+Editar › Preferencias › Extensiones › Amatista › ⌄ › Desinstalar.
