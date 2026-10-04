@@ -6,6 +6,7 @@ el progreso que se guarda en Oracle lo calcula Amatista, no el cliente.
 """
 from __future__ import annotations
 
+import math
 from typing import Any, Dict, Optional, Sequence
 
 from .errors import InvalidPracticeError
@@ -58,7 +59,13 @@ def _tupla_vector(valor, defecto):
         return defecto
     if not isinstance(valor, (list, tuple)) or len(valor) != 3:
         raise InvalidPracticeError("Vector inválido en la escena")
-    return tuple(float(v) for v in valor)
+    try:
+        numeros = tuple(float(v) for v in valor)
+    except (TypeError, ValueError):
+        raise InvalidPracticeError("Vector inválido en la escena") from None
+    if not all(math.isfinite(n) for n in numeros):
+        raise InvalidPracticeError("Vector inválido en la escena")
+    return numeros
 
 
 def _textos(valor) -> tuple:
