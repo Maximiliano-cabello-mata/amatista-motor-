@@ -1,0 +1,38 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bpi.m3.pelota",
+  "casos": [
+    {
+      "nombre": "Pelota quieta: pide fotogramas clave",
+      "construir": [{"esfera": {"nombre": "Pelota", "loc": [0, 0, 4]}}, {"plano": {"nombre": "Piso"}}],
+      "espera": {"completada": false, "actual": "claves", "pildoras": ["linea-tiempo", "clave"]}
+    },
+    {
+      "nombre": "Tres claves pero no toca el suelo",
+      "construir": [
+        {"esfera": {"nombre": "Pelota", "loc": [0, 0, 4]}},
+        {"animar": {"objeto": "Pelota", "propiedad": "location", "eje": "z", "claves": [[1, 4], [12, 2], [24, 4]]}}
+      ],
+      "espera": {"completada": false, "actual": "rebote"}
+    },
+    {
+      "nombre": "Rebota pero no se aplasta",
+      "construir": [
+        {"esfera": {"nombre": "Pelota", "loc": [0, 0, 4]}},
+        {"animar": {"objeto": "Pelota", "propiedad": "location", "eje": "z", "claves": [[1, 4], [12, 1], [24, 4]]}}
+      ],
+      "espera": {"completada": false, "actual": "aplastar", "pildoras": ["aplastar"]}
+    },
+    {
+      "nombre": "Solución: rebote con squash and stretch, guardada",
+      "construir": [
+        {"esfera": {"nombre": "Pelota", "loc": [0, 0, 4]}},
+        {"plano": {"nombre": "Piso"}},
+        {"animar": {"objeto": "Pelota", "propiedad": "location", "eje": "z", "claves": [[1, 4], [12, 0.85], [24, 4]]}},
+        {"animar": {"objeto": "Pelota", "propiedad": "scale", "eje": "z", "claves": [[1, 1], [12, 0.75], [24, 1]]}},
+        {"guardado": {"archivo": "mi_pelota.blend"}}
+      ],
+      "espera": {"completada": true, "progreso_min": 100}
+    }
+  ]
+}

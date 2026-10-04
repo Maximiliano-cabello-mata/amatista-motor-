@@ -73,6 +73,29 @@ def _items_plantillas(self, context):
     return items
 
 
+def _items_plantillas_practica(self, context):
+    from . import _motor
+
+    items = [("", "Sin plantilla", "Solo lo mínimo")] + [
+        (nombre, nombre.capitalize(), f"Práctica de tipo {nombre} con píldoras y objetivos de ejemplo")
+        for nombre in sorted(_motor.practica.PLANTILLAS)
+    ]
+    _CACHE["plantillas_practica"] = items
+    return items
+
+
+CURSOS = [
+    ("blender_principiante", "Principiante", "Curso para quien empieza desde cero"),
+    ("blender_principiante_intermedio", "Principiante-Intermedio", "Materiales, luces, render y animación"),
+    ("blender_intermedio", "Intermedio", "Próximamente"),
+    ("blender_avanzado", "Avanzado", "Próximamente"),
+]
+DISPAROS = [
+    ("start", "Al empezar", "En cuanto se abre la práctica"),
+    ("target", "En un paso", "Cuando un objetivo es el paso actual"),
+    ("guard", "Al pausar", "Cuando un vigilante pausa el progreso"),
+    ("complete", "Al terminar", "Cuando la práctica se completa"),
+]
 EJES = [("x", "X", "Eje X"), ("y", "Y", "Eje Y"), ("z", "Z", "Eje Z (altura)")]
 MODOS = [
     ("alumno", "Alumno", "La práctica como la ve un alumno", "USER", 0),
@@ -100,6 +123,17 @@ class EstadoAutor(bpy.types.PropertyGroup):
     nuevo_id: bpy.props.StringProperty(name="Id", default="blender.n1.nueva")
     nuevo_titulo: bpy.props.StringProperty(name="Título", default="Nueva práctica")
     nuevo_nivel: bpy.props.IntProperty(name="Nivel", default=1, min=1, max=5)
+    nueva_plantilla: bpy.props.EnumProperty(name="Plantilla", items=_items_plantillas_practica)
+    nuevo_curso: bpy.props.EnumProperty(name="Curso", items=CURSOS)
+    nuevo_modulo: bpy.props.IntProperty(name="Módulo", default=1, min=1, max=12)
+    # Píldoras (motor v3)
+    pil_titulo: bpy.props.StringProperty(name="Título")
+    pil_texto: bpy.props.StringProperty(name="Idea", description="Una idea, dos frases como máximo (≤ 280 caracteres)")
+    pil_teclas: bpy.props.StringProperty(name="Teclas", description="Separadas por + (Ctrl + R)")
+    pil_disparo: bpy.props.EnumProperty(name="Aparece", items=DISPAROS, default="start")
+    pil_objetivo: bpy.props.EnumProperty(name="Objetivo", items=_items_objetivos)
+    # Casos de prueba
+    caso_nombre: bpy.props.StringProperty(name="Caso", default="Solución completa")
     # Tagger
     nuevo_rol: bpy.props.StringProperty(name="Rol nuevo", description="Id del rol (minúsculas, sin espacios)")
     nuevo_rol_etiqueta: bpy.props.StringProperty(name="Nombre visible")
@@ -131,8 +165,16 @@ class EstadoAutor(bpy.types.PropertyGroup):
     depurar: bpy.props.BoolProperty(name="Mostrar diagnóstico", default=True)
 
 
+PESTANAS = [
+    ("aprender", "Aprender", "La teoría de este momento y tu repaso", "HELP", 0),
+    ("practicar", "Practicar", "La práctica en Blender, paso a paso", "PLAY", 1),
+    ("curso", "Mi curso", "El mapa de tus cursos y tu avance", "OUTLINER_COLLECTION", 2),
+]
+
+
 class EstadoSesion(bpy.types.PropertyGroup):
     modo: bpy.props.EnumProperty(name="Modo", items=MODOS, default="alumno")
+    pestana: bpy.props.EnumProperty(name="Sección", items=PESTANAS, default="practicar")
     practica_elegida: bpy.props.EnumProperty(name="Práctica", items=_items_catalogo)
     vista_previa: bpy.props.BoolProperty(
         name="Vista previa como alumno", description="Prueba el borrador exactamente como lo verá un alumno"

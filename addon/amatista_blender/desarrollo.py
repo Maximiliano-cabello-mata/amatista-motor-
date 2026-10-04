@@ -19,8 +19,9 @@ class AMATISTA_OT_autor_nuevo(bpy.types.Operator):
 
     def execute(self, context):
         a = context.scene.amatista_autor
-        autor.nuevo_borrador(a.nuevo_id, a.nuevo_titulo, a.nuevo_nivel)
-        self.report({"INFO"}, "Borrador creado. Declara roles y agrega objetivos.")
+        autor.nuevo_borrador(a.nuevo_id, a.nuevo_titulo, a.nuevo_nivel, a.nueva_plantilla, a.nuevo_curso, a.nuevo_modulo)
+        self.report({"INFO"}, "Borrador creado. Cambia los textos marcados «Cambia este texto»."
+                    if a.nueva_plantilla else "Borrador creado. Declara roles y agrega objetivos.")
         return {"FINISHED"}
 
 
@@ -290,7 +291,42 @@ class AMATISTA_OT_autor_verificacion(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class AMATISTA_OT_autor_agregar_pildora(bpy.types.Operator):
+    bl_idname = "amatista.autor_agregar_pildora"
+    bl_label = "Agregar píldora"
+    bl_description = "Agrega una idea de teoría que aparece en el momento elegido"
+
+    def execute(self, context):
+        a = context.scene.amatista_autor
+        try:
+            autor.agregar_pildora("", a.pil_titulo, a.pil_texto, a.pil_disparo, a.pil_objetivo, a.pil_teclas)
+        except ValueError as error:
+            return _error(self, error)
+        a.pil_titulo = a.pil_texto = a.pil_teclas = ""
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_autor_caso_prueba(bpy.types.Operator):
+    bl_idname = "amatista.autor_caso_prueba"
+    bl_label = "Guardar caso de prueba"
+    bl_description = (
+        "Guarda la foto de esta escena y lo que el motor dice de ella en «amatista_pruebas.json»: "
+        "pruebas sin escribir código (se corren con practicas.py probar)"
+    )
+
+    def execute(self, context):
+        try:
+            espera = autor.caso_de_prueba(context, context.scene.amatista_autor.caso_nombre)
+        except ValueError as error:
+            return _error(self, error)
+        resumen = "completada" if espera.get("completada") else f"paso actual: {espera.get('actual', '—')}"
+        self.report({"INFO"}, f"Caso guardado ({resumen}). Cópialo a pruebas.json de la práctica.")
+        return {"FINISHED"}
+
+
 CLASES = (
+    AMATISTA_OT_autor_agregar_pildora,
+    AMATISTA_OT_autor_caso_prueba,
     AMATISTA_OT_autor_nuevo,
     AMATISTA_OT_autor_desde_activa,
     AMATISTA_OT_autor_importar,

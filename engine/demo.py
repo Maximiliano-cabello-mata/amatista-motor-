@@ -10,7 +10,7 @@ from amatista_engine import create_default_engine  # noqa: E402
 from amatista_engine.models import SceneObject, SceneState  # noqa: E402
 from amatista_engine.practice import load_practice  # noqa: E402
 
-practice = load_practice(REPO / "practices" / "blender" / "level_1" / "mesa.json")
+practice = load_practice(REPO / "practices" / "archivo" / "v2" / "mesa.json")
 
 
 def pata(nombre, x, y):

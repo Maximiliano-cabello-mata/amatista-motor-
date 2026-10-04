@@ -1,0 +1,154 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bp.m3.nave",
+  "version": 1,
+  "title": "Nave espacial simétrica",
+  "level": 2,
+  "description": "Modela solo la mitad de una nave y deja que los modificadores Espejo y Subdivisión hagan el resto, sin destruir tu malla.",
+  "intro": "Los modificadores son filtros: cambian cómo se ve tu modelo sin tocar la malla. Hoy modelas media nave y el Espejo dibuja la otra mitad.",
+  "completion": "¡Terminaste el curso Principiante! Ya sabes moverte, modelar y usar modificadores. Se desbloquea Principiante-Intermedio: vas a pintar tu nave.",
+  "estimatedMinutes": 35,
+  "blender": {"min": "4.2"},
+  "skills": ["bl-modificadores", "bl-espejo", "bl-subdivision", "bl-aplicar-escala", "bl-malla-limpia"],
+  "tags": ["principiante", "modulo-3", "modificadores"],
+  "course": {"id": "blender_principiante", "module": 3, "lesson": "bp3_practica", "next": "blender.bpi.m1.pinta-nave"},
+  "review": ["blender.bp.m2.espada#extruir", "blender.bp.m2.espada#fusionar", "blender.bp.m2.espada#modos"],
+  "roles": {
+    "nave": {"label": "Nave", "description": "El cuerpo de tu nave: un solo objeto con sus modificadores."}
+  },
+  "tools": {"allowed": ["mesh.edit", "mesh.extrude", "mesh.loopcut", "mesh.merge", "select.box", "select.circle"]},
+  "pills": [
+    {
+      "id": "llave",
+      "title": "La llave inglesa",
+      "text": "Los modificadores viven en la pestaña de la llave inglesa (azul) del panel Propiedades. Agregar Modificador › Generar muestra Espejo y Subdivisión.",
+      "visual": "tab:MODIFIER",
+      "trigger": {"on": "start"},
+      "check": {"question": "¿Un modificador cambia tu malla original?", "options": ["Sí, para siempre", "No, es un filtro encima"], "answer": 1}
+    },
+    {
+      "id": "escala",
+      "title": "Ctrl + A: aplica la escala",
+      "text": "Si estiraste el cubo con S, Blender guarda esa escala aparte. Los modificadores se deforman con ella. Ctrl + A › Escala la deja en 1 sin cambiar la forma.",
+      "keys": ["Ctrl", "A"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "escala"},
+      "check": {"question": "¿Qué atajo aplica la escala?", "options": ["Ctrl + A", "Ctrl + S", "Shift + A"], "answer": 0}
+    },
+    {
+      "id": "espejo",
+      "title": "Espejo: modela la mitad",
+      "text": "El Espejo copia tu malla al otro lado de un eje. Borra la mitad del cubo (en Edición) y lo que hagas en un lado aparece en el otro.",
+      "visual": "tab:MODIFIER",
+      "trigger": {"on": "target", "target": "espejo"}
+    },
+    {
+      "id": "mitad",
+      "title": "Borra la mitad que sobra",
+      "text": "En Edición, Ctrl + R parte el cubo al centro. Selecciona las caras de un lado y pulsa X › Vértices. El Espejo rellena el hueco.",
+      "keys": ["X"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "una-mitad"}
+    },
+    {
+      "id": "subdivision",
+      "title": "Ctrl + 2: suaviza",
+      "text": "Subdivisión divide cada cara y redondea la forma. Ctrl + 1, 2 o 3 la agrega con ese nivel. Más de 3 vuelve lenta la computadora.",
+      "keys": ["Ctrl", "2"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "suave"},
+      "check": {"question": "¿Qué nivel de subdivisión basta casi siempre?", "options": ["1 a 3", "6", "10"], "answer": 0}
+    },
+    {
+      "id": "fusionar",
+      "title": "M › Por distancia",
+      "text": "Un E cancelado deja caras encimadas, y con Espejo y Subdivisión se notan como arrugas. M › Por distancia las une.",
+      "keys": ["M"],
+      "visual": "keys",
+      "trigger": {"on": "guard", "target": "malla-limpia"},
+      "once": false
+    }
+  ],
+  "targets": [
+    {
+      "id": "nave",
+      "title": "Tu nave",
+      "validator": "role.count",
+      "params": {"role": "nave", "equals": 1},
+      "weight": 10,
+      "tip": "Agrega un cubo (Shift+A › Malla › Cubo) y dile a Amatista que es tu nave.",
+      "hints": ["Pestaña Amatista › Es: Nave › Asignar rol."]
+    },
+    {
+      "id": "escala",
+      "title": "Escala aplicada",
+      "validator": "transform.scale_applied",
+      "params": {"role": "nave"},
+      "weight": 10,
+      "requires": ["nave"],
+      "tip": "En Modo Objeto: Ctrl+A › Escala.",
+      "hints": ["Mira el panel N › Elemento › Escala: tiene que decir 1, 1, 1."]
+    },
+    {
+      "id": "espejo",
+      "title": "Modificador Espejo en X",
+      "validator": "modifier.configured",
+      "params": {"role": "nave", "modifier": "MIRROR", "axis": "x"},
+      "weight": 20,
+      "requires": ["escala"],
+      "tip": "Llave inglesa › Agregar Modificador › Generar › Espejo. El eje X viene marcado.",
+      "hints": ["Si no ves la llave inglesa, selecciona la nave primero."]
+    },
+    {
+      "id": "una-mitad",
+      "title": "Modela solo una mitad",
+      "validator": "mesh.one_side",
+      "params": {"role": "nave", "axis": "x", "tolerance": 2},
+      "weight": 15,
+      "requires": ["espejo"],
+      "tip": "Tab, Ctrl+R al centro, selecciona un lado y X › Vértices.",
+      "hints": ["Activa Recortar (Clipping) en el Espejo para que el centro no se abra."]
+    },
+    {
+      "id": "forma",
+      "title": "Alas y cabina",
+      "validator": "mesh.face_count",
+      "params": {"role": "nave", "min": 20},
+      "weight": 20,
+      "requires": ["una-mitad"],
+      "tip": "Extruye (E) caras de un lado para hacer un ala y la cabina: el Espejo hace la otra.",
+      "hints": ["Selecciona la cara lateral y extrúyela hacia afuera dos veces: ya tienes un ala."]
+    },
+    {
+      "id": "suave",
+      "title": "Subdivisión entre 1 y 3",
+      "validator": "modifier.configured",
+      "params": {"role": "nave", "modifier": "SUBSURF", "min_levels": 1, "max_levels": 3},
+      "weight": 15,
+      "requires": ["forma"],
+      "tip": "Ctrl+2 en Modo Objeto agrega Subdivisión con nivel 2.",
+      "hints": ["Si el nivel está en 4 o más, bájalo en la llave inglesa (Niveles Vista)."]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda tu nave",
+      "validator": "file.named",
+      "params": {"contains": "nave"},
+      "weight": 10,
+      "requires": ["suave"],
+      "tip": "Ctrl+Shift+S: mi_nave.blend. La vas a pintar en el siguiente curso.",
+      "hints": ["Archivo › Guardar como, con un nombre que incluya «nave»."]
+    }
+  ],
+  "guards": [
+    {
+      "id": "malla-limpia",
+      "title": "Malla sin vértices encimados",
+      "validator": "mesh.no_duplicates",
+      "params": {"role": "nave"},
+      "fix": {"action": "merge_by_distance", "label": "Fusionar por distancia conmigo"},
+      "tip": "En Edición: A (todo), M › Por distancia.",
+      "messages": {"fail": "Hay caras encimadas en la nave: el Espejo y la Subdivisión las convierten en arrugas. Límpialas con M › Por distancia para seguir."}
+    }
+  ]
+}

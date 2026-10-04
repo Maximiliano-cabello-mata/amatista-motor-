@@ -1,0 +1,42 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bpi.m1.pinta-nave",
+  "casos": [
+    {
+      "nombre": "Nave sin materiales: pide crear tres",
+      "construir": [{"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave"}}],
+      "espera": {"completada": false, "actual": "materiales", "pildoras": ["vista-material", "principled"]}
+    },
+    {
+      "nombre": "Un material creado pero sin asignar no cuenta",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave"}},
+        {"material": {"objeto": "Nave", "nombre": "Casco"}},
+        {"material": {"objeto": "Nave", "nombre": "Cabina", "transmision": 1.0, "usado": false}},
+        {"material": {"objeto": "Nave", "nombre": "Motor", "metal": 1.0, "usado": false}}
+      ],
+      "espera": {"completada": false, "actual": "materiales", "mensaje_contiene": "1"}
+    },
+    {
+      "nombre": "Tres materiales pero ninguno es metal",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave"}},
+        {"material": {"objeto": "Nave", "nombre": "Casco"}},
+        {"material": {"objeto": "Nave", "nombre": "Cabina", "alfa": 0.3}},
+        {"material": {"objeto": "Nave", "nombre": "Motor", "color": [0.2, 0.2, 0.2]}}
+      ],
+      "espera": {"completada": false, "actual": "metal-brillante", "mensaje_contiene": "metal brillante"}
+    },
+    {
+      "nombre": "Solución: cristal, metal brillante, metal quemado y guardada",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave"}},
+        {"material": {"objeto": "Nave", "nombre": "Casco", "metal": 1.0, "rugosidad": 0.2}},
+        {"material": {"objeto": "Nave", "nombre": "Cabina", "transmision": 0.95, "rugosidad": 0.05}},
+        {"material": {"objeto": "Nave", "nombre": "Motor", "color": [0.15, 0.1, 0.08], "metal": 0.9, "rugosidad": 0.75}},
+        {"guardado": {"archivo": "mi_nave_pintada.blend"}}
+      ],
+      "espera": {"completada": true, "progreso_min": 100}
+    }
+  ]
+}

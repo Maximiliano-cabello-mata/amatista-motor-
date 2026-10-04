@@ -1,0 +1,174 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bp.m1.tren",
+  "version": 1,
+  "title": "Tren de juguete",
+  "level": 1,
+  "description": "Construye un tren con cubos y cilindros: agrégalos con Shift+A, escálalos con S, gíralos con R y ensámblalos con G.",
+  "intro": "Vas a armar un tren de juguete como si fuera un videojuego: cada pieza que colocas bien se ilumina en verde.",
+  "completion": "¡Tu tren está listo! Ya sabes agregar, mover, rotar y escalar. Se desbloquea el Módulo 2: Modelado.",
+  "estimatedMinutes": 25,
+  "blender": {"min": "4.2"},
+  "skills": ["bl-navegar-vista", "bl-agregar-primitivas", "bl-transformar", "bl-guardar-archivo"],
+  "tags": ["principiante", "modulo-1", "ensamblar"],
+  "course": {"id": "blender_principiante", "module": 1, "lesson": "bp1_practica", "next": "blender.bp.m2.espada"},
+  "starter": {"scene": "empty", "note": "Empieza con la escena vacía: el cubo, la luz y la cámara de inicio se quitan (puedes deshacer con Ctrl+Z)."},
+  "roles": {
+    "vagon": {"label": "Vagón", "description": "Un cubo estirado: el cuerpo de cada vagón o de la locomotora."},
+    "rueda": {"label": "Rueda", "description": "Un cilindro delgado y de pie."},
+    "chimenea": {"label": "Chimenea", "description": "Extra: un cilindro sobre la locomotora."}
+  },
+  "tools": {"allowed": ["view.navigate", "view.numpad", "object.add", "transform.move", "transform.rotate", "transform.scale", "object.duplicate", "file.save"]},
+  "pills": [
+    {
+      "id": "ejes",
+      "title": "Los tres ejes",
+      "text": "Blender mide el mundo en tres ejes: X rojo (izquierda y derecha), Y verde (adelante y atrás) y Z azul (arriba y abajo). Míralos en la cuadrícula del suelo.",
+      "visual": "axes",
+      "trigger": {"on": "start"},
+      "check": {"question": "¿Qué eje apunta hacia arriba?", "options": ["X (rojo)", "Y (verde)", "Z (azul)"], "answer": 2}
+    },
+    {
+      "id": "navegar",
+      "title": "Mueve la vista, no el mundo",
+      "text": "Gira la vista con la rueda presionada, desplázala con Shift + rueda presionada y acércate girando la rueda. Mover la vista nunca mueve tus objetos.",
+      "keys": ["Rueda", "Shift"],
+      "trigger": {"on": "start"}
+    },
+    {
+      "id": "agregar",
+      "title": "Shift + A: agregar formas",
+      "text": "Shift + A abre el menú Agregar. En Malla eliges Cubo, Cilindro o Esfera. La forma nueva aparece en el cursor 3D (la mira roja y blanca).",
+      "keys": ["Shift", "A"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "vagones"},
+      "check": {"question": "¿Qué atajo agrega una forma nueva?", "options": ["Shift + A", "Ctrl + S", "Tab"], "answer": 0}
+    },
+    {
+      "id": "grs",
+      "title": "G mueve, R rota, S escala",
+      "text": "Con un objeto seleccionado: G mueve, R rota y S escala. Después pulsa X, Y o Z para usar un solo eje, escribe un número y confirma con Enter.",
+      "keys": ["G", "R", "S"],
+      "visual": "keys",
+      "trigger": {"on": "selection"},
+      "check": {"question": "¿Qué tecla cambia el tamaño de un objeto?", "options": ["G", "R", "S"], "answer": 2}
+    },
+    {
+      "id": "vistas",
+      "title": "Mira desde el frente",
+      "text": "En el teclado numérico: 1 es la vista de frente, 3 de lado y 7 desde arriba. De frente se nota enseguida si una rueda flota sobre el suelo.",
+      "keys": ["1", "3", "7"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "ruedas-al-suelo"}
+    }
+  ],
+  "targets": [
+    {
+      "id": "vagones",
+      "title": "Dos vagones",
+      "validator": "role.count",
+      "params": {"role": "vagon", "min": 2},
+      "weight": 15,
+      "tip": "Cada vagón es un cubo. Agrega uno y después duplícalo con Shift+D.",
+      "hints": ["Shift+A › Malla › Cubo, y en la pestaña Amatista dile que es «Vagón».", "Con el vagón seleccionado, Shift+D crea una copia que conserva el rol."],
+      "guide": {"why": "Un tren se arma con piezas sencillas: el cubo es la base de casi todo en 3D."}
+    },
+    {
+      "id": "vagones-largos",
+      "title": "Vagones alargados",
+      "validator": "shape.proportion",
+      "params": {"role": "vagon", "axis": "x", "min_ratio": 1.3},
+      "weight": 10,
+      "requires": ["vagones"],
+      "tip": "Estira cada vagón solo a lo largo: S, luego X, y mueve el ratón.",
+      "hints": ["Selecciona un vagón y pulsa S y luego X.", "Escribe 1.6 y Enter: quedará más largo que alto."]
+    },
+    {
+      "id": "ruedas",
+      "title": "Cuatro ruedas",
+      "validator": "object.count",
+      "params": {"role": "rueda", "primitive": "cylinder", "min": 4},
+      "weight": 15,
+      "requires": ["vagones"],
+      "tip": "Las ruedas son cilindros. Haz una y duplícala.",
+      "hints": ["Shift+A › Malla › Cilindro y asígnale el rol «Rueda».", "Shift+D duplica la rueda con su rol."],
+      "messages": {"pass": "¡Cuatro ruedas listas!"}
+    },
+    {
+      "id": "ruedas-de-pie",
+      "title": "Ruedas de pie y delgadas",
+      "validator": "shape.thinnest_axis",
+      "params": {"role": "rueda", "axis": "horizontal", "max_ratio": 0.5},
+      "weight": 15,
+      "requires": ["ruedas"],
+      "tip": "Aplana el cilindro (S Z 0.2) y luego ponlo de pie (R X 90).",
+      "hints": ["S, Z, 0.2, Enter: el cilindro queda como una moneda.", "R, X, 90, Enter: la moneda se pone de pie como una rueda."],
+      "guide": {
+        "why": "Escalar en un solo eje cambia la forma; rotar la orienta. Son las dos herramientas que más vas a usar.",
+        "steps": [
+          {"text": "Selecciona una rueda", "keys": ["Clic"]},
+          {"text": "Aplánala en Z", "keys": ["S", "Z", "0.2", "Enter"]},
+          {"text": "Ponla de pie girándola en X", "keys": ["R", "X", "90", "Enter"]}
+        ]
+      }
+    },
+    {
+      "id": "ruedas-al-suelo",
+      "title": "Ruedas en el suelo",
+      "validator": "spatial.grounded",
+      "params": {"role": "rueda", "height": 0, "tolerance": 0.1},
+      "weight": 15,
+      "requires": ["ruedas-de-pie"],
+      "tip": "Mira de frente (1) y baja cada rueda con G Z hasta tocar la línea del suelo.",
+      "hints": ["Pulsa 1 en el teclado numérico para ver de frente.", "G, Z y mueve el ratón hasta que la rueda toque el suelo."]
+    },
+    {
+      "id": "ruedas-unidas",
+      "title": "Ruedas pegadas a los vagones",
+      "validator": "spatial.touching",
+      "params": {"role": "rueda", "reference_role": "vagon", "tolerance": 0.1},
+      "weight": 15,
+      "requires": ["ruedas-al-suelo"],
+      "tip": "Cada rueda debe tocar el costado o la base de un vagón.",
+      "hints": ["Mira desde arriba (7) para alinear las ruedas con el vagón.", "G, Y mueve la rueda hacia el costado del vagón."]
+    },
+    {
+      "id": "tren-unido",
+      "title": "Vagones enganchados",
+      "validator": "spatial.touching",
+      "params": {"role": "vagon", "reference_role": "vagon", "tolerance": 0.3},
+      "weight": 10,
+      "requires": ["vagones-largos"],
+      "tip": "Pon los vagones en fila, casi tocándose (G X).",
+      "hints": ["Selecciona un vagón y muévelo solo en X con G, X."]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda tu tren",
+      "validator": "file.named",
+      "params": {"contains": "tren"},
+      "weight": 5,
+      "requires": ["ruedas-unidas", "tren-unido"],
+      "tip": "Ctrl+Shift+S y nómbralo, por ejemplo, mi_tren.blend.",
+      "hints": ["Archivo › Guardar como, y escribe un nombre con «tren»."]
+    },
+    {
+      "id": "guardado",
+      "title": "Sin cambios pendientes",
+      "validator": "file.saved",
+      "weight": 0,
+      "requires": ["guardar"],
+      "optional": true,
+      "tip": "Ctrl+S cada vez que termines un cambio importante."
+    },
+    {
+      "id": "chimenea",
+      "title": "Extra: una chimenea",
+      "validator": "object.count",
+      "params": {"role": "chimenea", "primitive": "cylinder", "min": 1},
+      "weight": 0,
+      "optional": true,
+      "tip": "Un cilindro delgado y alto sobre la locomotora, con el rol «Chimenea»."
+    }
+  ]
+}

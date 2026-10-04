@@ -502,6 +502,17 @@ ENTRENADORES: Dict[str, Callable[[Contexto], Parcial]] = {
 }
 
 
+def coach_logic_any(ctx: Contexto) -> Parcial:
+    """«Una de varias»: guía con el entrenador de la primera opción."""
+    opciones = ctx.target.params.get("options") or []
+    if ctx.result.passed or not opciones:
+        return coach_generico(ctx)
+    primera = opciones[0]
+    sub = replace(ctx.target, validator=primera.get("validator", ""), params=dict(primera.get("params") or {}))
+    entrenador = ENTRENADORES.get(sub.validator, coach_generico)
+    return entrenador(Contexto(ctx.practice, sub, replace(ctx.result, details={}), ctx.scene))
+
+
 def coach_generico(ctx: Contexto) -> Parcial:
     d = ctx.result.details
     nombres = list(d.get("missing") or []) + [f.get("object") for f in d.get("failed") or [] if f.get("object")]
@@ -553,8 +564,36 @@ def guide_target(
     )
 
 
+def guide_guard(practice: PracticeDefinition, scene: SceneState, report: EvaluationReport) -> Optional[Guidance]:
+    """Motor v3: si un vigilante pausó el progreso, la guía muestra cómo arreglarlo."""
+    if not report.paused_by:
+        return None
+    guard = practice.guard(report.paused_by)
+    resultado = next((r for r in report.guards if r.target_id == report.paused_by), None)
+    if guard is None or resultado is None:
+        return None
+    total = len([s for s in report.steps if not s.optional])
+    base = guide_target(practice, guard, resultado, scene, report.step_number, total)
+    accion = base.action
+    if guard.fix is not None:
+        objetos = accion.objects if accion is not None else ()
+        accion = GuideAction(guard.fix.action, guard.fix.label or (accion.label if accion else "Arreglarlo conmigo"),
+                             objetos)
+    return replace(
+        base,
+        title=f"Progreso en pausa: {guard.title or guard.id}",
+        tone="ojo",
+        action=accion,
+        completed=False,
+        paused=True,
+    )
+
+
 def build_guidance(practice: PracticeDefinition, scene: SceneState, report: EvaluationReport) -> Guidance:
     """Guía del paso actual. Con la práctica terminada, la tarjeta de cierre."""
+    pausa = guide_guard(practice, scene, report)
+    if pausa is not None:
+        return pausa
     total = len([s for s in report.steps if not s.optional])
     if report.completed and (report.current_target_id is None or practice.target(report.current_target_id).optional):
         extra = practice.target(report.current_target_id) if report.current_target_id else None
@@ -599,4 +638,9 @@ def build_guidance(practice: PracticeDefinition, scene: SceneState, report: Eval
     return replace(guia, highlights=guia.highlights + tuple(hechos))
 
 
-__all__ = ["ACTUAL", "ENTRENADORES", "build_guidance", "delta_amable", "factor_amable", "guide_target", "objetivo_amable"]
+from .coach_v3 import ENTRENADORES_V3  # noqa: E402  (usa los ayudantes de arriba)
+
+ENTRENADORES.update(ENTRENADORES_V3)
+ENTRENADORES["logic.any"] = coach_logic_any
+
+__all__ = ["ACTUAL", "ENTRENADORES", "build_guidance", "guide_guard", "delta_amable", "factor_amable", "guide_target", "objetivo_amable"]

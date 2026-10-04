@@ -60,6 +60,12 @@ class GuideAction:
     save, focus. El add-on selecciona `objects`, encuadra la vista y arranca
     la herramienta (por ejemplo Escalar restringido a `axis`); el alumno la
     termina con el ratón o escribiendo `value`.
+
+    Motor v3: add_primitive (primitive), add_modifier (modifier), open_tab
+    (tab: MODIFIER, MATERIAL, RENDER…), merge_by_distance, edit_mode,
+    object_mode, add_light (light_type), add_camera, align_camera,
+    set_engine, render (F12), insert_keyframe (axis), new_material y
+    clear_scene.
     """
 
     kind: str
@@ -68,6 +74,11 @@ class GuideAction:
     axis: Optional[str] = None
     value: Optional[float] = None
     role: Optional[str] = None
+    primitive: Optional[str] = None
+    modifier: Optional[str] = None
+    tab: Optional[str] = None
+    light_type: Optional[str] = None
+    option: Optional[str] = None  # set_engine: EEVEE/CYCLES; insert_keyframe: location/rotation_euler/scale
 
 
 @dataclass(frozen=True)
@@ -84,6 +95,7 @@ class Guidance:
     cues: Tuple[VisualCue, ...] = ()
     action: Optional[GuideAction] = None
     completed: bool = False
+    paused: bool = False  # motor v3: un vigilante detuvo el progreso
 
 
 # --- Acompañamiento ---------------------------------------------------------------
@@ -94,6 +106,8 @@ MEJORANDO = "mejorando"
 RETROCESO = "retroceso"
 OFRECER_AYUDA = "ofrecer_ayuda"
 PRACTICA_COMPLETA = "practica_completa"
+PAUSA = "pausa"  # motor v3: un vigilante detuvo el progreso
+REANUDA = "reanuda"  # el vigilante volvió a cumplirse
 
 
 @dataclass(frozen=True)
@@ -108,7 +122,7 @@ class Intervention:
     @property
     def dialog(self) -> bool:
         """True si merece una ventana; False si basta un aviso que se desvanece."""
-        return self.kind in (OFRECER_AYUDA, PRACTICA_COMPLETA)
+        return self.kind in (OFRECER_AYUDA, PRACTICA_COMPLETA, PAUSA)
 
 
 def guidance_to_dict(g: Optional[Guidance]) -> Optional[Dict[str, Any]]:
@@ -135,6 +149,12 @@ def guidance_to_dict(g: Optional[Guidance]) -> Optional[Dict[str, Any]]:
             "axis": g.action.axis,
             "value": g.action.value,
             "role": g.action.role,
+            "primitive": g.action.primitive,
+            "modifier": g.action.modifier,
+            "tab": g.action.tab,
+            "light_type": g.action.light_type,
+            "option": g.action.option,
         },
+        "paused": g.paused,
         "completed": g.completed,
     }

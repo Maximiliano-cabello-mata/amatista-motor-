@@ -9,4 +9,4 @@ from .bootstrap import create_default_engine, create_default_registry
 from .engine import AmatistaEngine
 
 __all__ = ["AmatistaEngine", "create_default_engine", "create_default_registry"]
-__version__ = "0.3.0"
+__version__ = "3.0.0"

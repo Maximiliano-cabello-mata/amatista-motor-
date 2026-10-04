@@ -1,0 +1,71 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bpi.m2.tres-puntos",
+  "casos": [
+    {
+      "nombre": "Estudio inicial: modelo sin luces, sin cámara y en Workbench",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "loc": [0, 0, 0.5], "rol": "modelo"}},
+        {"plano": {"nombre": "Piso"}},
+        {"motor": "BLENDER_WORKBENCH"}
+      ],
+      "espera": {"completada": false, "actual": "camara", "pildoras": ["camara"]}
+    },
+    {
+      "nombre": "Con cámara y EEVEE: falta la luz de Área",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "loc": [0, 0, 0.5], "rol": "modelo"}},
+        {"camara": {"loc": [8, -8, 5]}},
+        {"luz": {"nombre": "Light", "tipo": "POINT"}}
+      ],
+      "espera": {"completada": false, "actual": "luz-area", "pildoras": ["luces"]}
+    },
+    {
+      "nombre": "Tres luces pero todas delante",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "loc": [0, 0, 0.5], "rol": "modelo"}},
+        {"camara": {"loc": [0, -10, 4]}},
+        {"luz": {"nombre": "Principal", "tipo": "AREA", "loc": [-4, -5, 4], "energia": 500, "mira_a": [0, 0, 0]}},
+        {"luz": {"nombre": "Relleno", "tipo": "AREA", "loc": [4, -5, 3], "energia": 200, "mira_a": [0, 0, 0]}},
+        {"luz": {"nombre": "Otra", "tipo": "AREA", "loc": [0, -6, 6], "energia": 300, "mira_a": [0, 0, 0]}}
+      ],
+      "espera": {"completada": false, "actual": "tres-puntos", "mensaje_contiene": "detrás"}
+    },
+    {
+      "nombre": "Relleno igual de fuerte que la principal",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "loc": [0, 0, 0.5], "rol": "modelo"}},
+        {"camara": {"loc": [0, -10, 4]}},
+        {"luz": {"nombre": "Principal", "tipo": "AREA", "loc": [-4, -5, 4], "energia": 500}},
+        {"luz": {"nombre": "Relleno", "tipo": "AREA", "loc": [4, -5, 3], "energia": 500}},
+        {"luz": {"nombre": "Contraluz", "tipo": "SPOT", "loc": [0, 5, 5], "energia": 800}}
+      ],
+      "espera": {"completada": false, "actual": "tres-puntos", "mensaje_contiene": "Relleno"}
+    },
+    {
+      "nombre": "Todo listo menos el render (F12)",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "loc": [0, 0, 0.5], "rol": "modelo"}},
+        {"camara": {"loc": [0, -10, 4]}},
+        {"luz": {"nombre": "Principal", "tipo": "AREA", "loc": [-4, -5, 4], "energia": 500}},
+        {"luz": {"nombre": "Relleno", "tipo": "AREA", "loc": [4, -5, 3], "energia": 200}},
+        {"luz": {"nombre": "Contraluz", "tipo": "SPOT", "loc": [0, 5, 5], "energia": 800}}
+      ],
+      "espera": {"completada": false, "actual": "render", "pildoras": ["f12"]}
+    },
+    {
+      "nombre": "Solución: tres puntos, EEVEE, render y guardado",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "loc": [0, 0, 0.5], "rol": "modelo"}},
+        {"plano": {"nombre": "Piso"}},
+        {"camara": {"loc": [0, -10, 4]}},
+        {"luz": {"nombre": "Principal", "tipo": "AREA", "loc": [-4, -5, 4], "energia": 500}},
+        {"luz": {"nombre": "Relleno", "tipo": "AREA", "loc": [4, -5, 3], "energia": 200}},
+        {"luz": {"nombre": "Contraluz", "tipo": "SPOT", "loc": [0, 5, 5], "energia": 800}},
+        {"renders": 1},
+        {"guardado": {"archivo": "mi_estudio.blend"}}
+      ],
+      "espera": {"completada": true, "progreso_min": 100}
+    }
+  ]
+}

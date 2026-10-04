@@ -25,7 +25,22 @@ class AmatistaEngine:
         self.registry = registry
         self.tools = tools
 
-    def _validar(self, target, scene: SceneState) -> ValidationResult:
+    def _validar(self, target, scene: SceneState, practice: Optional[PracticeDefinition] = None) -> ValidationResult:
+        resultado = self._validar_crudo(target, scene)
+        if practice is None or not practice.roles:
+            return resultado
+        # Motor v3: los mensajes nombran el rol como lo ve el alumno («Vagón», no «vagon»).
+        mensaje = resultado.message
+        for rol in practice.roles:
+            if (target.params or {}).get("role") != rol.id and rol.id not in str((target.params or {}).get("reference_role", "")):
+                continue
+            if rol.label and rol.label != rol.id:
+                mensaje = mensaje.replace(f"«{rol.id}»", f"«{rol.label}»")
+        if mensaje == resultado.message:
+            return resultado
+        return ValidationResult(resultado.target_id, resultado.validator, resultado.passed, mensaje, resultado.details)
+
+    def _validar_crudo(self, target, scene: SceneState) -> ValidationResult:
         validator = self.registry.get(target.validator)
         if validator is None:
             return ValidationResult(
@@ -58,7 +73,7 @@ class AmatistaEngine:
         return result
 
     def evaluate(self, practice: PracticeDefinition, scene: SceneState) -> EvaluationReport:
-        results = tuple(self._validar(target, scene) for target in practice.targets)
+        results = tuple(self._validar(target, scene, practice) for target in practice.targets)
         by_id = {result.target_id: result for result in results}
         progress = calculate_progress(practice.targets, by_id)
         obligatorios = [t for t in practice.targets if not t.optional]
@@ -67,6 +82,13 @@ class AmatistaEngine:
 
         usados = self.tools.detect_used(scene) if self.tools else ()
         avisos = self.tools.warnings(practice, usados) if self.tools else ()
+
+        # Motor v3: un vigilante que falla pausa el progreso (no se completa la
+        # práctica hasta arreglarlo) y la guía muestra su arreglo.
+        vigilancia = tuple(self._validar(guard, scene, practice) for guard in practice.guards)
+        pausa = next((r.target_id for r in vigilancia if r.passed is False), None)
+        if pausa is not None:
+            completed = False
 
         return EvaluationReport(
             practice_id=practice.id,
@@ -78,7 +100,9 @@ class AmatistaEngine:
             current_target_id=actual,
             tool_warnings=avisos,
             tools_used=usados,
-            needs_update=any(r.details.get("reason") == "unknown_validator" for r in results),
+            needs_update=any(r.details.get("reason") == "unknown_validator" for r in results + vigilancia),
+            guards=vigilancia,
+            paused_by=pausa,
         )
 
     def guide(self, practice: PracticeDefinition, scene: SceneState, report: Optional[EvaluationReport] = None):
@@ -87,12 +111,19 @@ class AmatistaEngine:
 
         return build_guidance(practice, scene, report or self.evaluate(practice, scene))
 
+    def pills(self, practice: PracticeDefinition, scene: SceneState, report: EvaluationReport, seen=()):
+        """Píldoras de teoría que tocan ahora (motor v3)."""
+        from .pedagogy.pills import pills_for
+
+        usados = report.tools_used
+        return pills_for(practice, scene, report, seen=seen, tools_used=usados)
+
     def evaluate_target(self, practice: PracticeDefinition, scene: SceneState, target_id: str) -> ValidationResult:
         """Solo un objetivo (el depurador del modo desarrollador)."""
-        target = practice.target(target_id)
+        target = practice.target(target_id) or practice.guard(target_id)
         if target is None:
             raise KeyError(target_id)
-        return self._validar(target, scene)
+        return self._validar(target, scene, practice)
 
     def targets_for_event(self, practice: PracticeDefinition, event: str):
         """Objetivos que un evento invalida (sección 16: no reevaluar todo)."""

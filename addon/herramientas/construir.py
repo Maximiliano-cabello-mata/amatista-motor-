@@ -2,7 +2,7 @@
 
 Uso desde la terminal (en la raíz del repositorio):
 
-    python addon/herramientas/construir.py                      # dist/amatista-0.3.0.zip
+    python addon/herramientas/construir.py                      # dist/amatista-3.0.0.zip
     python addon/herramientas/construir.py --sistema windows \\
         --servidor https://api.ejemplo.cl --plataforma https://ejemplo.cl
 
@@ -13,7 +13,8 @@ Qué hace:
 1. Copia addon/amatista_blender/ (sin pruebas ni cachés).
 2. Mete Amatista Engine dentro (amatista_blender/amatista_engine/) para que la
    extensión no dependa de nada instalado aparte.
-3. Copia las prácticas de practices/blender/ a practicas/ (funcionan sin red).
+3. Copia las prácticas de practices/blender/ (cursos.json, practica.json e imágenes) a
+   practicas/ (funcionan sin red).
 4. Escribe config.json con las direcciones del servidor y de la plataforma y,
    si se pide, un vínculo de un solo uso para conectar la cuenta sin pasos.
 5. Comprime con fechas fijas: el mismo código produce el mismo .zip (y el
@@ -105,7 +106,8 @@ def construir_extension(servidor: str = "http://localhost:8000", plataforma: str
         for ruta, nombre in _archivos(MOTOR):
             _agregar(zf, f"amatista_engine/{nombre}", ruta.read_bytes())
         for ruta, nombre in _archivos(PRACTICAS):
-            if ruta.suffix == ".json":
+            # Prácticas, mapa de cursos e imágenes de las píldoras; los casos de prueba se quedan en el repo.
+            if ruta.suffix in (".json", ".svg", ".png") and ruta.name != "pruebas.json":
                 _agregar(zf, f"practicas/{nombre}", ruta.read_bytes())
         config = configuracion(servidor, plataforma, canal, vinculo)
         _agregar(zf, "config.json", (json.dumps(config, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from ..registry import ParamSpec as P
 from ..registry import ValidatorRegistry
-from . import mesh, objects, scene, transforms
+from . import animation, lighting, logic, materials, mesh, objects, scene, shape, spatial, transforms
 
 # Parámetros comunes del selector de objetos (validators/base.py).
 SELECTOR = (
@@ -18,6 +18,7 @@ SELECTOR = (
     P("name", "text", "Nombre exacto"),
     P("name_prefix", "text", "Nombre empieza con"),
     P("type", "object_type", "Tipo de objeto"),
+    P("primitive", "primitive", "Primitiva (cube, cylinder…)"),
 )
 CANTIDAD = (
     P("equals", "int", "Exactamente"),
@@ -118,7 +119,8 @@ def register_builtin_validators(registry: ValidatorRegistry) -> None:
     )
     r(
         "scene.light_exists", scene.light_exists, label="Luz", category="escena",
-        description="La escena tiene luces.", params=CANTIDAD, watch=("OBJECT_ADDED",),
+        description="La escena tiene luces (de un tipo, si se indica: AREA, SUN, POINT, SPOT).",
+        params=CANTIDAD + (P("light_type", "light_type", "Tipo de luz"),), watch=("OBJECT_ADDED", "OBJECT_DATA"),
     )
     r(
         "file.saved", scene.file_saved, label="Archivo guardado", category="archivo",
@@ -128,6 +130,139 @@ def register_builtin_validators(registry: ValidatorRegistry) -> None:
         "file.named", scene.file_named, label="Nombre del archivo", category="archivo",
         description="El nombre del .blend incluye un texto.",
         params=(P("contains", "text", "Contiene", required=True),), watch=("FILE_SAVED",),
+    )
+    _registrar_v3(registry)
+
+
+def _registrar_v3(registry: ValidatorRegistry) -> None:
+    """Validadores del motor v3 (plan de estudios de Blender, docs/motor/etapas/etapa-3.md)."""
+    r = registry.register
+    # --- Forma y ensamblaje (módulo 1: tren de juguete) ---
+    r(
+        "shape.thinnest_axis", shape.thinnest_axis, label="Eje más delgado", category="forma",
+        description="El lado más delgado del objeto está en un eje (x, y, z u horizontal): ruedas de pie, tablas planas.",
+        params=SELECTOR + (P("axis", "text", "Eje (x, y, z, horizontal)", default="horizontal"),
+                           P("max_ratio", "float", "Delgadez máxima", default=0.6)),
+        watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
+    )
+    r(
+        "shape.proportion", shape.proportion, label="Proporción", category="forma",
+        description="El objeto mide en un eje al menos N veces su otra medida mayor (alargado).",
+        params=SELECTOR + (P("axis", "axis", "Eje", default="z"), P("min_ratio", "float", "Veces como mínimo", default=2.0),
+                           P("max_ratio", "float", "Veces como máximo")),
+        watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
+    )
+    r(
+        "spatial.grounded", spatial.grounded, label="Apoyado en el suelo", category="relaciones",
+        description="La parte más baja del objeto queda a una altura (0 = el suelo).",
+        params=SELECTOR + (P("height", "float", "Altura", default=0.0), P("tolerance", "float", "Tolerancia", default=0.05)),
+        watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
+    )
+    r(
+        "spatial.touching", spatial.touching, label="Toca a", category="relaciones",
+        description="Cada objeto toca (por su caja) al menos un objeto de referencia: piezas ensambladas.",
+        params=SELECTOR + (
+            P("reference_role", "role", "Rol de referencia"),
+            P("reference", "text", "Nombre de referencia"),
+            P("reference_primitive", "primitive", "Primitiva de referencia"),
+            P("tolerance", "float", "Tolerancia", default=0.05),
+        ),
+        watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
+    )
+    # --- Malla y modificadores (módulos 2 y 3) ---
+    r(
+        "mesh.no_duplicates", mesh.no_duplicates, label="Malla sin vértices encimados", category="malla",
+        description="No hay vértices duplicados (E y cancelar). Úsalo como vigilante con el arreglo merge_by_distance.",
+        params=SELECTOR + (P("max", "int", "Máximo permitido", default=0),), watch=("OBJECT_DATA",), selects=True,
+    )
+    r(
+        "mesh.one_side", mesh.one_side, label="Solo una mitad", category="malla",
+        description="La malla base vive de un solo lado del eje: el modificador Espejo dibuja la otra mitad.",
+        params=SELECTOR + (P("axis", "axis", "Eje", default="x"), P("side", "text", "Lado (negative, positive, any)"),
+                           P("tolerance", "int", "Vértices de tolerancia", default=0)),
+        watch=("OBJECT_DATA",), selects=True,
+    )
+    r(
+        "modifier.configured", mesh.modifier_configured, label="Modificador configurado", category="malla",
+        description="Modificador con sus ajustes: eje del espejo, niveles de subdivisión y encendido.",
+        params=SELECTOR + (
+            P("modifier", "modifier", "Modificador", required=True),
+            P("axis", "axis", "Eje del espejo"),
+            P("only_axis", "bool", "Solo ese eje"),
+            P("min_levels", "int", "Niveles mínimos"),
+            P("max_levels", "int", "Niveles máximos"),
+            P("enabled", "bool", "Encendido", default=True),
+        ),
+        watch=("OBJECT_MODIFIER",), selects=True,
+    )
+    # --- Materiales (módulo 4) ---
+    r(
+        "material.distinct", materials.distinct, label="Materiales distintos", category="materiales",
+        description="Cantidad de materiales distintos que pintan caras (equals, min, max).",
+        params=SELECTOR + CANTIDAD, watch=("OBJECT_DATA",), selects=True,
+    )
+    r(
+        "material.matches", materials.matches, label="Material con propiedades", category="materiales",
+        description="Hay materiales con Metálico, Rugosidad, Transmisión o Alfa en un rango (metal brillante, vidrio…).",
+        params=SELECTOR + (
+            P("metallic_min", "float", "Metálico mínimo"), P("metallic_max", "float", "Metálico máximo"),
+            P("roughness_min", "float", "Rugosidad mínima"), P("roughness_max", "float", "Rugosidad máxima"),
+            P("transmission_min", "float", "Transmisión mínima"), P("alpha_max", "float", "Alfa máximo"),
+            P("count", "int", "Cuántos materiales", default=1), P("label", "text", "Nombre para el alumno"),
+        ),
+        watch=("OBJECT_DATA",), selects=True,
+    )
+    # --- Luces, cámara y render (módulo 5) ---
+    luces = ("OBJECT_ADDED", "OBJECT_TRANSFORM", "OBJECT_DATA")
+    r(
+        "camera.active", lighting.camera_active, label="Cámara activa", category="escena",
+        description="La escena tiene una cámara activa (la que usa F12).", watch=("OBJECT_ADDED", "OBJECT_DATA"),
+    )
+    r(
+        "camera.frames", lighting.camera_frames, label="Encuadre", category="escena",
+        description="La cámara mira al modelo (selector o todas las mallas).",
+        params=SELECTOR + (P("margin", "float", "Margen del encuadre", default=1.0),), watch=luces, selects=True,
+    )
+    r(
+        "light.three_point", lighting.three_point, label="Iluminación de tres puntos", category="escena",
+        description="Principal y relleno delante (uno a cada lado) y contraluz detrás, vistos desde la cámara.",
+        params=SELECTOR + (P("fill_weaker", "bool", "El relleno es más suave", default=True),), watch=luces, selects=True,
+    )
+    r(
+        "render.engine", lighting.render_engine, label="Motor de render", category="escena",
+        description="El motor de render es EEVEE, Cycles o Workbench.",
+        params=(P("engine", "text", "Motor (EEVEE, CYCLES)", default="EEVEE"),), watch=("OBJECT_DATA",),
+    )
+    r(
+        "render.done", lighting.render_done, label="Render hecho (F12)", category="escena",
+        description="El alumno ya hizo al menos un render final con F12.",
+        params=(P("min", "int", "Renders mínimos", default=1),), watch=("OBJECT_DATA",),
+    )
+    # --- Animación (módulo 6) ---
+    anim = ("OBJECT_DATA", "OBJECT_TRANSFORM")
+    r(
+        "animation.keyframes", animation.keyframes, label="Fotogramas clave", category="animación",
+        description="El objeto tiene al menos N fotogramas clave en una propiedad y un eje.",
+        params=SELECTOR + (P("property", "text", "Propiedad (location, rotation_euler, scale)", default="location"),
+                           P("axis", "axis", "Eje", default="z"), P("min", "int", "Mínimo", default=2)),
+        watch=anim, selects=True,
+    )
+    r(
+        "animation.varies", animation.varies, label="La animación cambia", category="animación",
+        description="Los valores cambian en el tiempo: diferencia mínima, punto más bajo/alto y rebote.",
+        params=SELECTOR + (
+            P("property", "text", "Propiedad", default="location"), P("axis", "axis", "Eje", default="z"),
+            P("min_delta", "float", "Cambio mínimo"), P("low_max", "float", "El más bajo llega a"),
+            P("high_min", "float", "El más alto llega a"), P("bounce", "bool", "Rebota"),
+            P("ground", "bool", "Toca el suelo"), P("tolerance", "float", "Tolerancia", default=0.15),
+        ),
+        watch=anim, selects=True,
+    )
+    # --- Lógica ---
+    r(
+        "logic.any", logic.make_any(registry), label="Una de varias opciones", category="lógica",
+        description="Pasa si se cumple cualquiera de las opciones (cada una es un validador con sus parámetros).",
+        params=(P("options", "options", "Opciones", required=True),),
     )
 
 

@@ -16,7 +16,7 @@ from pathlib import Path
 import bpy
 from bpy.app.handlers import persistent
 
-from . import _motor, ajustes, guia, red
+from . import _motor, ajustes, aprendizaje, escenarios, guia, red
 
 # Estado de la sesión de Blender (no se guarda en el .blend).
 ESTADO = {
@@ -35,6 +35,7 @@ ESTADO = {
     # Amatista escribe sus propiedades en la escena y eso marca el archivo
     # como modificado: «guardado» se decide por los cambios del alumno.
     "cambios_desde_guardar": True,
+    "motor_render": "",
 }
 
 SYNC_SIN_CUENTA = "sin_cuenta"
@@ -47,12 +48,17 @@ SYNC_ERROR = "error"
 # --- Catálogo -------------------------------------------------------------------
 
 
-def _carpeta_paquete():
+def carpeta_paquete():
     """Prácticas incluidas en el paquete (o las del repositorio al desarrollar)."""
     empaquetadas = Path(__file__).resolve().parent / "practicas"
     if empaquetadas.is_dir():
         return empaquetadas
     return Path(__file__).resolve().parents[2] / "practices"
+
+
+_carpeta_paquete = carpeta_paquete
+# Solo el modo desarrollador ve las prácticas de prueba y las archivadas (v2).
+CARPETAS_DESARROLLO = ("sandbox", "archivo")
 
 
 def _carpeta_cache():
@@ -76,6 +82,8 @@ def _meta(datos, origen):
         "level": datos.get("level", 1),
         "minutes": datos.get("estimatedMinutes"),
         "version": datos.get("version", 1),
+        "course": (datos.get("course") or {}).get("id"),
+        "module": (datos.get("course") or {}).get("module"),
         "origen": origen,
         "definicion": datos,
     }
@@ -86,8 +94,8 @@ def catalogo():
     resultado = {}
     for ruta in sorted(_carpeta_paquete().rglob("*.json")):
         datos = _leer_json(ruta)
-        if isinstance(datos, dict) and datos.get("schema") == _motor.practica.SUPPORTED_SCHEMA:
-            if "sandbox" in ruta.parts and not ajustes.es_desarrollador():
+        if isinstance(datos, dict) and datos.get("schema") in _motor.practica.SUPPORTED_SCHEMAS:
+            if set(CARPETAS_DESARROLLO) & set(ruta.parts) and not ajustes.es_desarrollador():
                 continue
             resultado[datos["id"]] = _meta(datos, "paquete")
     try:
@@ -197,10 +205,30 @@ def activar(context, datos, origen="paquete"):
         ESTADO["aprobados_antes"] = {}
         ESTADO["sync"] = ""
         guia.reiniciar()
+        aprendizaje.reiniciar_sesion()
     if origen != "borrador":
         guardar_en_cache(datos)
+    try:
+        preparada = escenarios.preparar(sc, resultado.practice)
+    except Exception as error:  # noqa: BLE001 - una escena de inicio rota no impide practicar
+        preparada = None
+        print(f"[Amatista] No se pudo preparar la escena: {error}")
+    if preparada:
+        guia.avisar("Escena lista", preparada, "animo")
     evaluar(context, "abrir")
+    if nueva:
+        _abrir_teoria(resultado.practice)
     return resultado
+
+
+def _abrir_teoria(practica):
+    """Al abrir: primero el repaso de lo anterior (si toca) y luego la píldora de inicio."""
+    if guia.nivel() == guia.NIVEL_SILENCIOSO:
+        return
+    if aprendizaje.repasos_pendientes(practica):
+        _invocar("amatista.repaso")
+    elif aprendizaje.pildora_principal() is not None:
+        _invocar("amatista.pildora")
 
 
 def cerrar(context):
@@ -283,8 +311,17 @@ def evaluar(context=None, motivo="manual"):
         guia.actualizar(context, practica, foto, reporte, motivo)
     except Exception as error:  # noqa: BLE001 - la guía nunca impide evaluar
         print(f"[Amatista] Error en la guía: {error}")
+    try:
+        aprendizaje.actualizar_pildoras(practica, foto, reporte)
+        nueva = aprendizaje.pildora_principal()
+        if motivo != "abrir" and nueva is not None and nueva.id in aprendizaje.ESTADO["nuevas"]:
+            guia.avisar(f"Teoría: {nueva.title}", "Míralo en N › Amatista › Aprender.", "cerca")
+    except Exception as error:  # noqa: BLE001
+        print(f"[Amatista] Error en las píldoras: {error}")
     redibujar()
     _avisar_herramientas(sc, reporte)
+    if reporte.completed and sc.amatista.origen != "borrador":
+        aprendizaje.marcar_completada(practica.id)
     if reporte.completed and not sc.amatista.celebrada and motivo != "abrir":
         sc.amatista.celebrada = True
         _invocar("amatista.felicitar")
@@ -471,12 +508,31 @@ def redibujar():
                 area.tag_redraw()
 
 
+# Lo que el alumno cambia: objetos, mallas, materiales, luces, cámaras y animación (motor v3).
+OBSERVADOS = (
+    bpy.types.Object, bpy.types.Mesh, bpy.types.Material, bpy.types.Collection, bpy.types.Light,
+    bpy.types.Camera, bpy.types.Action,
+)
+
+
+@persistent
+def _al_renderizar(scene, *_args):
+    """F12 terminado: lo cuenta para render.done (el adaptador lee scene["amatista_renders"])."""
+    escena_actual = bpy.context.scene or scene
+    if escena_actual is None:
+        return
+    escena_actual["amatista_renders"] = int(escena_actual.get("amatista_renders", 0)) + 1
+    if escena_actual.amatista.practica_json:
+        ESTADO["sucio"] = True
+        ESTADO["ultimo_cambio"] = time.time()
+
+
 @persistent
 def _al_cambiar(scene, depsgraph=None):
     # Cambiar las propiedades de Amatista en la escena también avisa al
     # depsgraph: solo cuentan los cambios en objetos, mallas y materiales.
     if depsgraph is not None and not any(
-        isinstance(u.id, (bpy.types.Object, bpy.types.Mesh, bpy.types.Material, bpy.types.Collection))
+        isinstance(u.id, OBSERVADOS)
         for u in depsgraph.updates
     ):
         return
@@ -499,6 +555,7 @@ def _al_abrir(*_args):
     ESTADO.update(reporte=None, clave=None, practica=None, aprobados_antes={}, sync="",
                   cambios_desde_guardar=not bpy.data.filepath)
     guia.reiniciar()
+    aprendizaje.reiniciar_sesion()
     if bpy.context.scene and bpy.context.scene.amatista.practica_json:
         bpy.app.timers.register(lambda: (evaluar(bpy.context, "abrir"), None)[1], first_interval=0.3)
 
@@ -506,6 +563,14 @@ def _al_abrir(*_args):
 def _vigilante():
     """Cada medio segundo: si la escena cambió y ya se calmó, reevaluar."""
     p = ajustes.prefs()
+    sc = bpy.context.scene
+    if sc is not None and sc.amatista.practica_json:
+        # El motor de render no pasa por el depsgraph: se mira aquí.
+        motor = sc.render.engine
+        if ESTADO["motor_render"] and motor != ESTADO["motor_render"]:
+            ESTADO["sucio"] = True
+            ESTADO["ultimo_cambio"] = time.time() - 1
+        ESTADO["motor_render"] = motor
     if ESTADO["sucio"] and (p is None or p.comprobar_solo) and time.time() - ESTADO["ultimo_cambio"] > 0.4:
         try:
             evaluar(bpy.context, "cambio")
@@ -519,6 +584,7 @@ def register():
     bpy.app.handlers.depsgraph_update_post.append(_al_cambiar)
     bpy.app.handlers.save_post.append(_al_guardar)
     bpy.app.handlers.load_post.append(_al_abrir)
+    bpy.app.handlers.render_complete.append(_al_renderizar)
     if not bpy.app.timers.is_registered(_vigilante):
         bpy.app.timers.register(_vigilante, first_interval=1.0, persistent=True)
 
@@ -528,6 +594,7 @@ def unregister():
         (bpy.app.handlers.depsgraph_update_post, _al_cambiar),
         (bpy.app.handlers.save_post, _al_guardar),
         (bpy.app.handlers.load_post, _al_abrir),
+        (bpy.app.handlers.render_complete, _al_renderizar),
     ):
         if funcion in lista:
             lista.remove(funcion)

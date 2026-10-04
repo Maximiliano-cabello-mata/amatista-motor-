@@ -76,6 +76,8 @@ class ToolRegistry:
                 usados.append(tool.id)
             elif regla.get("material") and any(o.materials for o in scene.objects):
                 usados.append(tool.id)
+            elif regla.get("animation") and any(o.animation for o in scene.objects):
+                usados.append(tool.id)
         return tuple(sorted(usados))
 
     def policy(self, practice: PracticeDefinition, tool_id: str) -> str:

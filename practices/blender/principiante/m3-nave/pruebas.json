@@ -1,0 +1,51 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bp.m3.nave",
+  "casos": [
+    {
+      "nombre": "Escena de inicio: falta elegir la nave",
+      "construir": [{"inicial": true}],
+      "espera": {"completada": false, "actual": "nave", "accion": "assign_role", "pildoras": ["llave"]}
+    },
+    {
+      "nombre": "Cubo estirado con S: pide aplicar la escala",
+      "construir": [{"cubo": {"nombre": "Nave", "dims": [2, 4, 1], "escala": [1, 2, 0.5], "rol": "nave"}}],
+      "espera": {"completada": false, "actual": "escala", "pildoras": ["escala"]}
+    },
+    {
+      "nombre": "Espejo puesto pero la malla tiene las dos mitades",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [2, 4, 1], "rol": "nave"}},
+        {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}}
+      ],
+      "espera": {"completada": false, "actual": "una-mitad", "pildoras": ["mitad"]}
+    },
+    {
+      "nombre": "Subdivisión exagerada (nivel 5)",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-"}},
+        {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}},
+        {"modificador": {"objeto": "Nave", "tipo": "SUBSURF", "niveles": 5}}
+      ],
+      "espera": {"completada": false, "actual": "suave", "mensaje_contiene": "3"}
+    },
+    {
+      "nombre": "Caras encimadas: pausa y fusionar",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-", "encimados": 4}},
+        {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}}
+      ],
+      "espera": {"completada": false, "pausa": "malla-limpia", "accion": "merge_by_distance", "pildoras": ["fusionar"]}
+    },
+    {
+      "nombre": "Solución: media nave con Espejo, Subdivisión 2 y guardada",
+      "construir": [
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-"}},
+        {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}},
+        {"modificador": {"objeto": "Nave", "tipo": "SUBSURF", "niveles": 2}},
+        {"guardado": {"archivo": "mi_nave.blend"}}
+      ],
+      "espera": {"completada": true, "progreso_min": 100}
+    }
+  ]
+}

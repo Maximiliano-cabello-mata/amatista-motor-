@@ -1,7 +1,13 @@
 """Paneles de la barra lateral de la vista 3D (N › Amatista).
 
-Modo Alumno (Student):  Práctica (con la tarjeta guía «Ahora») · Asignar
-                        rol · Todos los pasos
+Modo Alumno (Student), motor v3: tres secciones como en una plataforma
+educativa, elegidas con las pestañas de arriba:
+    Aprender   la teoría de este momento (píldoras), las demás ideas de la
+               práctica y el repaso espaciado
+    Practicar  la práctica: curso y módulo, progreso, pausa si un vigilante
+               la detuvo, la tarjeta guía «Ahora», asignar rol y los pasos
+    Mi curso   el mapa de los cursos (Principiante, Principiante-Intermedio…)
+               con lo terminado, lo disponible y lo bloqueado
 Modo Desarrollador (Author): Borrador · Tagger · Inspector · Objetivos ·
                              Validación y depurador · Publicar
 Vista previa: el borrador exactamente como lo verá el alumno (sin
@@ -11,8 +17,8 @@ import time
 
 import bpy
 
-from .. import _motor, ajustes, autor, cuenta, guia, practicas, red
-from . import dialogos, estilo
+from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, practicas, red
+from . import aprender, dialogos, estilo
 
 CATEGORIA = "Amatista"
 ESTADOS_SYNC = {
@@ -31,6 +37,24 @@ def modo_alumno(context):
 
 def modo_autor(context):
     return ajustes.es_desarrollador() and context.window_manager.amatista.modo == "autor"
+
+
+def seccion(context, nombre):
+    return modo_alumno(context) and context.window_manager.amatista.pestana == nombre
+
+
+ICONO_PLAN = {
+    "completado": ("completado", None),
+    "disponible": ("actual", None),
+    "bloqueado": ("bloqueado", None),
+    "proximamente": (None, "TIME"),
+}
+DIFICULTAD_TEXTO = {
+    "principiante": "Desde cero",
+    "principiante_intermedio": "Ya conoces lo básico",
+    "intermedio": "Intermedio",
+    "avanzado": "Avanzado",
+}
 
 
 class _Base:
@@ -82,6 +106,12 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
             if context.window_manager.amatista.modo == "autor":
                 layout.prop(context.window_manager.amatista, "vista_previa", icon="HIDE_OFF")
 
+        if modo_alumno(context):
+            # Las tres secciones del alumno, como pestañas de una plataforma.
+            fila = layout.row(align=True)
+            fila.scale_y = 1.45
+            fila.prop(context.window_manager.amatista, "pestana", expand=True)
+
     def _dibujar_codigo(self, layout, context):
         cuerpo = estilo.tarjeta(layout, "Vincular con tu cuenta", icono_propio="logo")
         estilo.parrafo(cuerpo, context, "1. Abre la plataforma › Blender › Vincular.\n2. Escribe este código:")
@@ -109,13 +139,14 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return modo_alumno(context)
+        return seccion(context, "practicar")
 
     def draw(self, context):
         layout = self.layout
         practica = practicas.practica_activa(context)
         if practica is None:
-            self._elegir(layout, context)
+            if not dibujar_mapa(layout, context, solo_siguiente=True):
+                self._elegir(layout, context)
             return
         reporte = practicas.ESTADO["reporte"]
         if reporte is None:
@@ -124,11 +155,16 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
             layout.label(text="Revisando tu escena…", icon="TIME")
             return
 
+        curso, modulo = aprendizaje.lugar(practica)
+        if curso is not None:
+            miga = layout.row()
+            miga.active = False
+            miga.label(text=f"{curso.title} › Módulo {modulo.number}: {modulo.title}", icon="OUTLINER_COLLECTION")
         cuerpo = estilo.tarjeta(
             layout, practica.title, icono_propio="celebrar" if reporte.completed else "logo",
-            derecha=f"N{practica.level}",
+            derecha=f"M{modulo.number}" if modulo is not None else f"N{practica.level}",
         )
-        detalle = estilo.nivel_texto(practica.level)
+        detalle = estilo.nivel_texto(practica.level) if curso is None else DIFICULTAD_TEXTO.get(curso.difficulty, "")
         if practica.estimated_minutes:
             detalle += f" · {practica.estimated_minutes} min"
         sub = cuerpo.row()
@@ -146,8 +182,17 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
             estilo.parrafo(cuerpo, context, "Esta práctica necesita una versión más reciente del add-on.",
                            icon="ERROR", alerta=True)
 
+        if reporte.paused:
+            self._tarjeta_pausa(layout, context, practica, reporte)
+
         g = guia.guia_actual()
-        if g is not None and guia.nivel() != guia.NIVEL_SILENCIOSO:
+        pildora = aprendizaje.pildora_principal()
+        if pildora is not None and not reporte.completed:
+            fila = layout.row(align=True)
+            fila.scale_y = 1.2
+            fila.operator("amatista.pildora", text=f"Teoría: {pildora.title}", icon=aprender.icono_visual(pildora))
+            fila.operator("amatista.pestana", text="", icon="HELP").pestana = "aprender"
+        if g is not None and guia.nivel() != guia.NIVEL_SILENCIOSO and not (reporte.paused and g.paused):
             self._tarjeta_guia(layout, context, g)
         elif reporte.completed:
             estilo.parrafo(cuerpo, context, practica.completion or "¡Práctica completada!", icon="FUND")
@@ -171,9 +216,31 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
 
         self._estado_sync(layout, context)
 
+        if reporte.completed and practica.place is not None and practica.place.next:
+            estilo.boton_principal(layout, "amatista.abrir_practica", "Siguiente práctica", icon="FORWARD",
+                                   escala=1.4, practica_id=practica.place.next)
         fila = layout.row(align=True)
         fila.operator("amatista.abrir_plataforma", text="Plataforma", icon="URL").ruta = "#/panel"
         fila.operator("amatista.elegir_practica", text="Otra práctica", icon="FILE_REFRESH")
+
+    def _tarjeta_pausa(self, layout, context, practica, reporte):
+        """Un vigilante detuvo el progreso: aviso rojo con el arreglo a un clic."""
+        vigilante = practica.guard(reporte.paused_by)
+        resultado = next((r for r in reporte.guards if r.target_id == reporte.paused_by), None)
+        caja = layout.box()
+        caja.alert = True
+        cabecera = caja.row()
+        cabecera.scale_y = 1.2
+        cabecera.label(text="Progreso en pausa", icon="PAUSE")
+        if vigilante is not None:
+            estilo.parrafo(caja, context, vigilante.title, icon="ERROR", alerta=True)
+        if resultado is not None:
+            estilo.parrafo(caja, context, resultado.message, alerta=True)
+        if vigilante is not None and vigilante.tip:
+            estilo.parrafo(caja, context, vigilante.tip, icon="INFO")
+        g = guia.guia_actual()
+        if g is not None and g.paused and g.action is not None:
+            estilo.boton_principal(caja, "amatista.hazlo_conmigo", g.action.label, icon="PLAY", escala=1.35)
 
     def _tarjeta_guia(self, layout, context, g):
         """La tarjeta «Ahora»: el paso actual explicado, con teclas y botones."""
@@ -293,7 +360,8 @@ class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return (modo_alumno(context) or modo_autor(context)) and practicas.practica_activa(context) is not None
+        visible = seccion(context, "practicar") or modo_autor(context)
+        return visible and practicas.practica_activa(context) is not None
 
     def draw_header(self, context):
         self.layout.label(text="", icon="CHECKBOX_HLT")
@@ -352,7 +420,7 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         practica = practicas.practica_activa(context)
-        return modo_alumno(context) and practica is not None and bool(practica.roles)
+        return seccion(context, "practicar") and practica is not None and bool(practica.roles)
 
     def draw_header(self, context):
         self.layout.label(text="", icon="BOOKMARKS")
@@ -383,6 +451,144 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
                 col.label(text=f"{rol.label}: {len(conteo.get(rol.id, []))}", icon="DOT")
 
 
+# --- Aprender y Mi curso (motor v3) -----------------------------------------------------------
+
+
+def dibujar_mapa(layout, context, solo_siguiente=False):
+    """El mapa de los cursos. Devuelve False si no hay plan de estudios."""
+    plan = aprendizaje.plan()
+    if plan is None:
+        return False
+    estados = aprendizaje.estados()
+    siguiente = aprendizaje.siguiente()
+    catalogo = practicas.catalogo()
+    if siguiente:
+        meta = catalogo.get(siguiente, {})
+        encontrado = plan.locate(siguiente)
+        cuerpo = estilo.tarjeta(layout, "Tu siguiente práctica", icono_propio="actual")
+        if encontrado:
+            curso, modulo = encontrado
+            fila = cuerpo.row()
+            fila.active = False
+            fila.label(text=f"{curso.title} › Módulo {modulo.number}")
+        cuerpo.label(text=meta.get("title") or siguiente, icon="PLAY")
+        if meta.get("description"):
+            estilo.parrafo(cuerpo, context, meta["description"])
+        estilo.boton_principal(cuerpo, "amatista.abrir_practica", "Empezar", icon="PLAY", escala=1.5,
+                               practica_id=siguiente)
+    elif estados and all(e == "completado" for e in estados.values() if e != "proximamente"):
+        cuerpo = estilo.tarjeta(layout, "¡Terminaste los cursos disponibles!", icono_propio="celebrar")
+        estilo.parrafo(cuerpo, context, "Los cursos Intermedio y Avanzado llegan pronto. Mientras, repite una "
+                       "práctica para afianzarla.")
+    if solo_siguiente:
+        fila = layout.row()
+        fila.operator("amatista.pestana", text="Ver el mapa del curso", icon="OUTLINER_COLLECTION").pestana = "curso"
+        return True
+    for curso in plan.courses:
+        hechas = sum(1 for m in curso.modules if estados.get(m.practice) == "completado")
+        cuerpo = estilo.tarjeta(
+            layout, curso.title, icon="OUTLINER_COLLECTION",
+            derecha=f"{hechas}/{len(curso.modules)}" if curso.modules else "Pronto",
+        )
+        fila = cuerpo.row()
+        fila.active = False
+        fila.label(text=DIFICULTAD_TEXTO.get(curso.difficulty, curso.difficulty))
+        if curso.status == "proximamente" or not curso.modules:
+            estilo.parrafo(cuerpo, context, curso.description or "Próximamente.", icon="TIME")
+            continue
+        if curso.modules:
+            estilo.barra(cuerpo, hechas / len(curso.modules), f"{hechas} de {len(curso.modules)} módulos")
+        for modulo in curso.modules:
+            estado = estados.get(modulo.practice, "bloqueado")
+            propio, icono = ICONO_PLAN.get(estado, ("pendiente", None))
+            fila = cuerpo.row(align=True)
+            texto = f"{modulo.number}. {modulo.title}"
+            if propio:
+                fila.label(text=texto, icon_value=estilo.icono(propio))
+            else:
+                fila.label(text=texto, icon=icono)
+            if estado in ("disponible", "completado") and modulo.practice:
+                op = fila.operator("amatista.abrir_practica", text="Repetir" if estado == "completado" else "Empezar",
+                                   icon="FILE_REFRESH" if estado == "completado" else "PLAY")
+                op.practica_id = modulo.practice
+            if modulo.project:
+                sub = cuerpo.row()
+                sub.active = False
+                sub.label(text=f"Proyecto: {modulo.project}", icon="BLANK1")
+    return True
+
+
+class AMATISTA_PT_aprender(_Base, bpy.types.Panel):
+    bl_idname = "AMATISTA_PT_aprender"
+    bl_label = "Aprender"
+    bl_parent_id = "AMATISTA_PT_principal"
+    bl_options = {"HIDE_HEADER"}
+
+    @classmethod
+    def poll(cls, context):
+        return seccion(context, "aprender")
+
+    def draw(self, context):
+        layout = self.layout
+        practica = practicas.practica_activa(context)
+        if practica is None:
+            cuerpo = estilo.tarjeta(layout, "Teoría a tu ritmo", icono_propio="logo")
+            estilo.parrafo(cuerpo, context, "Cada práctica trae ideas cortas que aparecen justo cuando las necesitas. "
+                           "Abre una práctica para verlas aquí.")
+            layout.operator("amatista.pestana", text="Ir a Mi curso", icon="OUTLINER_COLLECTION").pestana = "curso"
+            return
+        if not practica.pills:
+            estilo.parrafo(layout, context, "Esta práctica no trae teoría: la guía de Practicar te acompaña.", icon="INFO")
+            return
+        principal = aprendizaje.pildora_principal()
+        if principal is not None:
+            fila = layout.row()
+            fila.label(text="Ahora mismo", icon_value=estilo.icono("actual"))
+            aprender.tarjeta_pildora(layout, context, principal, grande=True)
+        pendientes = aprendizaje.repasos_pendientes(practica)
+        if pendientes:
+            caja = estilo.tarjeta(layout, f"Repaso: {len(pendientes)} pregunta(s)", icon="RECOVER_LAST")
+            estilo.parrafo(caja, context, "Ideas de prácticas anteriores que conviene recordar hoy.")
+            estilo.boton_principal(caja, "amatista.repaso", "Repasar ahora", icon="PLAY", escala=1.25)
+        vistas = aprendizaje.vistas(practica.id)
+        cuerpo = estilo.seccion(layout, context, "amatista_ideas", f"Ideas de esta práctica ({len(practica.pills)})",
+                                icon="HELP")
+        if cuerpo is not None:
+            for pildora in practica.pills:
+                if principal is not None and pildora.id == principal.id:
+                    continue
+                fila = cuerpo.row(align=True)
+                fila.active = pildora.id not in vistas
+                fila.operator("amatista.pildora", text=pildora.title, icon=aprender.icono_visual(pildora),
+                              emboss=False).pildora = pildora.id
+                if pildora.id in vistas:
+                    fila.label(text="", icon="CHECKMARK")
+        dominadas = len(aprendizaje.dominadas())
+        if dominadas:
+            fila = layout.row()
+            fila.active = False
+            fila.label(text=f"Ideas que ya dominas: {dominadas}", icon="FUND")
+
+
+class AMATISTA_PT_curso(_Base, bpy.types.Panel):
+    bl_idname = "AMATISTA_PT_curso"
+    bl_label = "Mi curso"
+    bl_parent_id = "AMATISTA_PT_principal"
+    bl_options = {"HIDE_HEADER"}
+
+    @classmethod
+    def poll(cls, context):
+        return seccion(context, "curso")
+
+    def draw(self, context):
+        layout = self.layout
+        if not dibujar_mapa(layout, context):
+            estilo.parrafo(layout, context, "No encontramos el plan de estudios en este paquete.", icon="ERROR")
+        fila = layout.row(align=True)
+        fila.operator("amatista.abrir_plataforma", text="Ver en la plataforma", icon="URL").ruta = "#/cursos"
+        fila.operator("amatista.actualizar_catalogo", text="", icon="FILE_REFRESH")
+
+
 # --- Modo Desarrollador (Amatista Author) ---------------------------------------------------
 
 
@@ -407,8 +613,12 @@ class AMATISTA_PT_autor_borrador(_Autor, bpy.types.Panel):
         datos = autor.leer_borrador()
         if datos is None:
             cuerpo = estilo.tarjeta(layout, "Nueva práctica", icon="ADD")
+            cuerpo.prop(a, "nueva_plantilla")
             cuerpo.prop(a, "nuevo_id")
             cuerpo.prop(a, "nuevo_titulo")
+            fila = cuerpo.row(align=True)
+            fila.prop(a, "nuevo_curso", text="")
+            fila.prop(a, "nuevo_modulo")
             cuerpo.prop(a, "nuevo_nivel")
             estilo.boton_principal(cuerpo, "amatista.autor_nuevo", "Crear borrador", icon="ADD", escala=1.3)
             fila = layout.row(align=True)
@@ -620,6 +830,49 @@ class AMATISTA_PT_autor_depurador(_Autor, bpy.types.Panel):
                 _dibujar_detalle(caja, context, r)
 
 
+class AMATISTA_PT_autor_teoria(_Autor, bpy.types.Panel):
+    bl_idname = "AMATISTA_PT_autor_teoria"
+    bl_label = "Teoría y casos de prueba"
+
+    @classmethod
+    def poll(cls, context):
+        return super().poll(context) and autor.leer_borrador() is not None
+
+    def draw_header(self, context):
+        self.layout.label(text="", icon="HELP")
+
+    def draw(self, context):
+        layout = self.layout
+        a = context.scene.amatista_autor
+        datos = autor.leer_borrador() or {}
+        for pildora in datos.get("pills") or []:
+            fila = layout.row()
+            disparo = (pildora.get("trigger") or {}).get("on", "start")
+            fila.label(text=f"{pildora.get('title', pildora.get('id'))}", icon="LIGHT")
+            sub = fila.row()
+            sub.alignment = "RIGHT"
+            sub.active = False
+            sub.label(text=disparo)
+        cuerpo = estilo.tarjeta(layout, "Nueva píldora", icon="ADD")
+        cuerpo.prop(a, "pil_titulo")
+        cuerpo.prop(a, "pil_texto")
+        largo = len(a.pil_texto)
+        if largo > 280:
+            cuerpo.label(text=f"{largo} caracteres: mejor 280 o menos (una sola idea).", icon="ERROR")
+        cuerpo.prop(a, "pil_teclas")
+        fila = cuerpo.row(align=True)
+        fila.prop(a, "pil_disparo", text="")
+        if a.pil_disparo in ("target", "guard"):
+            fila.prop(a, "pil_objetivo", text="")
+        estilo.boton_principal(cuerpo, "amatista.autor_agregar_pildora", "Agregar píldora", icon="ADD", escala=1.2)
+        cuerpo = estilo.tarjeta(layout, "Casos de prueba sin código", icon="CHECKBOX_HLT")
+        estilo.parrafo(cuerpo, context, "Arma la escena (bien o con un error a propósito) y guárdala como caso: "
+                       "practicas.py probar comprueba que el motor responda igual.")
+        cuerpo.prop(a, "caso_nombre")
+        estilo.boton_principal(cuerpo, "amatista.autor_caso_prueba", "Guardar caso de esta escena", icon="ADD",
+                               escala=1.2)
+
+
 class AMATISTA_PT_autor_publicar(_Autor, bpy.types.Panel):
     bl_idname = "AMATISTA_PT_autor_publicar"
     bl_label = "Exportar y publicar"
@@ -659,7 +912,9 @@ class AMATISTA_PT_autor_publicar(_Autor, bpy.types.Panel):
 
 CLASES = (
     AMATISTA_PT_principal,
+    AMATISTA_PT_aprender,
     AMATISTA_PT_practica,
+    AMATISTA_PT_curso,
     AMATISTA_PT_roles,
     AMATISTA_PT_objetivos,
     AMATISTA_PT_autor_borrador,
@@ -667,5 +922,6 @@ CLASES = (
     AMATISTA_PT_autor_inspector,
     AMATISTA_PT_autor_objetivos,
     AMATISTA_PT_autor_depurador,
+    AMATISTA_PT_autor_teoria,
     AMATISTA_PT_autor_publicar,
 )

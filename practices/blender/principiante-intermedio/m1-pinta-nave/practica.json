@@ -1,0 +1,128 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bpi.m1.pinta-nave",
+  "version": 1,
+  "title": "Pinta tu nave",
+  "level": 2,
+  "description": "Dale materiales a tu nave con el Principled BSDF: cristal en la cabina, metal brillante y metal quemado en los motores.",
+  "intro": "Un material dice cómo rebota la luz en una superficie. Del Principled BSDF bastan tres controles: Color base, Metálico y Rugosidad.",
+  "completion": "¡Tu nave ya brilla! Se desbloquea el Módulo 2: luces, cámara y tu primer render.",
+  "estimatedMinutes": 30,
+  "blender": {"min": "4.2"},
+  "skills": ["bl-materiales", "bl-principled", "bl-asignar-material", "bl-vista-material"],
+  "tags": ["principiante-intermedio", "modulo-1", "materiales"],
+  "course": {"id": "blender_principiante_intermedio", "module": 1, "lesson": "bpi1_practica", "next": "blender.bpi.m2.tres-puntos"},
+  "review": ["blender.bp.m3.nave#llave", "blender.bp.m3.nave#subdivision", "blender.bp.m2.espada#componentes"],
+  "starter": {"scene": "empty", "from_practice": "blender.bp.m3.nave", "build": "nave_basica",
+              "note": "Abre tu mi_nave.blend del curso anterior. Si no lo tienes, Amatista arma una nave básica para empezar."},
+  "roles": {
+    "nave": {"label": "Nave", "description": "La nave que vas a pintar (la del curso Principiante)."}
+  },
+  "tools": {"allowed": ["mesh.edit", "select.box", "select.circle", "material.principled"]},
+  "pills": [
+    {
+      "id": "vista-material",
+      "title": "Mira los colores: Z",
+      "text": "En la vista Sólida todo es gris. Z › Vista previa de material (o el tercer círculo arriba a la derecha) muestra los materiales de verdad.",
+      "keys": ["Z"],
+      "visual": "keys",
+      "trigger": {"on": "start"}
+    },
+    {
+      "id": "principled",
+      "title": "Tres controles bastan",
+      "text": "Pestaña Material (la esfera roja) › Nuevo. Color base es el color; Metálico 1 lo vuelve metal; Rugosidad baja brilla como espejo y alta se ve mate.",
+      "visual": "tab:MATERIAL",
+      "trigger": {"on": "target", "target": "materiales"},
+      "check": {"question": "¿Qué control hace que una superficie brille como espejo?", "options": ["Rugosidad baja", "Rugosidad alta", "Color base"], "answer": 0}
+    },
+    {
+      "id": "asignar",
+      "title": "Un material por zona",
+      "text": "Agrega ranuras con el + de la lista de materiales. En Edición, selecciona caras, elige la ranura y pulsa Asignar.",
+      "keys": ["Tab", "3"],
+      "visual": "tab:MATERIAL",
+      "trigger": {"on": "mode", "mode": "EDIT"}
+    },
+    {
+      "id": "cristal",
+      "title": "Cristal",
+      "text": "Para la cabina, sube Transmisión (Transmission) cerca de 1: la luz pasa a través. También sirve bajar Alfa para hacerlo transparente.",
+      "visual": "tab:MATERIAL",
+      "trigger": {"on": "target", "target": "cristal"},
+      "check": {"question": "¿Qué control deja pasar la luz como un vidrio?", "options": ["Metálico", "Transmisión", "Rugosidad"], "answer": 1}
+    },
+    {
+      "id": "metal",
+      "title": "Metal brillante y metal quemado",
+      "text": "Los dos tienen Metálico alto. El brillante tiene Rugosidad baja (0.2) y el quemado Rugosidad alta (0.7) y un color más oscuro.",
+      "visual": "tab:MATERIAL",
+      "trigger": {"on": "target", "target": "metal-brillante"}
+    }
+  ],
+  "targets": [
+    {
+      "id": "nave",
+      "title": "Tu nave",
+      "validator": "role.count",
+      "params": {"role": "nave", "equals": 1},
+      "weight": 10,
+      "tip": "Selecciona el cuerpo de tu nave y dile a Amatista que es la nave.",
+      "hints": ["Pestaña Amatista › Es: Nave › Asignar rol."]
+    },
+    {
+      "id": "materiales",
+      "title": "Tres materiales distintos",
+      "validator": "material.distinct",
+      "params": {"role": "nave", "min": 3},
+      "weight": 20,
+      "requires": ["nave"],
+      "tip": "Crea tres materiales y asígnalos a zonas distintas: cuerpo, cabina y motores.",
+      "hints": ["Pestaña Material › + para agregar ranuras › Nuevo en cada una.", "En Edición selecciona las caras de la cabina, elige su ranura y pulsa Asignar."]
+    },
+    {
+      "id": "cristal",
+      "title": "Cabina de cristal",
+      "validator": "logic.any",
+      "params": {"options": [
+        {"validator": "material.matches", "params": {"role": "nave", "transmission_min": 0.5, "label": "cristal"}},
+        {"validator": "material.matches", "params": {"role": "nave", "alpha_max": 0.6, "label": "cristal"}}
+      ]},
+      "weight": 20,
+      "requires": ["materiales"],
+      "tip": "En el material de la cabina sube Transmisión a 0.9 (o baja Alfa a 0.4).",
+      "hints": ["Transmisión está dentro de la sección «Transmisión» del Principled BSDF: ábrela con la flechita."],
+      "messages": {"pass": "¡La cabina ya es de cristal!"}
+    },
+    {
+      "id": "metal-brillante",
+      "title": "Metal brillante",
+      "validator": "material.matches",
+      "params": {"role": "nave", "metallic_min": 0.7, "roughness_max": 0.35, "label": "un metal brillante"},
+      "weight": 15,
+      "requires": ["materiales"],
+      "tip": "Metálico 1 y Rugosidad 0.2.",
+      "hints": ["Arrastra el control Metálico hasta 1 y escribe 0.2 en Rugosidad."]
+    },
+    {
+      "id": "metal-quemado",
+      "title": "Metal quemado",
+      "validator": "material.matches",
+      "params": {"role": "nave", "metallic_min": 0.5, "roughness_min": 0.6, "label": "un metal quemado"},
+      "weight": 15,
+      "requires": ["materiales"],
+      "tip": "Metálico alto, Rugosidad 0.7 y un color oscuro: así se ven los motores usados.",
+      "hints": ["Duplica el metal brillante (botón de dos hojas junto al nombre) y súbele la Rugosidad."]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda tu nave pintada",
+      "validator": "file.named",
+      "params": {"contains": "nave"},
+      "weight": 20,
+      "requires": ["cristal", "metal-brillante", "metal-quemado"],
+      "tip": "Ctrl+Shift+S: mi_nave_pintada.blend.",
+      "hints": ["Archivo › Guardar como, con un nombre que incluya «nave»."]
+    }
+  ]
+}

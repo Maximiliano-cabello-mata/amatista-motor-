@@ -42,9 +42,18 @@ def collection_contains(target: TargetDefinition, scene: SceneState) -> Validati
     )
 
 
+TIPOS_LUZ = {"POINT": "puntuales", "SUN": "de sol", "SPOT": "foco", "AREA": "de área"}
+
+
 def _por_tipo(target: TargetDefinition, scene: SceneState, tipo: str, nombre: str) -> ValidationResult:
     minimo, maximo = count_rule(target, default_min=1)
     objetos = [o for o in scene.objects if o.object_type == tipo]
+    tipo_luz = str(target.params.get("light_type", "") or "").upper()
+    if tipo == "LIGHT" and tipo_luz:
+        if tipo_luz not in TIPOS_LUZ:
+            raise ValueError("light_type debe ser POINT, SUN, SPOT o AREA")
+        objetos = [o for o in objetos if (o.light_type or "").upper() == tipo_luz]
+        nombre = f"luces {TIPOS_LUZ[tipo_luz]}"
     return result(
         target,
         count_ok(len(objetos), minimo, maximo),

@@ -23,7 +23,9 @@ def test_extension_trae_manifiesto_motor_y_practicas():
     assert "__init__.py" in nombres
     assert "amatista_engine/engine.py" in nombres
     assert "amatista_engine/tools/catalogo.json" in nombres
-    assert "practicas/level_1/mesa.json" in nombres
+    assert "practicas/principiante/m1-tren/practica.json" in nombres
+    assert "practicas/cursos.json" in nombres
+    assert not [n for n in nombres if n.endswith("pruebas.json") or "archivo/" in n]
     assert "iconos/logo.png" in nombres
     assert not [n for n in nombres if "__pycache__" in n or n.startswith("tests/") or n.endswith(".pyc")]
     assert nombres.count("config.json") == 1

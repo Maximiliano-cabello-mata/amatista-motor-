@@ -28,3 +28,5 @@ guia = import_module(engine.__name__ + ".guide")
 
 MOTOR = engine.create_default_engine()
 VERSION_MOTOR = engine.__version__
+curriculo = import_module(engine.__name__ + ".curriculum")
+repaso = import_module(engine.__name__ + ".pedagogy.spaced")

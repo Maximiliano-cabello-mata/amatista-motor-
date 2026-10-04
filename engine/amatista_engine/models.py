@@ -2,6 +2,12 @@
 
 Todo son dataclasses inmutables de Python puro (sin bpy): el mismo código
 corre dentro de Blender, en las pruebas y en el servidor FastAPI.
+
+Motor v3: la escena trae también modificadores con sus ajustes, materiales
+(Principled BSDF), luces, cámaras, animación, la salud de la malla y el
+render; la práctica trae píldoras de teoría, vigilantes y su lugar en el
+curso. Todo campo nuevo es opcional: una foto o una práctica de la v2 sigue
+siendo válida.
 """
 from __future__ import annotations
 
@@ -9,6 +15,48 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple
 
 Vector = Tuple[float, float, float]
+Color = Tuple[float, float, float, float]
+
+
+@dataclass(frozen=True)
+class ModifierInfo:
+    """Un modificador con lo que importa para enseñar (motor v3).
+
+    axes: ejes activos de MIRROR (X, Y, Z); levels: niveles de SUBSURF en la
+    vista; enabled: si se ve en la vista 3D (el «ojo» del modificador).
+    """
+
+    type: str
+    name: str = ""
+    axes: Tuple[bool, bool, bool] = (False, False, False)
+    levels: Optional[int] = None
+    enabled: bool = True
+
+
+@dataclass(frozen=True)
+class MaterialInfo:
+    """Lo que el alumno mueve del Principled BSDF: color, metálico, rugosidad,
+    transmisión (vidrio) y alfa (transparencia)."""
+
+    name: str
+    base_color: Color = (0.8, 0.8, 0.8, 1.0)
+    metallic: float = 0.0
+    roughness: float = 0.5
+    transmission: float = 0.0
+    alpha: float = 1.0
+
+
+@dataclass(frozen=True)
+class AnimationChannel:
+    """Fotogramas clave de una propiedad: location, rotation_euler o scale y su eje."""
+
+    path: str
+    index: int
+    keys: Tuple[Tuple[float, float], ...] = ()  # (fotograma, valor)
+
+    @property
+    def values(self) -> Tuple[float, ...]:
+        return tuple(v for _, v in self.keys)
 
 
 @dataclass(frozen=True)
@@ -36,10 +84,35 @@ class SceneObject:
     bbox_min: Optional[Vector] = None
     bbox_max: Optional[Vector] = None
     parent: Optional[str] = None
+    # --- Motor v3 (todos opcionales) ---
+    data_name: Optional[str] = None  # nombre de la malla/luz/cámara: «Cylinder.001»
+    modifier_details: Tuple[ModifierInfo, ...] = ()
+    material_details: Tuple[MaterialInfo, ...] = ()
+    materials_used: Optional[Tuple[str, ...]] = None  # materiales que de verdad pintan caras
+    light_type: Optional[str] = None  # POINT, SUN, SPOT, AREA
+    light_energy: Optional[float] = None
+    camera_angle: Optional[float] = None  # campo de visión horizontal en radianes
+    forward: Optional[Vector] = None  # hacia dónde mira (cámaras y luces), en el mundo
+    duplicate_vertices: Optional[int] = None  # vértices encimados (E y luego cancelar)
+    side_counts: Optional[Tuple[Tuple[int, int], ...]] = None  # vértices (-, +) por eje local
+    animation: Tuple[AnimationChannel, ...] = ()
 
     @property
     def role(self) -> Optional[str]:
         return self.roles[0] if self.roles else None
+
+    def modifier(self, tipo: str) -> Optional[ModifierInfo]:
+        tipo = tipo.upper()
+        return next((m for m in self.modifier_details if m.type == tipo), None)
+
+    def channel(self, path: str, index: int) -> Optional[AnimationChannel]:
+        return next((c for c in self.animation if c.path == path and c.index == index), None)
+
+    @property
+    def primitive(self) -> str:
+        """«cylinder» para Cylinder.003: de qué primitiva salió la malla."""
+        base = (self.data_name or "").split(".")[0].strip().lower()
+        return base
 
     def caja(self) -> Tuple[Vector, Vector]:
         """(mínimo, máximo) de la caja envolvente en el mundo."""
@@ -59,6 +132,13 @@ class SceneState:
     file_saved: bool
     objects: Tuple[SceneObject, ...] = ()
     mode: str = "OBJECT"
+    # --- Motor v3 ---
+    active_object: Optional[str] = None
+    selected: Tuple[str, ...] = ()
+    active_camera: Optional[str] = None
+    render_engine: str = ""
+    renders: int = 0  # renders terminados (F12) desde que se abrió la práctica
+    frame_range: Tuple[int, int] = (1, 250)
 
     def objects_with_role(self, role: str) -> Tuple[SceneObject, ...]:
         return tuple(obj for obj in self.objects if role in obj.roles)
@@ -98,6 +178,14 @@ class TargetGuide:
 
 
 @dataclass(frozen=True)
+class FixDefinition:
+    """Arreglo que ofrece un vigilante: la acción de «Hazlo conmigo» y su texto."""
+
+    action: str
+    label: str = ""
+
+
+@dataclass(frozen=True)
 class TargetDefinition:
     id: str
     validator: str
@@ -110,6 +198,76 @@ class TargetDefinition:
     messages: Dict[str, str] = field(default_factory=dict)
     optional: bool = False
     guide: Optional[TargetGuide] = None
+    fix: Optional[FixDefinition] = None  # solo vigilantes (guards)
+
+
+@dataclass(frozen=True)
+class PillCheck:
+    """Pregunta corta de una píldora (repaso espaciado)."""
+
+    question: str
+    options: Tuple[str, ...]
+    answer: int
+
+
+@dataclass(frozen=True)
+class PillTrigger:
+    """Cuándo aparece una píldora.
+
+    on: start (al abrir), target (cuando ese objetivo es el actual), mode
+    (al entrar a un modo: EDIT, OBJECT, SCULPT...), selection (al seleccionar
+    un objeto), tool (al detectar una herramienta del catálogo), guard
+    (cuando un vigilante pausa el progreso), complete (al terminar).
+    """
+
+    on: str = "start"
+    target: str = ""
+    mode: str = ""
+    tool: str = ""
+
+
+@dataclass(frozen=True)
+class PillDefinition:
+    """Píldora de teoría: una idea, pocas palabras y algo que ver en Blender.
+
+    visual: axes (ejes X rojo, Y verde, Z azul sobre la vista 3D), keys
+    (teclas grandes junto al objeto), tab:<PESTAÑA> (abre y señala una
+    pestaña de Propiedades: MODIFIER, MATERIAL, RENDER, OUTPUT, DATA,
+    OBJECT), mode (Objeto vs Edición), image:<archivo> o vacío.
+    """
+
+    id: str
+    title: str
+    text: str
+    keys: Tuple[str, ...] = ()
+    visual: str = ""
+    trigger: PillTrigger = field(default_factory=PillTrigger)
+    once: bool = True
+    check: Optional[PillCheck] = None
+
+
+@dataclass(frozen=True)
+class CoursePlace:
+    """Dónde vive la práctica en la plataforma (motor v3)."""
+
+    course: str = ""
+    module: int = 0
+    lesson: str = ""
+    next: str = ""  # práctica que se desbloquea al terminar
+
+
+@dataclass(frozen=True)
+class StarterDefinition:
+    """Cómo empieza la escena: vacía, con lo que hay o armada por el add-on.
+
+    build: nombre de un escenario del add-on (nave_basica, estudio_foto,
+    pelota_y_suelo); from_practice: práctica cuyo archivo conviene reabrir.
+    """
+
+    scene: str = "keep"  # keep | empty
+    build: str = ""
+    from_practice: str = ""
+    note: str = ""
 
 
 @dataclass(frozen=True)
@@ -137,9 +295,21 @@ class PracticeDefinition:
     tags: Tuple[str, ...] = ()
     allowed_tools: Tuple[str, ...] = ()
     warn_tools: Tuple[str, ...] = ()
+    # --- Motor v3 (amatista.practice/2) ---
+    guards: Tuple[TargetDefinition, ...] = ()
+    pills: Tuple[PillDefinition, ...] = ()
+    review: Tuple[str, ...] = ()  # «practica#pildora» de prácticas anteriores
+    place: CoursePlace = field(default_factory=CoursePlace)
+    starter: StarterDefinition = field(default_factory=StarterDefinition)
 
     def target(self, target_id: str) -> Optional[TargetDefinition]:
         return next((t for t in self.targets if t.id == target_id), None)
+
+    def guard(self, guard_id: str) -> Optional[TargetDefinition]:
+        return next((g for g in self.guards if g.id == guard_id), None)
+
+    def pill(self, pill_id: str) -> Optional[PillDefinition]:
+        return next((p for p in self.pills if p.id == pill_id), None)
 
     def role_label(self, role_id: str) -> str:
         rol = next((r for r in self.roles if r.id == role_id), None)
@@ -195,6 +365,13 @@ class EvaluationReport:
     tool_warnings: Tuple[ToolWarning, ...] = ()
     tools_used: Tuple[str, ...] = ()
     needs_update: bool = False
+    # --- Motor v3: vigilantes ---
+    guards: Tuple[ValidationResult, ...] = ()
+    paused_by: Optional[str] = None  # id del vigilante que pausa el progreso
+
+    @property
+    def paused(self) -> bool:
+        return self.paused_by is not None
 
     def result(self, target_id: str) -> Optional[ValidationResult]:
         return next((r for r in self.results if r.target_id == target_id), None)

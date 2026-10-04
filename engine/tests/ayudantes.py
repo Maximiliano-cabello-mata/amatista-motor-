@@ -3,7 +3,7 @@ from pathlib import Path
 from amatista_engine.models import SceneObject, SceneState
 
 REPO = Path(__file__).resolve().parents[2]
-MESA = REPO / "practices" / "blender" / "level_1" / "mesa.json"
+MESA = REPO / "practices" / "archivo" / "v2" / "mesa.json"
 
 
 def pata(nombre, x, y, alto=0.75):

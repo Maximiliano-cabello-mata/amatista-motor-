@@ -9,6 +9,8 @@ observa cada evaluación y propone intervenciones:
     retroceso          algo que estaba bien dejó de estarlo
     ofrecer_ayuda      lleva varios intentos o mucho tiempo en el mismo paso
     practica_completa  terminó la práctica
+    pausa              un vigilante detuvo el progreso (motor v3): qué pasó y cómo arreglarlo
+    reanuda            el vigilante volvió a cumplirse: el progreso sigue
 
 No dibuja nada ni conoce Blender: el add-on decide si cada intervención es
 un aviso que se desvanece o un diálogo (Intervention.dialog). El estado es
@@ -25,6 +27,8 @@ from .models import (
     NUEVO_PASO,
     OFRECER_AYUDA,
     PASO_LOGRADO,
+    PAUSA,
+    REANUDA,
     PRACTICA_COMPLETA,
     RETROCESO,
     Intervention,
@@ -114,6 +118,19 @@ class Companion:
                     salida.append(
                         Intervention(RETROCESO, tid, f"Ojo: «{titulo(tid)}» ya no se cumple", r.message)
                     )
+
+        pausa_antes = s.get("paused")
+        if report.paused_by != pausa_antes:
+            s["paused"] = report.paused_by
+            if report.paused_by:
+                guard = practice.guard(report.paused_by)
+                r = next((g for g in report.guards if g.target_id == report.paused_by), None)
+                salida.append(Intervention(
+                    PAUSA, report.paused_by, f"Progreso en pausa: {(guard.title if guard else '') or report.paused_by}",
+                    (guard.messages.get("fail") if guard else "") or (r.message if r else ""),
+                ))
+            elif pausa_antes and not primera:
+                salida.append(Intervention(REANUDA, pausa_antes, "¡Arreglado! Sigue tu práctica", ""))
 
         if report.completed and not s.get("done"):
             s["done"] = True

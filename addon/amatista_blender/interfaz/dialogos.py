@@ -96,6 +96,10 @@ class AMATISTA_OT_felicitar(bpy.types.Operator):
             cuerpo.label(text="Tu progreso se guarda en tu cuenta de Amatista.", icon_value=estilo.icono("sincronizado"))
         else:
             cuerpo.label(text="Vincula tu cuenta para que cuente en la plataforma.", icon="INFO")
+        siguiente = practica.place.next if practica.place is not None else ""
+        if siguiente:
+            estilo.boton_principal(layout, "amatista.abrir_practica", "Siguiente práctica", icon="FORWARD",
+                                   escala=1.4, practica_id=siguiente)
         fila = layout.row(align=True)
         fila.scale_y = 1.3
         fila.operator("amatista.abrir_plataforma", text="Ver en la plataforma", icon="URL").ruta = "#/panel"

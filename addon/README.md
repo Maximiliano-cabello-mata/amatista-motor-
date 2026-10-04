@@ -1,6 +1,6 @@
 # Amatista para Blender (add-on)
 
-Extensión de Blender 4.2+ que lleva las prácticas de Amatista dentro de Blender: revisa la escena mientras el alumno trabaja, lo acompaña paso a paso (tarjeta con teclas, guía dibujada en la vista 3D, «Hazlo conmigo») y registra el progreso en la plataforma. Modos **Alumno** y **Desarrollador** (Amatista Author).
+Extensión de Blender 4.2+ (versión 3.0, motor v3) que convierte Blender en un aula de Amatista: pestañas **Aprender** (píldoras de teoría y repaso), **Practicar** (la práctica con guía paso a paso, «Hazlo conmigo» y pausa cuando algo se rompe) y **Mi curso** (el mapa de cursos y módulos). Prepara la escena de inicio de cada práctica y registra el progreso en la plataforma. Probada en Blender 4.2 y 5.0. Modos **Alumno** y **Desarrollador** (Amatista Author).
 
 ```
 amatista_blender/        la extensión (blender_manifest.toml, paneles, red, motor)

@@ -34,7 +34,8 @@ def test_tres_patas_dicen_cuantas_faltan():
     escena = SceneState(escena.blender_version, escena.file_path, True, escena.objects[:4])
     reporte = motor.evaluate(practica, escena)
     assert not reporte.completed
-    assert reporte.result("patas").message == "Tienes 3/4 «pata». Falta 1."
+    # Motor v3: el mensaje nombra el rol con su etiqueta («Pata»), no con su id.
+    assert reporte.result("patas").message == "Tienes 3/4 «Pata». Falta 1."
     assert reporte.current_target_id == "patas"
     assert {p.target_id: p.status for p in reporte.steps}["cubierta"] == COMPLETADO
 
@@ -98,8 +99,11 @@ def test_la_foto_de_la_escena_viaja_al_servidor_sin_cambiar_el_resultado():
 
 
 def test_todas_las_practicas_del_repositorio_compilan():
-    archivos = sorted((REPO / "practices").rglob("*.json"))
-    assert archivos
+    archivos = [
+        a for a in sorted((REPO / "practices").rglob("*.json"))
+        if str(json.loads(a.read_text(encoding="utf-8")).get("schema", "")).startswith("amatista.practice/")
+    ]
+    assert len(archivos) >= 9  # 6 del plan de estudios v3 + 3 archivadas de la v2
     for archivo in archivos:
         resultado = compile_practice(json.loads(archivo.read_text(encoding="utf-8")))
         assert resultado.ok, (archivo.name, resultado.errors)

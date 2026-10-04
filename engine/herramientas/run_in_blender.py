@@ -18,7 +18,7 @@ from amatista_engine.blender.adapter import capture_scene
 from amatista_engine.practice import load_practice
 
 practice = load_practice(
-    PROJECT_ROOT / "practices" / "sandbox" / "table.json"
+    PROJECT_ROOT / "practices" / "archivo" / "v2" / "table.json"
 )
 
 scene = capture_scene()

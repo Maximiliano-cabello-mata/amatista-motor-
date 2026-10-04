@@ -32,7 +32,7 @@ try:
 except ImportError:  # Blender sin GPU (modo background)
     blf = gpu = batch_for_shader = None
 
-from .. import ajustes, guia, practicas
+from .. import ajustes, aprendizaje, guia, practicas
 
 _MANEJADORES = []
 
@@ -136,6 +136,41 @@ def _dibujar_avisos(shader, x, y, ancho, escala):
         y += alto + 6 * escala
 
 
+def _dibujar_v3(shader, x, y, ancho, escala, practica, reporte):
+    """Motor v3: franja de pausa (naranja) y la píldora de teoría con sus teclas grandes.
+
+    Se apilan sobre la tarjeta; devuelve la altura donde siguen los avisos.
+    """
+    tam, tam_t, tam_chico = int(12 * escala), int(14 * escala), int(10 * escala)
+    relleno = 12 * escala
+    if reporte.paused:
+        vigilante = practica.guard(reporte.paused_by)
+        alto = 46 * escala
+        _rectangulo(shader, x, y, ancho, alto, NARANJA, 10 * escala)
+        _rectangulo(shader, x + 2, y + 2, ancho - 4, alto - 4, (0.16, 0.09, 0.03, 0.95), 9 * escala)
+        _texto(x + relleno, y + alto - 18 * escala, "PROGRESO EN PAUSA", tam_chico, NARANJA)
+        titulo = vigilante.title if vigilante is not None else reporte.paused_by
+        _texto(x + relleno, y + 10 * escala, _recortar(titulo, tam, ancho - 2 * relleno), tam, TEXTO)
+        y += alto + 8 * escala
+    pildora = aprendizaje.pildora_principal()
+    if pildora is not None and not reporte.completed:
+        alto = (52 if pildora.keys else 34) * escala
+        _rectangulo(shader, x, y, ancho, alto, FONDO, 10 * escala)
+        _rectangulo(shader, x, y, 4 * escala, alto, NEON)
+        _texto(x + relleno, y + alto - 16 * escala, "TEORÍA", tam_chico, NEON)
+        _texto(x + relleno + 52 * escala, y + alto - 16 * escala,
+               _recortar(pildora.title, tam_t, ancho - 2 * relleno - 52 * escala), tam_t, TEXTO)
+        if pildora.keys:
+            cx = x + relleno
+            for i, tecla in enumerate(pildora.keys[:5]):
+                if i:
+                    _texto(cx + 3 * escala, y + 12 * escala, "+", tam, TEXTO_SUAVE)
+                    cx += 14 * escala
+                cx += _tecla(shader, cx, y + 12 * escala, str(tecla), tam_t, escala * 1.2) + 2 * escala
+        y += alto + 8 * escala
+    return y
+
+
 def dibujar():
     p = ajustes.prefs()
     if p is not None and not p.mostrar_hud:
@@ -228,7 +263,8 @@ def dibujar():
         cursor -= (len(lineas) - 1) * (tam + 5)
     _pie(x + relleno, y + 10 * escala, ancho_texto, tam_chico, g)
 
-    _dibujar_avisos(shader, x, y + alto + 12 * escala, ancho, escala)
+    siguiente = _dibujar_v3(shader, x, y + alto + 12 * escala, ancho, escala, practica, reporte)
+    _dibujar_avisos(shader, x, siguiente, ancho, escala)
     gpu.state.blend_set("NONE")
 
 

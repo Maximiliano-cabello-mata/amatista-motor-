@@ -95,6 +95,8 @@ TONO_INTERVENCION = {
     "retroceso": "ojo",
     "ofrecer_ayuda": "animo",
     "practica_completa": "logrado",
+    "pausa": "ojo",
+    "reanuda": "logrado",
 }
 
 
@@ -112,6 +114,9 @@ def actualizar(context, practica, foto, reporte, motivo="cambio"):
     for i in intervenciones:
         if i.kind == "practica_completa":
             continue  # la felicitación ya es un diálogo propio (practicas.evaluar)
+        if i.kind == "pausa" and modo == NIVEL_ACOMPANADO:
+            practicas._invocar("amatista.pausa")
+            continue
         if i.kind == "ofrecer_ayuda":
             if modo == NIVEL_ACOMPANADO:
                 practicas._invocar("amatista.ofrecer_ayuda")
@@ -206,6 +211,10 @@ def ejecutar_accion(context, accion, interactivo=True):
             bpy.ops.mesh.primitive_cube_add()
         return "Agregamos un cubo. Ahora dile a Amatista qué es."
 
+    texto = _accion_v3(context, accion, interactivo)
+    if texto is not None:
+        return texto
+
     objetos = seleccionar(context, accion.objects)
     if not objetos:
         return None
@@ -263,6 +272,175 @@ def ejecutar_accion(context, accion, interactivo=True):
 
         bpy.ops.transform.rotate(value=math.radians(valor), orient_axis=(eje or "z").upper(), orient_type="GLOBAL")
         return "Girado."
+    return None
+
+
+# --- Acciones del motor v3 ------------------------------------------------------------------
+
+PRIMITIVAS = {
+    "cube": ("primitive_cube_add", "un cubo"), "cylinder": ("primitive_cylinder_add", "un cilindro"),
+    "sphere": ("primitive_uv_sphere_add", "una esfera"), "plane": ("primitive_plane_add", "un plano"),
+    "cone": ("primitive_cone_add", "un cono"), "torus": ("primitive_torus_add", "una dona"),
+    "icosphere": ("primitive_ico_sphere_add", "una icoesfera"), "suzanne": ("primitive_monkey_add", "a Suzanne"),
+}
+PESTANAS = {
+    "MODIFIER": "MODIFIER", "MATERIAL": "MATERIAL", "RENDER": "RENDER", "OUTPUT": "OUTPUT", "DATA": "DATA",
+    "OBJECT": "OBJECT", "WORLD": "WORLD", "SCENE": "SCENE",
+}
+MOTORES = {"EEVEE": ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE"), "CYCLES": ("CYCLES",), "WORKBENCH": ("BLENDER_WORKBENCH",)}
+
+
+def _en_vista(context, operador, *args, **kwargs):
+    """Ejecuta un operador en la vista 3D si hay ventana (los de malla y vista lo necesitan)."""
+    area, region = _ventana_3d(context)
+    if area is not None and not bpy.app.background:
+        with context.temp_override(area=area, region=region):
+            return operador(*args, **kwargs)
+    return operador(*args, **kwargs)
+
+
+def abrir_pestana(context, pestana):
+    """Cambia el editor Propiedades a una pestaña (Modificadores, Material, Render…)."""
+    pestana = PESTANAS.get(str(pestana or "").upper())
+    if pestana is None or context.window is None:
+        return False
+    for area in context.window.screen.areas:
+        if area.type == "PROPERTIES":
+            espacio = area.spaces.active
+            try:
+                espacio.context = pestana
+            except TypeError:
+                return False
+            area.tag_redraw()
+            return True
+    return False
+
+
+def _activo(context, nombres):
+    objetos = seleccionar(context, nombres) if nombres else []
+    return objetos[0] if objetos else context.active_object
+
+
+def _accion_v3(context, accion, interactivo):
+    """Acciones nuevas del motor v3. None si la acción no es de este grupo (o no aplica)."""
+    tipo = accion.kind
+    if tipo == "add_primitive":
+        operador, nombre = PRIMITIVAS.get(accion.primitive or "cube", PRIMITIVAS["cube"])
+        if context.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+        _en_vista(context, getattr(bpy.ops.mesh, operador))
+        if accion.role and context.active_object is not None:
+            _motor.tagger.assign_role(context.active_object, accion.role)
+        return f"Agregamos {nombre} en el cursor 3D."
+    if tipo == "open_tab":
+        if accion.objects:
+            seleccionar(context, accion.objects)
+        if abrir_pestana(context, accion.tab):
+            return "Mira el panel Propiedades (a la derecha): ya está en la pestaña correcta."
+        return "Abre el panel Propiedades: está a la derecha, debajo del Outliner."
+    if tipo in ("edit_mode", "object_mode", "merge_by_distance"):
+        obj = _activo(context, accion.objects)
+        if obj is None or obj.type != "MESH":
+            return None if tipo != "object_mode" else "Ya estás en Modo Objeto."
+        if tipo == "object_mode":
+            bpy.ops.object.mode_set(mode="OBJECT")
+            return "Volviste a Modo Objeto."
+        estaba_en_edicion = context.mode == "EDIT_MESH"
+        bpy.ops.object.mode_set(mode="EDIT")
+        if tipo == "edit_mode":
+            return "Estás en Modo Edición: 1, 2 y 3 eligen vértices, aristas o caras."
+        bpy.ops.mesh.select_all(action="SELECT")
+        antes = len(obj.data.vertices)
+        bpy.ops.mesh.remove_doubles(threshold=0.0001)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        quitados = antes - len(obj.data.vertices)
+        if estaba_en_edicion:
+            bpy.ops.object.mode_set(mode="EDIT")
+        return f"Fusionamos {quitados} vértices encimados. Tu progreso sigue." if quitados else "La malla ya estaba limpia."
+    if tipo == "apply_all":
+        obj = _activo(context, accion.objects)
+        if obj is None:
+            return None
+        if context.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+        return "Rotación y escala aplicadas."
+    if tipo == "add_modifier":
+        obj = _activo(context, accion.objects)
+        if obj is None or not accion.modifier:
+            return None
+        if context.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+        mod = obj.modifiers.new(accion.modifier.title(), accion.modifier)
+        if accion.modifier == "SUBSURF":
+            mod.levels = 2
+        if accion.modifier == "MIRROR":
+            mod.use_clip = True
+        abrir_pestana(context, "MODIFIER")
+        return f"Agregamos el modificador a «{obj.name}». Míralo en la llave inglesa."
+    if tipo == "add_light":
+        if context.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+        _en_vista(context, bpy.ops.object.light_add, type=accion.light_type or "AREA")
+        luz = context.active_object
+        if luz is not None and luz.type == "LIGHT":
+            luz.data.energy = 300.0 if luz.data.type == "AREA" else luz.data.energy
+        if interactivo and not bpy.app.background:
+            _en_vista(context, bpy.ops.transform.translate, "INVOKE_DEFAULT")
+            return "Mueve la luz con el ratón y haz clic para dejarla. Luego R para apuntarla."
+        return "Agregamos una luz en el cursor 3D."
+    if tipo == "add_camera":
+        if context.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
+        _en_vista(context, bpy.ops.object.camera_add)
+        context.scene.camera = context.active_object
+        return "Agregamos una cámara y es la activa. Ahora encuádrala con Ctrl+Alt+0."
+    if tipo == "align_camera":
+        if context.scene.camera is None:
+            return None
+        area, region = _ventana_3d(context)
+        if area is None or bpy.app.background:
+            return "Mira tu modelo como quieras fotografiarlo y pulsa Ctrl+Alt+0."
+        with context.temp_override(area=area, region=region):
+            bpy.ops.view3d.camera_to_view()
+        return "La cámara ahora ve lo mismo que tú. Pulsa 0 para comprobarlo."
+    if tipo == "set_engine":
+        motor = str(accion.option or "EEVEE").upper()
+        disponibles = {e.identifier for e in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items}
+        for identificador in MOTORES.get(motor, (motor,)):
+            if identificador in disponibles:
+                context.scene.render.engine = identificador
+                abrir_pestana(context, "RENDER")
+                return f"El motor de render ahora es {motor.title()}."
+        return None
+    if tipo == "render":
+        if bpy.app.background:
+            bpy.ops.render.render()
+            return "Render hecho."
+        bpy.ops.render.render("INVOKE_DEFAULT")
+        return "Haciendo el render… Imagen › Guardar para conservarlo."
+    if tipo == "new_material":
+        obj = _activo(context, accion.objects)
+        if obj is None or obj.type != "MESH":
+            return None
+        material = bpy.data.materials.new(f"Material {len(obj.material_slots) + 1}")
+        material.use_nodes = True
+        obj.data.materials.append(material)
+        abrir_pestana(context, "MATERIAL")
+        return "Creamos un material nuevo en una ranura. En Edición, elige caras y pulsa Asignar."
+    if tipo == "insert_keyframe":
+        obj = _activo(context, accion.objects)
+        if obj is None:
+            return None
+        propiedad = accion.option or "location"
+        indice = "xyz".index(accion.axis) if accion.axis in ("x", "y", "z") else -1
+        obj.keyframe_insert(data_path=propiedad, index=indice)
+        return f"Guardamos la clave en el fotograma {context.scene.frame_current}. Avanza, cambia el objeto y repite."
+    if tipo == "clear_scene":
+        from . import escenarios
+
+        escenarios.vaciar(context.scene)
+        return "Quitamos el cubo, la luz y la cámara de inicio."
     return None
 
 

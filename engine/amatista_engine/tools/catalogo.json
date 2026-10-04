@@ -24,6 +24,17 @@
     {"id": "geometry_nodes", "name": "Nodos de geometría", "shortcut": "Espacio de trabajo Geometry Nodes", "minimumLevel": 4, "category": "procedural", "description": "Genera geometría con nodos.", "detect": {"modifier": "NODES"}},
     {"id": "armature", "name": "Esqueleto (rigging)", "shortcut": "Shift+A › Armadura", "minimumLevel": 4, "category": "animación", "description": "Huesos para animar personajes.", "detect": {"object_type": "ARMATURE"}},
     {"id": "physics.cloth", "name": "Simulación de tela", "shortcut": "Propiedades › Física", "minimumLevel": 5, "category": "simulación", "description": "Simula telas que caen y se arrugan.", "detect": {"modifier": "CLOTH"}},
-    {"id": "particles", "name": "Partículas", "shortcut": "Propiedades › Partículas", "minimumLevel": 5, "category": "simulación", "description": "Emite partículas o cabello.", "detect": {"modifier": "PARTICLE_SYSTEM"}}
+    {"id": "particles", "name": "Partículas", "shortcut": "Propiedades › Partículas", "minimumLevel": 5, "category": "simulación", "description": "Emite partículas o cabello.", "detect": {"modifier": "PARTICLE_SYSTEM"}},
+    {"id": "view.numpad", "name": "Vistas del teclado numérico", "shortcut": "1 frente · 3 lado · 7 arriba · 0 cámara", "minimumLevel": 1, "category": "vista", "description": "Cambia a vistas exactas: de frente, de lado, desde arriba o por la cámara."},
+    {"id": "mesh.extrude", "name": "Extruir", "shortcut": "E", "minimumLevel": 2, "category": "malla", "description": "Saca caras nuevas desde las seleccionadas. Si cancelas con clic derecho, las caras nuevas quedan encimadas: fusiónalas por distancia."},
+    {"id": "mesh.loopcut", "name": "Corte de bucle", "shortcut": "Ctrl+R", "minimumLevel": 2, "category": "malla", "description": "Agrega un anillo de aristas alrededor de la malla para tener más detalle donde se necesita."},
+    {"id": "mesh.merge", "name": "Fusionar", "shortcut": "M", "minimumLevel": 2, "category": "malla", "description": "Une vértices. «Por distancia» limpia los que quedaron encimados."},
+    {"id": "select.box", "name": "Selección de caja", "shortcut": "B", "minimumLevel": 2, "category": "selección", "description": "Arrastra un rectángulo para seleccionar varios elementos."},
+    {"id": "select.circle", "name": "Selección circular", "shortcut": "C", "minimumLevel": 2, "category": "selección", "description": "Pinta la selección con un círculo; rueda del ratón para cambiar su tamaño, Esc para salir."},
+    {"id": "material.principled", "name": "Principled BSDF", "shortcut": "Propiedades › Material", "minimumLevel": 2, "category": "material", "description": "El material físico de Blender: Color base, Metálico y Rugosidad bastan para empezar.", "detect": {"material": true}},
+    {"id": "light.add", "name": "Luces", "shortcut": "Shift+A › Luz", "minimumLevel": 1, "category": "escena", "description": "Área para sombras suaves, Sol para luz direccional pareja, Punto y Foco.", "detect": {"object_type": "LIGHT"}},
+    {"id": "camera.add", "name": "Cámara", "shortcut": "Shift+A › Cámara · Ctrl+Alt+0", "minimumLevel": 1, "category": "escena", "description": "La cámara define la foto final; Ctrl+Alt+0 la pone donde estás mirando.", "detect": {"object_type": "CAMERA"}},
+    {"id": "render.f12", "name": "Render final", "shortcut": "F12", "minimumLevel": 1, "category": "render", "description": "Hace la foto final desde la cámara activa con el motor elegido (EEVEE es instantáneo)."},
+    {"id": "anim.keyframe", "name": "Fotograma clave", "shortcut": "I", "minimumLevel": 2, "category": "animación", "description": "Guarda la posición, rotación o escala de un objeto en el fotograma actual.", "detect": {"animation": true}}
   ]
 }

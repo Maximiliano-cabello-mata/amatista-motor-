@@ -1,0 +1,162 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bp.m2.espada",
+  "version": 1,
+  "title": "Espada low-poly",
+  "level": 2,
+  "description": "Modela una espada (o una taza) low-poly en Modo Edición: extruye con E, corta con Ctrl+R y mantén la malla limpia.",
+  "intro": "Ahora entras a la pieza: en Modo Edición cambias sus vértices, aristas y caras. Parte de un cubo y dale forma de espada.",
+  "completion": "¡Tu primera malla modelada a mano! Se desbloquea el Módulo 3: Modificadores.",
+  "estimatedMinutes": 30,
+  "blender": {"min": "4.2"},
+  "skills": ["bl-modo-edicion", "bl-extruir", "bl-corte-bucle", "bl-malla-limpia", "bl-guardar-archivo"],
+  "tags": ["principiante", "modulo-2", "modelado"],
+  "course": {"id": "blender_principiante", "module": 2, "lesson": "bp2_practica", "next": "blender.bp.m3.nave"},
+  "review": ["blender.bp.m1.tren#grs", "blender.bp.m1.tren#agregar"],
+  "roles": {
+    "modelo": {"label": "Modelo", "description": "Tu espada (o taza): un solo objeto que modelas en Edición."}
+  },
+  "tools": {"allowed": ["mesh.edit", "mesh.extrude", "mesh.loopcut", "mesh.merge", "select.box", "select.circle"]},
+  "pills": [
+    {
+      "id": "modos",
+      "title": "Modo Objeto y Modo Edición",
+      "text": "En Modo Objeto mueves el modelo entero, como una pieza de juguete. En Modo Edición cambias sus partes por dentro. Tab cambia entre los dos.",
+      "keys": ["Tab"],
+      "visual": "mode",
+      "trigger": {"on": "start"},
+      "check": {"question": "¿Qué tecla cambia entre Modo Objeto y Modo Edición?", "options": ["Tab", "E", "G"], "answer": 0}
+    },
+    {
+      "id": "componentes",
+      "title": "Vértices, aristas y caras",
+      "text": "Una malla está hecha de vértices (puntos), aristas (líneas) y caras (superficies). En Edición, 1, 2 y 3 eligen qué seleccionar.",
+      "keys": ["1", "2", "3"],
+      "visual": "keys",
+      "trigger": {"on": "mode", "mode": "EDIT"},
+      "check": {"question": "¿Cómo se llama el punto de una malla?", "options": ["Cara", "Vértice", "Arista"], "answer": 1}
+    },
+    {
+      "id": "seleccion",
+      "title": "B y C para seleccionar",
+      "text": "B dibuja una caja de selección. C pinta la selección con un círculo (la rueda cambia su tamaño, Esc termina). A selecciona todo.",
+      "keys": ["B", "C", "A"],
+      "visual": "keys",
+      "trigger": {"on": "mode", "mode": "EDIT"}
+    },
+    {
+      "id": "extruir",
+      "title": "E: saca caras nuevas",
+      "text": "Selecciona una cara y pulsa E: sale una cara nueva que mueves con el ratón. Clic para dejarla. Así crece la hoja de la espada.",
+      "keys": ["E"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "forma"},
+      "check": {"question": "¿Qué tecla extruye?", "options": ["E", "R", "M"], "answer": 0}
+    },
+    {
+      "id": "corte",
+      "title": "Ctrl + R: corte de bucle",
+      "text": "Ctrl + R agrega un anillo de aristas alrededor de la malla. Úsalo para separar el mango de la guarda.",
+      "keys": ["Ctrl", "R"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "detalle"}
+    },
+    {
+      "id": "fusionar",
+      "title": "M › Por distancia",
+      "text": "Si pulsas E y luego cancelas, las caras nuevas quedan encimadas sobre las viejas. M › Por distancia las une y deja la malla limpia.",
+      "keys": ["M"],
+      "visual": "keys",
+      "trigger": {"on": "guard", "target": "malla-limpia"},
+      "once": false,
+      "check": {"question": "¿Qué deja una extrusión cancelada?", "options": ["Nada", "Vértices encimados", "Un objeto nuevo"], "answer": 1}
+    }
+  ],
+  "targets": [
+    {
+      "id": "modelo",
+      "title": "Tu modelo",
+      "validator": "role.count",
+      "params": {"role": "modelo", "equals": 1},
+      "weight": 10,
+      "tip": "Selecciona el cubo con el que vas a modelar y dile a Amatista que es tu modelo.",
+      "hints": ["Pestaña Amatista › Es: Modelo › Asignar rol."]
+    },
+    {
+      "id": "forma",
+      "title": "Extruye la forma",
+      "validator": "mesh.face_count",
+      "params": {"role": "modelo", "min": 18},
+      "weight": 30,
+      "requires": ["modelo"],
+      "tip": "Tab, elige la cara de arriba (3 para caras) y extruye con E varias veces.",
+      "hints": ["Tab para entrar a Edición y 3 para seleccionar caras.", "Clic en la cara de arriba, E y mueve el ratón hacia arriba. Repite 3 veces."],
+      "guide": {
+        "why": "Cada extrusión agrega caras: así la malla crece desde el cubo hasta la espada.",
+        "steps": [
+          {"text": "Entra a Modo Edición", "keys": ["Tab"]},
+          {"text": "Selección por caras", "keys": ["3"]},
+          {"text": "Elige la cara de arriba y extrúyela", "keys": ["Clic", "E"]},
+          {"text": "Sube el ratón y haz clic; repite", "keys": ["Clic"]}
+        ]
+      }
+    },
+    {
+      "id": "proporcion",
+      "title": "Forma de espada (o de taza)",
+      "validator": "logic.any",
+      "params": {"options": [
+        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "z", "min_ratio": 3}},
+        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "x", "min_ratio": 3}},
+        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "y", "min_ratio": 3}},
+        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "z", "min_ratio": 0.7, "max_ratio": 1.6}}
+      ]},
+      "weight": 20,
+      "requires": ["forma"],
+      "tip": "Una espada es larga: al menos tres veces más larga que ancha. Una taza es casi tan alta como ancha.",
+      "hints": ["Sigue extruyendo la hoja hacia arriba hasta que sea larga.", "En Edición, selecciona la punta y escálala (S) para afilarla."],
+      "messages": {"pass": "¡Ya tiene forma!"}
+    },
+    {
+      "id": "detalle",
+      "title": "Un corte de bucle",
+      "validator": "mesh.vertex_count",
+      "params": {"role": "modelo", "min": 20},
+      "weight": 15,
+      "requires": ["forma"],
+      "tip": "Ctrl+R sobre la hoja agrega un anillo de aristas para dar detalle.",
+      "hints": ["Pasa el ratón por la hoja con Ctrl+R: verás una línea amarilla. Clic y luego clic derecho para dejarla centrada."]
+    },
+    {
+      "id": "low-poly",
+      "title": "Que siga siendo low-poly",
+      "validator": "mesh.vertex_count",
+      "params": {"role": "modelo", "max": 250},
+      "weight": 10,
+      "requires": ["forma"],
+      "tip": "Low-poly = pocos vértices. No subdividas toda la malla.",
+      "hints": ["Si tienes demasiados vértices, deshaz con Ctrl+Z el último corte o subdivisión."]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda tu espada",
+      "validator": "file.named",
+      "params": {"contains": "espada"},
+      "weight": 15,
+      "requires": ["proporcion", "detalle"],
+      "tip": "Tab para volver a Objeto y Ctrl+Shift+S: mi_espada.blend (o mi_taza_espada.blend si hiciste la taza).",
+      "hints": ["Archivo › Guardar como, con un nombre que incluya «espada»."]
+    }
+  ],
+  "guards": [
+    {
+      "id": "malla-limpia",
+      "title": "Malla sin vértices encimados",
+      "validator": "mesh.no_duplicates",
+      "params": {},
+      "fix": {"action": "merge_by_distance", "label": "Fusionar por distancia conmigo"},
+      "tip": "En Edición: A (todo), M › Por distancia.",
+      "messages": {"fail": "Detectamos caras encimadas: pasa cuando pulsas E y luego cancelas. Tu progreso queda en pausa hasta limpiarlas con M › Por distancia."}
+    }
+  ]
+}

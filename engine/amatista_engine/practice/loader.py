@@ -12,16 +12,40 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 from ..errors import InvalidPracticeError
-from ..models import GuideStepDefinition, Hint, PracticeDefinition, RoleDefinition, TargetDefinition, TargetGuide
+from ..models import (
+    CoursePlace,
+    FixDefinition,
+    GuideStepDefinition,
+    Hint,
+    PillCheck,
+    PillDefinition,
+    PillTrigger,
+    PracticeDefinition,
+    RoleDefinition,
+    StarterDefinition,
+    TargetDefinition,
+    TargetGuide,
+)
 from .schema import (
+    ARREGLOS,
     CAMPOS_OBJETIVO,
+    CAMPOS_V2,
+    DISPAROS,
+    ESCENAS_INICIALES,
+    MAX_PILDORAS,
+    MAX_TEXTO_PILDORA,
+    MAX_VIGILANTES,
+    PATRON_ID,
+    PESTANAS,
+    SCHEMA_V1,
+    SUPPORTED_SCHEMAS,
+    VISUALES,
     MAX_OBJETIVOS,
     MAX_PASOS_GUIA,
     MAX_PISTAS,
     MAX_TECLAS,
     MAX_TEXTO,
     NIVEL_MAXIMO,
-    PATRON_ID,
     PATRON_PRACTICA,
     PATRON_VERSION,
     SUPPORTED_SCHEMA,
@@ -137,10 +161,10 @@ def _roles(raw: Any, e: _Errores) -> tuple:
     return tuple(roles)
 
 
-def _objetivo(raw: Any, index: int, e: _Errores, ids: set):
-    donde = f"targets[{index}]."
+def _objetivo(raw: Any, index: int, e: _Errores, ids: set, lista: str = "targets"):
+    donde = f"{lista}[{index}]."
     if not isinstance(raw, dict):
-        e.add(f"targets[{index}] debe ser un objeto")
+        e.add(f"{lista}[{index}] debe ser un objeto")
         return None
     target_id = e.texto(raw, "id", donde)
     if target_id and not PATRON_ID.match(target_id):
@@ -155,7 +179,7 @@ def _objetivo(raw: Any, index: int, e: _Errores, ids: set):
         e.add(f"'{donde}params' debe ser un objeto")
         params = {}
     # Atajo de la especificación: {"validator": "role.count", "role": "pata", "equals": 4}.
-    extra = {k: v for k, v in raw.items() if k not in CAMPOS_OBJETIVO}
+    extra = {k: v for k, v in raw.items() if k not in CAMPOS_OBJETIVO | {"fix"}}
     params = {**extra, **params}
 
     weight = raw.get("weight", 1.0)
@@ -185,6 +209,143 @@ def _objetivo(raw: Any, index: int, e: _Errores, ids: set):
         messages={k: v.strip() for k, v in mensajes.items() if k in ("pass", "fail") and v.strip()},
         optional=optional,
         guide=_guia(raw.get("guide"), f"{donde}guide", e),
+        fix=_arreglo(raw.get("fix"), f"{donde}fix", e) if lista == "guards" else None,
+    )
+
+
+def _arreglo(raw: Any, donde: str, e: _Errores):
+    if raw is None:
+        return None
+    if isinstance(raw, str):
+        raw = {"action": raw}
+    if not isinstance(raw, dict) or raw.get("action") not in ARREGLOS:
+        e.add(f"'{donde}' debe ser {{action, label}} con action en: {', '.join(ARREGLOS)}")
+        return None
+    return FixDefinition(action=raw["action"], label=str(raw.get("label") or "").strip())
+
+
+def _disparo(raw: Any, donde: str, e: _Errores) -> PillTrigger:
+    if raw is None:
+        return PillTrigger()
+    if isinstance(raw, str):
+        raw = {"on": raw}
+    if not isinstance(raw, dict) or raw.get("on", "start") not in DISPAROS:
+        e.add(f"'{donde}' debe ser {{on, ...}} con on en: {', '.join(DISPAROS)}")
+        return PillTrigger()
+    disparo = PillTrigger(
+        on=str(raw.get("on", "start")),
+        target=str(raw.get("target") or ""),
+        mode=str(raw.get("mode") or "").upper(),
+        tool=str(raw.get("tool") or ""),
+    )
+    if disparo.on in ("target", "guard") and not disparo.target:
+        e.add(f"'{donde}.target' es obligatorio cuando on = {disparo.on}")
+    if disparo.on == "mode" and not disparo.mode:
+        e.add(f"'{donde}.mode' es obligatorio cuando on = mode (EDIT, OBJECT…)")
+    if disparo.on == "tool" and not disparo.tool:
+        e.add(f"'{donde}.tool' es obligatorio cuando on = tool (id del catálogo de herramientas)")
+    return disparo
+
+
+def _pregunta(raw: Any, donde: str, e: _Errores):
+    if raw is None:
+        return None
+    opciones = raw.get("options") if isinstance(raw, dict) else None
+    respuesta = raw.get("answer") if isinstance(raw, dict) else None
+    if (
+        not isinstance(raw, dict)
+        or not isinstance(raw.get("question"), str)
+        or not isinstance(opciones, list)
+        or not 2 <= len(opciones) <= 4
+        or not all(isinstance(o, str) and o.strip() for o in opciones)
+        or isinstance(respuesta, bool)
+        or not isinstance(respuesta, int)
+        or not 0 <= respuesta < len(opciones)
+    ):
+        e.add(f"'{donde}' debe ser {{question, options (2 a 4), answer (índice)}}")
+        return None
+    return PillCheck(raw["question"].strip(), tuple(o.strip() for o in opciones), respuesta)
+
+
+def _pildoras(raw: Any, e: _Errores) -> tuple:
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        e.add("'pills' debe ser una lista")
+        return ()
+    if len(raw) > MAX_PILDORAS:
+        e.add(f"'pills' admite como máximo {MAX_PILDORAS} píldoras")
+    pildoras, ids = [], set()
+    for i, p in enumerate(raw):
+        donde = f"pills[{i}]."
+        if not isinstance(p, dict):
+            e.add(f"pills[{i}] debe ser un objeto")
+            continue
+        pid = e.texto(p, "id", donde)
+        if pid and not PATRON_ID.match(pid):
+            e.add(f"'{donde}id' = '{pid}' solo admite letras, números, punto, guion y guion bajo")
+        if pid in ids:
+            e.add(f"Píldora duplicada: {pid}")
+        ids.add(pid)
+        texto = e.texto(p, "text", donde)
+        if len(texto) > MAX_TEXTO_PILDORA:
+            e.add(f"'{donde}text' es demasiado largo para una píldora (máx. {MAX_TEXTO_PILDORA})")
+        teclas = p.get("keys", []) or []
+        if not isinstance(teclas, list) or not all(isinstance(t, str) and t.strip() for t in teclas):
+            e.add(f"'{donde}keys' debe ser una lista de textos")
+            teclas = []
+        visual = str(p.get("visual") or "")
+        if not (
+            visual in VISUALES
+            or (visual.startswith("tab:") and visual[4:] in PESTANAS)
+            or (visual.startswith("image:") and len(visual) > 6)
+        ):
+            e.add(f"'{donde}visual' = '{visual}' no es válido (axes, keys, mode, tab:MODIFIER, image:archivo)")
+        once = p.get("once", True)
+        pildoras.append(
+            PillDefinition(
+                id=pid,
+                title=e.texto(p, "title", donde),
+                text=texto,
+                keys=tuple(t.strip() for t in teclas),
+                visual=visual,
+                trigger=_disparo(p.get("trigger"), f"{donde}trigger", e),
+                once=bool(once) if isinstance(once, bool) else True,
+                check=_pregunta(p.get("check"), f"{donde}check", e),
+            )
+        )
+    return tuple(pildoras)
+
+
+def _lugar(raw: Any, e: _Errores) -> CoursePlace:
+    if raw is None:
+        return CoursePlace()
+    if not isinstance(raw, dict):
+        e.add("'course' debe ser un objeto {id, module, lesson, next}")
+        return CoursePlace()
+    modulo = raw.get("module", 0)
+    if isinstance(modulo, bool) or not isinstance(modulo, int) or modulo < 0:
+        e.add("'course.module' debe ser un entero >= 0")
+        modulo = 0
+    siguiente = str(raw.get("next") or "")
+    if siguiente and not PATRON_PRACTICA.match(siguiente):
+        e.add("'course.next' debe ser el id de otra práctica")
+    return CoursePlace(
+        course=str(raw.get("id") or ""), module=modulo, lesson=str(raw.get("lesson") or ""), next=siguiente
+    )
+
+
+def _inicio(raw: Any, e: _Errores) -> StarterDefinition:
+    if raw is None:
+        return StarterDefinition()
+    if not isinstance(raw, dict) or raw.get("scene", "keep") not in ESCENAS_INICIALES:
+        e.add("'starter' debe ser {scene: keep|empty, build, from_practice, note}")
+        return StarterDefinition()
+    return StarterDefinition(
+        scene=str(raw.get("scene", "keep")),
+        build=str(raw.get("build") or ""),
+        from_practice=str(raw.get("from_practice") or ""),
+        note=str(raw.get("note") or "").strip(),
     )
 
 
@@ -194,8 +355,14 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
     e = _Errores()
 
     schema = e.texto(data, "schema")
-    if schema and schema != SUPPORTED_SCHEMA:
-        raise InvalidPracticeError(f"Schema no soportado: {schema}. Esperado: {SUPPORTED_SCHEMA}")
+    if schema and schema not in SUPPORTED_SCHEMAS:
+        raise InvalidPracticeError(
+            f"Schema no soportado: {schema}. Esperado: {' o '.join(SUPPORTED_SCHEMAS)}"
+        )
+    if schema == SCHEMA_V1:
+        usados = [c for c in CAMPOS_V2 if c in data]
+        if usados:
+            e.add(f"{', '.join(usados)} necesita{'n' if len(usados) > 1 else ''} \"schema\": \"amatista.practice/2\"")
 
     practice_id = e.texto(data, "id")
     if practice_id and not PATRON_PRACTICA.match(practice_id):
@@ -246,6 +413,27 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
         if targets and sum(t.weight for t in targets if not t.optional) <= 0:
             e.add("La suma total de pesos debe ser mayor que cero")
 
+    vigilantes = []
+    crudos_v = data.get("guards")
+    if crudos_v is not None:
+        if not isinstance(crudos_v, list) or len(crudos_v) > MAX_VIGILANTES:
+            e.add(f"'guards' debe ser una lista de hasta {MAX_VIGILANTES} vigilantes")
+        else:
+            ids_v = {t.id for t in targets}
+            for index, raw in enumerate(crudos_v):
+                vigilante = _objetivo(raw, index, e, ids_v, "guards")
+                if vigilante is not None:
+                    vigilantes.append(vigilante)
+
+    repaso = data.get("review")
+    if repaso is not None and (
+        not isinstance(repaso, list)
+        or len(repaso) > MAX_PILDORAS
+        or not all(isinstance(x, str) and "#" in x for x in repaso)
+    ):
+        e.add("'review' debe ser una lista de «practica#pildora»")
+        repaso = []
+
     practica = PracticeDefinition(
         schema=schema,
         id=practice_id,
@@ -263,6 +451,11 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
         tags=e.lista_ids(data.get("tags"), "tags"),
         allowed_tools=e.lista_ids(tools.get("allowed"), "tools.allowed"),
         warn_tools=e.lista_ids(tools.get("warn"), "tools.warn"),
+        guards=tuple(vigilantes),
+        pills=_pildoras(data.get("pills"), e),
+        review=tuple(repaso or ()),
+        place=_lugar(data.get("course"), e),
+        starter=_inicio(data.get("starter"), e),
     )
     if e.lista:
         raise InvalidPracticeError(e.lista[0], e.lista)
@@ -310,36 +503,68 @@ def dump_practice(practice: PracticeDefinition) -> Dict[str, Any]:
         }
     if practice.allowed_tools or practice.warn_tools:
         datos["tools"] = {"allowed": list(practice.allowed_tools), "warn": list(practice.warn_tools)}
-    objetivos = []
-    for t in practice.targets:
-        objetivo: Dict[str, Any] = {"id": t.id}
-        if t.title:
-            objetivo["title"] = t.title
-        objetivo["validator"] = t.validator
-        objetivo["params"] = dict(t.params)
-        objetivo["weight"] = int(t.weight) if float(t.weight).is_integer() else t.weight
-        if t.requires:
-            objetivo["requires"] = list(t.requires)
-        if t.tip:
-            objetivo["tip"] = t.tip
-        if t.hints:
-            objetivo["hints"] = [h.text for h in sorted(t.hints, key=lambda h: h.level)]
-        if t.messages:
-            objetivo["messages"] = dict(t.messages)
-        if t.optional:
-            objetivo["optional"] = True
-        if t.guide is not None and (t.guide.why or t.guide.steps):
-            guia: Dict[str, Any] = {}
-            if t.guide.why:
-                guia["why"] = t.guide.why
-            if t.guide.steps:
-                guia["steps"] = [
-                    {"text": p.text, "keys": list(p.keys)} if p.keys else p.text for p in t.guide.steps
-                ]
-            objetivo["guide"] = guia
-        objetivos.append(objetivo)
-    datos["targets"] = objetivos
+    if practice.place.course or practice.place.next:
+        lugar = {"id": practice.place.course, "module": practice.place.module, "lesson": practice.place.lesson,
+                 "next": practice.place.next}
+        datos["course"] = {k: v for k, v in lugar.items() if v not in ("", 0)}
+    if practice.starter != StarterDefinition():
+        inicio = {"scene": practice.starter.scene, "build": practice.starter.build,
+                  "from_practice": practice.starter.from_practice, "note": practice.starter.note}
+        datos["starter"] = {k: v for k, v in inicio.items() if v}
+    if practice.pills:
+        datos["pills"] = [_dump_pildora(p) for p in practice.pills]
+    if practice.review:
+        datos["review"] = list(practice.review)
+    datos["targets"] = [_dump_objetivo(t) for t in practice.targets]
+    if practice.guards:
+        datos["guards"] = [_dump_objetivo(g) for g in practice.guards]
     return datos
+
+
+def _dump_pildora(p: PillDefinition) -> Dict[str, Any]:
+    salida: Dict[str, Any] = {"id": p.id, "title": p.title, "text": p.text}
+    if p.keys:
+        salida["keys"] = list(p.keys)
+    if p.visual:
+        salida["visual"] = p.visual
+    disparo = {"on": p.trigger.on, "target": p.trigger.target, "mode": p.trigger.mode, "tool": p.trigger.tool}
+    salida["trigger"] = {k: v for k, v in disparo.items() if v}
+    if not p.once:
+        salida["once"] = False
+    if p.check is not None:
+        salida["check"] = {"question": p.check.question, "options": list(p.check.options), "answer": p.check.answer}
+    return salida
+
+
+def _dump_objetivo(t: TargetDefinition) -> Dict[str, Any]:
+    objetivo: Dict[str, Any] = {"id": t.id}
+    if t.title:
+        objetivo["title"] = t.title
+    objetivo["validator"] = t.validator
+    objetivo["params"] = dict(t.params)
+    objetivo["weight"] = int(t.weight) if float(t.weight).is_integer() else t.weight
+    if t.requires:
+        objetivo["requires"] = list(t.requires)
+    if t.tip:
+        objetivo["tip"] = t.tip
+    if t.hints:
+        objetivo["hints"] = [h.text for h in sorted(t.hints, key=lambda h: h.level)]
+    if t.messages:
+        objetivo["messages"] = dict(t.messages)
+    if t.optional:
+        objetivo["optional"] = True
+    if t.guide is not None and (t.guide.why or t.guide.steps):
+        guia: Dict[str, Any] = {}
+        if t.guide.why:
+            guia["why"] = t.guide.why
+        if t.guide.steps:
+            guia["steps"] = [
+                {"text": p.text, "keys": list(p.keys)} if p.keys else p.text for p in t.guide.steps
+            ]
+        objetivo["guide"] = guia
+    if t.fix is not None:
+        objetivo["fix"] = {"action": t.fix.action, "label": t.fix.label} if t.fix.label else {"action": t.fix.action}
+    return objetivo
 
 
 def dumps_practice(practice: PracticeDefinition) -> str:

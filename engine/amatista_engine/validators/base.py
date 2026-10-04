@@ -9,6 +9,9 @@ parámetros para decidir a qué objetos se aplican (se combinan con Y):
     type         tipo de Blender (MESH, CAMERA, LIGHT...)
     tag          etiqueta educativa (propiedad amatista_tags)
     collection   colección que contiene al objeto
+    primitive    primitiva de la que salió la malla (cube, cylinder, sphere,
+                 cone, torus, plane, icosphere, monkey) según el nombre de
+                 sus datos («Cylinder.003»). Motor v3.
 
 Sin selector, se aplican a todos los objetos de la escena.
 """
@@ -18,7 +21,19 @@ from typing import Any, Dict, Optional, Tuple
 
 from ..models import SceneObject, SceneState, TargetDefinition, ValidationResult
 
-SELECTORES = ("role", "name", "name_prefix", "type", "tag", "collection")
+SELECTORES = ("role", "name", "name_prefix", "type", "tag", "collection", "primitive")
+# Nombre en español o en inglés → nombre de los datos que pone Blender.
+PRIMITIVAS = {
+    "cube": "cube", "cubo": "cube",
+    "cylinder": "cylinder", "cilindro": "cylinder",
+    "sphere": "sphere", "esfera": "sphere", "uv_sphere": "sphere",
+    "icosphere": "icosphere", "icoesfera": "icosphere",
+    "cone": "cone", "cono": "cone",
+    "torus": "torus", "toroide": "torus", "dona": "torus",
+    "plane": "plane", "plano": "plane",
+    "circle": "circle", "circulo": "circle",
+    "monkey": "suzanne", "mono": "suzanne", "suzanne": "suzanne",
+}
 EJES = {"x": 0, "y": 1, "z": 2}
 
 
@@ -77,7 +92,16 @@ def describe(sel: Dict[str, str], practice_label=None) -> str:
         return f"#{sel['tag']}"
     if "collection" in sel:
         return f"colección {sel['collection']}"
+    if "primitive" in sel:
+        return {"cube": "cubos", "cylinder": "cilindros", "sphere": "esferas", "cone": "conos",
+                "plane": "planos", "torus": "donas", "icosphere": "icoesferas",
+                "suzanne": "monos"}.get(primitiva(sel["primitive"]), sel["primitive"])
     return "objetos"
+
+
+def primitiva(nombre: str) -> str:
+    clave = str(nombre or "").strip().lower()
+    return PRIMITIVAS.get(clave, clave)
 
 
 def select(scene: SceneState, sel: Dict[str, str]) -> Tuple[SceneObject, ...]:
@@ -93,6 +117,8 @@ def select(scene: SceneState, sel: Dict[str, str]) -> Tuple[SceneObject, ...]:
         if "tag" in sel and sel["tag"] not in obj.tags:
             return False
         if "collection" in sel and sel["collection"] not in obj.collections:
+            return False
+        if "primitive" in sel and obj.primitive != primitiva(sel["primitive"]):
             return False
         return True
 
@@ -118,8 +144,23 @@ def count_ok(found: int, minimo: Optional[int], maximo: Optional[int]) -> bool:
     return (minimo is None or found >= minimo) and (maximo is None or found <= maximo)
 
 
+def singular(que: str) -> str:
+    """«esferas» → «esfera», «materiales distintos» → «material distinto» (hasta « en …»)."""
+    cabeza, sep, resto = que.partition(" en ")
+    palabras = []
+    for p in cabeza.split(" "):
+        if p.endswith("es") and len(p) > 4 and p[-3] in "lrnd":
+            p = p[:-2]
+        elif p.endswith("s") and p[:1].islower() and len(p) > 3:
+            p = p[:-1]
+        palabras.append(p)
+    return " ".join(palabras) + sep + resto
+
+
 def count_message(found: int, minimo: Optional[int], maximo: Optional[int], que: str) -> str:
     """Mensajes generados (sección 22 de la especificación)."""
+    if found == 1 and not (minimo is not None and minimo == maximo):
+        que = singular(que)
     if minimo is not None and minimo == maximo:
         if found == minimo:
             return f"{found}/{minimo} {que}. Objetivo completado."

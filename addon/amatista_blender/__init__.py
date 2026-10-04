@@ -1,6 +1,8 @@
-"""Amatista para Blender.
+"""Amatista para Blender (versión 3: plataforma educativa dentro de Blender).
 
-Extensión de Blender 4.2+ (blender_manifest.toml). Tres modos sobre el mismo
+Extensión de Blender 4.2+ (blender_manifest.toml). El alumno tiene tres
+secciones: Aprender (teoría en píldoras y repaso), Practicar (la práctica
+guiada) y Mi curso (el mapa de cursos). Tres modos sobre el mismo
 Amatista Engine:
 
 - Alumno (Student): la práctica de la lección, objetivos, pistas y progreso
@@ -15,7 +17,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista",
     "author": "Maximiliano Cabello Mata",
-    "version": (0, 3, 0),
+    "version": (3, 0, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Prácticas guiadas de Amatista dentro de Blender",
@@ -25,13 +27,14 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 import bpy  # noqa: E402
 
 from . import ajustes, cuenta, desarrollo, estado, operadores, practicas
-from .interfaz import dialogos, estilo, hud, paneles
+from .interfaz import aprender, dialogos, estilo, hud, paneles
 
 CLASES = (
     (ajustes.PreferenciasAmatista,)
     + operadores.CLASES
     + desarrollo.CLASES
     + dialogos.CLASES
+    + aprender.CLASES
     + paneles.CLASES
 )
 

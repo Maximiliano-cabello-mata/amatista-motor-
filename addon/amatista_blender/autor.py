@@ -53,7 +53,13 @@ def _slug(texto):
     return re.sub(r"[^a-z0-9]+", "_", texto).strip("_")[:40] or "objetivo"
 
 
-def nuevo_borrador(practica_id, titulo, nivel):
+def nuevo_borrador(practica_id, titulo, nivel, plantilla="", curso="blender_principiante", modulo=1):
+    """Borrador nuevo; con plantilla (motor v3) trae píldoras, objetivos y vigilantes ya conectados."""
+    if plantilla:
+        datos = _motor.practica.nueva_practica(practica_id.strip().lower(), plantilla,
+                                                titulo.strip() or "Nueva práctica", curso, int(modulo))
+        datos["level"] = int(nivel)
+        return escribir_borrador(datos)
     datos = {
         "schema": _motor.practica.SUPPORTED_SCHEMA,
         "id": practica_id.strip().lower(),
@@ -65,6 +71,79 @@ def nuevo_borrador(practica_id, titulo, nivel):
         "targets": [],
     }
     return escribir_borrador(datos)
+
+
+# --- Motor v3: píldoras y casos de prueba ------------------------------------------------------
+
+TEXTO_PRUEBAS = "amatista_pruebas.json"
+
+
+def agregar_pildora(pildora_id, titulo, texto, disparo="start", objetivo="", teclas=""):
+    datos = leer_borrador()
+    if datos is None:
+        raise ValueError("Primero crea o abre un borrador.")
+    pildora_id = _slug(pildora_id or titulo).replace("_", "-")
+    if any(p.get("id") == pildora_id for p in datos.get("pills") or []):
+        raise ValueError(f"Ya hay una píldora «{pildora_id}».")
+    trigger = {"on": disparo}
+    if disparo in ("target", "guard"):
+        if not objetivo:
+            raise ValueError("Elige el objetivo que dispara la píldora.")
+        trigger["target"] = objetivo
+    pildora = {"id": pildora_id, "title": titulo.strip(), "text": texto.strip(), "trigger": trigger}
+    lista_teclas = [t.strip() for t in re.split(r"[+,]", teclas or "") if t.strip()]
+    if lista_teclas:
+        pildora["keys"] = lista_teclas
+        pildora["visual"] = "keys"
+    if not pildora["title"] or not pildora["text"]:
+        raise ValueError("La píldora necesita título y texto (una idea, dos frases como máximo).")
+    datos["schema"] = _motor.practica.SUPPORTED_SCHEMA
+    datos.setdefault("pills", []).append(pildora)
+    return escribir_borrador(datos)
+
+
+def leer_pruebas(practica_id):
+    texto = bpy.data.texts.get(TEXTO_PRUEBAS)
+    try:
+        datos = json.loads(texto.as_string()) if texto else None
+    except ValueError:
+        datos = None
+    if not isinstance(datos, dict):
+        datos = {"schema": "amatista.practice-tests/1", "practica": practica_id, "casos": []}
+    return datos
+
+
+def caso_de_prueba(context, nombre):
+    """Foto de esta escena + lo que el motor dice de ella → un caso de pruebas.json.
+
+    Así se escriben pruebas sin código: arma la escena (bien o mal a
+    propósito), guarda el caso y córrelo con «python engine/herramientas/
+    practicas.py probar». El caso queda en el texto «amatista_pruebas.json».
+    """
+    from . import practicas
+
+    practica = practicas.practica_borrador() or practicas.practica_activa(context)
+    if practica is None:
+        raise ValueError("Abre o prueba un borrador antes de guardar un caso.")
+    foto = practicas.capturar(context.scene)
+    reporte = _motor.MOTOR.evaluate(practica, foto)
+    espera = {"completada": reporte.completed}
+    if reporte.completed:
+        espera["progreso_min"] = 100
+    elif reporte.current_target_id:
+        espera["actual"] = reporte.current_target_id
+    if reporte.paused_by:
+        espera["pausa"] = reporte.paused_by
+    datos = leer_pruebas(practica.id)
+    datos["casos"].append({
+        "nombre": nombre.strip() or f"Caso {len(datos['casos']) + 1}",
+        "escena": _motor.foto.scene_to_dict(foto),
+        "espera": espera,
+    })
+    texto = bpy.data.texts.get(TEXTO_PRUEBAS) or bpy.data.texts.new(TEXTO_PRUEBAS)
+    texto.clear()
+    texto.write(json.dumps(datos, ensure_ascii=False, indent=2) + "\n")
+    return espera
 
 
 def borrador_desde_practica(definicion):

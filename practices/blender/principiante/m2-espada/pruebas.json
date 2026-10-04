@@ -1,0 +1,39 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bp.m2.espada",
+  "casos": [
+    {
+      "nombre": "Escena de inicio: hay que elegir el modelo",
+      "construir": [{"inicial": true}],
+      "espera": {"completada": false, "actual": "modelo", "accion": "assign_role", "pildoras": ["modos"]}
+    },
+    {
+      "nombre": "En Edición aparecen las píldoras de componentes y selección",
+      "construir": [{"cubo": {"nombre": "Espada", "dims": [2, 2, 2], "rol": "modelo"}}, {"modo": "EDIT_MESH"}],
+      "espera": {"completada": false, "actual": "forma", "pildoras": ["componentes", "seleccion", "extruir"]}
+    },
+    {
+      "nombre": "E y cancelar: el progreso se pausa y se ofrece fusionar",
+      "construir": [
+        {"cubo": {"nombre": "Espada", "dims": [0.4, 0.15, 3], "loc": [0, 0, 1.5], "rol": "modelo", "vertices": 32, "caras": 30, "encimados": 4}}
+      ],
+      "espera": {"completada": false, "pausa": "malla-limpia", "accion": "merge_by_distance", "pildoras": ["fusionar"], "mensaje_contiene": "encimadas"}
+    },
+    {
+      "nombre": "Solución: espada larga, con corte, limpia y guardada",
+      "construir": [
+        {"cubo": {"nombre": "Espada", "dims": [0.4, 0.15, 3], "loc": [0, 0, 1.5], "rol": "modelo", "vertices": 32, "caras": 30}},
+        {"guardado": {"archivo": "mi_espada.blend"}}
+      ],
+      "espera": {"completada": true, "progreso_min": 100}
+    },
+    {
+      "nombre": "Solución alternativa: una taza low-poly",
+      "construir": [
+        {"cilindro": {"nombre": "Taza", "dims": [1.2, 1.2, 1.4], "loc": [0, 0, 0.7], "rol": "modelo", "vertices": 80, "caras": 60}},
+        {"guardado": {"archivo": "mi_taza_espada.blend"}}
+      ],
+      "espera": {"completada": true}
+    }
+  ]
+}

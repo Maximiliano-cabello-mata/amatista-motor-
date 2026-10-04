@@ -27,7 +27,7 @@ def object_count(target: TargetDefinition, scene: SceneState) -> ValidationResul
     return result(
         target,
         count_ok(len(encontrados), minimo, maximo),
-        count_message(len(encontrados), minimo, maximo, que),
+        count_message(len(encontrados), minimo, maximo, f"«{que}»" if "role" in sel else que),
         {
             "selector": sel,
             "expected": {"min": minimo, "max": maximo},

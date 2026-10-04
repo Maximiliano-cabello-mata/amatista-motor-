@@ -23,6 +23,7 @@ from ..registry import ValidatorRegistry
 from ..tools.registry import ToolRegistry
 from ..validators.base import SELECTORES
 from .loader import parse_practice
+from .schema import PILDORA_IDEAL, SCHEMA_V2
 
 TIPOS_OBJETO = ("MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY", "CAMERA", "LIGHT", "ARMATURE", "LATTICE", "GPENCIL")
 
@@ -50,13 +51,15 @@ class CompileResult:
         }
 
 
-def _revisar_parametros(target, spec, roles_declarados, errores, avisos):
+def _revisar_parametros(target, spec, roles_declarados, errores, avisos, registry=None):
     donde = f"Objetivo «{target.id}»"
     for param in spec.params:
         if param.required and param.name not in target.params:
             errores.append(f"{donde}: {target.validator} necesita el parámetro «{param.name}» ({param.label}).")
     conocidos = {p.name for p in spec.params} | ({*SELECTORES, "reference", "inside"} if spec.selects else set())
     conocidos |= {"tolerance", "reference", "reference_role", "inside"}
+    if spec.id == "logic.any":
+        _revisar_opciones(target, errores, avisos, registry)
     for nombre in target.params:
         if nombre not in conocidos:
             avisos.append(f"{donde}: {target.validator} no usa el parámetro «{nombre}» (se ignora).")
@@ -68,7 +71,8 @@ def _revisar_parametros(target, spec, roles_declarados, errores, avisos):
                 f"(roles: {', '.join(sorted(roles_declarados))})."
             )
     eje = target.params.get("axis")
-    if eje is not None and str(eje).lower() not in ("x", "y", "z"):
+    validos = ("x", "y", "z", "horizontal") if spec.id == "shape.thinnest_axis" else ("x", "y", "z")
+    if eje is not None and str(eje).lower() not in validos:
         errores.append(f"{donde}: el eje debe ser x, y o z (es «{eje}»).")
     tipo = target.params.get("type")
     if tipo is not None and str(tipo).upper() not in TIPOS_OBJETO:
@@ -81,9 +85,71 @@ def _revisar_parametros(target, spec, roles_declarados, errores, avisos):
             except (TypeError, ValueError):
                 errores.append(f"{donde}: «min» y «max» deben ser números.")
     if spec.selects and not any(k in target.params for k in SELECTORES) and spec.id not in (
-        "object.count", "transform.scale_applied", "material.exists"
+        "object.count", "transform.scale_applied", "material.exists", "material.distinct", "material.matches",
+        "mesh.no_duplicates", "camera.frames", "light.three_point",
     ):
         errores.append(f"{donde}: {target.validator} necesita a qué objetos aplicarse (role, name, name_prefix o type).")
+
+
+def _revisar_opciones(target, errores, avisos, registro=None):
+    """logic.any: cada opción es un validador real con sus parámetros."""
+    from ..bootstrap import create_default_registry
+    from ..validators.logic import opciones
+
+    try:
+        crudas = opciones(target)
+    except ValueError as error:
+        errores.append(f"Objetivo «{target.id}»: {error}.")
+        return
+    registro = registro or create_default_registry()
+    for i, opcion in enumerate(crudas):
+        spec = registro.spec(opcion["validator"])
+        if spec is None:
+            errores.append(f"Objetivo «{target.id}»: la opción {i + 1} usa el validador «{opcion['validator']}», que no existe.")
+            continue
+        sub = type(target)(id=target.id, validator=opcion["validator"], params=dict(opcion.get("params") or {}))
+        _revisar_parametros(sub, spec, set(), errores, avisos)
+
+
+def _revisar_v2(practica, registry, tools, errores, avisos):
+    """Vigilantes, píldoras, repaso y curso (amatista.practice/2)."""
+    ids = {t.id for t in practica.targets}
+    roles = {r.id for r in practica.roles}
+    for guard in practica.guards:
+        spec = registry.spec(guard.validator)
+        if spec is None:
+            errores.append(f"Vigilante «{guard.id}»: el validador «{guard.validator}» no existe en este motor.")
+        else:
+            _revisar_parametros(guard, spec, roles, errores, avisos, registry)
+        if guard.fix is None:
+            avisos.append(f"Vigilante «{guard.id}»: sin «fix»; el alumno verá el problema pero no un botón para arreglarlo.")
+        if not guard.messages.get("fail") and not guard.tip:
+            avisos.append(f"Vigilante «{guard.id}»: conviene un messages.fail que explique por qué se pausó el progreso.")
+    vigilantes = {g.id for g in practica.guards}
+    for pildora in practica.pills:
+        donde = f"Píldora «{pildora.id}»"
+        disparo = pildora.trigger
+        if disparo.on == "target" and disparo.target not in ids:
+            errores.append(f"{donde}: aparece con el objetivo «{disparo.target}», que no existe.")
+        if disparo.on == "guard" and disparo.target not in vigilantes:
+            errores.append(f"{donde}: aparece con el vigilante «{disparo.target}», que no existe.")
+        if disparo.on == "tool" and disparo.tool not in tools:
+            errores.append(f"{donde}: la herramienta «{disparo.tool}» no está en el catálogo.")
+        if len(pildora.text) > PILDORA_IDEAL:
+            avisos.append(
+                f"{donde}: {len(pildora.text)} caracteres. Una píldora se lee de un vistazo (ideal ≤ {PILDORA_IDEAL})."
+            )
+    if practica.schema == SCHEMA_V2:
+        if not practica.pills:
+            avisos.append("La práctica no tiene píldoras de teoría (pills): el alumno no verá teoría dentro de Blender.")
+        elif not any(p.trigger.on == "start" for p in practica.pills):
+            avisos.append("Ninguna píldora aparece al empezar (trigger start): la práctica arranca sin contexto.")
+        if not practica.place.course:
+            avisos.append("La práctica no dice a qué curso pertenece (course.id).")
+        if practica.estimated_minutes is None:
+            avisos.append("Falta estimatedMinutes: el alumno no sabrá cuánto dura.")
+    if practica.place.next == practica.id:
+        errores.append("course.next no puede ser la misma práctica.")
 
 
 def compile_practice(
@@ -119,7 +185,7 @@ def compile_practice(
                 f"Amatista Engine (disponibles: {', '.join(registry.ids())})."
             )
         else:
-            _revisar_parametros(target, spec, roles, errores, avisos)
+            _revisar_parametros(target, spec, roles, errores, avisos, registry)
         for requisito in target.requires:
             if requisito == target.id:
                 errores.append(f"Objetivo «{target.id}»: no puede depender de sí mismo.")
@@ -142,6 +208,8 @@ def compile_practice(
     roles_usados = {t.params.get("role") for t in practica.targets} | {
         t.params.get("reference_role") for t in practica.targets
     }
+    roles_usados |= {g.params.get("role") for g in practica.guards}
+    _revisar_v2(practica, registry, tools, errores, avisos)
     for rol in roles - roles_usados:
         avisos.append(f"El rol «{rol}» está declarado pero ningún objetivo lo usa.")
     if not practica.roles and any(t.params.get("role") for t in practica.targets):

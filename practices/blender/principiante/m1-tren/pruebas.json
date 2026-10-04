@@ -1,0 +1,49 @@
+{
+  "schema": "amatista.practice-tests/1",
+  "practica": "blender.bp.m1.tren",
+  "casos": [
+    {
+      "nombre": "Escena vacía: el primer paso es agregar vagones",
+      "construir": [],
+      "espera": {"completada": false, "progreso_max": 0, "actual": "vagones", "pildoras": ["ejes", "navegar"]}
+    },
+    {
+      "nombre": "Ruedas acostadas como monedas",
+      "construir": [
+        {"cubo": {"nombre": "Locomotora", "dims": [1.6, 1, 1], "loc": [-0.9, 0, 0.8], "rol": "vagon"}},
+        {"cubo": {"nombre": "Vagon", "dims": [1.6, 1, 1], "loc": [0.8, 0, 0.8], "rol": "vagon"}},
+        {"cilindro": {"nombre": "Rueda", "dims": [0.6, 0.6, 0.15], "loc": [-1.3, 0.575, 0.3], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.001", "dims": [0.6, 0.6, 0.15], "loc": [-0.5, 0.575, 0.3], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.002", "dims": [0.6, 0.6, 0.15], "loc": [0.4, 0.575, 0.3], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.003", "dims": [0.6, 0.6, 0.15], "loc": [1.2, 0.575, 0.3], "rol": "rueda"}},
+        {"seleccionar": ["Rueda"]}
+      ],
+      "espera": {"completada": false, "actual": "ruedas-de-pie", "accion": "rotate", "pildoras": ["grs"]}
+    },
+    {
+      "nombre": "Una rueda flota",
+      "construir": [
+        {"cubo": {"nombre": "Locomotora", "dims": [1.6, 1, 1], "loc": [-0.9, 0, 0.8], "rol": "vagon"}},
+        {"cubo": {"nombre": "Vagon", "dims": [1.6, 1, 1], "loc": [0.8, 0, 0.8], "rol": "vagon"}},
+        {"cilindro": {"nombre": "Rueda", "dims": [0.6, 0.6, 0.15], "loc": [-1.3, 0.575, 0.8], "rot": [90, 0, 0], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.001", "dims": [0.6, 0.6, 0.15], "loc": [-0.5, 0.575, 0.3], "rot": [90, 0, 0], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.002", "dims": [0.6, 0.6, 0.15], "loc": [0.4, 0.575, 0.3], "rot": [90, 0, 0], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.003", "dims": [0.6, 0.6, 0.15], "loc": [1.2, 0.575, 0.3], "rot": [90, 0, 0], "rol": "rueda"}}
+      ],
+      "espera": {"completada": false, "actual": "ruedas-al-suelo", "accion": "move"}
+    },
+    {
+      "nombre": "Solución: tren completo y guardado",
+      "construir": [
+        {"cubo": {"nombre": "Locomotora", "dims": [1.6, 1, 1], "loc": [-0.9, 0, 0.8], "rol": "vagon"}},
+        {"cubo": {"nombre": "Vagon", "dims": [1.6, 1, 1], "loc": [0.8, 0, 0.8], "rol": "vagon"}},
+        {"cilindro": {"nombre": "Rueda", "dims": [0.6, 0.6, 0.15], "loc": [-1.3, 0.575, 0.3], "rot": [90, 0, 0], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.001", "dims": [0.6, 0.6, 0.15], "loc": [-0.5, 0.575, 0.3], "rot": [90, 0, 0], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.002", "dims": [0.6, 0.6, 0.15], "loc": [0.4, 0.575, 0.3], "rot": [90, 0, 0], "rol": "rueda"}},
+        {"cilindro": {"nombre": "Rueda.003", "dims": [0.6, 0.6, 0.15], "loc": [1.2, 0.575, 0.3], "rot": [90, 0, 0], "rol": "rueda"}},
+        {"guardado": {"archivo": "/home/alumno/mi_tren.blend"}}
+      ],
+      "espera": {"completada": true, "progreso_min": 100}
+    }
+  ]
+}

@@ -10,7 +10,7 @@ from amatista_engine.practice import load_practice
 
 REPO = Path(__file__).resolve().parents[2]
 motor = create_default_engine()
-practica = load_practice(REPO / "practices/blender/level_1/podio.json")
+practica = load_practice(REPO / "practices/archivo/v2/podio.json")
 
 def escena():
     # Valores de referencia independientes de los rangos del JSON.
@@ -46,9 +46,9 @@ def test_no_acepta_entrega_con_cambios_sin_guardar():
     assert reporte.result("guardar").passed is False
 
 def test_enlace_y_pasos_del_modulo_coinciden_con_la_practica():
-    modulo = json.loads((REPO / "frontend/src/data/modulos/blender-modulo-3.json").read_text(encoding="utf-8"))["module"]
+    modulo = json.loads((REPO / "frontend/src/data/modulos/archivo/blender-modulo-3.json").read_text(encoding="utf-8"))["module"]
     bloques = [b for l in modulo["lessons"] for b in l.get("contentBlocks", []) if b["type"] == "blender_practice"]
     assert len(bloques) == 1
     assert bloques[0]["practica"] == practica.id
     assert bloques[0]["steps"] == [t.title for t in practica.targets if not t.optional]
-    assert modulo["estado"] == "borrador"
+    assert modulo["estado"] == "archivado"  # motor v3: el módulo de la v2 quedó archivado

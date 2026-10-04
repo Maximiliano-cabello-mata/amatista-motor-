@@ -1,0 +1,144 @@
+{
+  "schema": "amatista.practice/2",
+  "id": "blender.bpi.m2.tres-puntos",
+  "version": 1,
+  "title": "Tres luces y tu primer render",
+  "level": 2,
+  "description": "Encuadra tu modelo con la cámara, ilumínalo con tres luces (principal, relleno y contraluz) y saca tu primera foto con F12 en EEVEE.",
+  "intro": "En 3D nada se ve sin luz. Hoy pones la cámara como un fotógrafo, colocas tres luces alrededor del modelo y sacas tu primera imagen.",
+  "completion": "¡Tu primera fotografía digital! Se desbloquea el Módulo 3: animación.",
+  "estimatedMinutes": 35,
+  "blender": {"min": "4.2"},
+  "skills": ["bl-luces", "bl-luz-area", "bl-camara", "bl-tres-puntos", "bl-eevee", "bl-render"],
+  "tags": ["principiante-intermedio", "modulo-2", "iluminacion", "render"],
+  "course": {"id": "blender_principiante_intermedio", "module": 2, "lesson": "bpi2_practica", "next": "blender.bpi.m3.pelota"},
+  "review": ["blender.bpi.m1.pinta-nave#principled", "blender.bpi.m1.pinta-nave#vista-material", "blender.bp.m1.tren#grs"],
+  "starter": {"scene": "empty", "build": "estudio_foto",
+              "note": "Amatista arma un estudio: tu nave (o un modelo de ejemplo) sobre un piso, sin luces y con el motor Workbench."},
+  "roles": {
+    "modelo": {"label": "Modelo", "description": "Lo que vas a fotografiar: tu nave o el modelo de ejemplo."}
+  },
+  "tools": {"allowed": ["light.add", "camera.add", "render.f12", "view.numpad", "material.principled"]},
+  "pills": [
+    {
+      "id": "camara",
+      "title": "La cámara es tus ojos",
+      "text": "F12 fotografía lo que ve la cámara activa. 0 del teclado numérico mira por ella; Ctrl + Alt + 0 la mueve a lo que tú estás viendo.",
+      "keys": ["Ctrl", "Alt", "0"],
+      "visual": "keys",
+      "trigger": {"on": "start"},
+      "check": {"question": "¿Qué tecla mira a través de la cámara?", "options": ["0 del teclado numérico", "F12", "Tab"], "answer": 0}
+    },
+    {
+      "id": "luces",
+      "title": "Área y Sol",
+      "text": "La luz de Área es un panel que da sombras suaves, como una ventana. El Sol ilumina parejo desde una dirección. Shift + A › Luz.",
+      "keys": ["Shift", "A"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "luz-area"},
+      "check": {"question": "¿Qué luz da sombras suaves?", "options": ["Área", "Sol", "Ninguna"], "answer": 0}
+    },
+    {
+      "id": "tres-puntos",
+      "title": "Principal, relleno y contraluz",
+      "text": "La principal ilumina fuerte desde un lado de la cámara. El relleno, más suave, desde el otro lado. El contraluz va detrás y dibuja el borde.",
+      "visual": "image:tres-puntos.svg",
+      "trigger": {"on": "target", "target": "tres-puntos"},
+      "check": {"question": "¿Dónde va el contraluz?", "options": ["Detrás del modelo", "Junto a la cámara", "Debajo del piso"], "answer": 0}
+    },
+    {
+      "id": "eevee",
+      "title": "EEVEE: render en tiempo real",
+      "text": "EEVEE muestra luces y materiales al instante. Cámbialo en la pestaña Render (la cámara de fotos trasera) de Propiedades.",
+      "visual": "tab:RENDER",
+      "trigger": {"on": "target", "target": "motor"}
+    },
+    {
+      "id": "f12",
+      "title": "F12: la foto final",
+      "text": "F12 abre una ventana con el render. Imagen › Guardar como lo guarda en PNG. Esc vuelve a la escena.",
+      "keys": ["F12"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "render"}
+    }
+  ],
+  "targets": [
+    {
+      "id": "modelo",
+      "title": "Elige qué fotografiar",
+      "validator": "role.count",
+      "params": {"role": "modelo", "equals": 1},
+      "weight": 5,
+      "tip": "Selecciona tu modelo y dile a Amatista que es el modelo.",
+      "hints": ["Pestaña Amatista › Es: Modelo › Asignar rol."]
+    },
+    {
+      "id": "camara",
+      "title": "Una cámara activa",
+      "validator": "camera.active",
+      "weight": 10,
+      "requires": ["modelo"],
+      "tip": "Shift+A › Cámara. Si ya hay una, Ctrl+0 la vuelve la activa.",
+      "hints": ["En el Outliner, la cámara activa tiene su ícono resaltado."]
+    },
+    {
+      "id": "encuadre",
+      "title": "Encuadra el modelo",
+      "validator": "camera.frames",
+      "params": {"role": "modelo"},
+      "weight": 15,
+      "requires": ["camara"],
+      "tip": "Mira el modelo como quieras fotografiarlo y pulsa Ctrl+Alt+0.",
+      "hints": ["Pulsa 0 (numérico) para comprobar lo que ve la cámara."]
+    },
+    {
+      "id": "motor",
+      "title": "Motor EEVEE",
+      "validator": "render.engine",
+      "params": {"engine": "EEVEE"},
+      "weight": 10,
+      "requires": ["camara"],
+      "tip": "Propiedades › Render › Motor de render: EEVEE.",
+      "hints": ["Si no ves la pestaña Render, busca el ícono de cámara de fotos en Propiedades."]
+    },
+    {
+      "id": "luz-area",
+      "title": "Al menos una luz de Área",
+      "validator": "scene.light_exists",
+      "params": {"light_type": "AREA", "min": 1},
+      "weight": 10,
+      "requires": ["encuadre"],
+      "tip": "Shift+A › Luz › Área. Sube su Potencia a 300 W o más en la pestaña de la bombilla.",
+      "hints": ["Muévela con G y apúntala al modelo con R."]
+    },
+    {
+      "id": "tres-puntos",
+      "title": "Iluminación de tres puntos",
+      "validator": "light.three_point",
+      "params": {"role": "modelo"},
+      "weight": 25,
+      "requires": ["luz-area"],
+      "tip": "Una luz delante a cada lado del modelo (la de relleno más suave) y una detrás.",
+      "hints": ["Mira desde arriba (7 del numérico): la cámara abajo, la principal y el relleno a sus lados, el contraluz arriba, detrás del modelo.", "Duplica la luz con Shift+D y baja la potencia de la copia: ése es el relleno."]
+    },
+    {
+      "id": "render",
+      "title": "Tu primer render",
+      "validator": "render.done",
+      "weight": 15,
+      "requires": ["tres-puntos", "motor"],
+      "tip": "F12.",
+      "hints": ["Si sale negro, revisa que las luces apunten al modelo y tengan potencia."]
+    },
+    {
+      "id": "guardar",
+      "title": "Guarda tu estudio",
+      "validator": "file.named",
+      "params": {"contains": "estudio"},
+      "weight": 10,
+      "requires": ["render"],
+      "tip": "Ctrl+Shift+S: mi_estudio.blend.",
+      "hints": ["Archivo › Guardar como, con un nombre que incluya «estudio»."]
+    }
+  ]
+}

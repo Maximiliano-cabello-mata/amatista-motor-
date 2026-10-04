@@ -17,6 +17,7 @@ import addon_utils
 
 ADDON = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ADDON))
+ARCHIVO_V2 = ADDON.parent / "practices" / "archivo" / "v2"
 
 FALLAS = []
 
@@ -66,8 +67,9 @@ def dibujar_todo(contexto):
     from amatista_blender import practicas
 
     revelada = practicas.pedir_pista(contexto, "patas")
-    for modo in ("alumno", "autor"):
+    for modo, pestana in (("alumno", "aprender"), ("alumno", "practicar"), ("alumno", "curso"), ("autor", "practicar")):
         contexto.window_manager.amatista.modo = modo
+        contexto.window_manager.amatista.pestana = pestana
         for clase in amatista_blender.CLASES:
             if not hasattr(clase, "draw"):
                 continue
@@ -134,6 +136,7 @@ class _Envoltura:
         self.__dict__["herramienta"] = "modifier.boolean"
         self.__dict__["objetivo"] = "patas"
         self.__dict__["explicar"] = False
+        self.__dict__["pildora"] = ""
 
     def __getattr__(self, nombre):
         valor = getattr(self._clase, nombre, None)
@@ -142,19 +145,168 @@ class _Envoltura:
         return valor
 
 
+def _limpiar():
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj)
+
+
+def _inicio_de_blender():
+    """El cubo, la luz y la cámara con los que abre Blender."""
+    bpy.ops.mesh.primitive_cube_add(size=2)
+    bpy.context.active_object.name = "Cube"
+    bpy.ops.object.light_add(type="POINT", location=(4, 1, 6))
+    bpy.context.active_object.name = "Light"
+    bpy.ops.object.camera_add(location=(7, -7, 5))
+    bpy.context.active_object.name = "Camera"
+
+
+def probar_v3(contexto):
+    """Motor v3: mapa del curso, escenas de inicio, píldoras, repaso, vigilantes y acciones nuevas."""
+    from amatista_blender import aprendizaje, guia, practicas
+
+    catalogo = practicas.catalogo()
+    aprendizaje.ESTADO["avance"] = {"completadas": [], "pildoras_vistas": {}, "repaso": {}}
+    revisar(aprendizaje.plan() is not None and len(aprendizaje.plan().courses) == 4, "mapa: 4 cursos")
+    revisar(aprendizaje.siguiente() == "blender.bp.m1.tren", "mapa: la primera práctica es el tren")
+    revisar(aprendizaje.estados()["blender.bp.m2.espada"] == "bloqueado", "mapa: la espada empieza bloqueada")
+
+    # Tren: la escena de inicio se vacía y la primera píldora es la de los ejes.
+    _limpiar()
+    _inicio_de_blender()
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    revisar(not bpy.data.objects, "tren: se quitan el cubo, la luz y la cámara de inicio")
+    principal = aprendizaje.pildora_principal()
+    revisar(principal is not None, f"tren: hay teoría desde el inicio ({principal and principal.id})")
+    g = guia.guia_actual()
+    revisar(g.action is not None and g.action.kind in ("add_cube", "add_primitive"),
+            f"tren: Hazlo conmigo agrega una pieza ({g.action})")
+    revisar(bpy.ops.amatista.hazlo_conmigo() == {"FINISHED"} and len(bpy.data.objects) == 1, "tren: se agrega la pieza")
+    bpy.ops.amatista.pildora_vista(pildora=principal.id)
+    revisar(principal.id in aprendizaje.vistas("blender.bp.m1.tren"), "píldora marcada como vista")
+    revisar(any(k.endswith("#" + principal.id) for k in aprendizaje.avance()["repaso"]) == (principal.check is not None),
+            "la píldora con pregunta entra al repaso")
+    aprendizaje.marcar_completada("blender.bp.m1.tren")
+    revisar(aprendizaje.estados()["blender.bp.m2.espada"] == "disponible", "mapa: terminar el tren abre la espada")
+
+    # Espada: repaso de lo anterior y vigilante de malla limpia.
+    for item in aprendizaje.avance()["repaso"].values():
+        item["due"] = 0  # ya toca repasar
+    aprendizaje.avance()["repaso"]["blender.bp.m1.tren#grs"] = {"box": 1, "due": 0}
+    _limpiar()
+    practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
+    pendientes = aprendizaje.repasos_pendientes(practicas.practica_activa(contexto))
+    revisar(bool(pendientes), f"espada: hay repaso del tren ({[i for i, _ in pendientes]})")
+    item, pildora = pendientes[0]
+    bpy.ops.amatista.responder_repaso(item=item, opcion=pildora.check.answer)
+    revisar(aprendizaje.avance()["repaso"][item]["box"] == 2, "repaso correcto: sube a la caja 2")
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    espada = contexto.active_object
+    from amatista_blender import _motor
+
+    _motor.tagger.assign_role(espada, "modelo")
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.duplicate()  # caras encimadas, como E y cancelar
+    bpy.ops.object.mode_set(mode="OBJECT")
+    reporte = practicas.evaluar(contexto)
+    revisar(reporte.paused_by == "malla-limpia", f"espada: el vigilante pausa el progreso ({reporte.paused_by})")
+    g = guia.guia_actual()
+    revisar(g.paused and g.action.kind == "merge_by_distance", "espada: la guía ofrece fusionar por distancia")
+    revisar(aprendizaje.pildora_principal().id == "fusionar", "espada: la píldora del vigilante va primero")
+    bpy.ops.amatista.hazlo_conmigo()
+    reporte = practicas.evaluar(contexto)
+    revisar(not reporte.paused and len(espada.data.vertices) == 8, "espada: fusionar limpia la malla y reanuda")
+
+    # Pinta tu nave: la escena se arma con la nave básica (Espejo + Subdivisión).
+    _limpiar()
+    practicas.activar(contexto, catalogo["blender.bpi.m1.pinta-nave"]["definicion"], "paquete")
+    nave = bpy.data.objects.get("Nave")
+    revisar(nave is not None and {m.type for m in nave.modifiers} == {"MIRROR", "SUBSURF"}, "pinta-nave: nave básica armada")
+    for _ in range(3):
+        guia.ejecutar_accion(contexto, _motor.guia.GuideAction("new_material", "Material", ("Nave",)), False)
+    materiales = [s.material for s in nave.material_slots]
+    principled = [m.node_tree.nodes.get("Principled BSDF") for m in materiales]
+    principled[0].inputs["Metallic"].default_value, principled[0].inputs["Roughness"].default_value = 1.0, 0.2
+    principled[1].inputs["Transmission Weight"].default_value = 1.0
+    principled[2].inputs["Metallic"].default_value, principled[2].inputs["Roughness"].default_value = 0.9, 0.8
+    for indice, poligono in enumerate(nave.data.polygons):
+        poligono.material_index = indice % 3
+    reporte = practicas.evaluar(contexto)
+    revisar(reporte.current_target_id == "guardar", f"pinta-nave: cristal y dos metales listos ({reporte.current_target_id})")
+
+    # Tres puntos: Workbench → EEVEE con «Hazlo conmigo» y F12 contado.
+    _limpiar()
+    practicas.activar(contexto, catalogo["blender.bpi.m2.tres-puntos"]["definicion"], "paquete")
+    revisar(contexto.scene.render.engine == "BLENDER_WORKBENCH", "tres puntos: el estudio empieza en Workbench")
+    guia.ejecutar_accion(contexto, _motor.guia.GuideAction("set_engine", "EEVEE", option="EEVEE"), False)
+    revisar("EEVEE" in contexto.scene.render.engine, "tres puntos: Hazlo conmigo cambia a EEVEE")
+    guia.ejecutar_accion(contexto, _motor.guia.GuideAction("add_camera", "Cámara"), False)
+    revisar(contexto.scene.camera is not None, "tres puntos: cámara agregada y activa")
+    practicas._al_renderizar(contexto.scene)
+    revisar(_motor.adapter.capture_scene(contexto.scene).renders == 1, "tres puntos: el render (F12) se cuenta")
+
+    # Pelota: claves de posición y escala.
+    _limpiar()
+    practicas.activar(contexto, catalogo["blender.bpi.m3.pelota"]["definicion"], "paquete")
+    pelota = bpy.data.objects.get("Pelota")
+    revisar(pelota is not None and pelota.location.z == 4.0, "pelota: escena con la pelota en el aire")
+    for cuadro, z, sz in ((1, 4.0, 1.0), (12, 1.0, 0.75), (24, 4.0, 1.0)):
+        contexto.scene.frame_set(cuadro)
+        pelota.location.z, pelota.scale.z = z, sz
+        guia.ejecutar_accion(contexto, _motor.guia.GuideAction("insert_keyframe", "I", ("Pelota",), "z",
+                                                               option="location"), False)
+        guia.ejecutar_accion(contexto, _motor.guia.GuideAction("insert_keyframe", "I", ("Pelota",), "z",
+                                                               option="scale"), False)
+    reporte = practicas.evaluar(contexto)
+    revisar(reporte.current_target_id == "guardar", f"pelota: rebota y se aplasta ({reporte.current_target_id}: {reporte.result(reporte.current_target_id).message if reporte.current_target_id else ''})")
+    ruta = Path(tempfile.mkdtemp()) / "mi_pelota.blend"
+    bpy.ops.wm.save_as_mainfile(filepath=str(ruta))
+    reporte = practicas.evaluar(contexto)
+    revisar(reporte.completed, "pelota: guardada, práctica completa")
+    revisar("blender.bpi.m3.pelota" in aprendizaje.avance()["completadas"], "la práctica completa queda en tu avance")
+
+    # Author v3: plantilla, píldora y caso de prueba sin código.
+    from amatista_blender import autor
+
+    contexto.window_manager.amatista.modo = "autor"
+    a = contexto.scene.amatista_autor
+    a.nuevo_id, a.nuevo_titulo, a.nueva_plantilla = "blender.bp.prueba", "Prueba", "modelado"
+    bpy.ops.amatista.autor_nuevo()
+    a.pil_titulo, a.pil_texto, a.pil_teclas, a.pil_disparo = "Ctrl + R", "Corta un anillo.", "Ctrl + R", "start"
+    bpy.ops.amatista.autor_agregar_pildora()
+    revisar(autor.compilar().ok and len(autor.leer_borrador()["pills"]) == 4, "Author: plantilla + píldora compilan")
+    bpy.ops.amatista.autor_caso_prueba()
+    casos = autor.leer_pruebas("blender.bp.prueba")["casos"]
+    revisar(len(casos) == 1 and "escena" in casos[0], "Author: caso de prueba con la foto de la escena")
+    contexto.window_manager.amatista.modo = "alumno"
+    dibujar_todo(contexto)
+    _limpiar()
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
+
     modulo = addon_utils.enable("amatista_blender", default_set=True, handle_error=None)
     revisar(modulo is not None, "el add-on se registra")
-    from amatista_blender import _motor, autor, practicas
+    from amatista_blender import _motor, ajustes, autor, practicas
+
+    import shutil
+
+    shutil.rmtree(ajustes.carpeta_usuario() / "practicas", ignore_errors=True)  # caché de corridas anteriores
+    (ajustes.carpeta_usuario() / "avance.json").unlink(missing_ok=True)
 
     revisar(bpy.context.preferences.addons.get("amatista_blender") is not None, "preferencias disponibles")
     catalogo = practicas.catalogo()
-    revisar("blender.n1.mesa" in catalogo, "la práctica de la mesa está en el catálogo")
+    revisar("blender.bp.m1.tren" in catalogo and "blender.bpi.m3.pelota" in catalogo,
+            "las 6 prácticas del plan de estudios están en el catálogo")
+    revisar("blender.n1.mesa" not in catalogo, "las prácticas archivadas (v2) no se muestran al alumno")
 
     contexto = bpy.context
-    practicas.activar(contexto, catalogo["blender.n1.mesa"]["definicion"], "paquete")
+
+    # --- Compatibilidad: la práctica v2 de la mesa (archivada) sigue funcionando ---
+    mesa = json.loads((ARCHIVO_V2 / "mesa.json").read_text(encoding="utf-8"))
+    practicas.activar(contexto, mesa, "paquete")
     reporte = practicas.ESTADO["reporte"]
     revisar(reporte is not None and reporte.progress == 0, "escena vacía: 0 %")
     revisar(reporte.current_target_id == "cubierta", "el primer paso es la cubierta")
@@ -194,7 +346,7 @@ def main():
         _motor.tagger.assign_role(pata, "pata")
         patas.append(pata)
     reporte = practicas.evaluar(contexto)
-    revisar(reporte.result("patas").message == "Tienes 3/4 «pata». Falta 1.", "detecta 3 de 4 patas")
+    revisar(reporte.result("patas").message == "Tienes 3/4 «Pata». Falta 1.", "detecta 3 de 4 patas")
     revisar(reporte.current_target_id == "patas", "el paso actual son las patas")
     g = guia.guia_actual()
     revisar(g.action.kind == "duplicate" and any(c.kind == "ghosts" for c in g.cues),
@@ -230,6 +382,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
+    revisar(datos["version_addon"] == "3.0.0", "el intento lleva la versión 3 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -261,8 +414,9 @@ def main():
     exportado = Path(tempfile.mkdtemp()) / "banco.json"
     autor.exportar(str(exportado))
     revisar(json.loads(exportado.read_text())["targets"][0]["hints"], "exportar practice.json con pistas")
+    contexto.window_manager.amatista.modo = "alumno"
 
-    dibujar_todo(contexto)
+    probar_v3(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

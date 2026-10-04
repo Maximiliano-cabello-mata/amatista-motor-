@@ -74,3 +74,126 @@ def material_exists(target: TargetDefinition, scene: SceneState) -> ValidationRe
         {"selector": sel, "material": nombre or None, "missing": sin},
     )
 
+
+
+# --- Motor v3: salud de la malla y modificadores con ajustes -----------------------------
+
+
+def no_duplicates(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Ninguna malla tiene vértices encimados (los deja «E» y luego cancelar).
+
+    Pensado como vigilante (guard): si falla, el motor pausa el progreso y
+    ofrece «Fusionar › Por distancia».
+    """
+    sel = selector(target)
+    objetos = [o for o in select(scene, sel) if o.object_type == "MESH"]
+    maximo = int(target.params.get("max", 0))
+    sucias = [
+        {"object": o.name, "value": o.duplicate_vertices}
+        for o in objetos
+        if o.duplicate_vertices is not None and o.duplicate_vertices > maximo
+    ]
+    if not sucias:
+        return result(target, True, "La malla está limpia: no hay vértices encimados.", {"selector": sel})
+    s = sucias[0]
+    return result(
+        target,
+        False,
+        f"«{s['object']}» tiene {s['value']} vértices encimados (pasa al extruir con E y cancelar). "
+        "Fusiónalos por distancia.",
+        {"selector": sel, "failed": sucias},
+    )
+
+
+def one_side(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """La malla base vive de un solo lado del eje (el espejo dibuja el otro).
+
+    params.axis (default x), params.side (negative | positive | any) y
+    params.tolerance: cuántos vértices pueden quedar del otro lado.
+    """
+    sel = selector(target)
+    objetos = [o for o in select(scene, sel) if o.object_type == "MESH"]
+    eje = str(target.params.get("axis", "x")).lower()
+    if eje not in "xyz" or len(eje) != 1:
+        raise ValueError("mesh.one_side requiere axis x, y o z")
+    lado = str(target.params.get("side", "any")).lower()
+    tolerancia = int(target.params.get("tolerance", 0))
+    que = describe(sel)
+    if not objetos:
+        return result(target, False, f"No hay mallas «{que}».", {"selector": sel})
+    fallan = []
+    for obj in objetos:
+        if obj.side_counts is None:
+            continue
+        negativos, positivos = obj.side_counts["xyz".index(eje)]
+        if lado == "negative":
+            sobra = positivos
+        elif lado == "positive":
+            sobra = negativos
+        else:
+            sobra = min(negativos, positivos)
+        if sobra > tolerancia:
+            fallan.append({"object": obj.name, "value": sobra})
+    if not fallan:
+        return result(target, True, f"Modelaste solo una mitad de «{que}»: el espejo hace el resto.", {"selector": sel})
+    return result(
+        target,
+        False,
+        f"«{fallan[0]['object']}» tiene {fallan[0]['value']} vértices del otro lado del eje {eje.upper()}: "
+        "borra esa mitad y deja que el modificador Espejo la dibuje.",
+        {"selector": sel, "axis": eje, "failed": fallan},
+    )
+
+
+# Nombre del modificador como lo muestra Blender en español.
+NOMBRES_MODIFICADOR = {
+    "MIRROR": "Espejo", "SUBSURF": "Subdivisión de superficie", "BEVEL": "Biselar", "SOLIDIFY": "Solidificar",
+    "ARRAY": "Arreglo", "BOOLEAN": "Booleano", "DECIMATE": "Diezmar", "WEIGHTED_NORMAL": "Normales ponderadas",
+}
+
+
+def modifier_configured(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Modificador con sus ajustes: eje del espejo, niveles de subdivisión, encendido.
+
+    params: modifier (MIRROR, SUBSURF, BEVEL...), axis (x, y o z; solo
+    MIRROR), only_axis (true: ningún otro eje activo), min_levels / max_levels
+    (SUBSURF) y enabled (default true: visible en la vista 3D).
+    """
+    tipo = text(target, "modifier", required=True).upper()
+    sel = selector(target)
+    objetos = select(scene, sel)
+    eje = str(target.params.get("axis", "") or "").lower()
+    solo_eje = bool(target.params.get("only_axis", False))
+    min_niveles = target.params.get("min_levels")
+    max_niveles = target.params.get("max_levels")
+    encendido = bool(target.params.get("enabled", True))
+    que = describe(sel)
+    nombre = NOMBRES_MODIFICADOR.get(tipo, tipo)
+    if not objetos:
+        return result(target, False, f"No hay objetos «{que}».", {"selector": sel})
+    for obj in objetos:
+        m = obj.modifier(tipo)
+        if m is None:
+            if tipo in obj.modifiers and not obj.modifier_details:
+                continue  # foto de un add-on anterior: solo se sabe que existe
+            return result(target, False, f"Agrega el modificador {nombre} a «{obj.name}» (llave inglesa › Agregar).",
+                          {"selector": sel, "missing": obj.name, "reason": "missing"})
+        if encendido and not m.enabled:
+            return result(target, False, f"El modificador {nombre} de «{obj.name}» está apagado: enciende su ojo.",
+                          {"selector": sel, "object": obj.name, "reason": "disabled"})
+        if eje:
+            indice = "xyz".index(eje)
+            if not m.axes[indice]:
+                return result(target, False, f"Activa el eje {eje.upper()} del espejo de «{obj.name}».",
+                              {"selector": sel, "object": obj.name, "reason": "axis", "axis": eje})
+            if solo_eje and sum(m.axes) > 1:
+                return result(target, False, f"El espejo de «{obj.name}» debe usar solo el eje {eje.upper()}.",
+                              {"selector": sel, "object": obj.name, "reason": "extra_axis", "axis": eje})
+        if min_niveles is not None and (m.levels or 0) < int(min_niveles):
+            return result(target, False, f"Sube los niveles de {nombre} de «{obj.name}» a {int(min_niveles)} o más.",
+                          {"selector": sel, "object": obj.name, "reason": "levels", "value": m.levels})
+        if max_niveles is not None and (m.levels or 0) > int(max_niveles):
+            return result(target, False, f"Baja los niveles de {nombre} de «{obj.name}» a {int(max_niveles)} o menos "
+                          "(más niveles = más lento).",
+                          {"selector": sel, "object": obj.name, "reason": "levels", "value": m.levels})
+    return result(target, True, f"El modificador {nombre} de «{que}» está bien configurado.", {"selector": sel})

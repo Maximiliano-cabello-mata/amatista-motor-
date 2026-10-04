@@ -5,7 +5,7 @@
 
 Documentación: docs/motor/referencia/07_guia_y_acompanamiento.md.
 """
-from .coach import ENTRENADORES, build_guidance, guide_target, objetivo_amable
+from .coach import ENTRENADORES, build_guidance, guide_guard, guide_target, objetivo_amable
 from .companion import Companion, distance
 from .models import (
     GuideAction,
@@ -29,6 +29,7 @@ __all__ = [
     "build_guidance",
     "distance",
     "guidance_to_dict",
+    "guide_guard",
     "guide_target",
     "objetivo_amable",
 ]
