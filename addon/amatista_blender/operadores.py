@@ -1,0 +1,218 @@
+"""Operadores del modo Alumno y de la cuenta (botones de los paneles)."""
+import bpy
+
+from . import _motor, ajustes, cuenta, practicas, red
+
+
+def _avisar(operador, error, ok=None):
+    if error:
+        operador.report({"WARNING"}, error)
+    elif ok:
+        operador.report({"INFO"}, ok)
+
+
+class AMATISTA_OT_vincular(bpy.types.Operator):
+    bl_idname = "amatista.vincular"
+    bl_label = "Vincular con Amatista"
+    bl_description = "Conecta Blender con tu cuenta de Amatista usando un código (sin escribir tu contraseña)"
+
+    def execute(self, context):
+        def listo(error):
+            if error is None and cuenta.VINCULO["url"]:
+                import webbrowser
+
+                webbrowser.open(cuenta.VINCULO["url"])
+
+        cuenta.iniciar_vinculo(listo)
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_cancelar_vinculo(bpy.types.Operator):
+    bl_idname = "amatista.cancelar_vinculo"
+    bl_label = "Cancelar"
+
+    def execute(self, context):
+        cuenta.cancelar_vinculo()
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_desvincular(bpy.types.Operator):
+    bl_idname = "amatista.desvincular"
+    bl_label = "Desvincular esta computadora"
+    bl_description = "Cierra la sesión de Amatista en este Blender"
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
+    def execute(self, context):
+        cuenta.desvincular()
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_permitir_internet(bpy.types.Operator):
+    bl_idname = "amatista.permitir_internet"
+    bl_label = "Permitir acceso en línea"
+    bl_description = "Activa Preferencias › Sistema › Red › Permitir acceso en línea (lo pides tú con este botón)"
+
+    def execute(self, context):
+        sistema = context.preferences.system
+        if hasattr(sistema, "use_online_access"):
+            sistema.use_online_access = True
+            ajustes.guardar_preferencias()
+        if red.en_linea_permitido():
+            cuenta.al_iniciar()
+            self.report({"INFO"}, "Listo: Amatista ya puede conectarse.")
+        else:
+            self.report({"WARNING"}, "Blender pide reiniciar para aplicar el cambio.")
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_abrir_plataforma(bpy.types.Operator):
+    bl_idname = "amatista.abrir_plataforma"
+    bl_label = "Abrir la plataforma"
+    bl_description = "Abre Amatista en el navegador"
+
+    ruta: bpy.props.StringProperty(default="#/panel")
+
+    def execute(self, context):
+        if not cuenta.abrir_plataforma(self.ruta):
+            self.report({"WARNING"}, "Este paquete no sabe la dirección de la plataforma (Preferencias del add-on).")
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_abrir_practica(bpy.types.Operator):
+    bl_idname = "amatista.abrir_practica"
+    bl_label = "Empezar práctica"
+    bl_description = "Abre la práctica en esta escena"
+
+    practica_id: bpy.props.StringProperty()
+
+    def execute(self, context):
+        practicas.abrir_por_id(context, self.practica_id, lambda error: error and print(f"[Amatista] {error}"))
+        _registrar_apertura(self.practica_id)
+        return {"FINISHED"}
+
+
+def _registrar_apertura(practica_id):
+    if practicas.vinculado():
+        red.pedir("POST", f"/api/addon/v1/practicas/{practica_id}/abrir", None, {"origen": "blender"})
+
+
+class AMATISTA_OT_practica_actual(bpy.types.Operator):
+    bl_idname = "amatista.practica_actual"
+    bl_label = "Abrir mi lección actual"
+    bl_description = "Abre la práctica de la lección que tienes abierta en la plataforma"
+
+    def execute(self, context):
+        def listo(error, respuesta):
+            if error:
+                print(f"[Amatista] {error}")
+            elif not (respuesta and respuesta.get("definicion")):
+                print("[Amatista] Abre en la plataforma una lección con práctica de Blender.")
+
+        practicas.cargar_practica_actual(listo)
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_elegir_practica(bpy.types.Operator):
+    bl_idname = "amatista.elegir_practica"
+    bl_label = "Elegir otra práctica"
+    bl_description = "Vuelve a la lista de prácticas (tu avance queda guardado en este archivo)"
+
+    def execute(self, context):
+        practicas.cerrar(context)
+        practicas.refrescar_catalogo()
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_actualizar_catalogo(bpy.types.Operator):
+    bl_idname = "amatista.actualizar_catalogo"
+    bl_label = "Actualizar lista"
+
+    def execute(self, context):
+        practicas.refrescar_catalogo()
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_comprobar(bpy.types.Operator):
+    bl_idname = "amatista.comprobar"
+    bl_label = "Comprobar"
+    bl_description = "Revisa tu escena con Amatista"
+
+    def execute(self, context):
+        reporte = practicas.evaluar(context, "manual")
+        if reporte is None:
+            self.report({"WARNING"}, "Primero abre una práctica.")
+            return {"CANCELLED"}
+        practicas.sincronizar(context)
+        self.report({"INFO"}, f"Progreso: {reporte.progress:.0f} %")
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_sincronizar(bpy.types.Operator):
+    bl_idname = "amatista.sincronizar"
+    bl_label = "Enviar mi progreso"
+    bl_description = "Guarda ahora tu progreso en la plataforma"
+
+    def execute(self, context):
+        if practicas.ESTADO["reporte"] is None:
+            practicas.evaluar(context)
+        practicas.sincronizar(context, forzar=True)
+        red.vaciar_cola()
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_asignar_rol(bpy.types.Operator):
+    bl_idname = "amatista.asignar_rol"
+    bl_label = "Asignar rol"
+    bl_description = "Dice a Amatista qué es cada objeto seleccionado (se guarda en el objeto)"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        rol = context.scene.amatista.rol_elegido
+        if not rol:
+            self.report({"WARNING"}, "La práctica no tiene roles.")
+            return {"CANCELLED"}
+        objetos = context.selected_objects or [context.active_object]
+        for obj in objetos:
+            _motor.tagger.assign_role(obj, rol)
+        practicas.evaluar(context, "rol")
+        self.report({"INFO"}, f"{len(objetos)} objeto(s) ahora son «{rol}».")
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_quitar_rol(bpy.types.Operator):
+    bl_idname = "amatista.quitar_rol"
+    bl_label = "Quitar rol"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        for obj in context.selected_objects or [context.active_object]:
+            _motor.tagger.remove_role(obj)
+        practicas.evaluar(context, "rol")
+        return {"FINISHED"}
+
+
+CLASES = (
+    AMATISTA_OT_vincular,
+    AMATISTA_OT_cancelar_vinculo,
+    AMATISTA_OT_desvincular,
+    AMATISTA_OT_permitir_internet,
+    AMATISTA_OT_abrir_plataforma,
+    AMATISTA_OT_abrir_practica,
+    AMATISTA_OT_practica_actual,
+    AMATISTA_OT_elegir_practica,
+    AMATISTA_OT_actualizar_catalogo,
+    AMATISTA_OT_comprobar,
+    AMATISTA_OT_sincronizar,
+    AMATISTA_OT_asignar_rol,
+    AMATISTA_OT_quitar_rol,
+)

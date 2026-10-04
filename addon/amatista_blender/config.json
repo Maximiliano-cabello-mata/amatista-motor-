@@ -1,0 +1,5 @@
+{
+  "servidor": "http://localhost:8000",
+  "plataforma": "http://localhost:5173",
+  "canal": "desarrollo"
+}

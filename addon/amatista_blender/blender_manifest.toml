@@ -1,0 +1,26 @@
+schema_version = "1.0.0"
+
+# Amatista para Blender: prácticas guiadas, comprobaciones locales y progreso
+# conectado con la plataforma. Documentación: docs/motor/ del repositorio.
+id = "amatista"
+version = "0.2.0"
+name = "Amatista"
+tagline = "Practicas guiadas de Amatista dentro de Blender"
+maintainer = "Maximiliano Cabello Mata"
+type = "add-on"
+website = "https://github.com/Maximiliano-cabello-mata/amatista"
+tags = ["3D View", "User Interface"]
+
+# 4.2 es la primera versión con extensiones (blender_manifest.toml).
+# La versión principal del curso es otra decisión (T-038).
+blender_version_min = "4.2.0"
+
+# El add-on usa bpy, que es GPL: la carpeta addon/ se publica como GPL-3.0-or-later.
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+network = "Descargar practicas y registrar tu progreso en Amatista"
+files = "Guardar en tu equipo las practicas descargadas y el progreso pendiente de enviar"
+
+[build]
+paths_exclude_pattern = ["__pycache__/", "/tests/", "*.pyc"]
