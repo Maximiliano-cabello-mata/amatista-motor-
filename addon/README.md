@@ -21,4 +21,4 @@ python addon/herramientas/construir.py --sistema macos \
 
 Los alumnos no usan estos comandos: la plataforma arma el paquete al descargarlo (`/api/addon/v1/descargas/{sistema}`). Licencia de esta carpeta: GPL-3.0-or-later (usa `bpy`).
 
-Documentación: [docs/motor/03_addon.md](../docs/motor/03_addon.md), [instalación](../docs/motor/04_instalacion_alumno.md) y [modo desarrollador](../docs/motor/06_modo_desarrollador.md).
+Documentación: [docs/motor/referencia/03_addon.md](../docs/motor/referencia/03_addon.md), [instalación](../docs/motor/referencia/04_instalacion_alumno.md) y [modo desarrollador](../docs/motor/referencia/06_modo_desarrollador.md).

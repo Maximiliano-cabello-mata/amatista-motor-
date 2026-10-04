@@ -81,6 +81,12 @@ class AmatistaEngine:
             needs_update=any(r.details.get("reason") == "unknown_validator" for r in results),
         )
 
+    def guide(self, practice: PracticeDefinition, scene: SceneState, report: Optional[EvaluationReport] = None):
+        """Guía del paso actual (etapa 2): qué hacer, con qué teclas y qué mirar."""
+        from .guide import build_guidance
+
+        return build_guidance(practice, scene, report or self.evaluate(practice, scene))
+
     def evaluate_target(self, practice: PracticeDefinition, scene: SceneState, target_id: str) -> ValidationResult:
         """Solo un objetivo (el depurador del modo desarrollador)."""
         target = practice.target(target_id)

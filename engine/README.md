@@ -16,4 +16,4 @@ demo.py                         python engine/demo.py (sin Blender)
 tests/                          python -m pytest engine/tests
 ```
 
-Documentación: [docs/motor/](../docs/motor/README.md), sobre todo [arquitectura](../docs/motor/01_arquitectura.md) y [formato de práctica](../docs/motor/02_formato_de_practica.md).
+Documentación: [docs/motor/](../docs/motor/README.md), sobre todo [arquitectura](../docs/motor/referencia/01_arquitectura.md) y [formato de práctica](../docs/motor/referencia/02_formato_de_practica.md).

@@ -12,11 +12,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 from ..errors import InvalidPracticeError
-from ..models import Hint, PracticeDefinition, RoleDefinition, TargetDefinition
+from ..models import GuideStepDefinition, Hint, PracticeDefinition, RoleDefinition, TargetDefinition, TargetGuide
 from .schema import (
     CAMPOS_OBJETIVO,
     MAX_OBJETIVOS,
+    MAX_PASOS_GUIA,
     MAX_PISTAS,
+    MAX_TECLAS,
     MAX_TEXTO,
     NIVEL_MAXIMO,
     PATRON_ID,
@@ -73,6 +75,41 @@ def _pistas(raw: Any, donde: str, e: _Errores) -> tuple:
     if len(set(niveles)) != len(niveles):
         e.add(f"'{donde}' repite niveles de pista")
     return tuple(sorted(pistas, key=lambda p: p.level))
+
+
+def _guia(raw: Any, donde: str, e: _Errores):
+    """{"why": "...", "steps": ["texto", {"text": "...", "keys": ["S", "Z"]}]}."""
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        e.add(f"'{donde}' debe ser un objeto {{why, steps}}")
+        return None
+    why = raw.get("why", "")
+    if not isinstance(why, str):
+        e.add(f"'{donde}.why' debe ser texto")
+        why = ""
+    pasos_raw = raw.get("steps", []) or []
+    if not isinstance(pasos_raw, list):
+        e.add(f"'{donde}.steps' debe ser una lista")
+        pasos_raw = []
+    if len(pasos_raw) > MAX_PASOS_GUIA:
+        e.add(f"'{donde}.steps' admite como máximo {MAX_PASOS_GUIA} pasos")
+    pasos = []
+    for i, paso in enumerate(pasos_raw):
+        if isinstance(paso, str) and paso.strip():
+            pasos.append(GuideStepDefinition(paso.strip()))
+            continue
+        if not (isinstance(paso, dict) and isinstance(paso.get("text"), str) and paso["text"].strip()):
+            e.add(f"'{donde}.steps[{i}]' debe ser texto o {{text, keys}}")
+            continue
+        teclas = paso.get("keys", []) or []
+        if not isinstance(teclas, list) or not all(isinstance(t, str) and t.strip() for t in teclas):
+            e.add(f"'{donde}.steps[{i}].keys' debe ser una lista de textos («S», «Z», «Enter»)")
+            teclas = []
+        if len(teclas) > MAX_TECLAS:
+            e.add(f"'{donde}.steps[{i}].keys' admite como máximo {MAX_TECLAS} teclas")
+        pasos.append(GuideStepDefinition(paso["text"].strip(), tuple(t.strip() for t in teclas)))
+    return TargetGuide(why=why.strip(), steps=tuple(pasos))
 
 
 def _roles(raw: Any, e: _Errores) -> tuple:
@@ -147,6 +184,7 @@ def _objetivo(raw: Any, index: int, e: _Errores, ids: set):
         hints=_pistas(raw.get("hints"), f"{donde}hints", e),
         messages={k: v.strip() for k, v in mensajes.items() if k in ("pass", "fail") and v.strip()},
         optional=optional,
+        guide=_guia(raw.get("guide"), f"{donde}guide", e),
     )
 
 
@@ -290,6 +328,15 @@ def dump_practice(practice: PracticeDefinition) -> Dict[str, Any]:
             objetivo["messages"] = dict(t.messages)
         if t.optional:
             objetivo["optional"] = True
+        if t.guide is not None and (t.guide.why or t.guide.steps):
+            guia: Dict[str, Any] = {}
+            if t.guide.why:
+                guia["why"] = t.guide.why
+            if t.guide.steps:
+                guia["steps"] = [
+                    {"text": p.text, "keys": list(p.keys)} if p.keys else p.text for p in t.guide.steps
+                ]
+            objetivo["guide"] = guia
         objetivos.append(objetivo)
     datos["targets"] = objetivos
     return datos

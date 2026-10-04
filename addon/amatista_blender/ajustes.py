@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "0.2.0"
+VERSION_ADDON = "0.3.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -112,6 +112,34 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         default=True,
         update=_al_cambiar_hud,
     )
+    acompanamiento: bpy.props.EnumProperty(
+        name="Acompañamiento",
+        description="Cuánto te acompaña Amatista mientras practicas",
+        items=[
+            ("acompanado", "Acompañado", "Tarjeta guía, avisos, resaltados en 3D y diálogos que explican cada paso", "HEART", 0),
+            ("tarjeta", "Solo tarjeta", "Tarjeta guía, avisos y resaltados, sin diálogos", "WINDOW", 1),
+            ("silencioso", "Silencioso", "Solo los objetivos y las pistas que pidas (como la etapa 1)", "HIDE_ON", 2),
+        ],
+        default="acompanado",
+    )
+    resaltar_3d: bpy.props.BoolProperty(
+        name="Mostrar en la vista 3D",
+        description="Resalta los objetos del paso actual y dibuja reglas, planos y fantasmas de ayuda",
+        default=True,
+    )
+    explicar_pasos: bpy.props.BoolProperty(
+        name="Explicarme cada paso nuevo",
+        description="Abre un diálogo con el porqué y las teclas al empezar cada paso",
+        default=True,
+    )
+    ayuda_tras_intentos: bpy.props.IntProperty(
+        name="Ofrecer ayuda tras", description="Cambios sin avanzar antes de preguntar «¿Te ayudo?»",
+        default=4, min=2, max=20,
+    )
+    ayuda_tras_segundos: bpy.props.IntProperty(
+        name="o tras (segundos)", description="Tiempo en el mismo paso antes de preguntar «¿Te ayudo?»",
+        default=120, min=30, max=900,
+    )
     avisar_herramientas: bpy.props.BoolProperty(
         name="Avisar herramientas de otro nivel",
         description="Muestra un aviso (no bloquea) si usas una herramienta de un nivel posterior",
@@ -137,6 +165,17 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         else:
             caja.label(text="Sin vincular: tu progreso se queda solo en esta computadora.")
             caja.operator("amatista.vincular", icon="LINKED")
+
+        caja = layout.box()
+        caja.label(text="Acompañamiento", icon="HEART")
+        caja.row().prop(self, "acompanamiento", expand=True)
+        sub = caja.column()
+        sub.active = self.acompanamiento != "silencioso"
+        sub.prop(self, "resaltar_3d")
+        sub.prop(self, "explicar_pasos")
+        fila = sub.row(align=True)
+        fila.prop(self, "ayuda_tras_intentos")
+        fila.prop(self, "ayuda_tras_segundos")
 
         caja = layout.box()
         caja.label(text="Práctica", icon="PREFERENCES")

@@ -1,7 +1,7 @@
 """Operadores del modo Alumno y de la cuenta (botones de los paneles)."""
 import bpy
 
-from . import _motor, ajustes, cuenta, practicas, red
+from . import _motor, ajustes, cuenta, guia, practicas, red
 
 
 def _avisar(operador, error, ok=None):
@@ -201,7 +201,56 @@ class AMATISTA_OT_quitar_rol(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class AMATISTA_OT_hazlo_conmigo(bpy.types.Operator):
+    bl_idname = "amatista.hazlo_conmigo"
+    bl_label = "Hazlo conmigo"
+    bl_description = (
+        "Selecciona el objeto del paso y arranca la herramienta correcta: tú la terminas con el ratón "
+        "o escribiendo el número de la guía (cuenta como ayuda paso a paso)"
+    )
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        g = guia.guia_actual()
+        if g is None or g.action is None:
+            self.report({"INFO"}, "Este paso no necesita ayuda: ¡ya está!")
+            return {"CANCELLED"}
+        objetivo = g.target_id
+        try:
+            texto = guia.ejecutar_accion(context, g.action)
+        except RuntimeError as error:
+            self.report({"WARNING"}, f"No se pudo arrancar la herramienta: {error}")
+            return {"CANCELLED"}
+        guia.registrar_ayuda(context, objetivo, "hazlo_conmigo", _motor.pedagogia.hints.NIVEL_GUIA)
+        if texto:
+            guia.avisar(g.action.label, texto, "animo")
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_mostrarme(bpy.types.Operator):
+    bl_idname = "amatista.mostrarme"
+    bl_label = "Muéstrame"
+    bl_description = "Selecciona y encuadra el objeto que hay que cambiar en este paso"
+
+    def execute(self, context):
+        g = guia.guia_actual()
+        if g is None:
+            return {"CANCELLED"}
+        nombres = [h.object_name for h in g.highlights if h.kind in ("corregir", "candidato")]
+        if not nombres and g.action is not None:
+            nombres = list(g.action.objects)
+        if nombres and guia.seleccionar(context, nombres):
+            guia.encuadrar(context)
+            guia.avisar(g.title, g.feedback, "animo")
+        else:
+            guia.avisar(g.title, g.instructions[0].text if g.instructions else g.feedback, "animo")
+        guia.registrar_ayuda(context, g.target_id, "mostrarme", 1)
+        return {"FINISHED"}
+
+
 CLASES = (
+    AMATISTA_OT_hazlo_conmigo,
+    AMATISTA_OT_mostrarme,
     AMATISTA_OT_vincular,
     AMATISTA_OT_cancelar_vinculo,
     AMATISTA_OT_desvincular,

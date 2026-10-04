@@ -1,6 +1,7 @@
 """Paneles de la barra lateral de la vista 3D (N › Amatista).
 
-Modo Alumno (Student):  Práctica · Objetivos · Asignar rol
+Modo Alumno (Student):  Práctica (con la tarjeta guía «Ahora») · Asignar
+                        rol · Todos los pasos
 Modo Desarrollador (Author): Borrador · Tagger · Inspector · Objetivos ·
                              Validación y depurador · Publicar
 Vista previa: el borrador exactamente como lo verá el alumno (sin
@@ -10,8 +11,8 @@ import time
 
 import bpy
 
-from .. import _motor, ajustes, autor, cuenta, practicas, red
-from . import estilo
+from .. import _motor, ajustes, autor, cuenta, guia, practicas, red
+from . import dialogos, estilo
 
 CATEGORIA = "Amatista"
 ESTADOS_SYNC = {
@@ -141,20 +142,27 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
         hechos = sum(1 for p in obligatorios if p.status == "completado")
         estilo.barra(cuerpo, reporte.progress / 100.0, f"{reporte.progress:.0f} %  ·  {hechos} de {len(obligatorios)} objetivos")
 
-        if reporte.completed:
-            estilo.parrafo(cuerpo, context, practica.completion or "¡Práctica completada!", icon="FUND")
-        elif reporte.current_target_id:
-            paso = next(p for p in reporte.steps if p.target_id == reporte.current_target_id)
-            cuerpo.label(text=f"Paso {reporte.step_number} de {len(reporte.steps)}: {paso.title}", icon="PLAY")
         if reporte.needs_update:
             estilo.parrafo(cuerpo, context, "Esta práctica necesita una versión más reciente del add-on.",
                            icon="ERROR", alerta=True)
 
-        fila = cuerpo.row(align=True)
-        fila.scale_y = 1.4
+        g = guia.guia_actual()
+        if g is not None and guia.nivel() != guia.NIVEL_SILENCIOSO:
+            self._tarjeta_guia(layout, context, g)
+        elif reporte.completed:
+            estilo.parrafo(cuerpo, context, practica.completion or "¡Práctica completada!", icon="FUND")
+        elif reporte.current_target_id:
+            paso = next(p for p in reporte.steps if p.target_id == reporte.current_target_id)
+            cuerpo.label(text=f"Paso {reporte.step_number} de {len(reporte.steps)}: {paso.title}", icon="PLAY")
+
+        fila = layout.row(align=True)
+        fila.scale_y = 1.2
         fila.operator("amatista.comprobar", text="Comprobar", icon="CHECKMARK")
         if not reporte.completed:
-            fila.operator("amatista.pista", text="Necesito una pista", icon_value=estilo.icono("pista"))
+            if guia.nivel() == guia.NIVEL_SILENCIOSO:
+                fila.operator("amatista.pista", text="Necesito una pista", icon_value=estilo.icono("pista"))
+            else:
+                fila.operator("amatista.explicar_paso", text="¿Cómo lo hago?", icon="QUESTION")
 
         for aviso in reporte.tool_warnings:
             caja = layout.box()
@@ -166,6 +174,33 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
         fila = layout.row(align=True)
         fila.operator("amatista.abrir_plataforma", text="Plataforma", icon="URL").ruta = "#/panel"
         fila.operator("amatista.elegir_practica", text="Otra práctica", icon="FILE_REFRESH")
+
+    def _tarjeta_guia(self, layout, context, g):
+        """La tarjeta «Ahora»: el paso actual explicado, con teclas y botones."""
+        caja = layout.box()
+        cabecera = caja.row(align=True)
+        cabecera.scale_y = 1.2
+        if g.completed:
+            cabecera.label(text=g.title, icon_value=estilo.icono("celebrar"))
+        else:
+            cabecera.label(text=f"Ahora: {g.title}", icon_value=estilo.icono("actual"))
+            if g.step_total:
+                derecha = cabecera.row()
+                derecha.alignment = "RIGHT"
+                derecha.active = False
+                derecha.label(text=f"{g.step_number}/{g.step_total}")
+        icono_tono, alerta = estilo.TONOS.get(g.tone, ("LIGHT", False))
+        estilo.parrafo(caja, context, g.feedback, icon=icono_tono, alerta=alerta)
+        if g.instructions:
+            estilo.separador(caja, 0.3)
+            estilo.instrucciones(caja, context, g.instructions)
+        if g.why and not g.completed:
+            fila = caja.column()
+            fila.active = False
+            estilo.parrafo(fila, context, g.why, icon="QUESTION")
+        if not g.completed:
+            estilo.separador(caja, 0.3)
+            dialogos.botones_guia(caja, g)
 
     def _estado_sync(self, layout, context):
         sc = context.scene
@@ -252,8 +287,9 @@ def _dibujar_detalle(layout, context, resultado):
 
 class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
     bl_idname = "AMATISTA_PT_objetivos"
-    bl_label = "Objetivos"
+    bl_label = "Todos los pasos"
     bl_parent_id = "AMATISTA_PT_principal"
+    bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod
     def poll(cls, context):
@@ -624,8 +660,8 @@ class AMATISTA_PT_autor_publicar(_Autor, bpy.types.Panel):
 CLASES = (
     AMATISTA_PT_principal,
     AMATISTA_PT_practica,
-    AMATISTA_PT_objetivos,
     AMATISTA_PT_roles,
+    AMATISTA_PT_objetivos,
     AMATISTA_PT_autor_borrador,
     AMATISTA_PT_autor_tagger,
     AMATISTA_PT_autor_inspector,

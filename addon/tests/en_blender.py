@@ -78,6 +78,50 @@ def dibujar_todo(contexto):
                 traceback.print_exc()
                 revisar(False, f"{nombre}.draw ({modo}): {error}")
     revisar(True, "todos los paneles y diálogos se dibujan sin errores")
+    dibujar_vista_3d(contexto)
+
+
+def dibujar_vista_3d(contexto):
+    """La tarjeta guía y los resaltados 3D con gpu/blf falsos (sin pantalla)."""
+    from types import SimpleNamespace
+
+    from amatista_blender import guia
+    from amatista_blender.interfaz import hud, visor3d
+
+    falso = Diseno()
+    blf_falso = SimpleNamespace(size=lambda *a: None, color=lambda *a: None, position=lambda *a: None,
+                                draw=lambda *a: None, dimensions=lambda f, t: (len(t) * 6.0, 10.0))
+    reemplazos = {"gpu": falso, "blf": blf_falso, "batch_for_shader": lambda *a, **k: falso,
+                  "location_3d_to_region_2d": lambda region, vista, punto: SimpleNamespace(x=100.0, y=80.0)}
+    originales = {}
+    for modulo in (hud, visor3d):
+        originales[modulo] = {k: getattr(modulo, k, None) for k in reemplazos}
+        for clave, valor in reemplazos.items():
+            setattr(modulo, clave, valor)
+    try:
+        guia.avisar("¡Listo! Prueba", "Un aviso de prueba que ocupa dos líneas en la tarjeta.", "logrado")
+        class ContextoFalso:
+            region = SimpleNamespace(width=800, height=600)
+            region_data = object()
+
+            def __getattr__(self, nombre):
+                return getattr(contexto, nombre)
+
+        bpy_falso = SimpleNamespace(context=ContextoFalso(), data=bpy.data, types=bpy.types, app=bpy.app)
+        for modulo in (hud, visor3d):
+            originales[modulo]["bpy"] = modulo.bpy
+            modulo.bpy = bpy_falso
+        hud.dibujar()
+        visor3d.dibujar_escena()
+        visor3d.dibujar_etiquetas()
+        revisar(True, "la tarjeta guía y los resaltados 3D se dibujan sin errores")
+    except Exception as error:  # noqa: BLE001
+        traceback.print_exc()
+        revisar(False, f"dibujar la vista 3D: {error}")
+    finally:
+        for modulo, valores in originales.items():
+            for clave, valor in valores.items():
+                setattr(modulo, clave, valor)
 
 
 class _Envoltura:
@@ -115,6 +159,33 @@ def main():
     revisar(reporte is not None and reporte.progress == 0, "escena vacía: 0 %")
     revisar(reporte.current_target_id == "cubierta", "el primer paso es la cubierta")
 
+    # --- Etapa 2: guía y «Hazlo conmigo» (sin ventana se aplica el valor sugerido) ---
+    from amatista_blender import guia
+
+    g = guia.guia_actual()
+    revisar(g is not None and g.action.kind == "add_cube", "guía: escena vacía propone agregar un cubo")
+    revisar(bpy.ops.amatista.hazlo_conmigo() == {"FINISHED"}, "Hazlo conmigo agrega el cubo")
+    practicas.evaluar(contexto)
+    g = guia.guia_actual()
+    revisar(g.action.kind == "assign_role" and g.highlights[0].kind == "candidato", "guía: propone el cubo como cubierta")
+    bpy.ops.amatista.hazlo_conmigo()
+    g = guia.guia_actual()
+    revisar(g.target_id == "grosor" and g.action.kind == "scale" and g.action.value == 0.1,
+            f"guía: escalar en Z por 0.1 ({g.action})")
+    revisar([i.keys for i in g.instructions][1] == ("S", "Z"), "guía: teclas S › Z")
+    dibujar_vista_3d(contexto)  # con regla y resaltado naranja
+    bpy.ops.amatista.hazlo_conmigo()
+    reporte = practicas.evaluar(contexto)
+    revisar(reporte.result("grosor").passed, "Hazlo conmigo deja la cubierta delgada")
+    revisar(practicas.pistas(contexto).get("grosor") == 3, "Hazlo conmigo cuenta como guía paso a paso")
+    revisar(any(a["titulo"].startswith("¡Listo!") for a in guia.ESTADO["avisos"]), "el acompañante celebra el paso")
+    revisar(bpy.ops.amatista.mostrarme() == {"FINISHED"}, "Muéstrame selecciona lo del paso")
+    revisar(practicas.datos_intento(contexto)["ayudas"]["hazlo_conmigo"] == 3, "el intento cuenta las ayudas")
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj)
+    contexto.scene.amatista.pistas_json = "{}"
+    practicas.evaluar(contexto)
+
     tabla = cubo("Tabla", (0, 0, 0.8), (2.0, 1.0, 0.1))
     _motor.tagger.assign_role(tabla, "cubierta")
     patas = []
@@ -125,6 +196,10 @@ def main():
     reporte = practicas.evaluar(contexto)
     revisar(reporte.result("patas").message == "Tienes 3/4 «pata». Falta 1.", "detecta 3 de 4 patas")
     revisar(reporte.current_target_id == "patas", "el paso actual son las patas")
+    g = guia.guia_actual()
+    revisar(g.action.kind == "duplicate" and any(c.kind == "ghosts" for c in g.cues),
+            "guía: duplicar y la pata que falta como fantasma")
+    dibujar_vista_3d(contexto)  # con fantasmas y contornos verdes
 
     resultado = bpy.ops.amatista.pista(objetivo="patas")
     revisar(resultado == {"FINISHED"}, "pedir pista funciona")

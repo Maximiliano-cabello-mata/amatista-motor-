@@ -145,5 +145,62 @@ def seccion(layout, context, idname, titulo, icon="NONE", cerrada=False):
     return caja
 
 
+TECLAS_ICONO = {
+    "shift": "EVENT_SHIFT", "ctrl": "EVENT_CTRL", "alt": "EVENT_ALT", "tab": "EVENT_TAB", "esc": "EVENT_ESC",
+    "enter": "EVENT_RETURN", "espacio": "EVENT_SPACEKEY", "supr": "EVENT_DEL", "clic": "MOUSE_LMB",
+    "clic derecho": "MOUSE_RMB", "rueda": "MOUSE_MMB", "arrastrar": "MOUSE_LMB_DRAG",
+    "0": "EVENT_ZEROKEY", "1": "EVENT_ONEKEY", "2": "EVENT_TWOKEY", "3": "EVENT_THREEKEY", "4": "EVENT_FOURKEY",
+    "5": "EVENT_FIVEKEY", "6": "EVENT_SIXKEY", "7": "EVENT_SEVENKEY", "8": "EVENT_EIGHTKEY", "9": "EVENT_NINEKEY",
+}
+
+
+def icono_tecla(tecla):
+    """Ícono de Blender para una tecla («S» → EVENT_S) o None si se escribe (0.25)."""
+    texto = str(tecla).strip()
+    if len(texto) == 1 and texto.isalpha():
+        return f"EVENT_{texto.upper()}"
+    return TECLAS_ICONO.get(texto.lower())
+
+
+def teclas(layout, lista, escala=1.0):
+    """Fila de teclas: íconos de teclado de Blender y los números en una cajita."""
+    if not lista:
+        return
+    fila = layout.row(align=True)
+    fila.alignment = "LEFT"
+    fila.scale_y = escala
+    for i, tecla in enumerate(lista):
+        if i:
+            sep = fila.row()
+            sep.active = False
+            sep.label(text="›")
+        icono_t = icono_tecla(tecla)
+        if icono_t:
+            fila.label(text="" if len(str(tecla)) == 1 else str(tecla), icon=icono_t)
+        else:
+            fila.box().label(text=str(tecla))
+
+
+def instrucciones(layout, context, lista, numerar=True):
+    """Micro pasos de la guía: número, teclas y texto partido."""
+    for indice, paso in enumerate(lista, start=1):
+        caja = layout.column(align=True)
+        cabecera = caja.row(align=True)
+        if numerar:
+            numero = cabecera.row()
+            numero.alignment = "LEFT"
+            numero.label(text=f"{indice}.")
+        teclas(cabecera, paso.keys)
+        parrafo(caja, context, paso.text, margen=6)
+
+
+TONOS = {
+    "logrado": ("FUND", False),
+    "cerca": ("SOLO_ON", False),
+    "animo": ("LIGHT", False),
+    "ojo": ("ERROR", True),
+}
+
+
 def nivel_texto(nivel):
     return f"Nivel {nivel} · {NIVELES.get(int(nivel or 1), '')}"

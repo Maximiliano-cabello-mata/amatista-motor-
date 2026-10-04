@@ -78,6 +78,26 @@ class Hint:
 
 
 @dataclass(frozen=True)
+class GuideStepDefinition:
+    """Micro paso escrito por el autor: texto y teclas («S», «Z», «0.1»)."""
+
+    text: str
+    keys: Tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class TargetGuide:
+    """Bloque opcional «guide» de un objetivo (etapa 2 del motor).
+
+    why: por qué importa el paso (lo muestra la tarjeta guía).
+    steps: micro pasos; si faltan, el motor los genera según el validador.
+    """
+
+    why: str = ""
+    steps: Tuple[GuideStepDefinition, ...] = ()
+
+
+@dataclass(frozen=True)
 class TargetDefinition:
     id: str
     validator: str
@@ -89,6 +109,7 @@ class TargetDefinition:
     hints: Tuple[Hint, ...] = ()
     messages: Dict[str, str] = field(default_factory=dict)
     optional: bool = False
+    guide: Optional[TargetGuide] = None
 
 
 @dataclass(frozen=True)

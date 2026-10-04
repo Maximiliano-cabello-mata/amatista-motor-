@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/1",
   "id": "blender.n1.mesa",
-  "version": 1,
+  "version": 2,
   "title": "Construir una mesa",
   "level": 1,
   "description": "Tu primera práctica dentro de Blender: con cinco cubos construyes una mesa, la revisas con Amatista y la guardas.",
@@ -26,6 +26,7 @@
       "params": {"role": "cubierta", "equals": 1},
       "weight": 15,
       "tip": "Empieza con el cubo de la escena o agrega uno con Shift+A › Malla › Cubo.",
+      "guide": {"why": "Amatista no adivina qué es cada objeto: tú le dices cuál es la cubierta. Así puede revisarla aunque la llames como quieras."},
       "hints": [
         "Una mesa empieza por su tabla: selecciona un cubo y dile a Amatista que es la cubierta.",
         "Con el cubo seleccionado, en el panel Amatista elige «Cubierta» y pulsa «Asignar rol».",
@@ -41,6 +42,7 @@
       "weight": 15,
       "requires": ["cubierta"],
       "tip": "Una cubierta real es ancha y delgada. Cambia solo su altura.",
+      "guide": {"why": "Una mesa real tiene la tabla ancha y delgada. Cambiar solo la altura (el eje Z) te enseña a escalar en un solo eje."},
       "hints": [
         "Revisa el grosor de la cubierta: debe medir entre 0.05 y 0.30 en Z.",
         "Puedes modificar solamente su altura con Escalar restringido al eje Z.",
@@ -55,6 +57,7 @@
       "weight": 30,
       "requires": ["cubierta"],
       "tip": "Crea una pata, dale el rol «Pata» y duplícala: las copias conservan el rol.",
+      "guide": {"why": "Duplicar es más rápido y preciso que crear cada pata desde cero, y las copias conservan el rol."},
       "hints": [
         "Revisa cuántos soportes tiene tu mesa.",
         "La cubierta necesita cuatro puntos de apoyo: uno en cada esquina.",
@@ -70,6 +73,7 @@
       "weight": 20,
       "requires": ["patas", "grosor"],
       "tip": "Cada pata debe quedar bajo la cubierta, sin atravesarla.",
+      "guide": {"why": "Si una pata atraviesa la tabla, la mesa no se podría construir. Mirar de frente (tecla 1) ayuda a ver dónde toca cada una."},
       "hints": [
         "Mira la mesa desde el frente (1 del teclado numérico) y revisa dónde termina cada pata.",
         "La parte de arriba de cada pata debe tocar la parte de abajo de la cubierta.",
@@ -84,6 +88,7 @@
       "weight": 10,
       "requires": ["patas"],
       "tip": "Una mesa de comedor mide unos 0.75 m de alto.",
+      "guide": {"why": "Las proporciones hacen que un objeto se reconozca: una mesa de comedor mide unos 0.75 m."},
       "hints": [
         "Compara la altura de las patas con una mesa real.",
         "Escala las patas solo en Z (S, Z) hasta que midan entre 0.4 y 1.2."
@@ -96,6 +101,7 @@
       "weight": 10,
       "requires": ["debajo"],
       "tip": "Guarda con un nombre que reconozcas, por ejemplo mi_mesa.blend.",
+      "guide": {"why": "Guardar seguido evita perder tu trabajo y le permite a Amatista registrar tu práctica."},
       "hints": [
         "Los cambios sin guardar se pierden si Blender se cierra.",
         "Archivo › Guardar como (Shift+Ctrl+S) la primera vez; después basta con Ctrl+S."
@@ -109,6 +115,7 @@
       "weight": 0,
       "optional": true,
       "tip": "Propiedades › Material › Nuevo, y cambia el color base.",
+      "guide": {"why": "El color no cambia la forma, pero hace que tu modelo se vea terminado."},
       "hints": ["Selecciona la cubierta y en Propiedades (pestaña de esfera roja) pulsa «Nuevo»."]
     }
   ]

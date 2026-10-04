@@ -16,7 +16,7 @@ from pathlib import Path
 import bpy
 from bpy.app.handlers import persistent
 
-from . import _motor, ajustes, red
+from . import _motor, ajustes, guia, red
 
 # Estado de la sesión de Blender (no se guarda en el .blend).
 ESTADO = {
@@ -196,6 +196,7 @@ def activar(context, datos, origen="paquete"):
         sc.amatista.celebrada = False
         ESTADO["aprobados_antes"] = {}
         ESTADO["sync"] = ""
+        guia.reiniciar()
     if origen != "borrador":
         guardar_en_cache(datos)
     evaluar(context, "abrir")
@@ -207,6 +208,7 @@ def cerrar(context):
     sc.amatista.practica_id = ""
     sc.amatista.practica_json = ""
     ESTADO.update(reporte=None, clave=None, practica=None, sync="")
+    guia.reiniciar()
     redibujar()
 
 
@@ -269,13 +271,18 @@ def evaluar(context=None, motivo="manual"):
         ESTADO["reporte"] = None
         return None
     sc = escena(context)
-    reporte = _motor.MOTOR.evaluate(practica, capturar(sc))
+    foto = capturar(sc)
+    reporte = _motor.MOTOR.evaluate(practica, foto)
     _contar_correcciones(sc, reporte)
     anterior = ESTADO["reporte"]
     ESTADO["reporte"] = reporte
     ESTADO["sucio"] = False
     if reporte.progress > sc.amatista.mejor_progreso:
         sc.amatista.mejor_progreso = reporte.progress
+    try:
+        guia.actualizar(context, practica, foto, reporte, motivo)
+    except Exception as error:  # noqa: BLE001 - la guía nunca impide evaluar
+        print(f"[Amatista] Error en la guía: {error}")
     redibujar()
     _avisar_herramientas(sc, reporte)
     if reporte.completed and not sc.amatista.celebrada and motivo != "abrir":
@@ -394,6 +401,7 @@ def datos_intento(context, modo="alumno"):
         "version_motor": _motor.VERSION_MOTOR,
         "sistema": red.sistema(),
         "modo": modo,
+        "ayudas": dict(guia.ESTADO["ayudas"]),
     }
 
 
@@ -490,6 +498,7 @@ def _al_guardar(*_args):
 def _al_abrir(*_args):
     ESTADO.update(reporte=None, clave=None, practica=None, aprobados_antes={}, sync="",
                   cambios_desde_guardar=not bpy.data.filepath)
+    guia.reiniciar()
     if bpy.context.scene and bpy.context.scene.amatista.practica_json:
         bpy.app.timers.register(lambda: (evaluar(bpy.context, "abrir"), None)[1], first_interval=0.3)
 

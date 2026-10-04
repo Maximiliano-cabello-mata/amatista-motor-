@@ -1,6 +1,6 @@
 # Prácticas del motor
 
-Prácticas en formato [`amatista.practice/1`](../docs/motor/02_formato_de_practica.md).
+Prácticas en formato [`amatista.practice/1`](../docs/motor/referencia/02_formato_de_practica.md).
 
 | Carpeta | Qué hay |
 |---|---|
@@ -13,4 +13,4 @@ Prácticas actuales:
 |---|---|---|
 | `blender.n1.mesa` | `blender/level_1/mesa.json` | Módulo 2 › «Práctica: construye una mesa» (`les_103`) |
 
-Una práctica nueva: créala con el modo Desarrollador del add-on ([guía](../docs/motor/06_modo_desarrollador.md)), expórtala aquí y agrega un bloque `blender_practice` a su lección. Cambiar una práctica publicada = subir `version` y volver a registrar: el admin publica la nueva.
+Una práctica nueva: créala con el modo Desarrollador del add-on ([guía](../docs/motor/referencia/06_modo_desarrollador.md)), expórtala aquí y agrega un bloque `blender_practice` a su lección. Cambiar una práctica publicada = subir `version` y volver a registrar: el admin publica la nueva.

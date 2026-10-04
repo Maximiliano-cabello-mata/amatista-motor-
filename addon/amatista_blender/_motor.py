@@ -24,6 +24,7 @@ practica = import_module(engine.__name__ + ".practice")
 pedagogia = import_module(engine.__name__ + ".pedagogy")
 foto = import_module(engine.__name__ + ".snapshot")
 herramientas = import_module(engine.__name__ + ".tools")
+guia = import_module(engine.__name__ + ".guide")
 
 MOTOR = engine.create_default_engine()
 VERSION_MOTOR = engine.__version__

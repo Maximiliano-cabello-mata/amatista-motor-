@@ -1,4 +1,5 @@
-"""Diálogos de Amatista: pista, felicitación, aviso de herramienta y bienvenida.
+"""Diálogos de Amatista: pista, felicitación, aviso de herramienta, bienvenida
+y, desde la etapa 2, «Así se hace este paso» y «¿Te ayudo?».
 
 Son ventanas emergentes pequeñas con el mismo estilo que los paneles
 (tarjeta con ícono propio, texto partido y botones grandes). Nunca bloquean
@@ -6,7 +7,7 @@ Blender: se cierran al mover el ratón fuera o con Esc.
 """
 import bpy
 
-from .. import _motor, ajustes, practicas
+from .. import _motor, ajustes, guia, practicas
 from . import estilo
 
 ANCHO = 380
@@ -166,4 +167,101 @@ class AMATISTA_OT_bienvenida(bpy.types.Operator):
             layout.operator("amatista.vincular", text="Vincular con mi cuenta", icon="LINKED")
 
 
-CLASES = (AMATISTA_OT_pista, AMATISTA_OT_felicitar, AMATISTA_OT_aviso_herramienta, AMATISTA_OT_bienvenida)
+def botones_guia(layout, g, escala=1.35, con_pista=True):
+    """«Hazlo conmigo» grande y, debajo, «Muéstrame» y «Pista»."""
+    if g is None or g.completed:
+        return
+    if g.action is not None:
+        estilo.boton_principal(layout, "amatista.hazlo_conmigo", g.action.label, icon="PLAY", escala=escala)
+    fila = layout.row(align=True)
+    fila.operator("amatista.mostrarme", text="Muéstrame", icon="HIDE_OFF")
+    if con_pista:
+        fila.operator("amatista.pista", text="Pista", icon_value=estilo.icono("pista"))
+
+
+class AMATISTA_OT_explicar_paso(bpy.types.Operator):
+    bl_idname = "amatista.explicar_paso"
+    bl_label = "Así se hace este paso"
+    bl_description = "Explica el paso actual: por qué importa, qué hacer y con qué teclas"
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        if guia.guia_actual() is None:
+            practicas.evaluar(context)
+        if guia.guia_actual() is None:
+            return {"CANCELLED"}
+        guia.ESTADO["ayudas"]["explicar"] += 1
+        return _popup(self, context, 460)
+
+    def draw(self, context):
+        layout = self.layout
+        g = guia.guia_actual()
+        if g is None:
+            return
+        cabecera = layout.row()
+        cabecera.scale_y = 1.4
+        cabecera.label(text=g.title, icon_value=estilo.icono("completado" if g.completed else "actual"))
+        if g.step_total:
+            derecha = cabecera.row()
+            derecha.alignment = "RIGHT"
+            derecha.label(text=f"Paso {g.step_number} de {g.step_total}")
+        if g.why:
+            caja = estilo.tarjeta(layout, "Por qué", icon="QUESTION")
+            estilo.parrafo(caja, context, g.why, margen=0)
+        icono_tono, alerta = estilo.TONOS.get(g.tone, ("LIGHT", False))
+        estilo.parrafo(layout, context, g.feedback, icon=icono_tono, margen=0, alerta=alerta)
+        if g.instructions:
+            caja = estilo.tarjeta(layout, "Cómo hacerlo", icon="KEYINGSET")
+            estilo.instrucciones(caja, context, g.instructions)
+        botones_guia(layout, g)
+        nota = layout.row()
+        nota.active = False
+        nota.label(text="Amatista resalta en la vista 3D lo que tienes que mirar.", icon="INFO")
+
+
+class AMATISTA_OT_ofrecer_ayuda(bpy.types.Operator):
+    bl_idname = "amatista.ofrecer_ayuda"
+    bl_label = "¿Te ayudo?"
+    bl_description = "Opciones de ayuda para el paso actual"
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        if guia.guia_actual() is None:
+            return {"CANCELLED"}
+        return _popup(self, context, 420)
+
+    def draw(self, context):
+        layout = self.layout
+        g = guia.guia_actual()
+        if g is None:
+            return
+        cabecera = layout.row()
+        cabecera.scale_y = 1.5
+        cabecera.label(text="¿Te ayudo con este paso?", icon_value=estilo.icono("logo"))
+        cuerpo = estilo.tarjeta(layout, g.title, icono_propio="actual",
+                                derecha=f"Paso {g.step_number} de {g.step_total}" if g.step_total else "")
+        estilo.parrafo(cuerpo, context, g.feedback, margen=0)
+        col = layout.column(align=True)
+        col.scale_y = 1.3
+        if g.action is not None:
+            col.operator("amatista.hazlo_conmigo", text=f"Hazlo conmigo: {g.action.label}", icon="PLAY")
+        col.operator("amatista.explicar_paso", text="Explícame qué hacer", icon="KEYINGSET")
+        col.operator("amatista.mostrarme", text="Muéstrame dónde", icon="HIDE_OFF")
+        col.operator("amatista.pista", text="Dame una pista", icon_value=estilo.icono("pista"))
+        nota = layout.row()
+        nota.active = False
+        nota.label(text="O sigue a tu manera: mueve el ratón fuera para cerrar.", icon="INFO")
+
+
+CLASES = (
+    AMATISTA_OT_pista,
+    AMATISTA_OT_felicitar,
+    AMATISTA_OT_aviso_herramienta,
+    AMATISTA_OT_bienvenida,
+    AMATISTA_OT_explicar_paso,
+    AMATISTA_OT_ofrecer_ayuda,
+)
