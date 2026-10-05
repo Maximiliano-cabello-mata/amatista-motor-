@@ -248,8 +248,22 @@ class AMATISTA_OT_mostrarme(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class AMATISTA_OT_mascota_siguiente(bpy.types.Operator):
+    bl_idname = "amatista.mascota_siguiente"
+    bl_label = "Otro dato"
+    bl_description = "La mascota del módulo te cuenta otro consejo o dato curioso"
+
+    def execute(self, context):
+        from . import temas
+
+        temas.siguiente_mensaje()
+        practicas.redibujar()
+        return {"FINISHED"}
+
+
 CLASES = (
     AMATISTA_OT_hazlo_conmigo,
+    AMATISTA_OT_mascota_siguiente,
     AMATISTA_OT_mostrarme,
     AMATISTA_OT_vincular,
     AMATISTA_OT_cancelar_vinculo,

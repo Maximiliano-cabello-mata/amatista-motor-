@@ -25,6 +25,7 @@ def test_extension_trae_manifiesto_motor_y_practicas():
     assert "amatista_engine/tools/catalogo.json" in nombres
     assert "practicas/principiante/m1-tren/practica.json" in nombres
     assert "practicas/cursos.json" in nombres
+    assert "practicas/temas.json" in nombres  # temática por módulo (add-on 3.2)
     assert not [n for n in nombres if n.endswith("pruebas.json") or "archivo/" in n]
     assert "iconos/logo.png" in nombres
     assert not [n for n in nombres if "__pycache__" in n or n.startswith("tests/") or n.endswith(".pyc")]
@@ -52,13 +53,13 @@ def test_paquete_por_sistema(sistema):
     zf = _zip(construir.construir_paquete(sistema))
     lanzador, permisos = construir.LANZADORES[sistema]
     nombres = zf.namelist()
-    assert f"Amatista/{lanzador}" in nombres
-    assert "Amatista/instalar_en_blender.py" in nombres
-    assert f"Amatista/{construir.nombre_extension()}" in nombres
-    leeme = zf.read("Amatista/LEEME.txt").decode("utf-8")
+    assert f"{construir.CARPETA_PAQUETE}/{lanzador}" in nombres
+    assert f"{construir.CARPETA_PAQUETE}/instalar_en_blender.py" in nombres
+    assert f"{construir.CARPETA_PAQUETE}/{construir.nombre_extension()}" in nombres
+    leeme = zf.read(f"{construir.CARPETA_PAQUETE}/LEEME.txt").decode("utf-8")
     assert lanzador in leeme and "{{" not in leeme
-    assert (zf.getinfo(f"Amatista/{lanzador}").external_attr >> 16) & 0o777 == permisos
-    script = zf.read(f"Amatista/{lanzador}")
+    assert (zf.getinfo(f"{construir.CARPETA_PAQUETE}/{lanzador}").external_attr >> 16) & 0o777 == permisos
+    script = zf.read(f"{construir.CARPETA_PAQUETE}/{lanzador}")
     if sistema == "windows":
         assert b"\r\n" in script and b"\n" not in script.replace(b"\r\n", b"")
     else:

@@ -289,6 +289,53 @@ def probar_v3(contexto):
     _limpiar()
 
 
+def probar_temas(contexto):
+    """Add-on 3.2: temática por módulo (tema, cielo de la vista 3D, mascota, HUD y paneles)."""
+    from amatista_blender import _motor, escenarios, practicas, temas
+    from amatista_blender.interfaz import hud
+
+    catalogo = practicas.catalogo()
+    revisar(temas.tema_de_practica("blender.bp.m1.tren")["nombre"] == "El taller de juguetes",
+            "tema: el tren es «El taller de juguetes»")
+    revisar(temas.tema_de_practica("blender.n1.mesa")["id"] == "cristal", "tema: sin módulo, la cueva del cristal")
+
+    sc = contexto.scene
+    practicas.cerrar(contexto)  # las pruebas anteriores abrieron prácticas sin mundo: Amatista creó uno
+    revisar(sc.world is None and escenarios.MUNDO_CREADO not in sc, "cerrar quita el mundo que creó Amatista")
+    sc.world = bpy.data.worlds.new("Mundo de prueba")
+    sc.world.color = (0.1, 0.2, 0.3)
+
+    def cielo(tema_id):
+        return temas.color_rgba(temas.tema(tema_id)["colores"]["cielo"], lineal=True)[:3]
+
+    def igual(a, b):
+        return all(abs(x - y) < 1e-4 for x, y in zip(a, b))
+
+    _limpiar()
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    revisar(igual(sc.world.color, cielo("taller")), "abrir el tren pinta el cielo del taller")
+    revisar(not bpy.data.objects, "el ambiente del tema no agrega objetos a la escena")
+    foto = _motor.foto.scene_to_dict(practicas.capturar(sc))
+    sc.world.color = (1.0, 0.0, 0.0)
+    revisar(_motor.foto.scene_to_dict(practicas.capturar(sc)) == foto, "el color del mundo no entra en la foto del motor")
+    practicas.activar(contexto, catalogo["blender.bpi.m3.pelota"]["definicion"], "paquete")
+    revisar(igual(sc.world.color, cielo("circo")), "cambiar de práctica cambia el cielo (circo)")
+    pal = hud.paleta(practicas.practica_activa(contexto))
+    revisar(pal["tema"]["id"] == "circo" and pal["jefe"] is not None, "la pelota es la práctica del jefe final del circo")
+    dibujar_todo(contexto)  # paneles, diálogos y HUD con el tema activo
+    practicas.cerrar(contexto)
+    revisar(igual(sc.world.color, (0.1, 0.2, 0.3)), "cerrar la práctica devuelve el cielo original")
+    revisar(escenarios.CIELO_PREVIO not in sc, "no queda rastro del cielo previo en la escena")
+
+    sc.world = None
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    revisar(sc.world is not None and sc.world.name == escenarios.NOMBRE_MUNDO, "sin mundo: Amatista crea uno con el cielo")
+    practicas.cerrar(contexto)
+    revisar(sc.world is None and escenarios.NOMBRE_MUNDO not in bpy.data.worlds, "al cerrar, el mundo creado se quita")
+    dibujar_vista_3d(contexto)  # sin práctica: el HUD no dibuja nada y no falla
+    _limpiar()
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -388,7 +435,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "3.1.0", "el intento lleva la versión 3.1 del add-on")
+    revisar(datos["version_addon"] == "3.2.0", "el intento lleva la versión 3.2 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -423,6 +470,7 @@ def main():
     contexto.window_manager.amatista.modo = "alumno"
 
     probar_v3(contexto)
+    probar_temas(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

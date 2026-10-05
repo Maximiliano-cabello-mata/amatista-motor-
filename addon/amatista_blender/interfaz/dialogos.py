@@ -7,7 +7,7 @@ Blender: se cierran al mover el ratón fuera o con Esc.
 """
 import bpy
 
-from .. import _motor, ajustes, guia, practicas
+from .. import _motor, ajustes, aprendizaje, guia, practicas, temas
 from . import estilo
 
 ANCHO = 380
@@ -83,6 +83,15 @@ class AMATISTA_OT_felicitar(bpy.types.Operator):
         cabecera.label(text="¡Práctica completada!", icon_value=estilo.icono("celebrar"))
         cuerpo = estilo.tarjeta(layout, practica.title, icono_propio="completado", derecha="100 %")
         estilo.parrafo(cuerpo, context, practica.completion or "Terminaste todos los objetivos.", margen=0)
+        tema = temas.tema_de_practica(practica.id)
+        try:
+            jefe = aprendizaje.es_cierre(practica)
+        except Exception:  # noqa: BLE001
+            jefe = False
+        if jefe:
+            cuerpo.label(text=f"¡Venciste a {tema['jefe']['nombre']}! «{tema['nombre']}» es tuyo.", icon="SOLO_ON")
+        else:
+            cuerpo.label(text=temas.voz(tema, "¡Así se hace! Sigue así."), icon="HEART")
         pistas = practicas.pistas(context)
         autonomia = _motor.pedagogia.classify(True, pistas, context.scene.amatista.correcciones)
         texto = {

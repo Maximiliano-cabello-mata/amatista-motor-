@@ -1,0 +1,271 @@
+{
+  "schema": "amatista.temas/1",
+  "descripcion": "Una temática por módulo: nombre, colores, escenario, mascota y jefe final. La comparten la plataforma (frontend/src/components/temas/temas.js) y el add-on (amatista_blender/temas.py). Las mascotas son personajes originales de Amatista, con estilo de videojuego retro.",
+  "modulos": {
+    "mod_bp_001": "taller",
+    "mod_bp_002": "herreria",
+    "mod_bp_003": "hangar",
+    "mod_bpi_001": "pintura",
+    "mod_bpi_002": "cine",
+    "mod_bpi_003": "circo",
+    "mod_bi_001": "aldea",
+    "mod_bi_002": "archivo",
+    "mod_bi_003": "galeria",
+    "mod_aframe_001": "portal"
+  },
+  "practicas": {
+    "blender.bp.m1": "taller",
+    "blender.bp.m2": "herreria",
+    "blender.bp.m3": "hangar",
+    "blender.bpi.m1": "pintura",
+    "blender.bpi.m2": "cine",
+    "blender.bpi.m3": "circo",
+    "blender.bi.m1": "aldea",
+    "blender.bi.m2": "archivo",
+    "blender.bi.m3": "galeria"
+  },
+  "temas": {
+    "taller": {
+      "nombre": "El taller de juguetes",
+      "lema": "Arma, mueve y gira piezas como en tu cuarto de juegos.",
+      "colores": { "acento": "#F5A524", "suave": "#FFD58A", "cielo": "#3A2410", "suelo": "#1A120A" },
+      "escena": "engranes",
+      "mascota": {
+        "nombre": "Tuerca",
+        "especie": "robot de cuerda",
+        "hola": "¡Hola! Soy Tuerca. Aquí todo se arma con piezas, igual que un juguete.",
+        "consejos": [
+          "Rueda del ratón para acercarte y botón central para girar alrededor.",
+          "G mueve, R gira y S escala. Después de la tecla puedes escribir X, Y o Z para fijar un eje.",
+          "Shift+A agrega un objeto nuevo donde está el cursor 3D."
+        ],
+        "datos": [
+          "Blender nació en 1994 en un estudio de animación de los Países Bajos y se volvió software libre en 2002.",
+          "En Blender el eje Z apunta hacia arriba; en muchos motores de videojuegos el de arriba es Y.",
+          "También puedes girar la vista con el teclado numérico: 2, 4, 6 y 8."
+        ]
+      },
+      "jefe": { "nombre": "Robo-Tren Rebelde", "frase": "¡Mis vagones no se dejan transformar!", "piel": "#F5A524", "sombra": "#B86E0B", "ojos": "#00E5FF", "adorno": "chimenea", "forma": "bloque" }
+    },
+    "herreria": {
+      "nombre": "La herrería",
+      "lema": "Golpe a golpe, vértice a vértice: forja tu primera pieza.",
+      "colores": { "acento": "#FF5A36", "suave": "#FFB199", "cielo": "#3A120C", "suelo": "#1A0B08" },
+      "escena": "chispas",
+      "mascota": {
+        "nombre": "Chispa",
+        "especie": "salamandra de fuego",
+        "hola": "Soy Chispa. En la forja, cada vértice cuenta.",
+        "consejos": [
+          "Tab cambia entre Modo Objeto y Modo Edición.",
+          "1, 2 y 3 eligen vértices, aristas o caras.",
+          "Si algo se ve raro, fusiona por distancia con M: quita vértices repetidos."
+        ],
+        "datos": [
+          "Una cara de cuatro lados se llama quad; la tarjeta de video la dibuja como dos triángulos.",
+          "Los personajes de los videojuegos de los años 90 tenían a veces solo unos cientos de triángulos.",
+          "Extruir (E) es como estirar metal caliente: sale una pieza nueva unida a la anterior."
+        ]
+      },
+      "jefe": { "nombre": "Gólem de Hierro", "frase": "Mi malla está llena de caras encimadas…", "piel": "#8A8F98", "sombra": "#4B4F57", "ojos": "#FF5A36", "adorno": "cuernos", "forma": "robusto" }
+    },
+    "hangar": {
+      "nombre": "El hangar espacial",
+      "lema": "Modela la mitad y deja que el espejo haga el resto.",
+      "colores": { "acento": "#5CC8FF", "suave": "#B5E6FF", "cielo": "#0B1A33", "suelo": "#070D1A" },
+      "escena": "estrellas",
+      "mascota": {
+        "nombre": "Orbi",
+        "especie": "satélite curioso",
+        "hola": "¡Bip! Soy Orbi. Las mejores naves se hacen por mitades.",
+        "consejos": [
+          "Agrega el modificador Espejo y modela solo un lado.",
+          "Activa Recorte en el Espejo para que los vértices del centro no se separen.",
+          "Aplica la escala con Ctrl+A antes de usar modificadores."
+        ],
+        "datos": [
+          "La Subdivisión de superficie usa el método Catmull-Clark, publicado en 1978.",
+          "Casi todos los vehículos y personajes son simétricos: por eso el Espejo ahorra la mitad del trabajo.",
+          "Los modificadores no destruyen nada: puedes apagarlos o quitarlos cuando quieras."
+        ]
+      },
+      "jefe": { "nombre": "Nave Nodriza Glitch", "frase": "Sin simetría no despegarás.", "piel": "#5CC8FF", "sombra": "#1E6E9E", "ojos": "#F5792A", "adorno": "antena", "forma": "flotante" }
+    },
+    "pintura": {
+      "nombre": "El estudio de pintura",
+      "lema": "Metal, cristal y óxido: dale color a tus naves.",
+      "colores": { "acento": "#FF7EDB", "suave": "#FFC2EF", "cielo": "#2E0F2A", "suelo": "#170816" },
+      "escena": "gotas",
+      "mascota": {
+        "nombre": "Gotita",
+        "especie": "gota de pintura",
+        "hola": "¡Splash! Soy Gotita. Hoy el gris queda prohibido.",
+        "consejos": [
+          "Color base, Metálico y Rugosidad cambian casi todo en un material.",
+          "Rugosidad baja brilla como espejo; rugosidad alta se ve mate.",
+          "Para cristal, sube la Transmisión."
+        ],
+        "datos": [
+          "El Principled BSDF de Blender se basa en el modelo de materiales que presentó Disney en 2012.",
+          "En la vida real, el color de un metal viene de sus reflejos.",
+          "Un mismo material puede ir en muchos objetos: cambias uno y cambian todos."
+        ]
+      },
+      "jefe": { "nombre": "La Mancha Gris", "frase": "Todo será gris y sin brillo.", "piel": "#9AA0A6", "sombra": "#5F6368", "ojos": "#FF7EDB", "adorno": "gotas", "forma": "redondo" }
+    },
+    "cine": {
+      "nombre": "El set de cine",
+      "lema": "Luces, cámara… ¡render!",
+      "colores": { "acento": "#FFE066", "suave": "#FFF1B3", "cielo": "#1E1A10", "suelo": "#0F0D08" },
+      "escena": "reflectores",
+      "mascota": {
+        "nombre": "Foco",
+        "especie": "reflector con patas",
+        "hola": "¡Silencio en el set! Soy Foco y sin mí no se ve nada.",
+        "consejos": [
+          "Tres luces: una principal, una de relleno más suave y una de contra detrás.",
+          "Ctrl+Alt+0 coloca la cámara activa donde estás mirando.",
+          "F12 hace el render de la cámara activa."
+        ],
+        "datos": [
+          "La iluminación de tres puntos viene del cine clásico de Hollywood.",
+          "EEVEE dibuja en tiempo real; Cycles sigue el camino de la luz y tarda más.",
+          "F11 vuelve a mostrar el último render."
+        ]
+      },
+      "jefe": { "nombre": "La Sombra del Apagón", "frase": "Sin luz, tu escena es solo negro.", "piel": "#2B2B35", "sombra": "#15151B", "ojos": "#FFE066", "adorno": "claqueta", "forma": "alto" }
+    },
+    "circo": {
+      "nombre": "El circo animado",
+      "lema": "Haz que todo rebote, se aplaste y vuelva a saltar.",
+      "colores": { "acento": "#C4FF4D", "suave": "#E6FFB0", "cielo": "#14280C", "suelo": "#0A1406" },
+      "escena": "carpa",
+      "mascota": {
+        "nombre": "Boing",
+        "especie": "pelota saltarina",
+        "hola": "¡Boing, boing! Soy Boing. Aquí nada se queda quieto.",
+        "consejos": [
+          "I agrega un fotograma clave al objeto seleccionado.",
+          "Mueve la línea de tiempo, cambia el objeto y vuelve a poner otro fotograma clave.",
+          "Aplasta la pelota al tocar el suelo y estírala al caer."
+        ],
+        "datos": [
+          "El cine se proyecta a 24 fotogramas por segundo desde finales de los años 20.",
+          "Aplastar y estirar es el primero de los 12 principios de la animación de Disney.",
+          "Entre dos fotogramas clave, Blender calcula solo los de en medio."
+        ]
+      },
+      "jefe": { "nombre": "El Payaso Congelado", "frase": "Nada se mueve en mi carpa.", "piel": "#B8F0FF", "sombra": "#6FB7CC", "ojos": "#C4FF4D", "adorno": "sombrero", "forma": "redondo" }
+    },
+    "aldea": {
+      "nombre": "La aldea de precisión",
+      "lema": "Medidas exactas, repeticiones y biseles: construye como arquitecto.",
+      "colores": { "acento": "#5FD3A8", "suave": "#B6F0DA", "cielo": "#0D2620", "suelo": "#071410" },
+      "escena": "aldea",
+      "mascota": {
+        "nombre": "Cota",
+        "especie": "castor arquitecto",
+        "hola": "Soy Cota. En mi aldea nada se hace a ojo.",
+        "consejos": [
+          "N abre el panel con las medidas exactas del objeto.",
+          "Array repite una pieza las veces que quieras, a la distancia que quieras.",
+          "Un Bisel pequeño hace que los bordes atrapen la luz y se vean reales."
+        ],
+        "datos": [
+          "En Blender, 1 unidad es 1 metro.",
+          "Con el imán (Snap) las piezas se pegan a la cuadrícula o a otros vértices.",
+          "Los arquitectos usan Blender para mostrar edificios antes de construirlos."
+        ]
+      },
+      "jefe": { "nombre": "El Arquitecto Torcido", "frase": "Ninguna de tus vigas está alineada.", "piel": "#5FB89A", "sombra": "#2F6F5A", "ojos": "#FFD166", "adorno": "casco", "forma": "alto" }
+    },
+    "archivo": {
+      "nombre": "El archivo del cartógrafo",
+      "lema": "Nombres, colecciones y orden: una escena que cualquiera entiende.",
+      "colores": { "acento": "#8C90F0", "suave": "#C9CBFF", "cielo": "#131433", "suelo": "#0A0A1A" },
+      "escena": "mapa",
+      "mascota": {
+        "nombre": "Índigo",
+        "especie": "búho cartógrafo",
+        "hola": "Uuh, uuh. Soy Índigo. Un buen mapa empieza con buenos nombres.",
+        "consejos": [
+          "Doble clic en un nombre del Outliner para cambiarlo.",
+          "M mueve los objetos seleccionados a una colección.",
+          "Usa el mismo material en varios objetos para cambiarlos todos de una vez."
+        ],
+        "datos": [
+          "Las colecciones de Blender funcionan como las carpetas de tu computadora.",
+          "En un estudio, una escena llena de «Cube.047» es imposible de revisar en equipo.",
+          "Puedes ocultar una colección entera con el ojo del Outliner."
+        ]
+      },
+      "jefe": { "nombre": "El Caos de los «Cube.047»", "frase": "Nadie encontrará nada en tu escena.", "piel": "#7B7FD6", "sombra": "#43468F", "ojos": "#00E5FF", "adorno": "ojo", "forma": "flotante" }
+    },
+    "galeria": {
+      "nombre": "La galería",
+      "lema": "Tu diorama, iluminado y listo para el portafolio.",
+      "colores": { "acento": "#C990EE", "suave": "#E8CCFA", "cielo": "#22102E", "suelo": "#110817" },
+      "escena": "galeria",
+      "mascota": {
+        "nombre": "Marco",
+        "especie": "camaleón curador",
+        "hola": "Bienvenido a mi galería. Soy Marco y solo cuelgo lo mejor.",
+        "consejos": [
+          "Encuadra con la regla de los tercios: lo importante, en una de las líneas.",
+          "En Cycles, más muestras quitan ruido pero tardan más.",
+          "Activa el eliminador de ruido para terminar más rápido."
+        ],
+        "datos": [
+          "Cycles llegó a Blender en 2011 y traza el camino de la luz rebote a rebote.",
+          "La regla de los tercios divide la imagen en nueve partes iguales.",
+          "Un buen render vende el modelo: es lo primero que ve quien revisa tu portafolio."
+        ]
+      },
+      "jefe": { "nombre": "El Crítico Implacable", "frase": "Ese render no entra a mi galería.", "piel": "#B57EDC", "sombra": "#5B2C7A", "ojos": "#FFFFFF", "adorno": "corona", "forma": "alto" }
+    },
+    "portal": {
+      "nombre": "El portal WebXR",
+      "lema": "Cruza de Blender a la web y entra en realidad virtual.",
+      "colores": { "acento": "#00E5FF", "suave": "#A8F6FF", "cielo": "#06222A", "suelo": "#031115" },
+      "escena": "portal",
+      "mascota": {
+        "nombre": "Píxel",
+        "especie": "gato holográfico",
+        "hola": "Miau.exe. Soy Píxel y vivo entre Blender y el navegador.",
+        "consejos": [
+          "Exporta desde Blender en glTF (.glb) para usar el modelo en la web.",
+          "En A-Frame, cada objeto es una etiqueta que empieza con a-.",
+          "Revisa tu escena en el navegador antes de entrar con el visor."
+        ],
+        "datos": [
+          "A-Frame lo creó el equipo de realidad virtual de Mozilla en 2015.",
+          "Al formato glTF le dicen «el JPEG del 3D».",
+          "WebXR deja usar realidad virtual y aumentada directamente en el navegador."
+        ]
+      },
+      "jefe": { "nombre": "Centinela del Portal", "frase": "Solo pasa quien domina las etiquetas.", "piel": "#00B8CC", "sombra": "#005F6B", "ojos": "#F5792A", "adorno": "visor", "forma": "flotante" }
+    },
+    "cristal": {
+      "nombre": "La cueva del cristal",
+      "lema": "Cada módulo te acerca a dominar el cristal de Amatista.",
+      "colores": { "acento": "#B57EDC", "suave": "#E2C6F5", "cielo": "#1E0F29", "suelo": "#0F0815" },
+      "escena": "cristales",
+      "mascota": {
+        "nombre": "Ami",
+        "especie": "cristal de amatista",
+        "hola": "Soy Ami, el cristal de Amatista. Vamos paso a paso.",
+        "consejos": [
+          "Lee la lección completa antes de abrir Blender.",
+          "Si te atoras, pide una pista: no cuenta en tu contra.",
+          "Vuelve al repaso de vez en cuando para no olvidar."
+        ],
+        "datos": [
+          "La amatista es una variedad de cuarzo de color violeta.",
+          "Repasar algo varios días seguidos ayuda a recordarlo mucho mejor.",
+          "Low poly significa «pocos polígonos»: es el estilo de Amatista."
+        ]
+      },
+      "jefe": { "nombre": "Guardián del Cristal", "frase": "Demuestra lo que aprendiste.", "piel": "#9B59B6", "sombra": "#3D1F52", "ojos": "#00E5FF", "adorno": "corona", "forma": "robusto" }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 Uso desde la terminal (en la raíz del repositorio):
 
-    python addon/herramientas/construir.py                      # dist/amatista-3.1.0.zip
+    python addon/herramientas/construir.py                      # dist/amatista-3.2.0.zip
     python addon/herramientas/construir.py --sistema windows \\
         --servidor https://api.ejemplo.cl --plataforma https://ejemplo.cl
 
@@ -66,6 +66,11 @@ def leer_manifiesto() -> dict:
 
 
 VERSION = leer_manifiesto()["version"]
+# Nombre del producto que ve el alumno: «Amatista Motor 3.2» (mayor.menor).
+NOMBRE = leer_manifiesto()["name"]
+VERSION_CORTA = ".".join(VERSION.split(".")[:2])
+NOMBRE_COMPLETO = f"{NOMBRE} {VERSION_CORTA}"
+CARPETA_PAQUETE = NOMBRE_COMPLETO
 
 
 def nombre_extension(version: str = VERSION) -> str:
@@ -116,11 +121,11 @@ def construir_extension(servidor: str = "http://localhost:8000", plataforma: str
 
 def leeme(sistema: str) -> str:
     texto = (INSTALADOR / "LEEME.txt").read_text(encoding="utf-8")
-    return texto.replace("{{VERSION}}", VERSION).replace("{{LANZADOR}}", LANZADORES[sistema][0])
+    return texto.replace("{{NOMBRE}}", NOMBRE_COMPLETO.upper()).replace("{{VERSION}}", VERSION).replace("{{LANZADOR}}", LANZADORES[sistema][0])
 
 
 def construir_paquete(sistema: str, **opciones) -> bytes:
-    """Carpeta «Amatista» con la extensión, el instalador y las instrucciones."""
+    """Carpeta «Amatista Motor X.Y» con la extensión, el instalador y las instrucciones."""
     if sistema not in SISTEMAS:
         raise ValueError(f"Sistema desconocido: {sistema}. Usa uno de {', '.join(SISTEMAS)}.")
     extension = construir_extension(**opciones)
@@ -130,14 +135,19 @@ def construir_paquete(sistema: str, **opciones) -> bytes:
         script = (INSTALADOR / lanzador).read_bytes()
         if lanzador.endswith(".bat"):  # cmd.exe necesita CRLF
             script = script.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
-        _agregar(zf, f"Amatista/{lanzador}", script, permisos)
-        _agregar(zf, "Amatista/instalar_en_blender.py", (INSTALADOR / "instalar_en_blender.py").read_bytes())
-        _agregar(zf, f"Amatista/{nombre_extension()}", extension)
+        _agregar(zf, f"{CARPETA_PAQUETE}/{lanzador}", script, permisos)
+        _agregar(zf, f"{CARPETA_PAQUETE}/instalar_en_blender.py", (INSTALADOR / "instalar_en_blender.py").read_bytes())
+        _agregar(zf, f"{CARPETA_PAQUETE}/{nombre_extension()}", extension)
         texto = leeme(sistema)
         if sistema == "windows":
             texto = texto.replace("\n", "\r\n")
-        _agregar(zf, "Amatista/LEEME.txt", texto.encode("utf-8"))
+        _agregar(zf, f"{CARPETA_PAQUETE}/LEEME.txt", texto.encode("utf-8"))
     return salida.getvalue()
+
+
+def nombre_descarga(sistema: str) -> str:
+    """Nombre del archivo que baja la plataforma: Amatista-Motor-3.2-windows.zip."""
+    return f"{NOMBRE_COMPLETO.replace(' ', '-')}-{sistema}.zip"
 
 
 def indice_repositorio(extension: bytes, url_archivo: str) -> dict:

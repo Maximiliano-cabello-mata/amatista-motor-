@@ -16,7 +16,7 @@ from pathlib import Path
 import bpy
 from bpy.app.handlers import persistent
 
-from . import _motor, ajustes, aprendizaje, escenarios, guia, red
+from . import _motor, ajustes, aprendizaje, escenarios, guia, red, temas
 
 # Estado de la sesión de Blender (no se guarda en el .blend).
 ESTADO = {
@@ -213,8 +213,13 @@ def activar(context, datos, origen="paquete"):
     except Exception as error:  # noqa: BLE001 - una escena de inicio rota no impide practicar
         preparada = None
         print(f"[Amatista] No se pudo preparar la escena: {error}")
+    try:
+        tema = escenarios.aplicar_ambiente(sc, datos["id"])
+    except Exception as error:  # noqa: BLE001 - el ambiente es decoración: nunca impide practicar
+        tema = None
+        print(f"[Amatista] No se pudo aplicar el ambiente del tema: {error}")
     if preparada:
-        guia.avisar("Escena lista", preparada, "animo")
+        guia.avisar("Escena lista", temas.voz(tema, preparada) if tema else preparada, "animo")
     evaluar(context, "abrir")
     if nueva:
         _abrir_teoria(resultado.practice)
@@ -233,6 +238,11 @@ def _abrir_teoria(practica):
 
 def cerrar(context):
     sc = escena(context)
+    try:
+        escenarios.restaurar_ambiente(sc)
+        escenarios._fondo_del_mundo(False)
+    except Exception as error:  # noqa: BLE001
+        print(f"[Amatista] No se pudo restaurar el mundo: {error}")
     sc.amatista.practica_id = ""
     sc.amatista.practica_json = ""
     ESTADO.update(reporte=None, clave=None, practica=None, sync="")
@@ -558,6 +568,18 @@ def _al_abrir(*_args):
     aprendizaje.reiniciar_sesion()
     if bpy.context.scene and bpy.context.scene.amatista.practica_json:
         bpy.app.timers.register(lambda: (evaluar(bpy.context, "abrir"), None)[1], first_interval=0.3)
+        bpy.app.timers.register(_ambiente_al_abrir, first_interval=0.35)
+
+
+def _ambiente_al_abrir():
+    """El color del cielo viaja en el .blend; el fondo de las vistas 3D se vuelve a encender."""
+    sc = bpy.context.scene
+    if sc is not None and sc.amatista.practica_id:
+        try:
+            escenarios.aplicar_ambiente(sc, sc.amatista.practica_id)
+        except Exception as error:  # noqa: BLE001
+            print(f"[Amatista] No se pudo aplicar el ambiente del tema: {error}")
+    return None
 
 
 def _vigilante():
@@ -598,6 +620,6 @@ def unregister():
     ):
         if funcion in lista:
             lista.remove(funcion)
-    for temporizador in (_vigilante, _sincronizar_programado):
+    for temporizador in (_vigilante, _sincronizar_programado, _ambiente_al_abrir):
         if bpy.app.timers.is_registered(temporizador):
             bpy.app.timers.unregister(temporizador)

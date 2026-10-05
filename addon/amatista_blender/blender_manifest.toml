@@ -3,8 +3,8 @@ schema_version = "1.0.0"
 # Amatista para Blender: prácticas guiadas, comprobaciones locales y progreso
 # conectado con la plataforma. Documentación: docs/motor/ del repositorio.
 id = "amatista"
-version = "3.1.0"
-name = "Amatista"
+version = "3.2.0"
+name = "Amatista Motor"
 tagline = "Practicas guiadas de Amatista dentro de Blender"
 maintainer = "Maximiliano Cabello Mata"
 type = "add-on"

@@ -15,9 +15,9 @@ Nada pesado al importar: la red y la evaluación arrancan con temporizadores.
 Documentación: docs/motor/ en el repositorio.
 """
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
-    "name": "Amatista",
+    "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (3, 1, 0),
+    "version": (3, 2, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Prácticas guiadas de Amatista dentro de Blender",
@@ -26,7 +26,7 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import ajustes, cuenta, desarrollo, estado, operadores, practicas
+from . import ajustes, cuenta, desarrollo, escenarios, estado, operadores, practicas
 from .interfaz import aprender, dialogos, estilo, hud, paneles
 
 CLASES = (
@@ -62,6 +62,10 @@ def register():
 def unregister():
     if bpy.app.timers.is_registered(_primer_arranque):
         bpy.app.timers.unregister(_primer_arranque)
+    try:
+        escenarios.restaurar_todo()  # el cielo del tema vuelve a como estaba
+    except Exception as error:  # noqa: BLE001 - desregistrar nunca debe fallar
+        print(f"[Amatista] No se pudo restaurar el mundo: {error}")
     hud.unregister()
     practicas.unregister()
     for clase in reversed(CLASES):

@@ -17,7 +17,7 @@ import time
 
 import bpy
 
-from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, practicas, red
+from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, practicas, red, temas
 from . import aprender, dialogos, estilo
 
 CATEGORIA = "Amatista"
@@ -55,6 +55,66 @@ DIFICULTAD_TEXTO = {
     "intermedio": "Intermedio",
     "avanzado": "Avanzado",
 }
+
+
+# Temática por módulo (add-on 3.2): un ícono de Blender por escenario del tema.
+ICONO_ESCENA = {
+    "engranes": "PREFERENCES",
+    "chispas": "LIGHT_SUN",
+    "estrellas": "WORLD",
+    "gotas": "MATERIAL",
+    "reflectores": "CAMERA_DATA",
+    "carpa": "ANIM",
+    "aldea": "HOME",
+    "mapa": "OUTLINER_COLLECTION",
+    "galeria": "IMAGE_DATA",
+    "portal": "URL",
+    "cristales": "SHADERFX",
+}
+ICONO_MENSAJE = {"hola": "HEART", "consejo": "LIGHT", "dato": "INFO"}
+
+
+def icono_tema(tema):
+    return ICONO_ESCENA.get(tema.get("escena"), "SHADERFX")
+
+
+def tarjeta_tema(layout, context, practica, reporte=None):
+    """Cabecera con la temática del módulo: tema, mascota con su mensaje y jefe final."""
+    tema = temas.tema_de_practica(practica.id)
+    mascota = tema["mascota"]
+    caja = layout.box()
+    fila = caja.row(align=True)
+    fila.scale_y = 1.15
+    fila.label(text=tema["nombre"], icon=icono_tema(tema))
+    if tema.get("lema"):
+        sub = caja.row()
+        sub.active = False
+        sub.label(text=tema["lema"])
+    try:
+        jefe = tema["jefe"] if aprendizaje.es_cierre(practica) else None
+    except Exception:  # noqa: BLE001 - sin plan de estudios no hay jefe
+        jefe = None
+    if jefe:
+        vencido = reporte is not None and reporte.completed
+        fila = caja.row()
+        fila.alert = not vencido
+        fila.label(text=(f"¡Venciste a {jefe['nombre']}!" if vencido else f"Jefe final: {jefe['nombre']}"),
+                   icon="FUND" if vencido else "SOLO_ON")
+        if not vencido and jefe.get("frase"):
+            sub = caja.row()
+            sub.active = False
+            sub.label(text=f"«{jefe['frase']}»")
+    if guia.nivel() == guia.NIVEL_SILENCIOSO:
+        return caja
+    tipo, texto = temas.mensaje_mascota(tema, temas.indice_actual())
+    mensaje = caja.column(align=True)
+    cabecera = mensaje.row(align=True)
+    etiqueta = {"consejo": "consejo", "dato": "dato curioso"}.get(tipo)
+    cabecera.label(text=f"{mascota['nombre']}, {mascota.get('especie', '')}" + (f" · {etiqueta}" if etiqueta else ""),
+                   icon=ICONO_MENSAJE.get(tipo, "HEART"))
+    cabecera.operator("amatista.mascota_siguiente", text="", icon="FILE_REFRESH", emboss=False)
+    estilo.parrafo(mensaje, context, texto, margen=6)
+    return caja
 
 
 class _Base:
@@ -160,6 +220,7 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
             miga = layout.row()
             miga.active = False
             miga.label(text=f"{curso.title} › Módulo {modulo.number}: {modulo.title}", icon="OUTLINER_COLLECTION")
+        tarjeta_tema(layout, context, practica, reporte)
         cuerpo = estilo.tarjeta(
             layout, practica.title, icono_propio="celebrar" if reporte.completed else "logo",
             derecha=f"M{modulo.number}" if modulo is not None else f"N{practica.level}",
@@ -471,6 +532,8 @@ def dibujar_mapa(layout, context, solo_siguiente=False):
             fila = cuerpo.row()
             fila.active = False
             fila.label(text=f"{curso.title} › Módulo {modulo.number}")
+        tema = temas.tema_de_practica(siguiente)
+        cuerpo.label(text=f"{tema['nombre']} · con {tema['mascota']['nombre']}", icon=icono_tema(tema))
         cuerpo.label(text=meta.get("title") or siguiente, icon="PLAY")
         if meta.get("description"):
             estilo.parrafo(cuerpo, context, meta["description"])
@@ -502,6 +565,11 @@ def dibujar_mapa(layout, context, solo_siguiente=False):
         for modulo in curso.modules:
             fila = cuerpo.row()
             fila.label(text=f"{modulo.number}. {modulo.title}")
+            tema = temas.tema_de_practica(modulo.practice or modulo.explore)
+            derecha = fila.row()
+            derecha.alignment = "RIGHT"
+            derecha.active = False
+            derecha.label(text=tema["nombre"], icon=icono_tema(tema))
             # Teoría y Blender se intercalan: exploración a mitad del módulo y práctica de cierre.
             for practica_id in modulo.sequence:
                 estado = estados.get(practica_id, "bloqueado")

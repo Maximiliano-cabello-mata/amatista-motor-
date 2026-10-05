@@ -1,5 +1,5 @@
-AMATISTA PARA BLENDER  ·  versión {{VERSION}}
-==============================================
+{{NOMBRE}} PARA BLENDER  ·  versión {{VERSION}}
+=====================================================
 
 Instalar (1 minuto)
 -------------------

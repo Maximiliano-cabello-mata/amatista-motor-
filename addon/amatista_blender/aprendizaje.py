@@ -124,6 +124,12 @@ def lugar(practica):
     return encontrado if encontrado else (None, None)
 
 
+def es_cierre(practica):
+    """¿Es la práctica que cierra su módulo? (la del jefe final del tema)."""
+    _curso, modulo = lugar(practica)
+    return modulo is not None and bool(modulo.practice) and modulo.practice == practica.id
+
+
 # --- Píldoras ----------------------------------------------------------------------------
 
 

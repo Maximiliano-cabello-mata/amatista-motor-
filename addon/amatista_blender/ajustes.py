@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "3.1.0"
+VERSION_ADDON = "3.2.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -151,7 +151,7 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
 
         layout = self.layout
         cabecera = layout.row()
-        cabecera.label(text="Amatista para Blender", icon_value=estilo.icono("logo"))
+        cabecera.label(text=f"Amatista Motor {VERSION_ADDON.rsplit('.', 1)[0]}", icon_value=estilo.icono("logo"))
         cabecera.label(text=f"Add-on {VERSION_ADDON}")
 
         caja = layout.box()

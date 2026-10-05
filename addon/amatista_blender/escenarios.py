@@ -166,3 +166,93 @@ def preparar(escena, practica):
     if not hecho:
         return None
     return "Listo: " + " y ".join(hecho) + ". Ctrl+Z lo deshace."
+
+
+# --- Ambiente del tema (add-on 3.2) ------------------------------------------------------
+#
+# Al abrir una práctica, el fondo de la vista 3D toma el color «cielo» del tema
+# del módulo. Solo se toca World.color (y, en las vistas en modo Sólido, que el
+# fondo use el del mundo): nunca se agregan ni quitan objetos, porque los
+# validadores del motor los cuentan. La foto de la escena no incluye el mundo.
+
+CIELO_PREVIO = "amatista_cielo_previo"  # [r, g, b] de World.color antes del tema
+MUNDO_CREADO = "amatista_mundo_creado"  # nombre del mundo que creó Amatista (no había ninguno)
+NOMBRE_MUNDO = "Amatista · Cielo"
+_FONDOS_PREVIOS = {}  # puntero de la vista 3D → background_type anterior (solo en esta sesión)
+
+
+def _vistas_3d():
+    if bpy.app.background:
+        return
+    for ventana in bpy.context.window_manager.windows:
+        for area in ventana.screen.areas:
+            if area.type == "VIEW_3D":
+                for espacio in area.spaces:
+                    if espacio.type == "VIEW_3D":
+                        yield espacio
+
+
+def _fondo_del_mundo(encender):
+    """Las vistas 3D en Sólido muestran World.color solo con el fondo «World»."""
+    try:
+        if encender:
+            for espacio in _vistas_3d():
+                clave = espacio.as_pointer()
+                if clave not in _FONDOS_PREVIOS:
+                    _FONDOS_PREVIOS[clave] = espacio.shading.background_type
+                espacio.shading.background_type = "WORLD"
+        else:
+            for espacio in _vistas_3d():
+                previo = _FONDOS_PREVIOS.get(espacio.as_pointer())
+                if previo is not None:
+                    espacio.shading.background_type = previo
+            _FONDOS_PREVIOS.clear()
+    except (AttributeError, TypeError, RuntimeError, ReferenceError) as error:
+        print(f"[Amatista] No se pudo cambiar el fondo de la vista 3D: {error}")
+
+
+def aplicar_ambiente(escena, practica_id):
+    """Pinta el cielo de la vista 3D con el tema de la práctica. Devuelve el tema."""
+    from . import temas
+
+    tema = temas.tema_de_practica(practica_id)
+    if escena is None:
+        return tema
+    mundo = escena.world
+    if mundo is None:
+        mundo = bpy.data.worlds.new(NOMBRE_MUNDO)
+        escena.world = mundo
+        escena[MUNDO_CREADO] = mundo.name
+    if CIELO_PREVIO not in escena and MUNDO_CREADO not in escena:
+        escena[CIELO_PREVIO] = [float(c) for c in mundo.color]
+    mundo.color = temas.color_rgba(tema["colores"]["cielo"], lineal=True)[:3]
+    _fondo_del_mundo(True)
+    return tema
+
+
+def restaurar_ambiente(escena):
+    """Deja el mundo como estaba antes del tema (al cerrar la práctica o desactivar el add-on)."""
+    if escena is None:
+        return
+    creado = escena.get(MUNDO_CREADO)
+    if creado:
+        mundo = bpy.data.worlds.get(creado)
+        if escena.world is not None and escena.world == mundo:
+            escena.world = None
+        if mundo is not None and mundo.users == 0:
+            bpy.data.worlds.remove(mundo)
+        del escena[MUNDO_CREADO]
+    previo = escena.get(CIELO_PREVIO)
+    if previo is not None:
+        if escena.world is not None:
+            escena.world.color = tuple(previo)[:3]
+        del escena[CIELO_PREVIO]
+
+
+def restaurar_todo():
+    for escena in list(bpy.data.scenes):
+        try:
+            restaurar_ambiente(escena)
+        except (AttributeError, TypeError, RuntimeError, ReferenceError) as error:
+            print(f"[Amatista] No se pudo restaurar el mundo de «{escena.name}»: {error}")
+    _fondo_del_mundo(False)
