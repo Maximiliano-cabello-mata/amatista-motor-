@@ -5,7 +5,9 @@ Las prácticas guiadas de Blender del plan de estudios, en formato [`amatista.pr
 | Carpeta | Qué hay |
 |---|---|
 | `blender/cursos.json` | El mapa de la ruta de Blender (`amatista.curriculum/1`): cursos, requisitos y módulos. Lo usa el add-on para «Mi curso». |
-| `blender/<curso>/m<n>-<nombre>/` | `practica.json` (la práctica), `pruebas.json` (sus casos) e imágenes de sus píldoras. Van dentro del add-on (sin `pruebas.json`) y se registran en Oracle con `python herramientas/contenido.py practicas` (desde `backend/`) o con Admin › Prácticas de Blender › Registrar las del repositorio. |
+| `blender/<curso>/m<n>-<nombre>/` | `practica.json` (la práctica, con su modelo de referencia en `reference`), `pruebas.json` (sus casos), `referencia.jpg` y `plano.svg` (cómo se debe ver, generados con `engine/herramientas/referencias.py`) e imágenes de sus píldoras. Van dentro del add-on (sin `pruebas.json`). El servidor las registra y publica solo al arrancar; también con `python herramientas/contenido.py practicas` (desde `backend/`) o Admin › Prácticas de Blender. |
+| `blender/temas.json` | El mundo de cada módulo: colores, escenario, personaje (consejos, charla, datos y reacciones) y jefe. Lo comparten la plataforma y el add-on. |
+| `blender/referencias.json` | Índice de las imágenes de referencia (lo escribe `referencias.py`). |
 | `archivo/v2/` | Las prácticas anteriores al motor v3 (mesa, podio y el ejemplo `table.json`). No se empaquetan ni se registran; el add-on las muestra solo en modo Desarrollador. |
 
 Prácticas actuales (18: en cada módulo, una exploración corta y una práctica de cierre, intercaladas con la teoría):

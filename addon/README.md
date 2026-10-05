@@ -1,6 +1,6 @@
 # Amatista para Blender (add-on)
 
-Extensión de Blender 4.2+ (versión 3.0, motor v3) que convierte Blender en un aula de Amatista: pestañas **Aprender** (píldoras de teoría y repaso), **Practicar** (la práctica con guía paso a paso, «Hazlo conmigo» y pausa cuando algo se rompe) y **Mi curso** (el mapa de cursos y módulos). Prepara la escena de inicio de cada práctica y registra el progreso en la plataforma. Probada en Blender 4.2 y 5.0. Modos **Alumno** y **Desarrollador** (Amatista Author).
+Extensión de Blender 4.2+ (**Amatista Motor 3.3**) que convierte Blender en un aula de Amatista: pestañas **Aprender** (píldoras de teoría y repaso), **Practicar** (la práctica con guía paso a paso, «Hazlo conmigo» y pausa cuando algo se rompe) y **Mi curso** (el mapa de cursos y módulos). Prepara la escena de inicio de cada práctica y registra el progreso en la plataforma. Cada práctica muestra «Así se debe ver» (imagen y plano del modelo de referencia) y la temática de su módulo con su personaje. Cada paquete lleva `integridad.json` y, si se descargó con cuenta, una marca de agua firmada ([protección del código](../docs/seguridad/02_proteccion_del_codigo.md)). Probada en Blender 4.2 y 5.0. Modos **Alumno** y **Desarrollador** (Amatista Author).
 
 ```
 amatista_blender/        la extensión (blender_manifest.toml, paneles, red, motor)
@@ -14,7 +14,7 @@ tests/
 ```
 
 ```bash
-python addon/herramientas/construir.py                         # dist/amatista-<versión>.zip
+python addon/herramientas/construir.py                         # dist/amatista-3.3.0.zip
 python addon/herramientas/construir.py --sistema macos \
        --servidor https://api.ejemplo --plataforma https://app.ejemplo   # paquete con instalador
 ```
