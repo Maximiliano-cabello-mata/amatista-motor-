@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from dataclasses import replace
+from typing import Any, Dict, List, Optional, Union
 
 from ..errors import InvalidPracticeError
 from ..models import (
@@ -21,6 +22,8 @@ from ..models import (
     PillDefinition,
     PillTrigger,
     PracticeDefinition,
+    ReferenceModel,
+    ReferencePart,
     RoleDefinition,
     StarterDefinition,
     TargetDefinition,
@@ -28,6 +31,10 @@ from ..models import (
 )
 from .schema import (
     ARREGLOS,
+    CAMPOS_PIEZA,
+    CAMPOS_REFERENCIA,
+    MAX_PIEZAS,
+    PRIMITIVAS_REFERENCIA,
     CAMPOS_OBJETIVO,
     CAMPOS_V2,
     DISPAROS,
@@ -349,6 +356,121 @@ def _inicio(raw: Any, e: _Errores) -> StarterDefinition:
     )
 
 
+def _vector(valor: Any, donde: str, e: _Errores, defecto=None, positivo: bool = False):
+    if valor is None and defecto is not None:
+        return defecto
+    if (not isinstance(valor, list) or len(valor) != 3
+            or not all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in valor)):
+        e.add(f"'{donde}' debe ser una lista de 3 números")
+        return defecto or (1.0, 1.0, 1.0)
+    if positivo and any(x < 0 for x in valor):
+        e.add(f"'{donde}' no puede tener medidas negativas")
+    return tuple(float(x) for x in valor)
+
+
+def _referencia(raw: Any, e: _Errores) -> Optional[ReferenceModel]:
+    """«reference»: la figura terminada en piezas (motor 3.3). Ver docs/motor/referencia/11_modelo_de_referencia.md."""
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        e.add("'reference' debe ser un objeto {title, description, tolerance, parts}")
+        return None
+    extra = set(raw) - CAMPOS_REFERENCIA
+    if extra:
+        e.add(f"'reference' no reconoce: {', '.join(sorted(extra))}")
+    tolerancia = raw.get("tolerance", 0.35)
+    if isinstance(tolerancia, bool) or not isinstance(tolerancia, (int, float)) or not 0.05 <= tolerancia <= 1.0:
+        e.add("'reference.tolerance' debe ser un número entre 0.05 y 1 (0.35 = ±35 %)")
+        tolerancia = 0.35
+    crudas = raw.get("parts")
+    if not isinstance(crudas, list) or not crudas or len(crudas) > MAX_PIEZAS:
+        e.add(f"'reference.parts' debe tener entre 1 y {MAX_PIEZAS} piezas")
+        crudas = []
+    piezas = []
+    for i, pieza in enumerate(crudas):
+        donde = f"reference.parts[{i}]"
+        if not isinstance(pieza, dict):
+            e.add(f"'{donde}' debe ser un objeto")
+            continue
+        extra = set(pieza) - CAMPOS_PIEZA
+        if extra:
+            e.add(f"'{donde}' no reconoce: {', '.join(sorted(extra))}")
+        primitiva = pieza.get("primitive")
+        if primitiva not in PRIMITIVAS_REFERENCIA:
+            e.add(f"'{donde}.primitive' debe ser una de: {', '.join(PRIMITIVAS_REFERENCIA)}")
+            continue
+        material = pieza.get("material") or {}
+        if not isinstance(material, dict):
+            e.add(f"'{donde}.material' debe ser un objeto")
+            material = {}
+        piezas.append(ReferencePart(
+            primitive=primitiva,
+            size=_vector(pieza.get("size"), f"{donde}.size", e, positivo=True),
+            location=_vector(pieza.get("location"), f"{donde}.location", e, (0.0, 0.0, 0.0)),
+            rotation=_vector(pieza.get("rotation"), f"{donde}.rotation", e, (0.0, 0.0, 0.0)),
+            role=str(pieza.get("role") or ""),
+            name=str(pieza.get("name") or ""),
+            color=str(pieza.get("color") or ""),
+            join=str(pieza.get("join") or ""),
+            segments=int(pieza.get("segments") or 0),
+            material=material,
+            compare=pieza.get("compare", True) is not False,
+        ))
+    objetos = raw.get("objects") or {}
+    camara = raw.get("camera") or {}
+    if not isinstance(objetos, dict) or not isinstance(camara, dict):
+        e.add("'reference.objects' y 'reference.camera' deben ser objetos")
+        objetos, camara = {}, {}
+    flexibles = raw.get("flexible") or []
+    if not isinstance(flexibles, list) or not all(isinstance(g, str) for g in flexibles):
+        e.add("'reference.flexible' debe ser una lista de roles o primitivas")
+        flexibles = []
+    grupos = {p.group for p in piezas}
+    for grupo in flexibles:
+        if grupo not in grupos:
+            e.add(f"'reference.flexible': «{grupo}» no es el rol ni la primitiva de ninguna pieza")
+    luces = raw.get("lights") or []
+    if not isinstance(luces, list) or not all(isinstance(x, dict) for x in luces):
+        e.add("'reference.lights' debe ser una lista de luces {type, location, energy}")
+        luces = []
+    return ReferenceModel(
+        lights=tuple(luces),
+        flexible=tuple(flexibles),
+        parts=tuple(piezas),
+        title=str(raw.get("title") or "").strip(),
+        description=str(raw.get("description") or "").strip(),
+        tolerance=float(tolerancia),
+        objects=objetos,
+        camera=camara,
+    )
+
+
+def pieza_como_dict(pieza: ReferencePart) -> Dict[str, Any]:
+    return {"group": pieza.group, "role": pieza.role, "primitive": pieza.primitive, "size": list(pieza.size),
+            "location": list(pieza.location), "rotation": list(pieza.rotation), "join": pieza.join}
+
+
+def _etiquetas(roles) -> Dict[str, str]:
+    return {r.id: r.label for r in roles or () if r.label}
+
+
+def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[ReferenceModel], roles, e: _Errores):
+    """figure.resembles sin «parts» toma las piezas y la holgura de «reference» (y los nombres de los roles)."""
+    salida = []
+    for objetivo in objetivos:
+        if objetivo.validator == "figure.resembles" and "parts" not in objetivo.params:
+            if referencia is None or not referencia.compared:
+                e.add(f"'{objetivo.id}': figure.resembles necesita 'reference' con piezas en la práctica")
+            else:
+                params = {"tolerance": referencia.tolerance, "labels": _etiquetas(roles), **objetivo.params,
+                          "parts": [pieza_como_dict(p) for p in referencia.compared]}
+                if referencia.flexible:
+                    params.setdefault("flexible", list(referencia.flexible))
+                objetivo = replace(objetivo, params=params)
+        salida.append(objetivo)
+    return salida
+
+
 def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
     if not isinstance(data, dict):
         raise InvalidPracticeError("La práctica debe ser un objeto JSON")
@@ -434,6 +556,11 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
         e.add("'review' debe ser una lista de «practica#pildora»")
         repaso = []
 
+    referencia = _referencia(data.get("reference"), e)
+    roles = _roles(data.get("roles"), e)
+    targets = _con_referencia(targets, referencia, roles, e)
+    vigilantes = _con_referencia(vigilantes, referencia, roles, e)
+
     practica = PracticeDefinition(
         schema=schema,
         id=practice_id,
@@ -447,7 +574,7 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
         estimated_minutes=minutos,
         blender_min=blender_min,
         skills=e.lista_ids(data.get("skills"), "skills"),
-        roles=_roles(data.get("roles"), e),
+        roles=roles,
         tags=e.lista_ids(data.get("tags"), "tags"),
         allowed_tools=e.lista_ids(tools.get("allowed"), "tools.allowed"),
         warn_tools=e.lista_ids(tools.get("warn"), "tools.warn"),
@@ -456,6 +583,7 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
         review=tuple(repaso or ()),
         place=_lugar(data.get("course"), e),
         starter=_inicio(data.get("starter"), e),
+        reference=referencia,
     )
     if e.lista:
         raise InvalidPracticeError(e.lista[0], e.lista)
@@ -515,10 +643,48 @@ def dump_practice(practice: PracticeDefinition) -> Dict[str, Any]:
         datos["pills"] = [_dump_pildora(p) for p in practice.pills]
     if practice.review:
         datos["review"] = list(practice.review)
-    datos["targets"] = [_dump_objetivo(t) for t in practice.targets]
+    datos["targets"] = [_dump_objetivo(t, practice.reference, practice.roles) for t in practice.targets]
     if practice.guards:
-        datos["guards"] = [_dump_objetivo(g) for g in practice.guards]
+        datos["guards"] = [_dump_objetivo(g, practice.reference, practice.roles) for g in practice.guards]
+    if practice.reference is not None:
+        datos["reference"] = _dump_referencia(practice.reference)
     return datos
+
+
+def _dump_referencia(r: ReferenceModel) -> Dict[str, Any]:
+    salida: Dict[str, Any] = {}
+    if r.title:
+        salida["title"] = r.title
+    if r.description:
+        salida["description"] = r.description
+    salida["tolerance"] = r.tolerance
+    piezas = []
+    for p in r.parts:
+        pieza: Dict[str, Any] = {"primitive": p.primitive, "size": list(p.size)}
+        if any(p.location):
+            pieza["location"] = list(p.location)
+        if any(p.rotation):
+            pieza["rotation"] = list(p.rotation)
+        for clave in ("role", "name", "color", "join"):
+            if getattr(p, clave):
+                pieza[clave] = getattr(p, clave)
+        if p.segments:
+            pieza["segments"] = p.segments
+        if p.material:
+            pieza["material"] = dict(p.material)
+        if not p.compare:
+            pieza["compare"] = False
+        piezas.append(pieza)
+    salida["parts"] = piezas
+    if r.objects:
+        salida["objects"] = dict(r.objects)
+    if r.camera:
+        salida["camera"] = dict(r.camera)
+    if r.flexible:
+        salida["flexible"] = list(r.flexible)
+    if r.lights:
+        salida["lights"] = [dict(x) for x in r.lights]
+    return salida
 
 
 def _dump_pildora(p: PillDefinition) -> Dict[str, Any]:
@@ -536,12 +702,21 @@ def _dump_pildora(p: PillDefinition) -> Dict[str, Any]:
     return salida
 
 
-def _dump_objetivo(t: TargetDefinition) -> Dict[str, Any]:
+def _dump_objetivo(t: TargetDefinition, referencia: Optional[ReferenceModel] = None, roles=()) -> Dict[str, Any]:
     objetivo: Dict[str, Any] = {"id": t.id}
     if t.title:
         objetivo["title"] = t.title
     objetivo["validator"] = t.validator
     objetivo["params"] = dict(t.params)
+    if t.validator == "figure.resembles" and referencia is not None:
+        # Las piezas viven en «reference»; el objetivo solo guarda lo propio.
+        objetivo["params"].pop("parts", None)
+        if objetivo["params"].get("tolerance") == referencia.tolerance:
+            objetivo["params"].pop("tolerance")
+        if objetivo["params"].get("labels") == _etiquetas(roles):
+            objetivo["params"].pop("labels")
+        if objetivo["params"].get("flexible") == list(referencia.flexible):
+            objetivo["params"].pop("flexible")
     objetivo["weight"] = int(t.weight) if float(t.weight).is_integer() else t.weight
     if t.requires:
         objetivo["requires"] = list(t.requires)

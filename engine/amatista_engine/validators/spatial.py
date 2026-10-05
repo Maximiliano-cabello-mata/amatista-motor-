@@ -49,7 +49,7 @@ def _referencias(target: TargetDefinition, scene: SceneState):
     nombre = text(target, "reference")
     primitiva = text(target, "reference_primitive")
     if not (rol or nombre or primitiva):
-        raise ValueError("spatial.touching requiere reference_role, reference o reference_primitive")
+        raise ValueError(f"{target.validator} requiere reference_role, reference o reference_primitive")
     sel = {}
     if rol:
         sel["role"] = rol
@@ -81,3 +81,52 @@ def touching(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     else:
         mensaje = f"«{sueltos[0]['object']}» está separado de «{ref}»: acércalo con G hasta que se toquen."
     return result(target, not sueltos, mensaje, {"selector": sel, "reference": sel_ref, "failed": sueltos})
+
+
+def on_top(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Cada objeto descansa ENCIMA de un objeto de referencia (motor 3.3): un techo sobre su casa.
+
+    spatial.touching acepta un techo pegado al costado; aquí la base del objeto
+    queda cerca de la parte de arriba de la referencia (±tolerance, relativa a la
+    altura del objeto) y su centro cae sobre ella, no al lado.
+    """
+    sel = selector(target)
+    objetos = select(scene, sel)
+    sel_ref, referencias = _referencias(target, scene)
+    tolerancia = number(target, "tolerance", 0.25)
+    que, ref = describe(sel), describe(sel_ref)
+    if not objetos or not referencias:
+        falta = que if not objetos else ref
+        return result(target, False, f"Todavía falta «{falta}» para revisar qué va encima.", {"selector": sel})
+    fallan = []
+    for obj in objetos:
+        (omin, omax) = obj.caja()
+        alto = max(omax[2] - omin[2], 0.01)
+        centro = ((omin[0] + omax[0]) / 2, (omin[1] + omax[1]) / 2)
+        mejor = None
+        for r in referencias:
+            if r.name == obj.name:
+                continue
+            rmin, rmax = r.caja()
+            margen = 0.1 * max(rmax[0] - rmin[0], rmax[1] - rmin[1])
+            encima = all(rmin[i] - margen <= centro[i] <= rmax[i] + margen for i in range(2))
+            hueco = omin[2] - rmax[2]
+            if encima and abs(hueco) <= tolerancia * alto + 0.02:
+                mejor = None
+                break
+            razon = "lado" if not encima else ("flota" if hueco > 0 else "hundido")
+            if mejor is None or (encima and mejor["reason"] == "lado"):
+                mejor = {"object": obj.name, "reason": razon, "value": round(hueco, 2)}
+        else:
+            if mejor:
+                fallan.append(mejor)
+    if not fallan:
+        mensaje = f"Cada «{que}» descansa encima de «{ref}»."
+    else:
+        f = fallan[0]
+        mensaje = {
+            "lado": f"«{f['object']}» está al lado de «{ref}», no encima: muévelo con G hasta que quede arriba.",
+            "flota": f"«{f['object']}» flota {f['value']:.2f} m sobre «{ref}»: bájalo con G Z hasta que se apoye.",
+            "hundido": f"«{f['object']}» se hunde en «{ref}»: súbelo con G Z hasta que se apoye arriba.",
+        }[f["reason"]]
+    return result(target, not fallan, mensaje, {"selector": sel, "reference": sel_ref, "failed": fallan})

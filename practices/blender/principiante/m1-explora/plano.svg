@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="system-ui, sans-serif" role="img" aria-label="Plano de Muñeco de nieve">
+<rect width="960" height="400" rx="18" fill="#0f2747"/>
+<defs><pattern id="cuadricula" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#5b7fb0" stroke-opacity=".35" stroke-width=".6"/></pattern></defs>
+<rect x="12" y="12" width="936" height="376" rx="12" fill="url(#cuadricula)"/>
+<text x="28" y="44" fill="#eaf3ff" font-size="20" font-weight="700">Plano: Muñeco de nieve</text>
+<rect x="28" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="40" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De frente (1)</text>
+<ellipse cx="178.0" cy="122.7" rx="5.1" ry="5.1" fill="#ff7a1a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="178.0" cy="244.6" rx="45.4" ry="45.4" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="178.0" cy="173.7" rx="32.6" ry="32.6" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="178.0" cy="122.7" rx="22.7" ry="22.7" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M132.6 312.0H223.4M132.6 307.0v10M223.4 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="178.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 1.6 m</text>
+<path d="M116.6 100.0V290.0M111.6 100.0h10M111.6 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="108.6" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 108.6 195.0)">≈ 3.4 m</text>
+<rect x="340" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="352" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De lado (3)</text>
+<ellipse cx="491.4" cy="244.6" rx="45.4" ry="45.4" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="491.4" cy="173.7" rx="32.6" ry="32.6" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="491.4" cy="122.7" rx="22.7" ry="22.7" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="443.2" y="117.6" width="28.4" height="10.2" rx="2.6" fill="#ff7a1a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M443.2 312.0H536.8M443.2 307.0v10M536.8 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="490.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 1.6 m</text>
+<path d="M427.2 100.0V290.0M422.2 100.0h10M422.2 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="419.2" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 419.2 195.0)">≈ 3.4 m</text>
+<rect x="652" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="664" y="92" fill="#eaf3ff" font-size="14" font-weight="600">Desde arriba (7)</text>
+<ellipse cx="802.0" cy="192.1" rx="46.1" ry="46.1" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="791.6" y="232.4" width="20.7" height="57.6" rx="5.2" fill="#ff7a1a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="802.0" cy="192.1" rx="66.2" ry="66.2" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="802.0" cy="192.1" rx="92.1" ry="92.1" fill="#f4f8ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M709.9 312.0H894.1M709.9 307.0v10M894.1 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="802.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 1.6 m</text>
+<path d="M693.9 100.0V290.0M688.9 100.0h10M688.9 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="685.9" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 685.9 195.0)">≈ 1.6 m</text>
+<text x="28" y="360" fill="#eaf3ff" font-size="14">Piezas: 3 × esfera · 1 × cono</text>
+<text x="28" y="380" fill="#cfe3ff" font-size="13">Medidas aproximadas: ±35 % está bien. Tu figura puede ser más grande o más chica y estar girada; lo que cuenta es que se vea así.</text>
+</svg>

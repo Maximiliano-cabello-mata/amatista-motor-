@@ -5,119 +5,55 @@
     {
       "nombre": "Escena vacía",
       "construir": [],
-      "espera": {
-        "completada": false,
-        "progreso_max": 0,
-        "actual": "tablero",
-        "pildoras": [
-          "medidas"
-        ]
-      }
+      "espera": {"completada": false, "progreso_max": 0, "actual": "tablero", "pildoras": ["medidas"]}
     },
     {
       "nombre": "Tablero sin Array",
+      "construir": [{"cubo": {"nombre": "Tablero", "dims": [8, 2, 0.2], "loc": [0, 0, 3], "rol": "tablero"}}],
+      "espera": {"completada": false, "actual": "tablones"}
+    },
+    {
+      "nombre": "Sin sentido: tablero cortito sobre dos pilares juntos",
       "construir": [
-        {
-          "cubo": {
-            "nombre": "Tablero",
-            "dims": [
-              8,
-              2,
-              0.2
-            ],
-            "loc": [
-              0,
-              0,
-              3
-            ],
-            "rol": "tablero"
-          }
-        }
+        {"cubo": {"nombre": "Tablero", "dims": [1.6, 2, 0.2], "loc": [0, 0, 3.1], "rol": "tablero"}},
+        {"modificador": {"objeto": "Tablero", "tipo": "ARRAY"}},
+        {"cilindro": {"nombre": "Pilar", "dims": [0.6, 0.6, 3], "loc": [-0.5, 0, 1.5], "rol": "pilar"}},
+        {"modificador": {"objeto": "Pilar", "tipo": "BEVEL"}},
+        {"cilindro": {"nombre": "Pilar.001", "dims": [0.6, 0.6, 3], "loc": [0.5, 0, 1.5], "rol": "pilar"}},
+        {"modificador": {"objeto": "Pilar.001", "tipo": "BEVEL"}},
+        {"guardado": {"archivo": "mi_puente.blend"}}
       ],
-      "espera": {
-        "completada": false,
-        "actual": "tablones"
-      }
+      "espera": {"completada": false, "actual": "figura"}
+    },
+    {
+      "nombre": "Solución con cuatro pilares (la cantidad es libre)",
+      "construir": [
+        {"cubo": {"nombre": "Tablero", "dims": [8, 2, 0.2], "loc": [0, 0, 3.1], "rol": "tablero"}},
+        {"modificador": {"objeto": "Tablero", "tipo": "ARRAY"}},
+        {"cilindro": {"nombre": "Pilar", "dims": [0.6, 0.6, 3], "loc": [-3, 0, 1.5], "rol": "pilar"}},
+        {"modificador": {"objeto": "Pilar", "tipo": "BEVEL"}},
+        {"cilindro": {"nombre": "Pilar.001", "dims": [0.6, 0.6, 3], "loc": [3, 0, 1.5], "rol": "pilar"}},
+        {"modificador": {"objeto": "Pilar.001", "tipo": "BEVEL"}},
+        {"cilindro": {"nombre": "Pilar.002", "dims": [0.6, 0.6, 3], "loc": [-1, 0, 1.5], "rol": "pilar"}},
+        {"cilindro": {"nombre": "Pilar.003", "dims": [0.6, 0.6, 3], "loc": [1, 0, 1.5], "rol": "pilar"}},
+        {"modificador": {"objeto": "Pilar.002", "tipo": "BEVEL"}},
+        {"modificador": {"objeto": "Pilar.003", "tipo": "BEVEL"}},
+        {"guardado": {"archivo": "mi_puente.blend"}}
+      ],
+      "espera": {"completada": true, "progreso_min": 100}
     },
     {
       "nombre": "Solución: puente completo",
       "construir": [
-        {
-          "cubo": {
-            "nombre": "Tablero",
-            "dims": [
-              8,
-              2,
-              0.2
-            ],
-            "loc": [
-              0,
-              0,
-              3.1
-            ],
-            "rol": "tablero"
-          }
-        },
-        {
-          "modificador": {
-            "objeto": "Tablero",
-            "tipo": "ARRAY"
-          }
-        },
-        {
-          "cilindro": {
-            "nombre": "Pilar",
-            "dims": [
-              0.6,
-              0.6,
-              3
-            ],
-            "loc": [
-              -3,
-              0,
-              1.5
-            ],
-            "rol": "pilar"
-          }
-        },
-        {
-          "modificador": {
-            "objeto": "Pilar",
-            "tipo": "BEVEL"
-          }
-        },
-        {
-          "cilindro": {
-            "nombre": "Pilar.001",
-            "dims": [
-              0.6,
-              0.6,
-              3
-            ],
-            "loc": [
-              3,
-              0,
-              1.5
-            ],
-            "rol": "pilar"
-          }
-        },
-        {
-          "modificador": {
-            "objeto": "Pilar.001",
-            "tipo": "BEVEL"
-          }
-        },
-        {
-          "guardado": {
-            "archivo": "mi_puente.blend"
-          }
-        }
+        {"cubo": {"nombre": "Tablero", "dims": [8, 2, 0.2], "loc": [0, 0, 3.1], "rol": "tablero"}},
+        {"modificador": {"objeto": "Tablero", "tipo": "ARRAY"}},
+        {"cilindro": {"nombre": "Pilar", "dims": [0.6, 0.6, 3], "loc": [-3, 0, 1.5], "rol": "pilar"}},
+        {"modificador": {"objeto": "Pilar", "tipo": "BEVEL"}},
+        {"cilindro": {"nombre": "Pilar.001", "dims": [0.6, 0.6, 3], "loc": [3, 0, 1.5], "rol": "pilar"}},
+        {"modificador": {"objeto": "Pilar.001", "tipo": "BEVEL"}},
+        {"guardado": {"archivo": "mi_puente.blend"}}
       ],
-      "espera": {
-        "completada": true,
-        "progreso_min": 100
-      }
+      "espera": {"completada": true, "progreso_min": 100}
     }
   ]
 }

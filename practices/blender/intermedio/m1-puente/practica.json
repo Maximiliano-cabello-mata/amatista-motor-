@@ -1,46 +1,21 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bi.m1.puente",
-  "version": 1,
+  "version": 2,
   "title": "Un puente de madera",
   "level": 3,
   "description": "Construyes un puente: tablones repetidos con Array sobre pilares biselados, con la escala aplicada y bien apoyado.",
   "intro": "La aldea necesita un puente para cruzar el río. Tú eres la arquitecta o el arquitecto.",
   "completion": "¡El puente aguanta! Se abre el Módulo 2: organiza tu aldea.",
   "estimatedMinutes": 25,
-  "blender": {
-    "min": "4.2"
-  },
-  "skills": [
-    "bl-array",
-    "bl-bisel",
-    "bl-aplicar-escala",
-    "bl-ensamblar"
-  ],
-  "tags": [
-    "intermedio",
-    "modulo-1",
-    "proyecto"
-  ],
-  "course": {
-    "id": "blender_intermedio",
-    "module": 1,
-    "lesson": "bi1_practica",
-    "next": "blender.bi.m2.explora"
-  },
-  "starter": {
-    "scene": "empty",
-    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."
-  },
+  "blender": {"min": "4.2"},
+  "skills": ["bl-array", "bl-bisel", "bl-aplicar-escala", "bl-ensamblar"],
+  "tags": ["intermedio", "modulo-1", "proyecto"],
+  "course": {"id": "blender_intermedio", "module": 1, "lesson": "bi1_practica", "next": "blender.bi.m2.explora"},
+  "starter": {"scene": "empty", "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."},
   "roles": {
-    "tablero": {
-      "label": "Tablero",
-      "description": "El piso del puente: un cubo plano y largo."
-    },
-    "pilar": {
-      "label": "Pilar",
-      "description": "Un cilindro alto que sostiene el tablero."
-    }
+    "tablero": {"label": "Tablero", "description": "El piso del puente: un cubo plano y largo."},
+    "pilar": {"label": "Pilar", "description": "Un cilindro alto que sostiene el tablero."}
   },
   "tools": {
     "allowed": [
@@ -58,18 +33,11 @@
       "id": "medidas",
       "title": "Escribe la medida",
       "text": "Mientras escalas o mueves, escribe un número: S X 4 es exactamente cuatro veces. El panel N muestra las medidas reales.",
-      "keys": [
-        "N"
-      ],
-      "trigger": {
-        "on": "start"
-      },
+      "keys": ["N"],
+      "trigger": {"on": "start"},
       "check": {
         "question": "¿Qué panel muestra las medidas exactas del objeto?",
-        "options": [
-          "El panel N",
-          "La línea de tiempo"
-        ],
+        "options": ["El panel N", "La línea de tiempo"],
         "answer": 0
       }
     },
@@ -77,15 +45,9 @@
       "id": "apoyo",
       "title": "Nada flota",
       "text": "Mira de frente (1) y de lado (3): los pilares tocan el suelo y el tablero descansa encima.",
-      "keys": [
-        "1",
-        "3"
-      ],
+      "keys": ["1", "3"],
       "visual": "keys",
-      "trigger": {
-        "on": "target",
-        "target": "sobre-pilares"
-      }
+      "trigger": {"on": "target", "target": "sobre-pilares"}
     }
   ],
   "targets": [
@@ -93,147 +55,152 @@
       "id": "tablero",
       "title": "El tablero",
       "validator": "role.count",
-      "params": {
-        "role": "tablero",
-        "min": 1
-      },
+      "params": {"role": "tablero", "min": 1},
       "weight": 10,
       "tip": "Un cubo plano y alargado con el rol «Tablero».",
-      "hints": [
-        "S Z 0.1 lo aplana.",
-        "En la pestaña Amatista dile que es «Tablero»."
-      ]
+      "hints": ["S Z 0.1 lo aplana.", "En la pestaña Amatista dile que es «Tablero»."]
     },
     {
       "id": "tablones",
       "title": "Tablones con Array",
       "validator": "modifier.exists",
-      "params": {
-        "role": "tablero",
-        "modifier": "ARRAY"
-      },
+      "params": {"role": "tablero", "modifier": "ARRAY"},
       "weight": 20,
-      "requires": [
-        "tablero"
-      ],
+      "requires": ["tablero"],
       "tip": "Agrega un Array al tablero para repetir los tablones.",
-      "hints": [
-        "Llave inglesa › Generar › Array.",
-        "Ajusta «Cantidad» y «Desplazamiento relativo»."
-      ]
+      "hints": ["Llave inglesa › Generar › Array.", "Ajusta «Cantidad» y «Desplazamiento relativo»."]
     },
     {
       "id": "escala",
       "title": "Escala aplicada en el tablero",
       "validator": "transform.scale_applied",
-      "params": {
-        "role": "tablero"
-      },
+      "params": {"role": "tablero"},
       "weight": 10,
-      "requires": [
-        "tablero"
-      ],
+      "requires": ["tablero"],
       "tip": "Ctrl+A › Escala antes de afinar el Array.",
-      "hints": [
-        "Selecciona el tablero y pulsa Ctrl+A.",
-        "Elige Escala."
-      ]
+      "hints": ["Selecciona el tablero y pulsa Ctrl+A.", "Elige Escala."]
     },
     {
       "id": "pilares",
       "title": "Dos pilares o más",
       "validator": "object.count",
-      "params": {
-        "role": "pilar",
-        "primitive": "cylinder",
-        "min": 2
-      },
+      "params": {"role": "pilar", "primitive": "cylinder", "min": 2},
       "weight": 15,
-      "requires": [
-        "tablero"
-      ],
+      "requires": ["tablero"],
       "tip": "Cilindros altos con el rol «Pilar».",
-      "hints": [
-        "Shift+A › Cilindro, S Z 3.",
-        "Shift+D duplica el pilar."
-      ]
+      "hints": ["Shift+A › Cilindro, S Z 3.", "Shift+D duplica el pilar."]
     },
     {
       "id": "en-el-suelo",
       "title": "Pilares en el suelo",
       "validator": "spatial.grounded",
-      "params": {
-        "role": "pilar",
-        "height": 0,
-        "tolerance": 0.1
-      },
+      "params": {"role": "pilar", "height": 0, "tolerance": 0.15},
       "weight": 10,
-      "requires": [
-        "pilares"
-      ],
+      "requires": ["pilares"],
       "tip": "Baja cada pilar hasta tocar el suelo.",
-      "hints": [
-        "Vista de frente (1).",
-        "G Z hasta la línea del suelo."
-      ]
+      "hints": ["Vista de frente (1).", "G Z hasta la línea del suelo."]
     },
     {
       "id": "sobre-pilares",
       "title": "Tablero sobre los pilares",
       "validator": "spatial.below",
-      "params": {
-        "role": "pilar",
-        "reference_role": "tablero",
-        "tolerance": 0.15
-      },
+      "params": {"role": "pilar", "reference_role": "tablero", "tolerance": 0.15},
       "weight": 15,
-      "requires": [
-        "en-el-suelo",
-        "tablones"
-      ],
+      "requires": ["en-el-suelo", "tablones"],
       "tip": "Los pilares van debajo del tablero, tocándolo.",
-      "hints": [
-        "Sube el tablero con G Z.",
-        "Revisa de lado (3) que no quede espacio."
-      ]
+      "hints": ["Sube el tablero con G Z.", "Revisa de lado (3) que no quede espacio."]
     },
     {
       "id": "biselados",
       "title": "Pilares biselados",
       "validator": "modifier.exists",
-      "params": {
-        "role": "pilar",
-        "modifier": "BEVEL"
-      },
+      "params": {"role": "pilar", "modifier": "BEVEL"},
       "weight": 10,
-      "requires": [
-        "pilares"
-      ],
+      "requires": ["pilares"],
       "tip": "Un Bisel en cada pilar.",
+      "hints": ["Agrega Bisel a un pilar y copia a los demás con Ctrl+L › Copiar modificadores."]
+    },
+    {
+      "id": "figura",
+      "title": "Se parece al puente del modelo",
+      "validator": "figure.resembles",
+      "params": {},
+      "weight": 15,
+      "requires": ["sobre-pilares"],
+      "tip": "Compara con la imagen: tablero largo y plano arriba, pilares altos debajo que llegan al suelo.",
       "hints": [
-        "Agrega Bisel a un pilar y copia a los demás con Ctrl+L › Copiar modificadores."
-      ]
+        "Si el tablero quedó corto, sube la cantidad del Array.",
+        "Los pilares sostienen el tablero cerca de sus extremos, no en un solo punto."
+      ],
+      "guide": {
+        "why": "Cada paso puede estar bien y aun así no parecer un puente; Amatista compara la figura completa con el modelo, sin medidas exactas."
+      }
     },
     {
       "id": "guardar",
       "title": "Guarda tu puente",
       "validator": "file.named",
-      "params": {
-        "contains": "puente"
-      },
+      "params": {"contains": "puente"},
       "weight": 10,
-      "requires": [
-        "sobre-pilares",
-        "biselados"
-      ],
+      "requires": ["biselados", "figura", "sobre-pilares"],
       "tip": "Ctrl+Shift+S: mi_puente.blend.",
-      "hints": [
-        "Archivo › Guardar como."
-      ]
+      "hints": ["Archivo › Guardar como."]
     }
   ],
-  "review": [
-    "blender.bi.m1.explora#array",
-    "blender.bp.m3.explora#escala"
-  ]
+  "review": ["blender.bi.m1.explora#array", "blender.bp.m3.explora#escala"],
+  "reference": {
+    "title": "Puente de madera",
+    "description": "Un tablero largo de tablones (Array) apoyado sobre pilares biselados que bajan hasta el suelo, entre dos orillas. La cantidad de pilares es libre (2, 3 o 4); el tablero va encima de ellos.",
+    "tolerance": 0.35,
+    "flexible": ["pilar"],
+    "parts": [
+      {
+        "primitive": "cube",
+        "role": "tablero",
+        "name": "Tablero",
+        "size": [8.4, 2.2, 0.2],
+        "location": [0, 0, 3.1],
+        "color": "#b07a4a"
+      },
+      {
+        "primitive": "cylinder",
+        "role": "pilar",
+        "name": "Pilar",
+        "size": [0.6, 0.6, 3],
+        "location": [-3, 0, 1.5],
+        "color": "#8d8d8d"
+      },
+      {
+        "primitive": "cylinder",
+        "role": "pilar",
+        "name": "Pilar.001",
+        "size": [0.6, 0.6, 3],
+        "location": [3, 0, 1.5],
+        "color": "#8d8d8d"
+      },
+      {
+        "primitive": "cube",
+        "name": "Orilla",
+        "size": [3, 5, 3],
+        "location": [-5.7, 0, 1.5],
+        "color": "#6f9e4f",
+        "compare": false
+      },
+      {
+        "primitive": "cube",
+        "name": "Orilla.001",
+        "size": [3, 5, 3],
+        "location": [5.7, 0, 1.5],
+        "color": "#6f9e4f",
+        "compare": false
+      },
+      {"primitive": "plane", "size": [16, 8, 0], "color": "#3f88c5", "compare": false}
+    ],
+    "objects": {
+      "Tablero": {"array": {"count": 8, "axis": "x", "gap": 0.06}},
+      "Pilar": {"bevel": 0.05},
+      "Pilar.001": {"bevel": 0.05}
+    },
+    "camera": {"location": [10, -15, 8.5], "target": [0, 0, 1.6]}
+  }
 }

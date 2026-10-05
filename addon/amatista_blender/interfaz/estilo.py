@@ -34,10 +34,32 @@ def cargar_iconos():
 
 
 def liberar_iconos():
-    global _ICONOS
+    global _ICONOS, _IMAGENES
     if _ICONOS is not None:
         bpy.utils.previews.remove(_ICONOS)
         _ICONOS = None
+    if _IMAGENES is not None:
+        bpy.utils.previews.remove(_IMAGENES)
+        _IMAGENES = None
+
+
+_IMAGENES = None
+
+
+def imagen(ruta):
+    """icon_value de una imagen cualquiera (la del modelo de referencia), cargada una vez."""
+    global _IMAGENES
+    if not ruta:
+        return 0
+    if _IMAGENES is None:
+        _IMAGENES = bpy.utils.previews.new()
+    clave = str(ruta)
+    if clave not in _IMAGENES:
+        try:
+            _IMAGENES.load(clave, clave, "IMAGE")
+        except (KeyError, RuntimeError):
+            return 0
+    return _IMAGENES[clave].icon_id
 
 
 def icono(nombre):

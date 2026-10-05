@@ -8,61 +8,28 @@
   "intro": "La galería abre sus puertas: presenta tu mejor pieza como en un portafolio profesional.",
   "completion": "¡Tu diorama está en la galería! Terminaste el nivel Intermedio de Blender.",
   "estimatedMinutes": 30,
-  "blender": {
-    "min": "4.2"
-  },
-  "skills": [
-    "bl-tres-puntos",
-    "bl-camara",
-    "bl-render",
-    "bl-portafolio"
-  ],
-  "tags": [
-    "intermedio",
-    "modulo-3",
-    "proyecto"
-  ],
-  "course": {
-    "id": "blender_intermedio",
-    "module": 3,
-    "lesson": "bi3_practica"
-  },
+  "blender": {"min": "4.2"},
+  "skills": ["bl-tres-puntos", "bl-camara", "bl-render", "bl-portafolio"],
+  "tags": ["intermedio", "modulo-3", "proyecto"],
+  "course": {"id": "blender_intermedio", "module": 3, "lesson": "bi3_practica"},
   "starter": {
     "scene": "keep",
     "note": "Trabaja sobre tu mi_aldea.blend (o cualquier modelo tuyo): Amatista no cambia nada al empezar."
   },
-  "roles": {
-    "diorama": {
-      "label": "Diorama",
-      "description": "La pieza principal que presentas en la galería."
-    }
-  },
-  "tools": {
-    "allowed": [
-      "light.add",
-      "camera.add",
-      "render.f12",
-      "view.numpad",
-      "file.save"
-    ]
-  },
+  "roles": {"diorama": {"label": "Diorama", "description": "La pieza principal que presentas en la galería."}},
+  "tools": {"allowed": ["light.add", "camera.add", "render.f12", "view.numpad", "file.save"]},
   "pills": [
     {
       "id": "composicion",
       "title": "Regla de tercios",
       "text": "Activa la guía de tercios en la cámara (Propiedades de cámara › Composición) y coloca lo importante en un cruce de líneas.",
-      "trigger": {
-        "on": "start"
-      }
+      "trigger": {"on": "start"}
     },
     {
       "id": "tres",
       "title": "Tres puntos otra vez",
       "text": "Principal delante a un lado, relleno más suave del otro y contraluz detrás. Lo aprendiste en el set de cine: ahora con tu propia pieza.",
-      "trigger": {
-        "on": "target",
-        "target": "luces"
-      }
+      "trigger": {"on": "target", "target": "luces"}
     }
   ],
   "targets": [
@@ -70,62 +37,39 @@
       "id": "diorama",
       "title": "Marca tu pieza",
       "validator": "role.count",
-      "params": {
-        "role": "diorama",
-        "min": 1
-      },
+      "params": {"role": "diorama", "min": 1},
       "weight": 10,
       "tip": "Asigna el rol «Diorama» a tu modelo principal.",
-      "hints": [
-        "Abre mi_aldea.blend o modela algo nuevo.",
-        "En la pestaña Amatista elige el rol «Diorama»."
-      ]
+      "hints": ["Abre mi_aldea.blend o modela algo nuevo.", "En la pestaña Amatista elige el rol «Diorama»."]
     },
     {
       "id": "camara",
       "title": "Cámara activa",
       "validator": "camera.active",
       "weight": 10,
-      "requires": [
-        "diorama"
-      ],
+      "requires": ["diorama"],
       "tip": "Shift+A › Cámara.",
-      "hints": [
-        "Ctrl+Numpad 0 la vuelve activa."
-      ]
+      "hints": ["Ctrl+Numpad 0 la vuelve activa."]
     },
     {
       "id": "encuadre",
       "title": "Encuadre de portafolio",
       "validator": "camera.frames",
-      "params": {
-        "role": "diorama"
-      },
+      "params": {"role": "diorama"},
       "weight": 20,
-      "requires": [
-        "camara"
-      ],
+      "requires": ["camara"],
       "tip": "Mira tu diorama como en la foto final y pulsa Ctrl+Alt+0.",
-      "hints": [
-        "Numpad 0 para ver por la cámara."
-      ]
+      "hints": ["Numpad 0 para ver por la cámara."]
     },
     {
       "id": "luces",
       "title": "Tres puntos",
       "validator": "light.three_point",
-      "params": {
-        "role": "diorama"
-      },
+      "params": {"role": "diorama"},
       "weight": 25,
-      "requires": [
-        "diorama"
-      ],
+      "requires": ["diorama"],
       "tip": "Principal y relleno delante a cada lado, contraluz detrás.",
-      "hints": [
-        "Mira desde arriba (7).",
-        "Duplica la principal con Shift+D y baja su potencia: es el relleno."
-      ]
+      "hints": ["Mira desde arriba (7).", "Duplica la principal con Shift+D y baja su potencia: es el relleno."]
     },
     {
       "id": "motor",
@@ -133,62 +77,110 @@
       "validator": "logic.any",
       "params": {
         "options": [
-          {
-            "validator": "render.engine",
-            "params": {
-              "engine": "EEVEE"
-            }
-          },
-          {
-            "validator": "render.engine",
-            "params": {
-              "engine": "CYCLES"
-            }
-          }
+          {"validator": "render.engine", "params": {"engine": "EEVEE"}},
+          {"validator": "render.engine", "params": {"engine": "CYCLES"}}
         ]
       },
       "weight": 5,
       "tip": "Elige EEVEE o Cycles en Propiedades › Render.",
-      "hints": [
-        "Workbench no sirve para la galería."
-      ]
+      "hints": ["Workbench no sirve para la galería."]
     },
     {
       "id": "render",
       "title": "La foto final",
       "validator": "render.done",
-      "params": {
-        "min": 1
-      },
+      "params": {"min": 1},
       "weight": 20,
-      "requires": [
-        "encuadre",
-        "luces"
-      ],
+      "requires": ["encuadre", "luces"],
       "tip": "F12.",
-      "hints": [
-        "Imagen › Guardar como en la ventana del render."
-      ]
+      "hints": ["Imagen › Guardar como en la ventana del render."]
     },
     {
       "id": "guardar",
       "title": "Guarda el diorama",
       "validator": "file.named",
-      "params": {
-        "contains": "diorama"
-      },
+      "params": {"contains": "diorama"},
       "weight": 10,
-      "requires": [
-        "render"
-      ],
+      "requires": ["render"],
       "tip": "Ctrl+Shift+S: mi_diorama.blend.",
-      "hints": [
-        "Archivo › Guardar como."
-      ]
+      "hints": ["Archivo › Guardar como."]
     }
   ],
-  "review": [
-    "blender.bi.m3.explora#motores",
-    "blender.bpi.m2.tres-puntos#tres-puntos"
-  ]
+  "review": ["blender.bi.m3.explora#motores", "blender.bpi.m2.tres-puntos#tres-puntos"],
+  "reference": {
+    "title": "Diorama en la galería",
+    "description": "Tu aldea sobre una base, encuadrada por la cámara y con luz de tres puntos; el render final se hace en Cycles.",
+    "tolerance": 0.35,
+    "parts": [
+      {
+        "primitive": "cylinder",
+        "role": "diorama",
+        "name": "Base",
+        "size": [11, 6, 0.4],
+        "location": [0, 0, 0.2],
+        "color": "#6d4c3d"
+      },
+      {
+        "primitive": "cube",
+        "name": "Casa_1",
+        "size": [1.6, 1.6, 1.6],
+        "location": [-3, 0.5, 1.2],
+        "color": "#e74c3c",
+        "compare": false
+      },
+      {
+        "primitive": "cube",
+        "name": "Casa_2",
+        "size": [1.6, 1.6, 1.6],
+        "location": [0, -0.6, 1.2],
+        "color": "#3498db",
+        "compare": false
+      },
+      {
+        "primitive": "cube",
+        "name": "Casa_3",
+        "size": [1.6, 1.6, 1.6],
+        "location": [3, 0.4, 1.2],
+        "color": "#2ecc71",
+        "compare": false
+      },
+      {
+        "primitive": "cone",
+        "name": "Techo_1",
+        "size": [2.3, 2.3, 1.1],
+        "location": [-3, 0.5, 2.55],
+        "rotation": [0, 0, 45],
+        "segments": 4,
+        "color": "#7a4b2a",
+        "compare": false
+      },
+      {
+        "primitive": "cone",
+        "name": "Techo_2",
+        "size": [2.3, 2.3, 1.1],
+        "location": [0, -0.6, 2.55],
+        "rotation": [0, 0, 45],
+        "segments": 4,
+        "color": "#7a4b2a",
+        "compare": false
+      },
+      {
+        "primitive": "cone",
+        "name": "Techo_3",
+        "size": [2.3, 2.3, 1.1],
+        "location": [3, 0.4, 2.55],
+        "rotation": [0, 0, 45],
+        "segments": 4,
+        "color": "#7a4b2a",
+        "compare": false
+      },
+      {"primitive": "plane", "size": [20, 20, 0], "color": "#2b2f3a", "compare": false}
+    ],
+    "lights": [
+      {"name": "Principal", "type": "AREA", "location": [-4, -5, 4], "energy": 500},
+      {"name": "Relleno", "type": "AREA", "location": [4, -5, 3], "energy": 200},
+      {"name": "Contraluz", "type": "SPOT", "location": [0, 5, 5], "energy": 800}
+    ],
+    "camera": {"location": [0, -12, 5.5], "target": [0, 0, 1]}
+  }
 }

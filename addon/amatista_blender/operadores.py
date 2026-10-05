@@ -80,6 +80,23 @@ class AMATISTA_OT_abrir_plataforma(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class AMATISTA_OT_ver_referencia(bpy.types.Operator):
+    bl_idname = "amatista.ver_referencia"
+    bl_label = "Ver el modelo de referencia"
+    bl_description = "Abre la imagen o el plano con medidas de cómo debe verse la figura"
+
+    archivo: bpy.props.StringProperty(default="referencia.jpg")
+
+    def execute(self, context):
+        practica = practicas.practica_activa(context)
+        ruta = practicas.archivo_de_referencia(practica.id, self.archivo) if practica else None
+        if ruta is None:
+            self.report({"WARNING"}, "Esta práctica no trae imagen de referencia.")
+            return {"CANCELLED"}
+        bpy.ops.wm.path_open(filepath=str(ruta))
+        return {"FINISHED"}
+
+
 class AMATISTA_OT_abrir_practica(bpy.types.Operator):
     bl_idname = "amatista.abrir_practica"
     bl_label = "Empezar práctica"
@@ -262,6 +279,7 @@ class AMATISTA_OT_mascota_siguiente(bpy.types.Operator):
 
 
 CLASES = (
+    AMATISTA_OT_ver_referencia,
     AMATISTA_OT_hazlo_conmigo,
     AMATISTA_OT_mascota_siguiente,
     AMATISTA_OT_mostrarme,

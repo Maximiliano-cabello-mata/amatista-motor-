@@ -99,7 +99,7 @@ def revisar(rutas: Sequence[str]) -> int:
 
 def comprobar_caso(motor, practica, caso: Dict[str, Any]) -> List[str]:
     """Fallas de un caso de pruebas.json (lista vacía si cumple lo esperado)."""
-    escena = escena_de_caso(caso)
+    escena = escena_de_caso(caso, practica)
     reporte = motor.evaluate(practica, escena)
     guia = build_guidance(practica, escena, reporte)
     espera = caso.get("espera") or {}
@@ -165,7 +165,7 @@ def probar(rutas: Sequence[str], detalle: bool = False) -> int:
             else:
                 print(_color(f"  ✓ {caso.get('nombre')}", VERDE))
             if detalle:
-                _tabla(motor, practica, escena_de_caso(caso))
+                _tabla(motor, practica, escena_de_caso(caso, practica))
     print(f"{total - fallidos} de {total} casos correctos")
     return 1 if fallidos else 0
 
@@ -205,7 +205,7 @@ def simular(ruta: str, escena: Optional[str]) -> int:
         casos = (_leer(carpeta / PRUEBAS).get("casos") or []) if (carpeta / PRUEBAS).exists() else []
     for caso in casos:
         print(caso.get("nombre"))
-        _tabla(motor, practica, escena_de_caso(caso))
+        _tabla(motor, practica, escena_de_caso(caso, practica))
     return 0
 
 

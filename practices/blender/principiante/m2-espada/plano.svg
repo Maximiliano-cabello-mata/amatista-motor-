@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="system-ui, sans-serif" role="img" aria-label="Plano de Espada low-poly">
+<rect width="960" height="400" rx="18" fill="#0f2747"/>
+<defs><pattern id="cuadricula" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#5b7fb0" stroke-opacity=".35" stroke-width=".6"/></pattern></defs>
+<rect x="12" y="12" width="936" height="376" rx="12" fill="url(#cuadricula)"/>
+<text x="28" y="44" fill="#eaf3ff" font-size="20" font-weight="700">Plano: Espada low-poly</text>
+<rect x="28" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="40" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De frente (1)</text>
+<ellipse cx="178.0" cy="283.7" rx="6.3" ry="6.3" fill="#c8a24a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="174.0" y="245.3" width="8.1" height="33.7" rx="2.0" fill="#6b3f22" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="153.3" y="237.4" width="49.5" height="8.1" rx="0.5" fill="#c8a24a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="171.3" y="120.5" width="13.5" height="116.9" rx="0.8" fill="#d6dde6" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<polygon points="171.3,120.2 184.7,120.2 178.0,100.0" fill="#d6dde6" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M153.3 312.0H202.7M153.3 307.0v10M202.7 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="178.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 1.1 m</text>
+<path d="M137.3 100.0V290.0M132.3 100.0h10M132.3 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="129.3" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 129.3 195.0)">≈ 4.2 m</text>
+<rect x="340" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="352" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De lado (3)</text>
+<ellipse cx="490.0" cy="283.7" rx="6.3" ry="6.3" fill="#c8a24a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="486.0" y="245.3" width="8.1" height="33.7" rx="2.0" fill="#6b3f22" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="484.2" y="237.4" width="11.7" height="8.1" rx="0.5" fill="#c8a24a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="488.2" y="120.5" width="3.6" height="116.9" rx="0.2" fill="#d6dde6" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<polygon points="488.2,120.2 491.8,120.2 490.0,100.0" fill="#d6dde6" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M483.7 312.0H496.3M483.7 307.0v10M496.3 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="490.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 0.3 m</text>
+<path d="M467.7 100.0V290.0M462.7 100.0h10M462.7 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="459.7" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 459.7 195.0)">≈ 4.2 m</text>
+<rect x="652" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="664" y="92" fill="#eaf3ff" font-size="14" font-weight="600">Desde arriba (7)</text>
+<rect x="769.3" y="186.3" width="65.5" height="17.5" rx="4.4" fill="#d6dde6" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="769.3" y="186.3" width="65.5" height="17.5" rx="1.0" fill="#d6dde6" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="682.0" y="166.6" width="240.0" height="56.7" rx="3.4" fill="#c8a24a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="802.0" cy="195.0" rx="19.6" ry="19.6" fill="#6b3f22" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="802.0" cy="195.0" rx="30.5" ry="30.5" fill="#c8a24a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M682.0 247.5H922.0M682.0 242.5v10M922.0 242.5v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="802.0" y="263.5" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 1.1 m</text>
+<path d="M666.0 164.5V225.5M661.0 164.5h10M661.0 225.5h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="658.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 658.0 195.0)">≈ 0.3 m</text>
+<text x="28" y="360" fill="#eaf3ff" font-size="14">Piezas: 1 × Modelo</text>
+<text x="28" y="380" fill="#cfe3ff" font-size="13">Medidas aproximadas: ±35 % está bien. Tu figura puede ser más grande o más chica y estar girada; lo que cuenta es que se vea así.</text>
+</svg>

@@ -16,7 +16,7 @@ SCHEMA_V1 = "amatista.practice/1"
 SCHEMA_V2 = "amatista.practice/2"
 SUPPORTED_SCHEMA = SCHEMA_V2  # el que escriben las herramientas nuevas
 SUPPORTED_SCHEMAS = (SCHEMA_V1, SCHEMA_V2)
-CAMPOS_V2 = ("guards", "pills", "review", "course", "starter")
+CAMPOS_V2 = ("guards", "pills", "review", "course", "starter", "reference")
 
 # Ids de práctica: minúsculas, números, punto, guion y guion bajo («blender.n1.mesa»).
 PATRON_PRACTICA = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
@@ -30,9 +30,16 @@ CAMPOS_OBJETIVO = {
 CAMPOS_PRACTICA = {
     "schema", "id", "version", "title", "level", "description", "intro", "completion", "estimatedMinutes",
     "blender", "skills", "roles", "tags", "tools", "targets",
-    "guards", "pills", "review", "course", "starter",
+    "guards", "pills", "review", "course", "starter", "reference",
 }
 CAMPOS_PILDORA = {"id", "title", "text", "keys", "visual", "trigger", "once", "check"}
+
+# Modelo de referencia (motor 3.3): piezas de la figura terminada.
+CAMPOS_REFERENCIA = {"title", "description", "tolerance", "parts", "objects", "camera", "flexible", "lights"}
+CAMPOS_PIEZA = {"primitive", "size", "location", "rotation", "role", "name", "color", "join", "segments",
+                "material", "compare"}
+PRIMITIVAS_REFERENCIA = ("cube", "cylinder", "sphere", "icosphere", "cone", "torus", "plane")
+MAX_PIEZAS = 60
 
 MAX_OBJETIVOS = 40
 MAX_PISTAS = 6

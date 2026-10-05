@@ -2,7 +2,7 @@
 
 Uso desde la terminal (en la raíz del repositorio):
 
-    python addon/herramientas/construir.py                      # dist/amatista-3.2.0.zip
+    python addon/herramientas/construir.py                      # dist/amatista-3.3.0.zip
     python addon/herramientas/construir.py --sistema windows \\
         --servidor https://api.ejemplo.cl --plataforma https://ejemplo.cl
 
@@ -71,7 +71,7 @@ def leer_manifiesto() -> dict:
 
 
 VERSION = leer_manifiesto()["version"]
-# Nombre del producto que ve el alumno: «Amatista Motor 3.2» (mayor.menor).
+# Nombre del producto que ve el alumno: «Amatista Motor 3.3» (mayor.menor).
 NOMBRE = leer_manifiesto()["name"]
 VERSION_CORTA = ".".join(VERSION.split(".")[:2])
 NOMBRE_COMPLETO = f"{NOMBRE} {VERSION_CORTA}"
@@ -149,7 +149,7 @@ def _base_extension(_huella: tuple) -> bytes:
             poner(f"amatista_engine/{nombre}", ruta.read_bytes())
         for ruta, nombre in _archivos(PRACTICAS):
             # Prácticas, mapa de cursos e imágenes de referencia; los casos de prueba se quedan en el repo.
-            if ruta.suffix in (".json", ".svg", ".png") and ruta.name != "pruebas.json":
+            if ruta.suffix in (".json", ".svg", ".png", ".jpg") and ruta.name != "pruebas.json":
                 poner(f"practicas/{nombre}", ruta.read_bytes())
         _agregar(zf, ARCHIVO_INTEGRIDAD, integridad(hashes))
     return salida.getvalue()

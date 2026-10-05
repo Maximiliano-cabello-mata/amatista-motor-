@@ -1,58 +1,29 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bi.m1.explora",
-  "version": 1,
+  "version": 2,
   "title": "Calentamiento: repite con Array",
   "level": 3,
   "description": "Una tabla, un modificador Array y un Bisel: repites piezas sin copiarlas a mano. Amatista registra cada modificador.",
   "intro": "En el nivel Intermedio trabajas como en un estudio: menos clics, más control. Prueba el Array.",
   "completion": "¡Repetiste sin copiar! La siguiente lección explica el ajuste por medidas y el Snap.",
   "estimatedMinutes": 10,
-  "blender": {
-    "min": "4.2"
-  },
-  "skills": [
-    "bl-modificadores",
-    "bl-array"
-  ],
-  "tags": [
-    "intermedio",
-    "modulo-1",
-    "exploracion"
-  ],
-  "course": {
-    "id": "blender_intermedio",
-    "module": 1,
-    "lesson": "bi1_blender",
-    "next": "blender.bi.m1.puente"
-  },
-  "starter": {
-    "scene": "empty",
-    "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."
-  },
-  "tools": {
-    "allowed": [
-      "object.add",
-      "transform.scale",
-      "modifier.array",
-      "modifier.bevel"
-    ]
-  },
+  "blender": {"min": "4.2"},
+  "skills": ["bl-modificadores", "bl-array"],
+  "tags": ["intermedio", "modulo-1", "exploracion"],
+  "course": {"id": "blender_intermedio", "module": 1, "lesson": "bi1_blender", "next": "blender.bi.m1.puente"},
+  "starter": {"scene": "empty", "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."},
+  "tools": {"allowed": ["object.add", "transform.scale", "modifier.array", "modifier.bevel"]},
   "pills": [
     {
       "id": "array",
       "title": "Array: copias vivas",
       "text": "El modificador Array repite el objeto en fila. Cambias la pieza original y todas las copias cambian con ella.",
       "visual": "tab:MODIFIER",
-      "trigger": {
-        "on": "start"
-      },
+      "trigger": {"on": "start"},
       "check": {
         "question": "Si editas la pieza original de un Array, ¿qué pasa con las copias?",
-        "options": [
-          "Cambian también",
-          "Se quedan igual"
-        ],
+        "options": ["Cambian también", "Se quedan igual"],
         "answer": 0
       }
     },
@@ -61,67 +32,50 @@
       "title": "Bisel: bordes que atrapan luz",
       "text": "Ningún objeto real tiene aristas perfectas. Un Bisel pequeño redondea los bordes y el render se ve más creíble.",
       "visual": "tab:MODIFIER",
-      "trigger": {
-        "on": "target",
-        "target": "biselada"
-      }
+      "trigger": {"on": "target", "target": "biselada"}
     }
   ],
   "targets": [
     {
       "id": "tabla",
-      "title": "Una tabla alargada",
-      "validator": "shape.proportion",
-      "params": {
-        "primitive": "cube",
-        "axis": "x",
-        "min_ratio": 2
-      },
+      "title": "Una tabla plana",
+      "validator": "shape.thinnest_axis",
+      "params": {"primitive": "cube", "axis": "z", "max_ratio": 0.5},
       "weight": 20,
-      "tip": "Agrega un cubo y estíralo: S X 3.",
-      "hints": [
-        "Shift+A › Malla › Cubo.",
-        "S, X, 3, Enter."
-      ]
+      "tip": "Agrega un cubo y aplástalo como tabla: S Z 0.1, y luego S X 3 para hacerla larga.",
+      "hints": ["Shift+A › Malla › Cubo.", "S, X, 3, Enter."]
     },
     {
       "id": "repetida",
       "title": "Repítela con Array",
       "validator": "modifier.exists",
-      "params": {
-        "primitive": "cube",
-        "modifier": "ARRAY"
-      },
+      "params": {"primitive": "cube", "modifier": "ARRAY"},
       "weight": 40,
-      "requires": [
-        "tabla"
-      ],
+      "requires": ["tabla"],
       "tip": "Llave inglesa › Agregar modificador › Generar › Array.",
-      "hints": [
-        "Con la tabla seleccionada, abre la pestaña de la llave.",
-        "Sube «Cantidad» a 6."
-      ]
+      "hints": ["Con la tabla seleccionada, abre la pestaña de la llave.", "Sube «Cantidad» a 6."]
     },
     {
       "id": "biselada",
       "title": "Redondea con Bisel",
       "validator": "modifier.exists",
-      "params": {
-        "primitive": "cube",
-        "modifier": "BEVEL"
-      },
+      "params": {"primitive": "cube", "modifier": "BEVEL"},
       "weight": 40,
-      "requires": [
-        "repetida"
-      ],
+      "requires": ["repetida"],
       "tip": "Agrega también un modificador Bisel.",
-      "hints": [
-        "Agregar modificador › Generar › Bisel.",
-        "Baja la «Cantidad» a 0.05."
-      ]
+      "hints": ["Agregar modificador › Generar › Bisel.", "Baja la «Cantidad» a 0.05."]
     }
   ],
-  "review": [
-    "blender.bpi.m3.explora#clave"
-  ]
+  "review": ["blender.bpi.m3.explora#clave"],
+  "reference": {
+    "title": "Tabla repetida con Array",
+    "description": "Una tabla larga (cerca de 6 × 1 × 0.2 m) repetida con Array a lo ancho, con un Bisel pequeño que suaviza los bordes.",
+    "tolerance": 0.35,
+    "parts": [
+      {"primitive": "cube", "name": "Tabla", "size": [6, 5.4, 0.2], "location": [0, 0, 0.1], "color": "#b07a4a"},
+      {"primitive": "plane", "size": [10, 10, 0], "color": "#cfd8e3", "compare": false}
+    ],
+    "objects": {"Tabla": {"array": {"count": 5, "axis": "y", "gap": 0.1}, "bevel": 0.03}},
+    "camera": {"location": [6, -8, 6], "target": [0, 0, 0]}
+  }
 }

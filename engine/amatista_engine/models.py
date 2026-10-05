@@ -257,6 +257,53 @@ class CoursePlace:
 
 
 @dataclass(frozen=True)
+class ReferencePart:
+    """Una pieza del modelo de referencia (motor 3.3).
+
+    size son las medidas del objeto (como la «Dimensión» de Blender, antes de
+    girarlo) y rotation va en GRADOS. join junta varias piezas en un solo
+    objeto (una espada modelada en una sola malla). Lo usan figure.resembles
+    (comparar la figura del alumno) y engine/herramientas/referencias.py
+    (dibujar la imagen y el plano de referencia).
+    """
+
+    primitive: str
+    size: Tuple[float, float, float]
+    location: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    rotation: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    role: str = ""
+    name: str = ""
+    color: str = ""
+    join: str = ""
+    segments: int = 0
+    material: Dict[str, Any] = field(default_factory=dict)
+    compare: bool = True  # False: solo decora la imagen (suelo, fantasmas de una animación)
+
+    @property
+    def group(self) -> str:
+        """Con qué objetos del alumno se compara: su rol o, si no tiene, su primitiva."""
+        return self.role or self.primitive
+
+
+@dataclass(frozen=True)
+class ReferenceModel:
+    """Cómo debe verse la figura terminada: piezas, holgura y textos para el alumno."""
+
+    parts: Tuple[ReferencePart, ...] = ()
+    title: str = ""
+    description: str = ""
+    tolerance: float = 0.35  # ±35 % en las medidas: «medianamente cercanas, no exactas»
+    objects: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # modificadores por objeto unido
+    camera: Dict[str, Any] = field(default_factory=dict)
+    flexible: Tuple[str, ...] = ()  # grupos donde la cantidad es libre (2 o 4 pilares, 3 o 5 casas)
+    lights: Tuple[Dict[str, Any], ...] = ()  # luces para la imagen (tres puntos); no se comparan
+
+    @property
+    def compared(self) -> Tuple[ReferencePart, ...]:
+        return tuple(p for p in self.parts if p.compare)
+
+
+@dataclass(frozen=True)
 class StarterDefinition:
     """Cómo empieza la escena: vacía, con lo que hay o armada por el add-on.
 
@@ -301,6 +348,8 @@ class PracticeDefinition:
     review: Tuple[str, ...] = ()  # «practica#pildora» de prácticas anteriores
     place: CoursePlace = field(default_factory=CoursePlace)
     starter: StarterDefinition = field(default_factory=StarterDefinition)
+    # --- Motor 3.3: modelo de referencia (cómo debe verse la figura) ---
+    reference: Optional[ReferenceModel] = None
 
     def target(self, target_id: str) -> Optional[TargetDefinition]:
         return next((t for t in self.targets if t.id == target_id), None)

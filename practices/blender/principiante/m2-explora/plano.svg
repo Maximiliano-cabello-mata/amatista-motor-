@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="system-ui, sans-serif" role="img" aria-label="Plano de Cubo extruido">
+<rect width="960" height="400" rx="18" fill="#0f2747"/>
+<defs><pattern id="cuadricula" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#5b7fb0" stroke-opacity=".35" stroke-width=".6"/></pattern></defs>
+<rect x="12" y="12" width="936" height="376" rx="12" fill="url(#cuadricula)"/>
+<text x="28" y="44" fill="#eaf3ff" font-size="20" font-weight="700">Plano: Cubo extruido</text>
+<rect x="28" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="40" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De frente (1)</text>
+<rect x="118.6" y="171.2" width="118.8" height="118.8" rx="7.1" fill="#9b7bff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="118.6" y="100.0" width="118.8" height="71.2" rx="4.3" fill="#b9a2ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M118.6 312.0H237.4M118.6 307.0v10M237.4 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="178.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 2 m</text>
+<path d="M102.6 100.0V290.0M97.6 100.0h10M97.6 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="94.6" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 94.6 195.0)">≈ 3.2 m</text>
+<rect x="340" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="352" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De lado (3)</text>
+<rect x="430.6" y="171.2" width="118.8" height="118.8" rx="7.1" fill="#9b7bff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="430.6" y="100.0" width="118.8" height="71.2" rx="4.3" fill="#b9a2ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M430.6 312.0H549.4M430.6 307.0v10M549.4 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="490.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 2 m</text>
+<path d="M414.6 100.0V290.0M409.6 100.0h10M409.6 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="406.6" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 406.6 195.0)">≈ 3.2 m</text>
+<rect x="652" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="664" y="92" fill="#eaf3ff" font-size="14" font-weight="600">Desde arriba (7)</text>
+<rect x="707.0" y="100.0" width="190.0" height="190.0" rx="11.4" fill="#b9a2ff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="707.0" y="100.0" width="190.0" height="190.0" rx="11.4" fill="#9b7bff" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M707.0 312.0H897.0M707.0 307.0v10M897.0 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="802.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 2 m</text>
+<path d="M691.0 100.0V290.0M686.0 100.0h10M686.0 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="683.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 683.0 195.0)">≈ 2 m</text>
+<text x="28" y="360" fill="#eaf3ff" font-size="14">Piezas: 1 × cubo</text>
+<text x="28" y="380" fill="#cfe3ff" font-size="13">Medidas aproximadas: ±35 % está bien. Tu figura puede ser más grande o más chica y estar girada; lo que cuenta es que se vea así.</text>
+</svg>

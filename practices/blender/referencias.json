@@ -1,0 +1,122 @@
+{
+  "schema": "amatista.references/1",
+  "practicas": {
+    "blender.bi.m1.explora": {
+      "carpeta": "intermedio/m1-explora",
+      "titulo": "Tabla repetida con Array",
+      "descripcion": "Una tabla larga (cerca de 6 × 1 × 0.2 m) repetida con Array a lo ancho, con un Bisel pequeño que suaviza los bordes.",
+      "holgura": 35,
+      "medidas": [6.0, 5.4, 0.2],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bi.m1.puente": {
+      "carpeta": "intermedio/m1-puente",
+      "titulo": "Puente de madera",
+      "descripcion": "Un tablero largo de tablones (Array) apoyado sobre pilares biselados que bajan hasta el suelo, entre dos orillas. La cantidad de pilares es libre (2, 3 o 4); el tablero va encima de ellos.",
+      "holgura": 35,
+      "medidas": [8.4, 2.2, 3.2],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bi.m2.aldea": {
+      "carpeta": "intermedio/m2-aldea",
+      "titulo": "Aldea ordenada",
+      "descripcion": "Tres casas (cubos) de colores distintos, cada una con su techo de cono de 4 lados ENCIMA, no al lado. Casas en la colección «Casas» y techos en «Techos».",
+      "holgura": 35,
+      "medidas": [12.1, 4.1, 3.4],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bi.m3.diorama": {
+      "carpeta": "intermedio/m3-diorama",
+      "titulo": "Diorama en la galería",
+      "descripcion": "Tu aldea sobre una base, encuadrada por la cámara y con luz de tres puntos; el render final se hace en Cycles.",
+      "holgura": 35,
+      "medidas": [11.0, 6.0, 0.4],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bp.m1.explora": {
+      "carpeta": "principiante/m1-explora",
+      "titulo": "Muñeco de nieve",
+      "descripcion": "Tres esferas apiladas, de mayor a menor (cerca de 1.6, 1.15 y 0.8 m), la de abajo en el suelo, y un cono pequeño como nariz apuntando al frente. ±35 % en las medidas está bien.",
+      "holgura": 35,
+      "medidas": [1.6, 1.65, 3.35],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bp.m1.tren": {
+      "carpeta": "principiante/m1-tren",
+      "titulo": "Tren de juguete",
+      "descripcion": "Locomotora roja con chimenea y un vagón azul, en fila y casi tocándose. Cuatro ruedas de pie por vagón, dos de cada lado, apoyadas en el suelo. Las medidas son una guía: ±35 % está bien.",
+      "holgura": 35,
+      "medidas": [4.5, 1.6, 2.15],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bp.m2.espada": {
+      "carpeta": "principiante/m2-espada",
+      "titulo": "Espada low-poly",
+      "descripcion": "Hoja larga y delgada con punta, guarda horizontal, mango y pomo: un solo objeto, al menos tres veces más alto que ancho. Si haces la taza: casi tan alta como ancha, con asa.",
+      "holgura": 35,
+      "medidas": [1.1, 0.28, 4.22],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bp.m2.explora": {
+      "carpeta": "principiante/m2-explora",
+      "titulo": "Cubo extruido",
+      "descripcion": "Un solo objeto: el cubo con su cara de arriba extruida (E) y un corte en bucle (Ctrl+R) que agrega un anillo de aristas.",
+      "holgura": 35,
+      "medidas": [2.0, 2.0, 3.2],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bp.m3.explora": {
+      "carpeta": "principiante/m3-explora",
+      "titulo": "Cojín suave",
+      "descripcion": "Un cubo aplastado (cerca de 2 × 2 × 0.6 m) con la escala aplicada y Subdivisión de superficie nivel 2: las esquinas se redondean sin tocar la malla.",
+      "holgura": 35,
+      "medidas": [2.0, 2.0, 0.6],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bp.m3.nave": {
+      "carpeta": "principiante/m3-nave",
+      "titulo": "Nave espacial simétrica",
+      "descripcion": "Cuerpo alargado con cabina al frente, alas a los lados, dos motores atrás y una aleta: la mitad izquierda es el espejo de la derecha. Subdivisión nivel 1 o 2 la suaviza.",
+      "holgura": 35,
+      "medidas": [4.0, 3.55, 1.3],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bpi.m1.pinta-nave": {
+      "carpeta": "principiante-intermedio/m1-pinta-nave",
+      "titulo": "Nave pintada",
+      "descripcion": "Casco de metal brillante (Metálico 1, Rugosidad baja), cabina de cristal (Transmisión 1) y motores de metal quemado (oscuro y rugoso).",
+      "holgura": 35,
+      "medidas": [4.0, 3.55, 1.3],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bpi.m2.tres-puntos": {
+      "carpeta": "principiante-intermedio/m2-tres-puntos",
+      "titulo": "Estudio de tres luces",
+      "descripcion": "Tu modelo sobre un piso, la cámara al frente y tres luces: la principal fuerte delante a un lado, el relleno más suave delante al otro lado y el contraluz detrás.",
+      "holgura": 35,
+      "medidas": [4.0, 3.55, 1.3],
+      "imagen": true,
+      "plano": true
+    },
+    "blender.bpi.m3.pelota": {
+      "carpeta": "principiante-intermedio/m3-pelota",
+      "titulo": "Pelota que rebota",
+      "descripcion": "La pelota cae desde 4 m (fotograma 1), toca el suelo y se aplasta en el fotograma 12, y vuelve a subir en el 24. Las pelotas transparentes muestran el recorrido.",
+      "holgura": 35,
+      "medidas": [1.2, 1.2, 1.2],
+      "imagen": true,
+      "plano": true
+    }
+  }
+}

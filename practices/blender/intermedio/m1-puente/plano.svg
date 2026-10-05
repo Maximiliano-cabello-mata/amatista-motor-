@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="system-ui, sans-serif" role="img" aria-label="Plano de Puente de madera">
+<rect width="960" height="400" rx="18" fill="#0f2747"/>
+<defs><pattern id="cuadricula" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#5b7fb0" stroke-opacity=".35" stroke-width=".6"/></pattern></defs>
+<rect x="12" y="12" width="936" height="376" rx="12" fill="url(#cuadricula)"/>
+<text x="28" y="44" fill="#eaf3ff" font-size="20" font-weight="700">Plano: Puente de madera</text>
+<rect x="28" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="40" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De frente (1)</text>
+<rect x="58.0" y="149.3" width="240.0" height="5.7" rx="0.3" fill="#b07a4a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="83.7" y="155.0" width="17.1" height="85.7" rx="4.3" fill="#8d8d8d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="255.1" y="155.0" width="17.1" height="85.7" rx="4.3" fill="#8d8d8d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="-27.7" y="155.0" width="85.7" height="85.7" rx="5.1" fill="#6f9e4f" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="298.0" y="155.0" width="85.7" height="85.7" rx="5.1" fill="#6f9e4f" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<path d="M58.0 262.7H298.0M58.0 257.7v10M298.0 257.7v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="178.0" y="278.7" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 8.4 m</text>
+<path d="M42.0 149.3V240.7M37.0 149.3h10M37.0 240.7h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="34.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 34.0 195.0)">≈ 3.2 m</text>
+<rect x="340" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="352" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De lado (3)</text>
+<rect x="341.6" y="111.9" width="296.9" height="178.1" rx="10.7" fill="#6f9e4f" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="472.2" y="111.9" width="35.6" height="178.1" rx="8.9" fill="#8d8d8d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="424.7" y="100.0" width="130.6" height="11.9" rx="0.7" fill="#b07a4a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="472.2" y="111.9" width="35.6" height="178.1" rx="8.9" fill="#8d8d8d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="341.6" y="111.9" width="296.9" height="178.1" rx="10.7" fill="#6f9e4f" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<path d="M424.7 312.0H555.3M424.7 307.0v10M555.3 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="490.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 2.2 m</text>
+<path d="M408.7 100.0V290.0M403.7 100.0h10M403.7 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="400.7" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 400.7 195.0)">≈ 3.2 m</text>
+<rect x="652" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="664" y="92" fill="#eaf3ff" font-size="14" font-weight="600">Desde arriba (7)</text>
+<rect x="682.0" y="163.6" width="240.0" height="62.9" rx="3.8" fill="#b07a4a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="716.3" cy="195.0" rx="8.6" ry="8.6" fill="#8d8d8d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="887.7" cy="195.0" rx="8.6" ry="8.6" fill="#8d8d8d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="596.3" y="123.6" width="85.7" height="142.9" rx="5.1" fill="#6f9e4f" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="922.0" y="123.6" width="85.7" height="142.9" rx="5.1" fill="#6f9e4f" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<path d="M682.0 248.4H922.0M682.0 243.4v10M922.0 243.4v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="802.0" y="264.4" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 8.4 m</text>
+<path d="M666.0 163.6V226.4M661.0 163.6h10M661.0 226.4h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="658.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 658.0 195.0)">≈ 2.2 m</text>
+<text x="28" y="360" fill="#eaf3ff" font-size="14">Piezas: 1 × Tablero · 2 × Pilar</text>
+<text x="28" y="380" fill="#cfe3ff" font-size="13">Medidas aproximadas: ±35 % está bien. Tu figura puede ser más grande o más chica y estar girada; lo que cuenta es que se vea así.</text>
+</svg>

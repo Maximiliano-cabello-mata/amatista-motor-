@@ -251,6 +251,68 @@ class Escena:
     def a_dict(self) -> Dict[str, Any]:
         return scene_to_dict(self.construir())
 
+    def referencia(self, piezas: Sequence[Any] = (), escala: float = 1.0, variacion: float = 0.0, semilla: int = 1,
+                   giro: int = 0, sin: Sequence[str] = (), roles: bool = True, desplazar=(0.0, 0.0, 0.0)) -> "Escena":
+        """Arma la figura del modelo de referencia, como la haría un alumno (motor 3.3).
+
+        escala agranda todo; variacion (0.2 = ±20 %) cambia al azar cada medida y
+        lugar como lo haría una mano humana; giro (grados en Z) gira la figura en el
+        suelo; sin quita grupos («chimenea»); roles=False no asigna roles. Las piezas
+        con el mismo «join» salen como UN objeto (su caja). piezas: ReferencePart o dicts.
+        """
+        import random
+
+        azar = random.Random(semilla)
+
+        def ruido() -> float:
+            return 1.0 + azar.uniform(-variacion, variacion) if variacion else 1.0
+
+        def campo(pieza, clave, defecto=None):
+            return pieza.get(clave, defecto) if isinstance(pieza, dict) else getattr(pieza, clave, defecto)
+
+        unidas: Dict[str, List[Any]] = {}
+        sueltas = []
+        for pieza in piezas:
+            if campo(pieza, "compare", True) is False:
+                continue
+            grupo = campo(pieza, "role") or campo(pieza, "primitive")
+            if grupo in sin:
+                continue
+            if campo(pieza, "join"):
+                unidas.setdefault(campo(pieza, "join"), []).append(pieza)
+            else:
+                sueltas.append([pieza])
+        rad = math.radians(giro)
+        for grupo_piezas in sueltas + list(unidas.values()):
+            primera = grupo_piezas[0]
+            if len(grupo_piezas) == 1:  # pieza sola: con su medida local y su giro, como en Blender
+                rot = list(_v(campo(primera, "rotation")))
+                medidas = [m * escala * ruido() for m in _v(campo(primera, "size"))]
+                centro = [c * escala for c in _v(campo(primera, "location"))]
+                caja = caja_rotada((0, 0, 0), medidas, tuple(math.radians(r) for r in rot))
+                base = centro[2] + caja[0][2]
+                rot[2] += giro
+            else:  # piezas unidas: un objeto con la caja de todas
+                cajas = [caja_rotada(_v(campo(p, "location")), _v(campo(p, "size")),
+                                     tuple(math.radians(a) for a in _v(campo(p, "rotation")))) for p in grupo_piezas]
+                minimo = [min(c[0][i] for c in cajas) for i in range(3)]
+                maximo = [max(c[1][i] for c in cajas) for i in range(3)]
+                centro = [(x + y) / 2 * escala for x, y in zip(minimo, maximo)]
+                medidas = [(y - x) * escala * ruido() for x, y in zip(minimo, maximo)]
+                rot = [0.0, 0.0, float(giro)]
+                caja = ((0, 0, -medidas[2] / 2), (0, 0, medidas[2] / 2))
+                base = minimo[2] * escala
+            centro = [c * ruido() for c in centro]
+            x, y = centro[0], centro[1]
+            centro[0], centro[1] = x * math.cos(rad) - y * math.sin(rad), x * math.sin(rad) + y * math.cos(rad)
+            if abs(base) <= 0.001:  # apoyada en el suelo como la del modelo (la mano no la deja flotando)
+                centro[2] = -caja[0][2]
+            centro = [c + d for c, d in zip(centro, _v(desplazar))]
+            rol = campo(primera, "role") if roles else ""
+            nombre = campo(primera, "name") or (rol or campo(primera, "primitive")).capitalize()
+            self.malla(campo(primera, "primitive"), nombre, dims=medidas, loc=centro, rot=rot, rol=rol or "")
+        return self
+
 
 # Pasos de pruebas.json → métodos del constructor.
 PASOS = {
@@ -258,11 +320,15 @@ PASOS = {
     "cono": "cono", "malla": "malla", "luz": "luz", "camara": "camara", "modificador": "modificador",
     "material": "material", "animar": "animar", "rol": "rol", "mover": "mover", "quitar": "quitar",
     "modo": "modo", "seleccionar": "seleccionar", "motor": "motor", "renders": "renders", "guardado": "guardado",
+    "referencia": "referencia",
 }
 
 
-def escena_desde_pasos(pasos: List[Dict[str, Any]]) -> SceneState:
-    """[{"cubo": {"nombre": "Vagon", "dims": [2,1,1]}}, {"renders": 1}] → SceneState."""
+def escena_desde_pasos(pasos: List[Dict[str, Any]], practica=None) -> SceneState:
+    """[{"cubo": {"nombre": "Vagon", "dims": [2,1,1]}}, {"renders": 1}] → SceneState.
+
+    {"referencia": {"variacion": 0.2}} arma el modelo de referencia de la práctica.
+    """
     e = Escena()
     for i, paso in enumerate(pasos):
         if not isinstance(paso, dict) or len(paso) != 1:
@@ -271,6 +337,11 @@ def escena_desde_pasos(pasos: List[Dict[str, Any]]) -> SceneState:
         if clave not in PASOS:
             raise ValueError(f"construir[{i}]: paso desconocido «{clave}» (usa: {', '.join(sorted(PASOS))})")
         metodo = getattr(e, PASOS[clave])
+        if clave == "referencia":
+            if practica is None or practica.reference is None:
+                raise ValueError(f"construir[{i}]: «referencia» necesita una práctica con «reference»")
+            e.referencia(practica.reference.parts, **(args if isinstance(args, dict) else {}))
+            continue
         if isinstance(args, dict):
             metodo(**args)
         elif isinstance(args, list):
@@ -282,8 +353,8 @@ def escena_desde_pasos(pasos: List[Dict[str, Any]]) -> SceneState:
     return e.construir()
 
 
-def escena_de_caso(caso: Dict[str, Any]) -> SceneState:
+def escena_de_caso(caso: Dict[str, Any], practica=None) -> SceneState:
     """Un caso de pruebas.json: «construir» (pasos) o «escena» (foto exportada del add-on)."""
     if "escena" in caso:
         return scene_from_dict(caso["escena"])
-    return escena_desde_pasos(caso.get("construir") or [])
+    return escena_desde_pasos(caso.get("construir") or [], practica)

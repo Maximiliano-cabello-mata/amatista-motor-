@@ -3,76 +3,22 @@
   "practica": "blender.bp.m3.explora",
   "casos": [
     {
-      "nombre": "Cubo estirado sin aplicar la escala",
-      "construir": [
-        {
-          "cubo": {
-            "nombre": "Cube",
-            "dims": [
-              4,
-              2,
-              2
-            ],
-            "escala": [
-              2,
-              1,
-              1
-            ]
-          }
-        }
-      ],
-      "espera": {
-        "completada": false,
-        "actual": "escala-aplicada",
-        "pildoras": [
-          "filtro"
-        ]
-      }
+      "nombre": "Cubo aplastado sin aplicar la escala",
+      "construir": [{"cubo": {"nombre": "Cube", "dims": [2, 2, 0.6], "escala": [1, 1, 0.3]}}],
+      "espera": {"completada": false, "actual": "escala-aplicada", "pildoras": ["filtro"]}
     },
     {
       "nombre": "Escala aplicada, falta Subdivisión",
-      "construir": [
-        {
-          "cubo": {
-            "nombre": "Cube",
-            "dims": [
-              4,
-              2,
-              2
-            ]
-          }
-        }
-      ],
-      "espera": {
-        "completada": false,
-        "actual": "subdividido"
-      }
+      "construir": [{"cubo": {"nombre": "Cube", "dims": [2, 2, 0.6]}}],
+      "espera": {"completada": false, "actual": "subdividido"}
     },
     {
       "nombre": "Solución: escala aplicada y Subdivisión 2",
       "construir": [
-        {
-          "cubo": {
-            "nombre": "Cube",
-            "dims": [
-              4,
-              2,
-              2
-            ]
-          }
-        },
-        {
-          "modificador": {
-            "objeto": "Cube",
-            "tipo": "SUBSURF",
-            "niveles": 2
-          }
-        }
+        {"cubo": {"nombre": "Cube", "dims": [2, 2, 0.6]}},
+        {"modificador": {"objeto": "Cube", "tipo": "SUBSURF", "niveles": 2}}
       ],
-      "espera": {
-        "completada": true,
-        "progreso_min": 100
-      }
+      "espera": {"completada": true, "progreso_min": 100}
     }
   ]
 }

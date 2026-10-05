@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="system-ui, sans-serif" role="img" aria-label="Plano de Diorama en la galería">
+<rect width="960" height="400" rx="18" fill="#0f2747"/>
+<defs><pattern id="cuadricula" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#5b7fb0" stroke-opacity=".35" stroke-width=".6"/></pattern></defs>
+<rect x="12" y="12" width="936" height="376" rx="12" fill="url(#cuadricula)"/>
+<text x="28" y="44" fill="#eaf3ff" font-size="20" font-weight="700">Plano: Diorama en la galería</text>
+<rect x="28" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="40" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De frente (1)</text>
+<rect x="142.5" y="131.7" width="71.0" height="24.0" rx="6.0" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="160.5" y="155.7" width="34.9" height="34.9" rx="2.1" fill="#3498db" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="58.0" y="190.6" width="240.0" height="8.7" rx="2.2" fill="#6d4c3d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="208.0" y="131.7" width="71.0" height="24.0" rx="6.0" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="226.0" y="155.7" width="34.9" height="34.9" rx="2.1" fill="#2ecc71" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="95.1" y="155.7" width="34.9" height="34.9" rx="2.1" fill="#e74c3c" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="77.1" y="131.7" width="71.0" height="24.0" rx="6.0" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<path d="M58.0 221.4H298.0M58.0 216.4v10M298.0 216.4v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="178.0" y="237.4" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 11 m</text>
+<path d="M42.0 190.6V199.4M37.0 190.6h10M37.0 199.4h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="34.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 34.0 195.0)">≈ 0.4 m</text>
+<rect x="340" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="352" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De lado (3)</text>
+<rect x="478.0" y="123.0" width="64.0" height="64.0" rx="3.8" fill="#e74c3c" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="444.9" y="79.0" width="130.1" height="44.0" rx="11.0" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="370.0" y="187.0" width="240.0" height="16.0" rx="4.0" fill="#6d4c3d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="434.0" y="123.0" width="64.0" height="64.0" rx="3.8" fill="#3498db" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="400.9" y="79.0" width="130.1" height="44.0" rx="11.0" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="474.0" y="123.0" width="64.0" height="64.0" rx="3.8" fill="#2ecc71" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="440.9" y="79.0" width="130.1" height="44.0" rx="11.0" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<path d="M370.0 225.0H610.0M370.0 220.0v10M610.0 220.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="490.0" y="241.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 6 m</text>
+<path d="M354.0 187.0V203.0M349.0 187.0h10M349.0 203.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="346.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 346.0 195.0)">≈ 0.4 m</text>
+<rect x="652" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="664" y="92" fill="#eaf3ff" font-size="14" font-weight="600">Desde arriba (7)</text>
+<ellipse cx="736.5" cy="184.1" rx="35.5" ry="35.5" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<ellipse cx="802.0" cy="208.1" rx="35.5" ry="35.5" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<ellipse cx="867.5" cy="186.3" rx="35.5" ry="35.5" fill="#7a4b2a" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="719.1" y="166.6" width="34.9" height="34.9" rx="2.1" fill="#e74c3c" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="784.5" y="190.6" width="34.9" height="34.9" rx="2.1" fill="#3498db" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="850.0" y="168.8" width="34.9" height="34.9" rx="2.1" fill="#2ecc71" fill-opacity=".15" stroke="#5b7fb0" stroke-dasharray="3 3"/>
+<rect x="682.0" y="129.5" width="240.0" height="130.9" rx="32.7" fill="#6d4c3d" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M682.0 282.5H922.0M682.0 277.5v10M922.0 277.5v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="802.0" y="298.5" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 11 m</text>
+<path d="M666.0 129.5V260.5M661.0 129.5h10M661.0 260.5h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="658.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 658.0 195.0)">≈ 6 m</text>
+<text x="28" y="360" fill="#eaf3ff" font-size="14">Piezas: 1 × Diorama</text>
+<text x="28" y="380" fill="#cfe3ff" font-size="13">Medidas aproximadas: ±35 % está bien. Tu figura puede ser más grande o más chica y estar girada; lo que cuenta es que se vea así.</text>
+</svg>

@@ -3,70 +3,38 @@
   "practica": "blender.bp.m1.explora",
   "casos": [
     {
-      "nombre": "Escena vacía: primero un cubo",
+      "nombre": "Escena vacía: primero una esfera",
       "construir": [],
-      "espera": {
-        "completada": false,
-        "progreso_max": 0,
-        "actual": "cubo",
-        "pildoras": [
-          "zonas",
-          "orbitar"
-        ]
-      }
+      "espera": {"completada": false, "progreso_max": 0, "actual": "esfera", "pildoras": ["zonas", "orbitar"]}
     },
     {
-      "nombre": "Cubo en el suelo: falta subirlo",
+      "nombre": "Tres esferas iguales en el suelo: falta la nariz",
       "construir": [
-        {
-          "cubo": {
-            "nombre": "Cube"
-          }
-        }
+        {"esfera": {"nombre": "Sphere", "dims": [2, 2, 2], "loc": [-3, 0, 1]}},
+        {"esfera": {"nombre": "Sphere", "dims": [2, 2, 2], "loc": [0, 0, 1]}},
+        {"esfera": {"nombre": "Sphere", "dims": [2, 2, 2], "loc": [3, 0, 1]}}
       ],
-      "espera": {
-        "completada": false,
-        "actual": "cubo-arriba"
-      }
+      "espera": {"completada": false, "actual": "nariz"}
     },
     {
-      "nombre": "Solución: cubo arriba y girado, esfera grande",
+      "nombre": "Sin sentido: esferas iguales en fila y nariz girada",
       "construir": [
-        {
-          "cubo": {
-            "nombre": "Cube",
-            "loc": [
-              0,
-              0,
-              2
-            ],
-            "rot": [
-              0,
-              0,
-              45
-            ]
-          }
-        },
-        {
-          "esfera": {
-            "nombre": "Sphere",
-            "loc": [
-              3,
-              0,
-              1
-            ],
-            "dims": [
-              4,
-              4,
-              4
-            ]
-          }
-        }
+        {"esfera": {"nombre": "Sphere", "dims": [2, 2, 2], "loc": [-3, 0, 1]}},
+        {"esfera": {"nombre": "Sphere", "dims": [2, 2, 2], "loc": [0, 0, 1]}},
+        {"esfera": {"nombre": "Sphere", "dims": [2, 2, 2], "loc": [3, 0, 1]}},
+        {"cono": {"nombre": "Cone", "dims": [0.2, 0.2, 0.5], "loc": [0, -1.2, 1], "rot": [90, 0, 0]}}
       ],
-      "espera": {
-        "completada": true,
-        "progreso_min": 100
-      }
+      "espera": {"completada": false, "actual": "figura"}
+    },
+    {
+      "nombre": "Solución: el muñeco del modelo, armado a mano (±20 %)",
+      "construir": [{"referencia": {"variacion": 0.2, "semilla": 3}}],
+      "espera": {"completada": true, "progreso_min": 100}
+    },
+    {
+      "nombre": "Solución: más grande y mirando de lado",
+      "construir": [{"referencia": {"escala": 1.6, "giro": 90}}],
+      "espera": {"completada": true}
     }
   ]
 }

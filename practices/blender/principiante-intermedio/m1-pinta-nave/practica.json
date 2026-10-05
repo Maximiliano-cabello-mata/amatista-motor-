@@ -13,11 +13,13 @@
   "tags": ["principiante-intermedio", "modulo-1", "materiales"],
   "course": {"id": "blender_principiante_intermedio", "module": 1, "lesson": "bpi1_practica", "next": "blender.bpi.m2.explora"},
   "review": ["blender.bp.m3.nave#llave", "blender.bp.m3.nave#subdivision", "blender.bp.m2.espada#componentes"],
-  "starter": {"scene": "empty", "from_practice": "blender.bp.m3.nave", "build": "nave_basica",
-              "note": "Abre tu mi_nave.blend del curso anterior. Si no lo tienes, Amatista arma una nave básica para empezar."},
-  "roles": {
-    "nave": {"label": "Nave", "description": "La nave que vas a pintar (la del curso Principiante)."}
+  "starter": {
+    "scene": "empty",
+    "from_practice": "blender.bp.m3.nave",
+    "build": "nave_basica",
+    "note": "Abre tu mi_nave.blend del curso anterior. Si no lo tienes, Amatista arma una nave básica para empezar."
   },
+  "roles": {"nave": {"label": "Nave", "description": "La nave que vas a pintar (la del curso Principiante)."}},
   "tools": {"allowed": ["mesh.edit", "select.box", "select.circle", "material.principled"]},
   "pills": [
     {
@@ -34,7 +36,11 @@
       "text": "Pestaña Material (la esfera roja) › Nuevo. Color base es el color; Metálico 1 lo vuelve metal; Rugosidad baja brilla como espejo y alta se ve mate.",
       "visual": "tab:MATERIAL",
       "trigger": {"on": "target", "target": "materiales"},
-      "check": {"question": "¿Qué control hace que una superficie brille como espejo?", "options": ["Rugosidad baja", "Rugosidad alta", "Color base"], "answer": 0}
+      "check": {
+        "question": "¿Qué control hace que una superficie brille como espejo?",
+        "options": ["Rugosidad baja", "Rugosidad alta", "Color base"],
+        "answer": 0
+      }
     },
     {
       "id": "asignar",
@@ -50,7 +56,11 @@
       "text": "Para la cabina, sube Transmisión (Transmission) cerca de 1: la luz pasa a través. También sirve bajar Alfa para hacerlo transparente.",
       "visual": "tab:MATERIAL",
       "trigger": {"on": "target", "target": "cristal"},
-      "check": {"question": "¿Qué control deja pasar la luz como un vidrio?", "options": ["Metálico", "Transmisión", "Rugosidad"], "answer": 1}
+      "check": {
+        "question": "¿Qué control deja pasar la luz como un vidrio?",
+        "options": ["Metálico", "Transmisión", "Rugosidad"],
+        "answer": 1
+      }
     },
     {
       "id": "metal",
@@ -78,16 +88,21 @@
       "weight": 20,
       "requires": ["nave"],
       "tip": "Crea tres materiales y asígnalos a zonas distintas: cuerpo, cabina y motores.",
-      "hints": ["Pestaña Material › + para agregar ranuras › Nuevo en cada una.", "En Edición selecciona las caras de la cabina, elige su ranura y pulsa Asignar."]
+      "hints": [
+        "Pestaña Material › + para agregar ranuras › Nuevo en cada una.",
+        "En Edición selecciona las caras de la cabina, elige su ranura y pulsa Asignar."
+      ]
     },
     {
       "id": "cristal",
       "title": "Cabina de cristal",
       "validator": "logic.any",
-      "params": {"options": [
-        {"validator": "material.matches", "params": {"role": "nave", "transmission_min": 0.5, "label": "cristal"}},
-        {"validator": "material.matches", "params": {"role": "nave", "alpha_max": 0.6, "label": "cristal"}}
-      ]},
+      "params": {
+        "options": [
+          {"validator": "material.matches", "params": {"role": "nave", "transmission_min": 0.5, "label": "cristal"}},
+          {"validator": "material.matches", "params": {"role": "nave", "alpha_max": 0.6, "label": "cristal"}}
+        ]
+      },
       "weight": 20,
       "requires": ["materiales"],
       "tip": "En el material de la cabina sube Transmisión a 0.9 (o baja Alfa a 0.4).",
@@ -124,5 +139,76 @@
       "tip": "Ctrl+Shift+S: mi_nave_pintada.blend.",
       "hints": ["Archivo › Guardar como, con un nombre que incluya «nave»."]
     }
-  ]
+  ],
+  "reference": {
+    "title": "Nave pintada",
+    "description": "Casco de metal brillante (Metálico 1, Rugosidad baja), cabina de cristal (Transmisión 1) y motores de metal quemado (oscuro y rugoso).",
+    "tolerance": 0.35,
+    "parts": [
+      {
+        "primitive": "cube",
+        "role": "nave",
+        "name": "Cuerpo",
+        "size": [1.2, 3.2, 0.7],
+        "location": [0, 0, 1.0],
+        "color": "#c9ced6",
+        "join": "nave",
+        "material": {"metallic": 0.7, "roughness": 0.35}
+      },
+      {
+        "primitive": "sphere",
+        "role": "nave",
+        "name": "Cabina",
+        "size": [0.8, 1.2, 0.6],
+        "location": [0, 0.55, 1.35],
+        "color": "#7fd3ff",
+        "join": "nave",
+        "material": {"transmission": 0.9, "roughness": 0.05}
+      },
+      {
+        "primitive": "cube",
+        "role": "nave",
+        "name": "Alas",
+        "size": [4.0, 1.3, 0.16],
+        "location": [0, -0.35, 0.95],
+        "color": "#e74c3c",
+        "join": "nave",
+        "material": {"metallic": 0.6, "roughness": 0.35}
+      },
+      {
+        "primitive": "cylinder",
+        "role": "nave",
+        "name": "Motor izquierdo",
+        "size": [0.45, 0.45, 0.9],
+        "location": [-0.55, -1.5, 1.0],
+        "rotation": [90, 0, 0],
+        "color": "#3a2e28",
+        "join": "nave",
+        "material": {"metallic": 0.9, "roughness": 0.75}
+      },
+      {
+        "primitive": "cylinder",
+        "role": "nave",
+        "name": "Motor derecho",
+        "size": [0.45, 0.45, 0.9],
+        "location": [0.55, -1.5, 1.0],
+        "rotation": [90, 0, 0],
+        "color": "#3a2e28",
+        "join": "nave",
+        "material": {"metallic": 0.9, "roughness": 0.75}
+      },
+      {
+        "primitive": "cube",
+        "role": "nave",
+        "name": "Aleta",
+        "size": [0.12, 0.7, 0.7],
+        "location": [0, -1.1, 1.6],
+        "color": "#e74c3c",
+        "join": "nave"
+      },
+      {"primitive": "plane", "size": [10, 10, 0], "color": "#1d2433", "compare": false}
+    ],
+    "objects": {"nave": {"bevel": 0.04}},
+    "camera": {"location": [6, -7, 4.5], "target": [0, 0, 1]}
+  }
 }

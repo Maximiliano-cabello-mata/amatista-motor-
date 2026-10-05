@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" font-family="system-ui, sans-serif" role="img" aria-label="Plano de Aldea ordenada">
+<rect width="960" height="400" rx="18" fill="#0f2747"/>
+<defs><pattern id="cuadricula" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#5b7fb0" stroke-opacity=".35" stroke-width=".6"/></pattern></defs>
+<rect x="12" y="12" width="936" height="376" rx="12" fill="url(#cuadricula)"/>
+<text x="28" y="44" fill="#eaf3ff" font-size="20" font-weight="700">Plano: Aldea ordenada</text>
+<rect x="28" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="40" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De frente (1)</text>
+<rect x="78.8" y="189.1" width="39.7" height="39.7" rx="2.4" fill="#e74c3c" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="158.2" y="189.1" width="39.7" height="39.7" rx="2.4" fill="#3498db" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="237.5" y="189.1" width="39.7" height="39.7" rx="2.4" fill="#2ecc71" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="58.0" y="161.3" width="81.3" height="27.8" rx="6.9" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="137.3" y="161.3" width="81.3" height="27.8" rx="6.9" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="216.7" y="161.3" width="81.3" height="27.8" rx="6.9" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M58.0 250.7H298.0M58.0 245.7v10M298.0 245.7v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="178.0" y="266.7" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 12 m</text>
+<path d="M42.0 161.3V228.7M37.0 161.3h10M37.0 228.7h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="34.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 34.0 195.0)">≈ 3.4 m</text>
+<rect x="340" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="352" y="92" fill="#eaf3ff" font-size="14" font-weight="600">De lado (3)</text>
+<rect x="434.1" y="178.2" width="111.8" height="111.8" rx="6.7" fill="#e74c3c" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="375.4" y="100.0" width="229.2" height="78.2" rx="19.6" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="434.1" y="178.2" width="111.8" height="111.8" rx="6.7" fill="#3498db" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="375.4" y="100.0" width="229.2" height="78.2" rx="19.6" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="434.1" y="178.2" width="111.8" height="111.8" rx="6.7" fill="#2ecc71" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="375.4" y="100.0" width="229.2" height="78.2" rx="19.6" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M375.4 312.0H604.6M375.4 307.0v10M604.6 307.0v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="490.0" y="328.0" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 4.1 m</text>
+<path d="M359.4 100.0V290.0M354.4 100.0h10M354.4 290.0h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="351.4" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 351.4 195.0)">≈ 3.4 m</text>
+<rect x="652" y="70" width="300" height="270" rx="10" fill="none" stroke="#5b7fb0" stroke-dasharray="4 4"/>
+<text x="664" y="92" fill="#eaf3ff" font-size="14" font-weight="600">Desde arriba (7)</text>
+<ellipse cx="722.7" cy="195.0" rx="40.7" ry="40.7" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="802.0" cy="195.0" rx="40.7" ry="40.7" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<ellipse cx="881.3" cy="195.0" rx="40.7" ry="40.7" fill="#7a4b2a" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="702.8" y="175.2" width="39.7" height="39.7" rx="2.4" fill="#e74c3c" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="782.2" y="175.2" width="39.7" height="39.7" rx="2.4" fill="#3498db" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<rect x="861.5" y="175.2" width="39.7" height="39.7" rx="2.4" fill="#2ecc71" fill-opacity=".55" stroke="#cfe3ff" stroke-width="1.4"/>
+<path d="M682.0 257.7H922.0M682.0 252.7v10M922.0 252.7v10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="802.0" y="273.7" fill="#eaf3ff" font-size="13" text-anchor="middle">≈ 12 m</text>
+<path d="M666.0 154.3V235.7M661.0 154.3h10M661.0 235.7h10" stroke="#cfe3ff" stroke-width="1.2"/>
+<text x="658.0" y="195.0" fill="#eaf3ff" font-size="13" text-anchor="middle" transform="rotate(-90 658.0 195.0)">≈ 4.1 m</text>
+<text x="28" y="360" fill="#eaf3ff" font-size="14">Piezas: 3 × Casa · 3 × Techo</text>
+<text x="28" y="380" fill="#cfe3ff" font-size="13">Medidas aproximadas: ±35 % está bien. Tu figura puede ser más grande o más chica y estar girada; lo que cuenta es que se vea así.</text>
+</svg>

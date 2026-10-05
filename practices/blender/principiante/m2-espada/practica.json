@@ -13,9 +13,7 @@
   "tags": ["principiante", "modulo-2", "modelado"],
   "course": {"id": "blender_principiante", "module": 2, "lesson": "bp2_practica", "next": "blender.bp.m3.explora"},
   "review": ["blender.bp.m1.tren#grs", "blender.bp.m1.tren#agregar"],
-  "roles": {
-    "modelo": {"label": "Modelo", "description": "Tu espada (o taza): un solo objeto que modelas en Edición."}
-  },
+  "roles": {"modelo": {"label": "Modelo", "description": "Tu espada (o taza): un solo objeto que modelas en Edición."}},
   "tools": {"allowed": ["mesh.edit", "mesh.extrude", "mesh.loopcut", "mesh.merge", "select.box", "select.circle"]},
   "pills": [
     {
@@ -69,7 +67,11 @@
       "visual": "keys",
       "trigger": {"on": "guard", "target": "malla-limpia"},
       "once": false,
-      "check": {"question": "¿Qué deja una extrusión cancelada?", "options": ["Nada", "Vértices encimados", "Un objeto nuevo"], "answer": 1}
+      "check": {
+        "question": "¿Qué deja una extrusión cancelada?",
+        "options": ["Nada", "Vértices encimados", "Un objeto nuevo"],
+        "answer": 1
+      }
     }
   ],
   "targets": [
@@ -90,7 +92,10 @@
       "weight": 30,
       "requires": ["modelo"],
       "tip": "Tab, elige la cara de arriba (3 para caras) y extruye con E varias veces.",
-      "hints": ["Tab para entrar a Edición y 3 para seleccionar caras.", "Clic en la cara de arriba, E y mueve el ratón hacia arriba. Repite 3 veces."],
+      "hints": [
+        "Tab para entrar a Edición y 3 para seleccionar caras.",
+        "Clic en la cara de arriba, E y mueve el ratón hacia arriba. Repite 3 veces."
+      ],
       "guide": {
         "why": "Cada extrusión agrega caras: así la malla crece desde el cubo hasta la espada.",
         "steps": [
@@ -105,16 +110,24 @@
       "id": "proporcion",
       "title": "Forma de espada (o de taza)",
       "validator": "logic.any",
-      "params": {"options": [
-        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "z", "min_ratio": 3}},
-        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "x", "min_ratio": 3}},
-        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "y", "min_ratio": 3}},
-        {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "z", "min_ratio": 0.7, "max_ratio": 1.6}}
-      ]},
+      "params": {
+        "options": [
+          {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "z", "min_ratio": 3}},
+          {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "x", "min_ratio": 3}},
+          {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "y", "min_ratio": 3}},
+          {
+            "validator": "shape.proportion",
+            "params": {"role": "modelo", "axis": "z", "min_ratio": 0.7, "max_ratio": 1.6}
+          }
+        ]
+      },
       "weight": 20,
       "requires": ["forma"],
       "tip": "Una espada es larga: al menos tres veces más larga que ancha. Una taza es casi tan alta como ancha.",
-      "hints": ["Sigue extruyendo la hoja hacia arriba hasta que sea larga.", "En Edición, selecciona la punta y escálala (S) para afilarla."],
+      "hints": [
+        "Sigue extruyendo la hoja hacia arriba hasta que sea larga.",
+        "En Edición, selecciona la punta y escálala (S) para afilarla."
+      ],
       "messages": {"pass": "¡Ya tiene forma!"}
     },
     {
@@ -125,7 +138,9 @@
       "weight": 15,
       "requires": ["forma"],
       "tip": "Ctrl+R sobre la hoja agrega un anillo de aristas para dar detalle.",
-      "hints": ["Pasa el ratón por la hoja con Ctrl+R: verás una línea amarilla. Clic y luego clic derecho para dejarla centrada."]
+      "hints": [
+        "Pasa el ratón por la hoja con Ctrl+R: verás una línea amarilla. Clic y luego clic derecho para dejarla centrada."
+      ]
     },
     {
       "id": "low-poly",
@@ -156,7 +171,69 @@
       "params": {},
       "fix": {"action": "merge_by_distance", "label": "Fusionar por distancia conmigo"},
       "tip": "En Edición: A (todo), M › Por distancia.",
-      "messages": {"fail": "Detectamos caras encimadas: pasa cuando pulsas E y luego cancelas. Tu progreso queda en pausa hasta limpiarlas con M › Por distancia."}
+      "messages": {
+        "fail": "Detectamos caras encimadas: pasa cuando pulsas E y luego cancelas. Tu progreso queda en pausa hasta limpiarlas con M › Por distancia."
+      }
     }
-  ]
+  ],
+  "reference": {
+    "title": "Espada low-poly",
+    "description": "Hoja larga y delgada con punta, guarda horizontal, mango y pomo: un solo objeto, al menos tres veces más alto que ancho. Si haces la taza: casi tan alta como ancha, con asa.",
+    "tolerance": 0.35,
+    "parts": [
+      {
+        "primitive": "sphere",
+        "role": "modelo",
+        "name": "Pomo",
+        "size": [0.28, 0.28, 0.28],
+        "location": [0, 0, 0.14],
+        "color": "#c8a24a",
+        "join": "espada",
+        "segments": 8
+      },
+      {
+        "primitive": "cylinder",
+        "role": "modelo",
+        "name": "Mango",
+        "size": [0.18, 0.18, 0.75],
+        "location": [0, 0, 0.62],
+        "color": "#6b3f22",
+        "join": "espada",
+        "segments": 8
+      },
+      {
+        "primitive": "cube",
+        "role": "modelo",
+        "name": "Guarda",
+        "size": [1.1, 0.26, 0.18],
+        "location": [0, 0, 1.08],
+        "color": "#c8a24a",
+        "join": "espada"
+      },
+      {
+        "primitive": "cube",
+        "role": "modelo",
+        "name": "Hoja",
+        "size": [0.3, 0.08, 2.6],
+        "location": [0, 0, 2.47],
+        "color": "#d6dde6",
+        "join": "espada",
+        "material": {"metallic": 0.9, "roughness": 0.25}
+      },
+      {
+        "primitive": "cone",
+        "role": "modelo",
+        "name": "Punta",
+        "size": [0.3, 0.08, 0.45],
+        "location": [0, 0, 4.0],
+        "color": "#d6dde6",
+        "join": "espada",
+        "segments": 4,
+        "material": {"metallic": 0.9, "roughness": 0.25}
+      },
+      {"primitive": "plane", "size": [5, 5, 0], "color": "#cfd8e3", "compare": false}
+    ],
+    "objects": {"espada": {"wire": true}},
+    "camera": {"location": [5, -9, 3.2], "target": [0, 0, 2.0], "lens": 38}
+  }
 }

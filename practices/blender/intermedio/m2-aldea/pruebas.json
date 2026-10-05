@@ -5,170 +5,48 @@
     {
       "nombre": "Escena vacía",
       "construir": [],
-      "espera": {
-        "completada": false,
-        "progreso_max": 0,
-        "actual": "casas",
-        "pildoras": [
-          "carpetas"
-        ]
-      }
+      "espera": {"completada": false, "progreso_max": 0, "actual": "casas", "pildoras": ["carpetas"]}
     },
     {
       "nombre": "Casas sin colección ni techo",
       "construir": [
-        {
-          "cubo": {
-            "nombre": "Casa_1",
-            "rol": "casa"
-          }
-        },
-        {
-          "cubo": {
-            "nombre": "Casa_2",
-            "loc": [
-              4,
-              0,
-              0
-            ],
-            "rol": "casa"
-          }
-        },
-        {
-          "cubo": {
-            "nombre": "Casa_3",
-            "loc": [
-              8,
-              0,
-              0
-            ],
-            "rol": "casa"
-          }
-        }
+        {"cubo": {"nombre": "Casa_1", "rol": "casa"}},
+        {"cubo": {"nombre": "Casa_2", "loc": [4, 0, 0], "rol": "casa"}},
+        {"cubo": {"nombre": "Casa_3", "loc": [8, 0, 0], "rol": "casa"}}
       ],
-      "espera": {
-        "completada": false,
-        "actual": "techos"
-      }
+      "espera": {"completada": false, "actual": "techos"}
+    },
+    {
+      "nombre": "Sin sentido: techos pegados al costado de las casas",
+      "construir": [
+        {"cubo": {"nombre": "Casa_1", "loc": [0, 0, 1], "rol": "casa", "coleccion": "Casas"}},
+        {"cubo": {"nombre": "Casa_2", "loc": [4, 0, 1], "rol": "casa", "coleccion": "Casas"}},
+        {"cubo": {"nombre": "Casa_3", "loc": [8, 0, 1], "rol": "casa", "coleccion": "Casas"}},
+        {"cono": {"nombre": "Techo_1", "loc": [2, 0, 1], "rol": "techo", "coleccion": "Techos"}},
+        {"cono": {"nombre": "Techo_2", "loc": [6, 0, 1], "rol": "techo", "coleccion": "Techos"}},
+        {"cono": {"nombre": "Techo_3", "loc": [10, 0, 1], "rol": "techo", "coleccion": "Techos"}},
+        {"material": {"objeto": "Casa_1", "nombre": "Rojo", "color": [0.8, 0.1, 0.1]}},
+        {"material": {"objeto": "Casa_2", "nombre": "Azul", "color": [0.1, 0.2, 0.8]}},
+        {"material": {"objeto": "Casa_3", "nombre": "Verde", "color": [0.1, 0.7, 0.2]}},
+        {"guardado": {"archivo": "mi_aldea.blend"}}
+      ],
+      "espera": {"completada": false, "actual": "techos-encima"}
     },
     {
       "nombre": "Solución: aldea ordenada",
       "construir": [
-        {
-          "cubo": {
-            "nombre": "Casa_1",
-            "loc": [
-              0,
-              0,
-              1
-            ],
-            "rol": "casa",
-            "coleccion": "Casas"
-          }
-        },
-        {
-          "cubo": {
-            "nombre": "Casa_2",
-            "loc": [
-              4,
-              0,
-              1
-            ],
-            "rol": "casa",
-            "coleccion": "Casas"
-          }
-        },
-        {
-          "cubo": {
-            "nombre": "Casa_3",
-            "loc": [
-              8,
-              0,
-              1
-            ],
-            "rol": "casa",
-            "coleccion": "Casas"
-          }
-        },
-        {
-          "cono": {
-            "nombre": "Techo_1",
-            "loc": [
-              0,
-              0,
-              3
-            ],
-            "rol": "techo",
-            "coleccion": "Techos"
-          }
-        },
-        {
-          "cono": {
-            "nombre": "Techo_2",
-            "loc": [
-              4,
-              0,
-              3
-            ],
-            "rol": "techo",
-            "coleccion": "Techos"
-          }
-        },
-        {
-          "cono": {
-            "nombre": "Techo_3",
-            "loc": [
-              8,
-              0,
-              3
-            ],
-            "rol": "techo",
-            "coleccion": "Techos"
-          }
-        },
-        {
-          "material": {
-            "objeto": "Casa_1",
-            "nombre": "Rojo",
-            "color": [
-              0.8,
-              0.1,
-              0.1
-            ]
-          }
-        },
-        {
-          "material": {
-            "objeto": "Casa_2",
-            "nombre": "Azul",
-            "color": [
-              0.1,
-              0.2,
-              0.8
-            ]
-          }
-        },
-        {
-          "material": {
-            "objeto": "Casa_3",
-            "nombre": "Verde",
-            "color": [
-              0.1,
-              0.7,
-              0.2
-            ]
-          }
-        },
-        {
-          "guardado": {
-            "archivo": "mi_aldea.blend"
-          }
-        }
+        {"cubo": {"nombre": "Casa_1", "loc": [0, 0, 1], "rol": "casa", "coleccion": "Casas"}},
+        {"cubo": {"nombre": "Casa_2", "loc": [4, 0, 1], "rol": "casa", "coleccion": "Casas"}},
+        {"cubo": {"nombre": "Casa_3", "loc": [8, 0, 1], "rol": "casa", "coleccion": "Casas"}},
+        {"cono": {"nombre": "Techo_1", "loc": [0, 0, 3], "rol": "techo", "coleccion": "Techos"}},
+        {"cono": {"nombre": "Techo_2", "loc": [4, 0, 3], "rol": "techo", "coleccion": "Techos"}},
+        {"cono": {"nombre": "Techo_3", "loc": [8, 0, 3], "rol": "techo", "coleccion": "Techos"}},
+        {"material": {"objeto": "Casa_1", "nombre": "Rojo", "color": [0.8, 0.1, 0.1]}},
+        {"material": {"objeto": "Casa_2", "nombre": "Azul", "color": [0.1, 0.2, 0.8]}},
+        {"material": {"objeto": "Casa_3", "nombre": "Verde", "color": [0.1, 0.7, 0.2]}},
+        {"guardado": {"archivo": "mi_aldea.blend"}}
       ],
-      "espera": {
-        "completada": true,
-        "progreso_min": 100
-      }
+      "espera": {"completada": true, "progreso_min": 100}
     }
   ]
 }

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from ..registry import ParamSpec as P
 from ..registry import ValidatorRegistry
-from . import animation, lighting, logic, materials, mesh, objects, scene, shape, spatial, transforms
+from . import animation, figure, lighting, logic, materials, mesh, objects, scene, shape, spatial, transforms
 
 # Parámetros comunes del selector de objetos (validators/base.py).
 SELECTOR = (
@@ -257,6 +257,44 @@ def _registrar_v3(registry: ValidatorRegistry) -> None:
             P("ground", "bool", "Toca el suelo"), P("tolerance", "float", "Tolerancia", default=0.15),
         ),
         watch=anim, selects=True,
+    )
+    r(
+        "spatial.on_top", spatial.on_top, label="Encima de", category="relaciones",
+        description="Cada objeto descansa encima de uno de referencia (un techo sobre su casa), no a un lado.",
+        params=SELECTOR + (
+            P("reference_role", "role", "Rol de referencia"),
+            P("reference", "text", "Nombre de referencia"),
+            P("reference_primitive", "primitive", "Primitiva de referencia"),
+            P("tolerance", "float", "Holgura (parte de la altura del objeto)", default=0.25),
+        ),
+        watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
+    )
+    # --- Figura con sentido (motor 3.3, docs/motor/referencia/11_modelo_de_referencia.md) ---
+    r(
+        "figure.resembles", figure.resembles, label="La figura se parece al modelo", category="forma",
+        description=("Compara la figura con el modelo de referencia de la práctica («reference»): mismas piezas, "
+                     "tamaños y lugares parecidos (±tolerancia) y proporciones de la figura. No pide medidas exactas; "
+                     "acepta la figura más grande o chica, girada o en espejo."),
+        params=(
+            P("tolerance", "float", "Holgura de medidas (0.35 = ±35 %)", default=0.35),
+            P("min_score", "float", "Parecido mínimo (0 a 1)", default=0.7),
+            P("scale_range", "float", "Veces más grande o chica permitido", default=2.5),
+            # Los pone el cargador desde «reference» y «roles»; no se escriben a mano.
+            P("parts", "reference", "Piezas del modelo (de «reference»)"),
+            P("labels", "reference", "Nombres de los roles (de «roles»)"),
+            P("flexible", "reference", "Grupos con cantidad libre (de «reference»)"),
+        ),
+        watch=TRANSFORMACION + ("OBJECT_DATA",),
+    )
+    r(
+        "dimension.approx", figure.approx_dimension, label="Medida aproximada", category="transformaciones",
+        description="Una medida queda CERCA de un valor (±tolerancia), en un eje o en su lado más largo o más corto.",
+        params=SELECTOR + (
+            P("axis", "text", "Eje (x, y, z, largest, smallest)", default="largest"),
+            P("value", "float", "Valor aproximado", required=True),
+            P("tolerance", "float", "Holgura (0.35 = ±35 %)", default=0.35),
+        ),
+        watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
     )
     # --- Lógica ---
     r(

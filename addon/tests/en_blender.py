@@ -184,6 +184,14 @@ def probar_v3(contexto):
     revisar(g.action is not None and g.action.kind in ("add_cube", "add_primitive"),
             f"tren: Hazlo conmigo agrega una pieza ({g.action})")
     revisar(bpy.ops.amatista.hazlo_conmigo() == {"FINISHED"} and len(bpy.data.objects) == 1, "tren: se agrega la pieza")
+    # Motor 3.3: «Así se debe ver» con la imagen y el plano del modelo de referencia.
+    from amatista_blender.interfaz import estilo
+
+    imagen = practicas.archivo_de_referencia("blender.bp.m1.tren", "referencia.jpg")
+    revisar(imagen is not None and practicas.archivo_de_referencia("blender.bp.m1.tren", "plano.svg") is not None,
+            "tren: trae la imagen y el plano del modelo de referencia")
+    estilo.imagen(imagen)
+    revisar(estilo._IMAGENES is not None and str(imagen) in estilo._IMAGENES, "tren: la imagen de referencia se carga como vista previa")
     bpy.ops.amatista.pildora_vista(pildora=principal.id)
     revisar(principal.id in aprendizaje.vistas("blender.bp.m1.tren"), "píldora marcada como vista")
     revisar(any(k.endswith("#" + principal.id) for k in aprendizaje.avance()["repaso"]) == (principal.check is not None),
@@ -435,7 +443,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "3.2.0", "el intento lleva la versión 3.2 del add-on")
+    revisar(datos["version_addon"] == "3.3.0", "el intento lleva la versión 3.3 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"

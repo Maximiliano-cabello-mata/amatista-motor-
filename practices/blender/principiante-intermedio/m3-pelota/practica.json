@@ -13,8 +13,11 @@
   "tags": ["principiante-intermedio", "modulo-3", "animacion"],
   "course": {"id": "blender_principiante_intermedio", "module": 3, "lesson": "bpi3_practica"},
   "review": ["blender.bpi.m2.tres-puntos#f12", "blender.bpi.m2.tres-puntos#camara", "blender.bp.m1.tren#grs"],
-  "starter": {"scene": "empty", "build": "pelota_y_suelo",
-              "note": "Amatista arma una esfera a 4 m de altura sobre un piso, con cámara y luz."},
+  "starter": {
+    "scene": "empty",
+    "build": "pelota_y_suelo",
+    "note": "Amatista arma una esfera a 4 m de altura sobre un piso, con cámara y luz."
+  },
   "tools": {"allowed": ["anim.keyframe", "view.numpad", "render.f12"]},
   "pills": [
     {
@@ -49,7 +52,11 @@
       "keys": ["S", "Z"],
       "visual": "keys",
       "trigger": {"on": "target", "target": "aplastar"},
-      "check": {"question": "¿Para qué sirve aplastar la pelota al chocar?", "options": ["Para que se sienta su peso", "Para que pese menos el archivo", "Para cambiarle el color"], "answer": 0}
+      "check": {
+        "question": "¿Para qué sirve aplastar la pelota al chocar?",
+        "options": ["Para que se sienta su peso", "Para que pese menos el archivo", "Para cambiarle el color"],
+        "answer": 0
+      }
     }
   ],
   "targets": [
@@ -102,5 +109,51 @@
       "tip": "Ctrl+Shift+S: mi_pelota.blend. Reprodúcela con Espacio.",
       "hints": ["Archivo › Guardar como, con un nombre que incluya «pelota»."]
     }
-  ]
+  ],
+  "reference": {
+    "title": "Pelota que rebota",
+    "description": "La pelota cae desde 4 m (fotograma 1), toca el suelo y se aplasta en el fotograma 12, y vuelve a subir en el 24. Las pelotas transparentes muestran el recorrido.",
+    "tolerance": 0.35,
+    "parts": [
+      {"primitive": "sphere", "name": "Pelota", "size": [1.2, 1.2, 1.2], "location": [0, 0, 4], "color": "#ff6b35"},
+      {
+        "primitive": "sphere",
+        "name": "Fotograma 6",
+        "size": [1.2, 1.2, 1.25],
+        "location": [1.6, 0, 2.2],
+        "color": "#ff6b35",
+        "material": {"alpha": 0.35},
+        "compare": false
+      },
+      {
+        "primitive": "sphere",
+        "name": "Fotograma 12",
+        "size": [1.45, 1.45, 0.85],
+        "location": [3.2, 0, 0.43],
+        "color": "#ff6b35",
+        "material": {"alpha": 0.5},
+        "compare": false
+      },
+      {
+        "primitive": "sphere",
+        "name": "Fotograma 18",
+        "size": [1.2, 1.2, 1.25],
+        "location": [4.8, 0, 2.2],
+        "color": "#ff6b35",
+        "material": {"alpha": 0.35},
+        "compare": false
+      },
+      {
+        "primitive": "sphere",
+        "name": "Fotograma 24",
+        "size": [1.2, 1.2, 1.2],
+        "location": [6.4, 0, 4],
+        "color": "#ff6b35",
+        "material": {"alpha": 0.2},
+        "compare": false
+      },
+      {"primitive": "plane", "size": [14, 14, 0], "color": "#7fb069", "compare": false}
+    ],
+    "camera": {"location": [3.2, -12, 3], "target": [3.2, 0, 2]}
+  }
 }

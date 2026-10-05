@@ -251,6 +251,8 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
         if reporte.paused:
             self._tarjeta_pausa(layout, context, practica, reporte)
 
+        self._modelo(layout, context, practica, reporte)
+
         g = guia.guia_actual()
         pildora = aprendizaje.pildora_principal()
         if pildora is not None and not reporte.completed:
@@ -288,6 +290,24 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
         fila = layout.row(align=True)
         fila.operator("amatista.abrir_plataforma", text="Plataforma", icon="URL").ruta = "#/panel"
         fila.operator("amatista.elegir_practica", text="Otra práctica", icon="FILE_REFRESH")
+
+    def _modelo(self, layout, context, practica, reporte):
+        """«Así se debe ver»: la imagen del modelo de referencia (motor 3.3)."""
+        referencia = getattr(practica, "reference", None)
+        imagen = practicas.archivo_de_referencia(practica.id, "referencia.jpg")
+        if referencia is None or imagen is None:
+            return
+        cuerpo = estilo.seccion(layout, context, "modelo", "Así se debe ver", icon="IMAGE_DATA",
+                                cerrada=reporte.completed)
+        if cuerpo is None:
+            return
+        cuerpo.template_icon(icon_value=estilo.imagen(imagen), scale=9.0)
+        if referencia.description:
+            estilo.parrafo(cuerpo, context, referencia.description)
+        fila = cuerpo.row(align=True)
+        fila.operator("amatista.ver_referencia", text="Ver grande", icon="ZOOM_IN").archivo = "referencia.jpg"
+        if practicas.archivo_de_referencia(practica.id, "plano.svg"):
+            fila.operator("amatista.ver_referencia", text="Plano con medidas", icon="DRIVER_DISTANCE").archivo = "plano.svg"
 
     def _tarjeta_pausa(self, layout, context, practica, reporte):
         """Un vigilante detuvo el progreso: aviso rojo con el arreglo a un clic."""

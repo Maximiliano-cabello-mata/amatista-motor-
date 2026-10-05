@@ -13,11 +13,12 @@
   "tags": ["principiante-intermedio", "modulo-2", "iluminacion", "render"],
   "course": {"id": "blender_principiante_intermedio", "module": 2, "lesson": "bpi2_practica", "next": "blender.bpi.m3.explora"},
   "review": ["blender.bpi.m1.pinta-nave#principled", "blender.bpi.m1.pinta-nave#vista-material", "blender.bp.m1.tren#grs"],
-  "starter": {"scene": "empty", "build": "estudio_foto",
-              "note": "Amatista arma un estudio: tu nave (o un modelo de ejemplo) sobre un piso, sin luces y con el motor Workbench."},
-  "roles": {
-    "modelo": {"label": "Modelo", "description": "Lo que vas a fotografiar: tu nave o el modelo de ejemplo."}
+  "starter": {
+    "scene": "empty",
+    "build": "estudio_foto",
+    "note": "Amatista arma un estudio: tu nave (o un modelo de ejemplo) sobre un piso, sin luces y con el motor Workbench."
   },
+  "roles": {"modelo": {"label": "Modelo", "description": "Lo que vas a fotografiar: tu nave o el modelo de ejemplo."}},
   "tools": {"allowed": ["light.add", "camera.add", "render.f12", "view.numpad", "material.principled"]},
   "pills": [
     {
@@ -27,7 +28,11 @@
       "keys": ["Ctrl", "Alt", "0"],
       "visual": "keys",
       "trigger": {"on": "start"},
-      "check": {"question": "¿Qué tecla mira a través de la cámara?", "options": ["0 del teclado numérico", "F12", "Tab"], "answer": 0}
+      "check": {
+        "question": "¿Qué tecla mira a través de la cámara?",
+        "options": ["0 del teclado numérico", "F12", "Tab"],
+        "answer": 0
+      }
     },
     {
       "id": "luces",
@@ -44,7 +49,11 @@
       "text": "La principal ilumina fuerte desde un lado de la cámara. El relleno, más suave, desde el otro lado. El contraluz va detrás y dibuja el borde.",
       "visual": "image:tres-puntos.svg",
       "trigger": {"on": "target", "target": "tres-puntos"},
-      "check": {"question": "¿Dónde va el contraluz?", "options": ["Detrás del modelo", "Junto a la cámara", "Debajo del piso"], "answer": 0}
+      "check": {
+        "question": "¿Dónde va el contraluz?",
+        "options": ["Detrás del modelo", "Junto a la cámara", "Debajo del piso"],
+        "answer": 0
+      }
     },
     {
       "id": "eevee",
@@ -119,7 +128,10 @@
       "weight": 25,
       "requires": ["luz-area"],
       "tip": "Una luz delante a cada lado del modelo (la de relleno más suave) y una detrás.",
-      "hints": ["Mira desde arriba (7 del numérico): la cámara abajo, la principal y el relleno a sus lados, el contraluz arriba, detrás del modelo.", "Duplica la luz con Shift+D y baja la potencia de la copia: ése es el relleno."]
+      "hints": [
+        "Mira desde arriba (7 del numérico): la cámara abajo, la principal y el relleno a sus lados, el contraluz arriba, detrás del modelo.",
+        "Duplica la luz con Shift+D y baja la potencia de la copia: ése es el relleno."
+      ]
     },
     {
       "id": "render",
@@ -140,5 +152,81 @@
       "tip": "Ctrl+Shift+S: mi_estudio.blend.",
       "hints": ["Archivo › Guardar como, con un nombre que incluya «estudio»."]
     }
-  ]
+  ],
+  "reference": {
+    "title": "Estudio de tres luces",
+    "description": "Tu modelo sobre un piso, la cámara al frente y tres luces: la principal fuerte delante a un lado, el relleno más suave delante al otro lado y el contraluz detrás.",
+    "tolerance": 0.35,
+    "parts": [
+      {
+        "primitive": "cube",
+        "role": "modelo",
+        "name": "Cuerpo",
+        "size": [1.2, 3.2, 0.7],
+        "location": [0, 0, 1.0],
+        "color": "#c9ced6",
+        "join": "nave",
+        "material": {"metallic": 0.7, "roughness": 0.35}
+      },
+      {
+        "primitive": "sphere",
+        "role": "modelo",
+        "name": "Cabina",
+        "size": [0.8, 1.2, 0.6],
+        "location": [0, 0.55, 1.35],
+        "color": "#7fd3ff",
+        "join": "nave",
+        "material": {"transmission": 0.9, "roughness": 0.05}
+      },
+      {
+        "primitive": "cube",
+        "role": "modelo",
+        "name": "Alas",
+        "size": [4.0, 1.3, 0.16],
+        "location": [0, -0.35, 0.95],
+        "color": "#e74c3c",
+        "join": "nave",
+        "material": {"metallic": 0.6, "roughness": 0.35}
+      },
+      {
+        "primitive": "cylinder",
+        "role": "modelo",
+        "name": "Motor izquierdo",
+        "size": [0.45, 0.45, 0.9],
+        "location": [-0.55, -1.5, 1.0],
+        "rotation": [90, 0, 0],
+        "color": "#3a2e28",
+        "join": "nave",
+        "material": {"metallic": 0.9, "roughness": 0.75}
+      },
+      {
+        "primitive": "cylinder",
+        "role": "modelo",
+        "name": "Motor derecho",
+        "size": [0.45, 0.45, 0.9],
+        "location": [0.55, -1.5, 1.0],
+        "rotation": [90, 0, 0],
+        "color": "#3a2e28",
+        "join": "nave",
+        "material": {"metallic": 0.9, "roughness": 0.75}
+      },
+      {
+        "primitive": "cube",
+        "role": "modelo",
+        "name": "Aleta",
+        "size": [0.12, 0.7, 0.7],
+        "location": [0, -1.1, 1.6],
+        "color": "#e74c3c",
+        "join": "nave"
+      },
+      {"primitive": "plane", "size": [14, 14, 0], "color": "#2b2f3a", "compare": false}
+    ],
+    "objects": {"nave": {"bevel": 0.04}},
+    "lights": [
+      {"name": "Principal", "type": "AREA", "location": [-4, -5, 4], "energy": 500},
+      {"name": "Relleno", "type": "AREA", "location": [4, -5, 3], "energy": 200},
+      {"name": "Contraluz", "type": "SPOT", "location": [0, 5, 5], "energy": 800}
+    ],
+    "camera": {"location": [0, -10, 4], "target": [0, 0, 1]}
+  }
 }
