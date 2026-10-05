@@ -20,7 +20,7 @@ import uuid
 
 import bpy
 
-from . import ajustes
+from . import ajustes, integridad
 
 _resultados = queue.Queue()
 _activos = 0
@@ -45,6 +45,15 @@ def _cabeceras(con_token):
         "X-Blender-Version": bpy.app.version_string,
         "User-Agent": f"Amatista-Blender/{ajustes.VERSION_ADDON} Blender/{bpy.app.version_string}",
     }
+    # La copia del add-on (integridad.py) y la marca de agua de su descarga:
+    # el servidor marca como «sin verificar» lo que mande una copia modificada.
+    revision = integridad.revisar()
+    cabeceras["X-Amatista-Integridad"] = revision["estado"]
+    if revision["huella"]:
+        cabeceras["X-Amatista-Huella"] = revision["huella"]
+    licencia = integridad.licencia()
+    if licencia.get("id"):
+        cabeceras["X-Amatista-Licencia"] = str(licencia["id"])[:64]
     p = ajustes.prefs()
     if con_token and p and p.token:
         cabeceras["Authorization"] = f"Bearer {p.token}"
@@ -72,6 +81,11 @@ def pedir(metodo, ruta, al_terminar=None, datos=None, con_token=True, segundos=1
             al_terminar(None, SIN_INTERNET, 0)
         return
     url = ajustes.servidor() + ruta
+    if not url.lower().startswith(("https://", "http://")):
+        # Solo HTTP(S): una dirección file:// o rara en las preferencias no debe leerse.
+        if al_terminar:
+            al_terminar(None, "La dirección del servidor debe empezar con https://", 0)
+        return
     cabeceras = _cabeceras(con_token)
     cuerpo = json.dumps(datos).encode("utf-8") if datos is not None else None
 

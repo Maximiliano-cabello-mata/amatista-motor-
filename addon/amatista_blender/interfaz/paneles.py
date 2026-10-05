@@ -17,7 +17,7 @@ import time
 
 import bpy
 
-from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, practicas, red, temas
+from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, integridad, practicas, red, temas
 from . import aprender, dialogos, estilo
 
 CATEGORIA = "Amatista"
@@ -142,6 +142,11 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
             estilo.parrafo(cuerpo, context, "Blender tiene desactivado el acceso en línea. Amatista lo necesita para "
                            "descargar prácticas y guardar tu progreso.")
             cuerpo.operator("amatista.permitir_internet", icon="WORLD")
+
+        if integridad.revisar()["estado"] == "modificada":
+            cuerpo = estilo.tarjeta(layout, "Copia modificada", icon="ERROR")
+            estilo.parrafo(cuerpo, context, "Algunos archivos de Amatista Motor no son los originales. Tus intentos "
+                           "se guardan como «sin verificar». Vuelve a descargarlo desde la plataforma (Mi Blender).")
 
         if cuenta.VINCULO["activo"]:
             self._dibujar_codigo(layout, context)

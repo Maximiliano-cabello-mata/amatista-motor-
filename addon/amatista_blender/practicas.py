@@ -160,7 +160,7 @@ def practica_activa(context=None):
     texto = sc.amatista.practica_json if sc else ""
     if not texto:
         return None
-    clave = hashlib.sha1(texto.encode("utf-8")).hexdigest()
+    clave = hashlib.sha1(texto.encode("utf-8"), usedforsecurity=False).hexdigest()
     if ESTADO["clave"] != clave:
         try:
             ESTADO["practica"] = _motor.practica.parse_practice(json.loads(texto))

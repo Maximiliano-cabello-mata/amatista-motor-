@@ -31,7 +31,9 @@ import io
 import json
 import re
 import sys
+import time
 import zipfile
+from functools import lru_cache
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
@@ -41,6 +43,9 @@ PRACTICAS = RAIZ / "practices" / "blender"
 INSTALADOR = Path(__file__).resolve().parent / "instalador"
 
 FECHA_FIJA = (2026, 1, 1, 0, 0, 0)
+# Protección del código en el equipo del alumno (docs/seguridad/02_proteccion_del_codigo.md).
+ARCHIVO_INTEGRIDAD = "integridad.json"
+ARCHIVO_LICENCIA = "licencia.json"
 IGNORAR = {"__pycache__", "tests", ".DS_Store"}
 SISTEMAS = ("windows", "macos", "linux")
 LANZADORES = {
@@ -84,9 +89,9 @@ def _archivos(carpeta: Path):
             yield ruta, relativa.as_posix()
 
 
-def _agregar(zf: zipfile.ZipFile, nombre: str, contenido: bytes, permisos: int = 0o644) -> None:
+def _agregar(zf: zipfile.ZipFile, nombre: str, contenido: bytes, permisos: int = 0o644, comprimir: bool = True) -> None:
     info = zipfile.ZipInfo(nombre, date_time=FECHA_FIJA)
-    info.compress_type = zipfile.ZIP_DEFLATED
+    info.compress_type = zipfile.ZIP_DEFLATED if comprimir else zipfile.ZIP_STORED
     info.external_attr = (0o100000 | permisos) << 16
     info.create_system = 3  # Unix: conserva los permisos del lanzador en macOS y Linux
     zf.writestr(info, contenido)
@@ -99,23 +104,88 @@ def configuracion(servidor: str, plataforma: str, canal: str = "estable", vincul
     return config
 
 
-def construir_extension(servidor: str = "http://localhost:8000", plataforma: str = "http://localhost:5173",
-                        canal: str = "estable", vinculo: dict | None = None) -> bytes:
-    """La extensión lista para Blender (manifiesto en la raíz del .zip)."""
+def _huella_fuentes() -> tuple:
+    """Cambia cuando cambia algún archivo que entra al paquete (fecha y tamaño)."""
+    datos = []
+    for carpeta in (ADDON, MOTOR, PRACTICAS):
+        for ruta, nombre in _archivos(carpeta):
+            info = ruta.stat()
+            datos.append((nombre, info.st_mtime_ns, info.st_size))
+    return tuple(datos)
+
+
+_HUELLA = {"momento": -1e9, "valor": ()}
+
+
+def _huella_reciente(segundos: float = 10.0) -> tuple:
+    """_huella_fuentes() recorre ~200 archivos (unos 4 ms): se revisa cada 10 s como mucho."""
+    momento = time.monotonic()
+    if momento - _HUELLA["momento"] > segundos:
+        _HUELLA.update(momento=momento, valor=_huella_fuentes())
+    return _HUELLA["valor"]
+
+
+@lru_cache(maxsize=2)
+def _base_extension(_huella: tuple) -> bytes:
+    """La extensión sin config.json, ya comprimida.
+
+    Comprimir ~200 archivos es lo caro de cada descarga (informe de
+    rendimiento del 5 de octubre: ~55 ms por descarga con cuenta y ~900 ms con
+    diez a la vez). Se hace una vez; cada descarga solo agrega su config.json.
+    """
     salida = io.BytesIO()
+    hashes = {}
     with zipfile.ZipFile(salida, "w") as zf:
+
+        def poner(nombre: str, contenido: bytes) -> None:
+            hashes[nombre] = hashlib.sha256(contenido).hexdigest()
+            _agregar(zf, nombre, contenido)
+
         for ruta, nombre in _archivos(ADDON):
-            if nombre == "config.json":
+            if nombre in ("config.json", ARCHIVO_INTEGRIDAD, ARCHIVO_LICENCIA):
                 continue
-            _agregar(zf, nombre, ruta.read_bytes())
+            poner(nombre, ruta.read_bytes())
         for ruta, nombre in _archivos(MOTOR):
-            _agregar(zf, f"amatista_engine/{nombre}", ruta.read_bytes())
+            poner(f"amatista_engine/{nombre}", ruta.read_bytes())
         for ruta, nombre in _archivos(PRACTICAS):
-            # Prácticas, mapa de cursos e imágenes de las píldoras; los casos de prueba se quedan en el repo.
+            # Prácticas, mapa de cursos e imágenes de referencia; los casos de prueba se quedan en el repo.
             if ruta.suffix in (".json", ".svg", ".png") and ruta.name != "pruebas.json":
-                _agregar(zf, f"practicas/{nombre}", ruta.read_bytes())
+                poner(f"practicas/{nombre}", ruta.read_bytes())
+        _agregar(zf, ARCHIVO_INTEGRIDAD, integridad(hashes))
+    return salida.getvalue()
+
+
+def huella_de(hashes: dict) -> str:
+    """Huella del paquete: SHA-256 de la lista ordenada «archivo:sha256»."""
+    texto = "\n".join(f"{nombre}:{valor}" for nombre, valor in sorted(hashes.items()))
+    return hashlib.sha256(texto.encode("utf-8")).hexdigest()
+
+
+def integridad(hashes: dict) -> bytes:
+    """integridad.json: el add-on la compara con sus archivos al arrancar (sin red)."""
+    datos = {"version": VERSION, "huella": huella_de(hashes), "archivos": dict(sorted(hashes.items()))}
+    return (json.dumps(datos, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
+
+
+def huella_oficial() -> str:
+    """La huella del add-on que entrega este servidor (el backend la compara con la que manda el add-on)."""
+    with zipfile.ZipFile(io.BytesIO(_base_extension(_huella_reciente()))) as zf:
+        return json.loads(zf.read(ARCHIVO_INTEGRIDAD))["huella"]
+
+
+def construir_extension(servidor: str = "http://localhost:8000", plataforma: str = "http://localhost:5173",
+                        canal: str = "estable", vinculo: dict | None = None, licencia: dict | None = None) -> bytes:
+    """La extensión lista para Blender (manifiesto en la raíz del .zip).
+
+    licencia: marca de agua firmada por el servidor (api/addon.py) con la
+    cuenta que descargó; si una copia circula, dice de quién salió.
+    """
+    salida = io.BytesIO(_base_extension(_huella_reciente()))
+    with zipfile.ZipFile(salida, "a") as zf:
         config = configuracion(servidor, plataforma, canal, vinculo)
         _agregar(zf, "config.json", (json.dumps(config, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+        if licencia:
+            _agregar(zf, ARCHIVO_LICENCIA, (json.dumps(licencia, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     return salida.getvalue()
 
 
@@ -137,7 +207,8 @@ def construir_paquete(sistema: str, **opciones) -> bytes:
             script = script.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
         _agregar(zf, f"{CARPETA_PAQUETE}/{lanzador}", script, permisos)
         _agregar(zf, f"{CARPETA_PAQUETE}/instalar_en_blender.py", (INSTALADOR / "instalar_en_blender.py").read_bytes())
-        _agregar(zf, f"{CARPETA_PAQUETE}/{nombre_extension()}", extension)
+        # La extensión ya viene comprimida: se guarda tal cual (comprimirla otra vez solo gasta CPU).
+        _agregar(zf, f"{CARPETA_PAQUETE}/{nombre_extension()}", extension, comprimir=False)
         texto = leeme(sistema)
         if sistema == "windows":
             texto = texto.replace("\n", "\r\n")
