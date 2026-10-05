@@ -269,7 +269,7 @@ def _registrar_v3(registry: ValidatorRegistry) -> None:
         ),
         watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
     )
-    # --- Figura con sentido (motor 3.3, docs/motor/referencia/11_modelo_de_referencia.md) ---
+    # --- Figura con sentido (motor 3.3, docs/motor/referencia/10_modelo_de_referencia.md) ---
     r(
         "figure.resembles", figure.resembles, label="La figura se parece al modelo", category="forma",
         description=("Compara la figura con el modelo de referencia de la práctica («reference»): mismas piezas, "

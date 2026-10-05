@@ -369,7 +369,7 @@ def _vector(valor: Any, donde: str, e: _Errores, defecto=None, positivo: bool = 
 
 
 def _referencia(raw: Any, e: _Errores) -> Optional[ReferenceModel]:
-    """«reference»: la figura terminada en piezas (motor 3.3). Ver docs/motor/referencia/11_modelo_de_referencia.md."""
+    """«reference»: la figura terminada en piezas (motor 3.3). Ver docs/motor/referencia/10_modelo_de_referencia.md."""
     if raw is None:
         return None
     if not isinstance(raw, dict):
