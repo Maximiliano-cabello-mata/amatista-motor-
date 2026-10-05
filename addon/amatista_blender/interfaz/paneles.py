@@ -71,7 +71,7 @@ ICONO_ESCENA = {
     "portal": "URL",
     "cristales": "SHADERFX",
 }
-ICONO_MENSAJE = {"hola": "HEART", "consejo": "LIGHT", "dato": "INFO"}
+ICONO_MENSAJE = {"hola": "HEART", "consejo": "LIGHT", "charla": "OUTLINER_OB_SPEAKER", "dato": "INFO"}
 
 
 def icono_tema(tema):

@@ -275,16 +275,19 @@ def mezclar(color_a, color_b, factor):
 
 
 def mensajes_mascota(tema_dict):
-    """[(tipo, texto)]: el saludo y luego consejos y datos curiosos intercalados."""
+    """[(tipo, texto)]: el saludo y luego consejos, charla y datos curiosos intercalados."""
     mascota = (tema_dict or {}).get("mascota") or {}
     lista = []
     if mascota.get("hola"):
         lista.append(("hola", mascota["hola"]))
     consejos = list(mascota.get("consejos") or [])
     datos = list(mascota.get("datos") or [])
-    for i in range(max(len(consejos), len(datos))):
+    charla = list(mascota.get("charla") or [])
+    for i in range(max(len(consejos), len(datos), len(charla))):
         if i < len(consejos):
             lista.append(("consejo", consejos[i]))
+        if i < len(charla):
+            lista.append(("charla", charla[i]))
         if i < len(datos):
             lista.append(("dato", datos[i]))
     return lista or [("hola", _RESPALDO["mascota"]["hola"])]

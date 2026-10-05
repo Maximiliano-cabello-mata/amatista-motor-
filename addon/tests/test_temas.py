@@ -105,8 +105,9 @@ def test_mensajes_de_la_mascota_dan_la_vuelta():
     lista = temas.mensajes_mascota(t)
     m = t["mascota"]
     assert lista[0] == ("hola", m["hola"])
-    assert lista[1] == ("consejo", m["consejos"][0]) and lista[2] == ("dato", m["datos"][0])
-    assert len(lista) == 1 + len(m["consejos"]) + len(m["datos"])
+    assert lista[1] == ("consejo", m["consejos"][0]) and lista[2] == ("charla", m["charla"][0])
+    assert lista[3] == ("dato", m["datos"][0])
+    assert len(lista) == 1 + len(m["consejos"]) + len(m["charla"]) + len(m["datos"])
     assert temas.mensaje_mascota(t, len(lista)) == lista[0]
     assert temas.mensaje_mascota(t, 3) == temas.mensaje_mascota(t, 3)
 
