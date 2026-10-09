@@ -210,5 +210,35 @@
     ],
     "objects": {"nave": {"bevel": 0.04}},
     "camera": {"location": [6, -7, 4.5], "target": [0, 0, 1]}
+  },
+  "example": {
+    "title": "Nave pintada",
+    "description": "Tu nave con tres materiales: casco de metal brillante, cabina de cristal y motores de metal quemado.",
+    "steps": [
+      {"referencia": {}},
+      {"material": {"objeto": "Cuerpo", "nombre": "Casco", "metal": 1.0, "rugosidad": 0.2}},
+      {
+        "material": {
+          "objeto": "Cuerpo",
+          "nombre": "Cabina",
+          "transmision": 0.95,
+          "rugosidad": 0.05,
+          "color": [0.5, 0.83, 1.0],
+          "piezas": ["Cabina"]
+        }
+      },
+      {
+        "material": {
+          "objeto": "Cuerpo",
+          "nombre": "Motor",
+          "color": [0.15, 0.1, 0.08],
+          "metal": 0.9,
+          "rugosidad": 0.75,
+          "piezas": ["Motor izquierdo", "Motor derecho"]
+        }
+      },
+      {"guardado": {"archivo": "mi_nave_pintada.blend"}}
+    ],
+    "check": ["materiales", "archivo"]
   }
 }

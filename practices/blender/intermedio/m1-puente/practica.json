@@ -58,7 +58,10 @@
       "params": {"role": "tablero", "min": 1},
       "weight": 10,
       "tip": "Un cubo plano y alargado: Amatista lo reconoce como el tablero.",
-      "hints": ["S Z 0.1 lo aplana.", "Amatista lo reconoce por su forma; si no, ponle el rol «Tablero» en la pestaña Amatista."]
+      "hints": [
+        "S Z 0.1 lo aplana.",
+        "Amatista lo reconoce por su forma; si no, ponle el rol «Tablero» en la pestaña Amatista."
+      ]
     },
     {
       "id": "tablones",
@@ -202,5 +205,16 @@
       "Pilar.001": {"bevel": 0.05}
     },
     "camera": {"location": [10, -15, 8.5], "target": [0, 0, 1.6]}
+  },
+  "example": {
+    "title": "Puente de madera",
+    "description": "Un tablero de tablones repetidos con Array sobre pilares biselados (la cantidad de pilares es libre), apoyado en ellos y guardado.",
+    "steps": [
+      {"referencia": {}},
+      {"modificador": {"objeto": "Tablero", "tipo": "ARRAY"}},
+      {"modificador": {"objeto": "Pilar", "tipo": "BEVEL"}},
+      {"modificador": {"objeto": "Pilar.001", "tipo": "BEVEL"}},
+      {"guardado": {"archivo": "mi_puente.blend"}}
+    ]
   }
 }

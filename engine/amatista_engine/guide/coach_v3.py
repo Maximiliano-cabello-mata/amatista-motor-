@@ -466,7 +466,31 @@ def coach_silhouette(ctx: Contexto) -> Parcial:
                    action=GuideAction("edit_mode", "Entrar a Edición conmigo", (nombre,)))
 
 
+# --- El ejemplo resuelto (motor 3.5) ----------------------------------------------------
+
+
+def coach_example(ctx: Contexto) -> Parcial:
+    """Como el instructor: el primer punto pendiente de la lista, con sus teclas; lo demás, en la lista."""
+    if ctx.result.passed:
+        return Parcial(ctx.result.message, TONO_LOGRADO)
+    pendientes = [i for i in ctx.result.details.get("checklist") or [] if not i.get("ok") and i.get("consejo")]
+    pasos = []
+    if pendientes:
+        primero = pendientes[0]
+        pasos.append(Paso(primero["consejo"], _teclas_de(primero["consejo"])))
+        otros = []
+        for i in pendientes[1:]:
+            if i.get("aspecto") and i["aspecto"] not in otros and i["aspecto"] != primero.get("aspecto"):
+                otros.append(i["aspecto"])
+        if otros:
+            pasos.append(Paso(f"Después: {', '.join(otros).lower()} (mira la lista «Comparado con el ejemplo»)"))
+    pasos.append(Paso("¿Dudas? Abre el ejemplo resuelto y compáralo con tu escena"))
+    return Parcial(ctx.result.message, TONO_CERCA if len(pendientes) <= 1 else TONO_ANIMO, tuple(pasos),
+                   action=GuideAction("show_example", "Ver el ejemplo resuelto"))
+
+
 ENTRENADORES_V3: Dict[str, object] = {
+    "example.matches": coach_example,
     "object.count": coach_object_count,
     "figure.silhouette": coach_silhouette,
     "shape.thinnest_axis": coach_thinnest,

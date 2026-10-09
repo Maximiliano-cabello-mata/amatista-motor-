@@ -117,6 +117,7 @@
     "title": "Aldea ordenada",
     "description": "Tres casas (cubos) de colores distintos, cada una con su techo de cono de 4 lados ENCIMA, no al lado. Casas en la colección «Casas» y techos en «Techos».",
     "tolerance": 0.35,
+    "strictness": "forma",
     "parts": [
       {
         "primitive": "cube",
@@ -175,5 +176,18 @@
       {"primitive": "plane", "size": [14, 14, 0], "color": "#9bc27a", "compare": false}
     ],
     "camera": {"location": [7, -10, 6], "target": [0, 0, 1.2]}
+  },
+  "example": {
+    "title": "Aldea ordenada",
+    "description": "Tres casas de colores distintos con su techo encima, las casas en la colección «Casas» y los techos en «Techos».",
+    "steps": [
+      {"referencia": {}},
+      {"coleccion": {"nombre": "Casas", "objetos": ["Casa_1", "Casa_2", "Casa_3"]}},
+      {"coleccion": {"nombre": "Techos", "objetos": ["Techo_1", "Techo_2", "Techo_3"]}},
+      {"material": {"objeto": "Casa_1", "nombre": "Rojo", "color": [0.9, 0.3, 0.24]}},
+      {"material": {"objeto": "Casa_2", "nombre": "Azul", "color": [0.2, 0.6, 0.86]}},
+      {"material": {"objeto": "Casa_3", "nombre": "Verde", "color": [0.18, 0.8, 0.44]}},
+      {"guardado": {"archivo": "mi_aldea.blend"}}
+    ]
   }
 }

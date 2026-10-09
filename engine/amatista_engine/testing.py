@@ -184,7 +184,10 @@ class Escena:
         raise KeyError(f"No hay un objeto «{nombre}» en la escena de prueba")
 
     def _obj(self, nombre: str) -> SceneObject:
-        return next(o for o in self._objetos if o.name == nombre)
+        obj = next((o for o in self._objetos if o.name == nombre), None)
+        if obj is None:
+            raise KeyError(f"No hay un objeto «{nombre}» en la escena")
+        return obj
 
     def modificador(self, objeto: str, tipo: str, ejes: Sequence[bool] = (True, False, False),
                     niveles: Optional[int] = None, encendido: bool = True) -> "Escena":
@@ -195,7 +198,9 @@ class Escena:
         return self._cambiar(objeto, modifiers=o.modifiers + (tipo,), modifier_details=o.modifier_details + (m,))
 
     def material(self, objeto: str, nombre: str, color=(0.8, 0.8, 0.8, 1.0), metal: float = 0.0,
-                 rugosidad: float = 0.5, transmision: float = 0.0, alfa: float = 1.0, usado: bool = True) -> "Escena":
+                 rugosidad: float = 0.5, transmision: float = 0.0, alfa: float = 1.0, usado: bool = True,
+                 piezas: Sequence[str] = ()) -> "Escena":
+        """piezas: en un objeto hecho de piezas unidas, las que pinta (solo cambia cómo se arma el ejemplo)."""
         o = self._obj(objeto)
         info = MaterialInfo(nombre, tuple(color) + ((1.0,) if len(color) == 3 else ()), metal, rugosidad,
                             transmision, alfa)
@@ -207,6 +212,12 @@ class Escena:
         o = self._obj(objeto)
         canal = AnimationChannel(propiedad, "xyz".index(eje.lower()), tuple((float(f), float(v)) for f, v in claves))
         return self._cambiar(objeto, animation=o.animation + (canal,))
+
+    def coleccion(self, nombre: str, objetos: Sequence[str]) -> "Escena":
+        """Mueve esos objetos a la colección «nombre» (M › Nueva colección)."""
+        for objeto in objetos:
+            self._cambiar(objeto, collections=(nombre,))
+        return self
 
     def rol(self, objeto: str, rol: str) -> "Escena":
         return self._cambiar(objeto, roles=(rol,))
@@ -392,7 +403,8 @@ class Escena:
 PASOS = {
     "inicial": "inicial", "cubo": "cubo", "cilindro": "cilindro", "esfera": "esfera", "plano": "plano",
     "cono": "cono", "malla": "malla", "luz": "luz", "camara": "camara", "modificador": "modificador",
-    "material": "material", "animar": "animar", "rol": "rol", "mover": "mover", "quitar": "quitar",
+    "material": "material", "animar": "animar", "coleccion": "coleccion", "rol": "rol", "mover": "mover",
+    "quitar": "quitar",
     "modo": "modo", "seleccionar": "seleccionar", "motor": "motor", "renders": "renders", "guardado": "guardado",
     "referencia": "referencia",
 }

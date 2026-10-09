@@ -241,5 +241,10 @@
     "objects": {"espada": {"wire": true}},
     "camera": {"location": [5, -9, 3.2], "target": [0, 0, 2.0], "lens": 38}
   },
-  "starter": {"scene": "empty", "note": "Empiezas con una escena vacía: la espada sale de un cubo que agregas tú."}
+  "starter": {"scene": "empty", "note": "Empiezas con una escena vacía: la espada sale de un cubo que agregas tú."},
+  "example": {
+    "title": "Espada low-poly",
+    "description": "Una sola malla que sale de un cubo: pomo, mango, guarda ancha, hoja larga y punta afilada.",
+    "steps": [{"referencia": {"vertices": 48, "caras": 46}}, {"guardado": {"archivo": "mi_espada.blend"}}]
+  }
 }

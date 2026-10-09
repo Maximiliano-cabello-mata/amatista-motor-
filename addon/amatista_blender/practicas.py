@@ -509,16 +509,17 @@ def evaluar(context=None, motivo="manual"):
 
 
 def lista_instructor(reporte=None):
-    """(título, [{texto, ok, estado, consejo}]) de la figura (motor 3.5), o (None, []).
+    """(título, [{texto, ok, estado, consejo, aspecto}]) del instructor (motor 3.5), o (None, []).
 
-    La dan figure.silhouette y figure.recognize: qué partes del modelo ya
-    están y qué falta, con la tecla que lo arregla. Primero la del paso
-    actual; si el paso actual no es la figura, la de la figura.
+    La dan example.matches (la práctica comparada con su ejemplo resuelto,
+    aspecto por aspecto), figure.silhouette y figure.recognize: qué ya está y
+    qué falta, con la tecla que lo arregla. Primero la del paso actual; si no
+    tiene, la del ejemplo.
     """
     reporte = reporte or ESTADO["reporte"]
     if reporte is None:
         return None, []
-    resultados = list(reporte.results)
+    resultados = sorted(reporte.results, key=lambda r: r.validator != "example.matches")
     actual = reporte.result(reporte.current_target_id) if reporte.current_target_id else None
     if actual is not None:
         resultados.insert(0, actual)

@@ -16,7 +16,7 @@ SCHEMA_V1 = "amatista.practice/1"
 SCHEMA_V2 = "amatista.practice/2"
 SUPPORTED_SCHEMA = SCHEMA_V2  # el que escriben las herramientas nuevas
 SUPPORTED_SCHEMAS = (SCHEMA_V1, SCHEMA_V2)
-CAMPOS_V2 = ("guards", "pills", "review", "course", "starter", "reference")
+CAMPOS_V2 = ("guards", "pills", "review", "course", "starter", "reference", "example")
 
 # Ids de práctica: minúsculas, números, punto, guion y guion bajo («blender.n1.mesa»).
 PATRON_PRACTICA = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
@@ -30,8 +30,10 @@ CAMPOS_OBJETIVO = {
 CAMPOS_PRACTICA = {
     "schema", "id", "version", "title", "level", "description", "intro", "completion", "estimatedMinutes",
     "blender", "skills", "roles", "tags", "tools", "targets",
-    "guards", "pills", "review", "course", "starter", "reference",
+    "guards", "pills", "review", "course", "starter", "reference", "example",
 }
+# Ejemplo resuelto (motor 3.5): la solución en pasos y qué aspectos se revisan.
+CAMPOS_EJEMPLO = {"title", "description", "steps", "check"}
 CAMPOS_PILDORA = {"id", "title", "text", "keys", "visual", "trigger", "once", "check"}
 
 # Modelo de referencia (motor 3.3): piezas de la figura terminada.

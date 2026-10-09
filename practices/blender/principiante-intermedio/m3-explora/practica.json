@@ -8,67 +8,31 @@
   "intro": "Antes del rebote, anima lo más simple: un cubo que se mueve de un lado al otro.",
   "completion": "¡Se mueve! La siguiente lección te explica el rebote y el encoger y estirar.",
   "estimatedMinutes": 8,
-  "blender": {
-    "min": "4.2"
-  },
-  "skills": [
-    "bl-animacion"
-  ],
-  "tags": [
-    "exploracion",
-    "principiante-intermedio",
-    "modulo-3"
-  ],
-  "course": {
-    "id": "blender_principiante_intermedio",
-    "module": 3,
-    "lesson": "bpi3_blender",
-    "next": "blender.bpi.m3.pelota"
-  },
+  "blender": {"min": "4.2"},
+  "skills": ["bl-animacion"],
+  "tags": ["exploracion", "principiante-intermedio", "modulo-3"],
+  "course": {"id": "blender_principiante_intermedio", "module": 3, "lesson": "bpi3_blender", "next": "blender.bpi.m3.pelota"},
   "starter": {
     "scene": "empty",
     "note": "Empiezas con la escena vacía (Ctrl+Z la recupera). Es una exploración corta: tu avance queda registrado."
   },
-  "tools": {
-    "allowed": [
-      "object.add",
-      "transform.move",
-      "anim.keyframe"
-    ]
-  },
+  "tools": {"allowed": ["object.add", "transform.move", "anim.keyframe"]},
   "pills": [
     {
       "id": "clave",
       "title": "I guarda una clave",
       "text": "Con el ratón en la vista 3D, I › Ubicación guarda dónde está el objeto en este fotograma. Cambia de fotograma, muévelo y vuelve a pulsar I.",
-      "keys": [
-        "I"
-      ],
+      "keys": ["I"],
       "visual": "keys",
-      "trigger": {
-        "on": "start"
-      },
-      "check": {
-        "question": "¿Qué tecla inserta un fotograma clave?",
-        "options": [
-          "I",
-          "K",
-          "F12"
-        ],
-        "answer": 0
-      }
+      "trigger": {"on": "start"},
+      "check": {"question": "¿Qué tecla inserta un fotograma clave?", "options": ["I", "K", "F12"], "answer": 0}
     },
     {
       "id": "reproducir",
       "title": "Espacio reproduce",
       "text": "Barra espaciadora reproduce la animación; otra vez la detiene. Blender inventa los fotogramas de en medio.",
-      "keys": [
-        "Espacio"
-      ],
-      "trigger": {
-        "on": "target",
-        "target": "se-mueve"
-      }
+      "keys": ["Espacio"],
+      "trigger": {"on": "target", "target": "se-mueve"}
     }
   ],
   "targets": [
@@ -76,30 +40,18 @@
       "id": "cubo",
       "title": "Agrega un cubo",
       "validator": "object.exists",
-      "params": {
-        "primitive": "cube"
-      },
+      "params": {"primitive": "cube"},
       "weight": 15,
       "tip": "Shift+A › Malla › Cubo.",
-      "hints": [
-        "Shift+A sobre la vista 3D.",
-        "Malla › Cubo."
-      ]
+      "hints": ["Shift+A sobre la vista 3D.", "Malla › Cubo."]
     },
     {
       "id": "claves",
       "title": "Dos fotogramas clave",
       "validator": "animation.keyframes",
-      "params": {
-        "primitive": "cube",
-        "property": "location",
-        "axis": "x",
-        "min": 2
-      },
+      "params": {"primitive": "cube", "property": "location", "axis": "x", "min": 2},
       "weight": 45,
-      "requires": [
-        "cubo"
-      ],
+      "requires": ["cubo"],
       "tip": "Fotograma 1: I › Ubicación. Fotograma 24: G X 4 y otra vez I.",
       "hints": [
         "En la línea de tiempo ve al fotograma 1 y pulsa I › Ubicación.",
@@ -110,24 +62,21 @@
       "id": "se-mueve",
       "title": "Que de verdad se mueva",
       "validator": "animation.varies",
-      "params": {
-        "primitive": "cube",
-        "property": "location",
-        "axis": "x",
-        "min_delta": 2
-      },
+      "params": {"primitive": "cube", "property": "location", "axis": "x", "min_delta": 2},
       "weight": 40,
-      "requires": [
-        "claves"
-      ],
+      "requires": ["claves"],
       "tip": "Las dos claves deben estar al menos a 2 m de distancia en X.",
-      "hints": [
-        "Ve al fotograma 24 y aleja más el cubo con G X.",
-        "Pulsa I otra vez para reemplazar la clave."
-      ]
+      "hints": ["Ve al fotograma 24 y aleja más el cubo con G X.", "Pulsa I otra vez para reemplazar la clave."]
     }
   ],
-  "review": [
-    "blender.bpi.m2.explora#f12"
-  ]
+  "review": ["blender.bpi.m2.explora#f12"],
+  "example": {
+    "title": "Un cubo que cruza la escena",
+    "description": "Dos fotogramas clave de Ubicación X: el cubo recorre 4 metros en un segundo.",
+    "steps": [
+      {"cubo": {"nombre": "Cubo"}},
+      {"animar": {"objeto": "Cubo", "propiedad": "location", "eje": "x", "claves": [[1, 0], [24, 4]]}}
+    ],
+    "check": ["animacion"]
+  }
 }

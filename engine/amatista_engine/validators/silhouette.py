@@ -31,6 +31,15 @@ def modelo_de(partes: List[Dict[str, Any]]):
     return _modelo(json.dumps(partes, sort_keys=True))
 
 
+def mejor_malla(mallas, modelo, tramos, exigencia: str, candidatas: int = 3):
+    """(objeto, revisión) de la malla que más se parece al modelo entre las más largas; revisión None sin silueta."""
+    con_silueta = sorted((o for o in mallas if o.silhouette is not None), key=lambda o: -o.silhouette.largo)
+    if not con_silueta:
+        return max(mallas, key=lambda o: max(o.dimensions or (0.0,))), None
+    revisadas = [(o, comparar_siluetas(o.silhouette, modelo, tramos, exigencia)) for o in con_silueta[:candidatas]]
+    return max(revisadas, key=lambda par: (not par[1].criticas, -len(par[1].fuera), par[1].puntaje))
+
+
 def silhouette(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     partes = target.params.get("parts")
     if not isinstance(partes, list) or not partes:
@@ -50,16 +59,15 @@ def silhouette(target: TargetDefinition, scene: SceneState) -> ValidationResult:
         detalles["checklist"] = lista_vacia
         return result(target, False, "Todavía no hay una malla: agrega un cubo (Shift + A › Malla › Cubo); "
                                      f"de ahí sale {titulo}.", detalles)
-    # La malla principal: la más larga (lo demás puede ser decoración).
-    obj = max(mallas, key=lambda o: o.silhouette.largo if o.silhouette else max(o.dimensions or (0.0,)))
+    # La malla principal: de las más largas, la que más se parece (un piso plano también es largo).
+    obj, revision = mejor_malla(mallas, modelo, tramos, perfil.id)
     detalles["object"] = obj.name
-    if obj.silhouette is None:
+    if revision is None:
         # Fotos del add-on 3.4 o mallas enormes: no se puede revisar; no se bloquea al alumno.
         detalles["no_silhouette"] = True
         return result(target, True, "Amatista no pudo medir la silueta de tu malla (actualiza el add-on "
                                     "Amatista Motor para que la revise).", detalles)
 
-    revision = comparar_siluetas(obj.silhouette, modelo, tramos, perfil.id)
     lista = lista_de_revision(revision)
     porcentaje = round(revision.puntaje * 100)
     detalles.update({

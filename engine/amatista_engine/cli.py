@@ -131,6 +131,16 @@ def comprobar_caso(motor, practica, caso: Dict[str, Any]) -> List[str]:
     return fallas
 
 
+def _ejemplo_completa(motor, practica) -> List[str]:
+    """Lo que propone la práctica (su ejemplo) debe pasar cada paso que revisa el motor."""
+    from .ejemplo import escena_esperada
+    from .practice.loader import pieza_como_dict
+
+    partes = [pieza_como_dict(p) for p in practica.reference.compared] if practica.reference else []
+    reporte = motor.evaluate(practica, escena_esperada(practica.example.steps, partes))
+    return [f"{r.target_id}: {r.message}" for r in reporte.results if not r.passed]
+
+
 def probar(rutas: Sequence[str], detalle: bool = False) -> int:
     motor = create_default_engine()
     total = fallidos = 0
@@ -141,6 +151,14 @@ def probar(rutas: Sequence[str], detalle: bool = False) -> int:
             print(_color(f"✗ {carpeta}: {error}", ROJO))
             fallidos += 1
             continue
+        if practica.example is not None:  # motor 3.5: el ejemplo resuelto debe completar su propia práctica
+            total += 1
+            fallas = _ejemplo_completa(motor, practica)
+            if fallas:
+                fallidos += 1
+                print(_color(f"✗ {practica.id}: el ejemplo resuelto no completa la práctica", ROJO))
+                for falla in fallas:
+                    print(_color(f"      {falla}", ROJO))
         archivo = carpeta / PRUEBAS
         if not archivo.exists():
             print(_color(f"· {practica.id}: sin {PRUEBAS}", AMARILLO))

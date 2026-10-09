@@ -189,7 +189,7 @@ def test_la_silueta_viaja_en_la_foto(piezas):
 
 
 def test_la_practica_de_la_espada_sigue_una_ruta(practica):
-    assert [t.id for t in practica.targets] == ["malla", "alargar", "silueta", "low-poly", "guardar"]
+    assert [t.id for t in practica.targets] == ["malla", "alargar", "silueta", "low-poly", "guardar", "ejemplo"]
     assert not practica.roles  # nada de «asígnale el rol»: se modela
     motor = create_default_engine()
     hecha = Escena().referencia(practica.reference.parts, vertices=48, caras=46).guardado("mi_espada.blend").construir()

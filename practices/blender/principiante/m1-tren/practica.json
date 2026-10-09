@@ -321,5 +321,10 @@
     ],
     "description": "Locomotora roja con chimenea y un vagón azul, en fila y casi tocándose. Cuatro ruedas de pie por vagón, dos de cada lado, apoyadas en el suelo. Las medidas son una guía: ±35 % está bien.",
     "camera": {"location": [6.5, -7.5, 4.2], "target": [0, 0, 0.8]}
+  },
+  "example": {
+    "title": "Tren de juguete",
+    "description": "Locomotora con chimenea, un vagón detrás y cuatro ruedas de pie a cada lado, todo tocando el suelo.",
+    "steps": [{"referencia": {}}, {"guardado": {"archivo": "mi_tren.blend"}}]
   }
 }

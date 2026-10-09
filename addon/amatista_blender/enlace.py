@@ -7,8 +7,8 @@ enfocado) y en la respuesta recibe:
 
 - órdenes de la plataforma: abrir una práctica («Abrir en Blender»),
   enfocar, ver todo Blender o volver a leer los ajustes y, desde el motor
-  3.5, comprobar, pedir pista, «Hazlo conmigo», guardar y empezar de nuevo
-  (MANEJO). El latido lleva lo que dice el instructor (detalle_vivo) para
+  3.5, comprobar, pedir pista, «Hazlo conmigo», guardar, empezar de nuevo
+  (MANEJO) y ver el ejemplo resuelto o volver de él (ejemplo.py). El latido lleva lo que dice el instructor (detalle_vivo) para
   que la lección lo muestre al lado de la práctica. Cada orden trae un
   id y se repite hasta que Blender avisa que la cumplió (orden_hecha), así
   que un latido perdido no pierde la orden;
@@ -67,7 +67,8 @@ def detalle_vivo():
         "total": min(99, int(getattr(g, "step_total", 0) or 0)),
         "figura": (figura or "")[:120],
         "lista": [{"texto": str(i.get("texto", ""))[:60], "ok": bool(i.get("ok")), "estado": str(i.get("estado", ""))[:20],
-                   "consejo": str(i.get("consejo", ""))[:400]} for i in lista[:16]],
+                   "consejo": str(i.get("consejo", ""))[:400], "aspecto": str(i.get("aspecto", ""))[:40]}
+                  for i in lista[:16]],
         "modo": str(getattr(bpy.context, "mode", "") or "")[:20],
         "pistas": max(0, min(9, len(objetivo.hints) - reveladas)) if objetivo is not None else 0,
         "accion": (g.action.label if g is not None and g.action is not None else "")[:80],
@@ -85,7 +86,16 @@ def _datos():
     }
     sc = getattr(bpy.context, "scene", None)
     practica = practicas.practica_activa() if sc is not None else None
-    if practica is not None and sc.amatista.origen != "borrador":
+    if practica is None and sc is not None and sc.get("amatista_ejemplo"):  # mirando el ejemplo resuelto
+        datos["practica_id"] = str(sc["amatista_ejemplo"]).split("@")[0][:80]
+        detalle = None
+        try:
+            detalle = detalle_vivo()
+        except Exception as error:  # noqa: BLE001
+            print(f"[Amatista] Detalle del enlace: {error}")
+        if detalle:
+            datos["detalle"] = {**detalle, "modo": "EJEMPLO"}
+    elif practica is not None and sc.amatista.origen != "borrador":
         reporte = practicas.ESTADO["reporte"]
         datos["practica_id"] = practica.id[:80]
         if reporte is not None:
@@ -178,7 +188,7 @@ def _terminada(orden_id):
 
 def cumplir(orden):
     """Ejecuta una orden de la plataforma una sola vez (aunque llegue repetida)."""
-    from . import enfoque, practicas
+    from . import enfoque, guia, practicas
 
     orden_id = str(orden["id"])
     if orden_id in ESTADO["cumplidas"]:
@@ -197,6 +207,18 @@ def cumplir(orden):
         practicas.abrir_por_id(context, datos["practica_id"], abierta)
         practicas.mostrar_en_amatista(context)
         return True
+    if tipo in ("ver_ejemplo", "volver_practica"):  # motor 3.5: el ejemplo resuelto en su escena
+        from . import ejemplo
+
+        try:
+            texto = ejemplo.ver_ejemplo(context) if tipo == "ver_ejemplo" else ejemplo.volver(context)
+        except Exception as error:  # noqa: BLE001 - una orden fallida nunca rompe Blender
+            texto = None
+            print(f"[Amatista] La plataforma pidió «{tipo}»: {error}")
+        if texto:
+            guia.avisar("Desde la plataforma", texto, "animo")
+        _terminada(orden_id)
+        return True
     practica = practicas.practica_activa(context)
     if datos.get("practica_id") and getattr(practica, "id", "") != datos["practica_id"]:
         _terminada(orden_id)  # la orden era para otra práctica: no se aplica a la que está abierta
@@ -208,8 +230,6 @@ def cumplir(orden):
             texto = None
             print(f"[Amatista] La plataforma pidió «{tipo}»: {error}")
         if texto:
-            from . import guia
-
             guia.avisar("Desde la plataforma", texto, "animo")
         _terminada(orden_id)
         practicas.evaluar(context, "plataforma")

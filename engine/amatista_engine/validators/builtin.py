@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from ..registry import ParamSpec as P
 from ..registry import ValidatorRegistry
-from . import (animation, figure, lighting, logic, materials, mesh, objects, recognize, scene, shape, silhouette, spatial,
-               transforms)
+from . import (animation, example, figure, lighting, logic, materials, mesh, objects, recognize, scene, shape, silhouette,
+               spatial, transforms)
 
 # Parámetros comunes del selector de objetos (validators/base.py).
 SELECTOR = (
@@ -322,6 +322,27 @@ def _registrar_v3(registry: ValidatorRegistry) -> None:
             P("title", "reference", "Nombre de la figura (de «reference.title»)"),
         ),
         watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
+    )
+    # --- Motor 3.5: la revisión autónoma contra el ejemplo resuelto (ejemplo/) ---
+    r(
+        "example.matches", example.matches, label="Coincide con el ejemplo", category="ejemplo",
+        description=("Revisa la escena del alumno contra el ejemplo resuelto de la práctica («example»), aspecto por "
+                     "aspecto: la figura (o su silueta), el trabajo en la malla, los modificadores, los materiales, las "
+                     "colecciones, las luces, la cámara, la animación, el render y el archivo. Solo revisa lo que el "
+                     "ejemplo tiene y deja una lista con qué coincide y cómo hacer lo que falta. El cargador lo agrega "
+                     "al final de toda práctica con ejemplo."),
+        params=(
+            P("aspects", "reference", "Aspectos que revisa este paso (vacío = todos los del ejemplo)"),
+            P("strictness", "text", "Exigencia (forma, proporcion, cercana, medidas, exacta; vacío = la del nivel)"),
+            # Los pone el cargador desde «example», «reference», «roles» y «level»; no se escriben a mano.
+            P("steps", "reference", "Pasos del ejemplo (de «example.steps»)"),
+            P("check", "reference", "Aspectos de la práctica (de «example.check»)"),
+            P("parts", "reference", "Piezas del modelo (de «reference»)"),
+            P("labels", "reference", "Nombres de los roles (de «roles»)"),
+            P("flexible", "reference", "Grupos con cantidad libre (de «reference»)"),
+            P("level", "reference", "Nivel de la práctica (de «level»)"),
+            P("title", "reference", "Nombre de la figura (de «example.title»)"),
+        ),
     )
     r(
         "dimension.approx", figure.approx_dimension, label="Medida aproximada", category="transformaciones",

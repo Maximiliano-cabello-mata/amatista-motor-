@@ -515,7 +515,7 @@ def probar_motor_35(contexto):
     from amatista_blender import enlace
 
     detalle = enlace._datos().get("detalle") or {}
-    revisar(detalle.get("figura") and len(detalle.get("lista", [])) == 5 and detalle.get("modo") == "OBJECT",
+    revisar(detalle.get("figura") and len(detalle.get("lista", [])) >= 5 and detalle.get("modo") == "OBJECT",
             f"el latido lleva el paso, el mensaje y la lista de la figura ({detalle})")
     revisar(enlace.cumplir({"id": "o35a", "tipo": "comprobar", "datos": {"practica_id": "blender.bp.m2.espada"}}),
             "orden «comprobar» desde la plataforma")
@@ -538,6 +538,54 @@ def probar_motor_35(contexto):
     practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
     practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
     revisar(contexto.scene != escena_antes, "volver a la espada abre la escena nueva, no la anterior")
+    dibujar_todo(contexto)
+    practicas.cerrar(contexto)
+
+
+def probar_ejemplo(contexto):
+    """Motor 3.5: «Ver el ejemplo» arma el ejemplo resuelto en su escena y el motor lo reconoce."""
+    import dataclasses
+
+    from amatista_blender import _motor, ejemplo, enlace, practicas
+
+    coincide = importlib.import_module(_motor.engine.__name__ + ".validators.example").matches
+    catalogo = practicas.catalogo()
+    casos = (
+        ("blender.bp.m2.espada", ["figura"]), ("blender.bp.m1.tren", ["figura"]),
+        ("blender.bpi.m3.pelota", ["animacion"]), ("blender.bpi.m2.tres-puntos", ["luces", "camara"]),
+        ("blender.bi.m2.aldea", ["figura", "materiales", "colecciones"]), ("blender.bp.m3.nave", ["modificadores"]),
+        ("blender.bpi.m1.pinta-nave", ["materiales"]), ("blender.bi.m1.puente", ["figura", "modificadores"]),
+    )
+    for practica_id, aspectos in casos:
+        _escena_nueva(contexto, f"Mia {practica_id}")
+        practicas.activar(contexto, catalogo[practica_id]["definicion"], "paquete")
+        mia = bpy.context.scene
+        practica = practicas.practica_activa(contexto)
+        revisar(ejemplo.instrucciones(practica), f"{practica_id}: el ejemplo se lee paso a paso")
+        texto = ejemplo.ver_ejemplo(contexto)
+        sc = bpy.context.scene
+        revisar(sc != mia and ejemplo.es_ejemplo(sc) and len(sc.objects) > 0,
+                f"{practica_id}: «Ver el ejemplo» lo arma en su propia escena ({texto})")
+        revisar(practicas.practica_activa(bpy.context) is None, f"{practica_id}: el motor no revisa la escena del ejemplo")
+        objetivo = practica.targets[-1]
+        r = coincide(dataclasses.replace(objetivo, params={**objetivo.params, "aspects": aspectos}),
+                     _motor.adapter.capture_scene(sc))
+        revisar(r.passed, f"{practica_id}: el ejemplo armado en Blender coincide en {aspectos} ({r.message})")
+        datos = enlace._datos()
+        revisar(datos.get("practica_id") == practica_id and (datos.get("detalle") or {}).get("modo") == "EJEMPLO",
+                f"{practica_id}: el latido dice que Blender muestra el ejemplo ({datos})")
+        revisar(ejemplo.volver(contexto) and bpy.context.scene == mia, f"{practica_id}: «Volver a mi práctica»")
+    ejemplo.ver_ejemplo(contexto)
+    revisar(sum(1 for s in bpy.data.scenes if s.get(ejemplo.EJEMPLO) == f"{practica.id}@{practica.version}") == 1,
+            "ver el ejemplo otra vez no lo arma dos veces")
+    del_ejemplo = bpy.context.scene
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    revisar(bpy.context.scene != del_ejemplo and not ejemplo.es_ejemplo(bpy.context.scene),
+            "abrir otra práctica desde el ejemplo no la carga en la escena del ejemplo")
+    revisar(enlace.cumplir({"id": "o35ej", "tipo": "ver_ejemplo", "datos": {}}) and ejemplo.es_ejemplo(bpy.context.scene),
+            "la plataforma abre el ejemplo en Blender (orden «ver_ejemplo»)")
+    revisar(enlace.cumplir({"id": "o35vu", "tipo": "volver_practica", "datos": {}})
+            and bpy.context.scene.amatista.practica_id == "blender.bp.m1.tren", "y vuelve a la práctica")
     dibujar_todo(contexto)
     practicas.cerrar(contexto)
 
@@ -679,6 +727,7 @@ def main():
     probar_temas(contexto)
     probar_motor_34(contexto)
     probar_motor_35(contexto)
+    probar_ejemplo(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

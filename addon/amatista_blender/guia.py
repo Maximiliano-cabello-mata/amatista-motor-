@@ -331,6 +331,10 @@ def _activo(context, nombres):
 def _accion_v3(context, accion, interactivo):
     """Acciones nuevas del motor v3. None si la acción no es de este grupo (o no aplica)."""
     tipo = accion.kind
+    if tipo == "show_example":
+        from . import ejemplo
+
+        return ejemplo.ver_ejemplo(context)
     if tipo == "add_primitive":
         operador, nombre = PRIMITIVAS.get(accion.primitive or "cube", PRIMITIVAS["cube"])
         if context.mode != "OBJECT":

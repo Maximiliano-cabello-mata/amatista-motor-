@@ -155,5 +155,17 @@
       {"primitive": "plane", "size": [14, 14, 0], "color": "#7fb069", "compare": false}
     ],
     "camera": {"location": [3.2, -12, 3], "target": [3.2, 0, 2]}
+  },
+  "example": {
+    "title": "Pelota que rebota",
+    "description": "La pelota cae, toca el piso en el fotograma 12, se aplasta y vuelve a subir en el 24.",
+    "steps": [
+      {"esfera": {"nombre": "Pelota", "loc": [0, 0, 4]}},
+      {"plano": {"nombre": "Piso"}},
+      {"animar": {"objeto": "Pelota", "propiedad": "location", "eje": "z", "claves": [[1, 4], [12, 0.85], [24, 4]]}},
+      {"animar": {"objeto": "Pelota", "propiedad": "scale", "eje": "z", "claves": [[1, 1], [12, 0.75], [24, 1]]}},
+      {"guardado": {"archivo": "mi_pelota.blend"}}
+    ],
+    "check": ["animacion", "archivo"]
   }
 }

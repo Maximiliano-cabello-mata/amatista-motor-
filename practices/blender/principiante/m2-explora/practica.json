@@ -127,5 +127,11 @@
     ],
     "objects": {"cubo": {"wire": true}},
     "camera": {"location": [5, -6, 4.5], "target": [0, 0, 1.5]}
+  },
+  "example": {
+    "title": "Cubo extruido y cortado",
+    "description": "Un cubo al que le sacas una cara con E y le haces un corte con Ctrl + R.",
+    "steps": [{"cubo": {"nombre": "Cubo", "vertices": 16, "caras": 14}}],
+    "check": ["malla"]
   }
 }

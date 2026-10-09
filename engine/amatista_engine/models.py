@@ -326,6 +326,22 @@ class ReferenceModel:
 
 
 @dataclass(frozen=True)
+class ExampleDefinition:
+    """El ejemplo resuelto de la práctica, en código (motor 3.5): ejemplo/pasos.py.
+
+    steps: la solución como pasos ({"cubo": {...}}, {"material": {...}}…), el mismo
+    idioma de pruebas.json. check: aspectos que se revisan (vacío = todos los
+    que tiene el ejemplo). auto: el cargador agregó el objetivo «ejemplo».
+    """
+
+    steps: Tuple[Dict[str, Any], ...]
+    title: str = ""
+    description: str = ""
+    check: Tuple[str, ...] = ()
+    auto: bool = False
+
+
+@dataclass(frozen=True)
 class StarterDefinition:
     """Cómo empieza la escena: vacía, con lo que hay o armada por el add-on.
 
@@ -372,6 +388,8 @@ class PracticeDefinition:
     starter: StarterDefinition = field(default_factory=StarterDefinition)
     # --- Motor 3.3: modelo de referencia (cómo debe verse la figura) ---
     reference: Optional[ReferenceModel] = None
+    # --- Motor 3.5: el ejemplo resuelto (lo que espera la práctica, en código) ---
+    example: Optional[ExampleDefinition] = None
 
     def target(self, target_id: str) -> Optional[TargetDefinition]:
         return next((t for t in self.targets if t.id == target_id), None)

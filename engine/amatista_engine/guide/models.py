@@ -65,7 +65,7 @@ class GuideAction:
     (tab: MODIFIER, MATERIAL, RENDER…), merge_by_distance, edit_mode,
     object_mode, add_light (light_type), add_camera, align_camera,
     set_engine, render (F12), insert_keyframe (axis), new_material y
-    clear_scene.
+    clear_scene. Motor 3.5: show_example (abre el ejemplo resuelto en su escena).
     """
 
     kind: str

@@ -161,5 +161,10 @@
       {"primitive": "plane", "size": [6, 6, 0], "color": "#c9dcef", "compare": false}
     ],
     "camera": {"location": [3.2, -8, 3.6], "target": [0, 0, 1.6]}
+  },
+  "example": {
+    "title": "Muñeco de nieve",
+    "description": "Tres esferas apiladas de mayor a menor y una nariz de cono girada hacia el frente.",
+    "steps": [{"referencia": {}}]
   }
 }

@@ -12,7 +12,7 @@ from typing import Any, Dict
 
 from ..figures.reconocer import ENCIMA, FLOTA, LADOS, SUELO, TOCA, biblioteca, identificar, perfil_para, reconocer
 from ..models import SceneState, TargetDefinition, ValidationResult
-from .base import number, result, text
+from .base import number, primitiva, result, text
 from .figure import EJES_TEXTO, _nombre_grupo, mensaje_de
 
 EJE_LADO = {0: "a lo largo", 1: "a lo ancho"}
@@ -57,12 +57,17 @@ def lista_de_revision(r, partes, scene: SceneState, etiquetas: Dict[str, str], f
         primitivas.setdefault(grupo, pieza.get("primitive", "cube"))
     tienes: Dict[str, int] = {}
     for obj in scene.objects:
-        grupo = r.deducidos.get(obj.name) or (obj.roles[0] if obj.roles else None)
+        if obj.object_type != "MESH":
+            continue
+        grupo = r.deducidos.get(obj.name) or next((g for g in obj.roles if g in esperadas), None)
+        if grupo is None and primitiva(obj.primitive) in esperadas:  # piezas sin rol: cuenta su primitiva
+            grupo = primitiva(obj.primitive)
         if grupo:
             tienes[grupo] = tienes.get(grupo, 0) + 1
     lista = []
     for grupo, juntas in esperadas.items():
         nombre = _nombre_grupo(grupo, etiquetas)
+        nombre = nombre[:1].upper() + nombre[1:]
         falta = 0 if grupo in flexibles and tienes.get(grupo) else len(juntas) - tienes.get(grupo, 0)
         consejo = ""
         if falta > 0:

@@ -158,6 +158,33 @@ class AMATISTA_OT_empezar_de_nuevo(bpy.types.Operator):
         return {"FINISHED"} if texto else {"CANCELLED"}
 
 
+class AMATISTA_OT_ver_ejemplo(bpy.types.Operator):
+    bl_idname = "amatista.ver_ejemplo"
+    bl_label = "Ver el ejemplo resuelto"
+    bl_description = ("Arma el ejemplo resuelto de la práctica en su propia escena para que lo mires y lo compares. "
+                      "Tu escena no cambia")
+
+    def execute(self, context):
+        from . import ejemplo
+
+        self.report({"INFO"}, ejemplo.ver_ejemplo(context))
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_volver_practica(bpy.types.Operator):
+    bl_idname = "amatista.volver_practica"
+    bl_label = "Volver a mi práctica"
+    bl_description = "Regresa de la escena del ejemplo a la escena de tu práctica"
+
+    def execute(self, context):
+        from . import ejemplo
+
+        texto = ejemplo.volver(context)
+        if texto:
+            self.report({"INFO"}, texto)
+        return {"FINISHED"} if texto else {"CANCELLED"}
+
+
 class AMATISTA_OT_actualizar_catalogo(bpy.types.Operator):
     bl_idname = "amatista.actualizar_catalogo"
     bl_label = "Actualizar lista"
@@ -308,6 +335,8 @@ CLASES = (
     AMATISTA_OT_practica_actual,
     AMATISTA_OT_elegir_practica,
     AMATISTA_OT_empezar_de_nuevo,
+    AMATISTA_OT_ver_ejemplo,
+    AMATISTA_OT_volver_practica,
     AMATISTA_OT_actualizar_catalogo,
     AMATISTA_OT_comprobar,
     AMATISTA_OT_sincronizar,
