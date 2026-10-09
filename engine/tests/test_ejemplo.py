@@ -253,3 +253,15 @@ def test_copiar_el_ejemplo_no_cambia_la_practica():
     antes = copy.deepcopy(practica.example.steps)
     escena_esperada(practica.example.steps, _partes(practica))
     assert practica.example.steps == antes
+
+
+def test_ejemplo_no_aprueba_silueta_omitida():
+    from dataclasses import replace
+
+    ruta = next(p for p in PRACTICAS if p.parent.name == 'm2-espada')
+    practica = load_practice(ruta)
+    esperada = escena_esperada(practica.example.steps, _partes(practica))
+    sin_evidencia = replace(esperada, objects=tuple(replace(o, silhouette=None) for o in esperada.objects))
+    resultado = revisar(practica, sin_evidencia)
+    assert not resultado.passed
+    assert any(not i['ok'] and 'silueta' in i['consejo'] for i in resultado.details['checklist'])

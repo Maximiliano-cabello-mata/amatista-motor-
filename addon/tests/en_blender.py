@@ -571,6 +571,9 @@ def probar_ejemplo(contexto):
         r = coincide(dataclasses.replace(objetivo, params={**objetivo.params, "aspects": aspectos}),
                      _motor.adapter.capture_scene(sc))
         revisar(r.passed, f"{practica_id}: el ejemplo armado en Blender coincide en {aspectos} ({r.message})")
+        enviada = _motor.foto.scene_from_dict(practicas._foto_para_enviar(sc, practica))
+        revisada = coincide(dataclasses.replace(objetivo, params={**objetivo.params, "aspects": aspectos}), enviada)
+        revisar(revisada.passed, f"{practica_id}: la foto enviada conserva la evidencia del ejemplo")
         datos = enlace._datos()
         revisar(datos.get("practica_id") == practica_id and (datos.get("detalle") or {}).get("modo") == "EJEMPLO",
                 f"{practica_id}: el latido dice que Blender muestra el ejemplo ({datos})")
@@ -688,7 +691,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "3.5.0", "el intento lleva la versión 3.5 del add-on")
+    revisar(datos["version_addon"] == "3.5.1", "el intento lleva la versión 3.5 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"

@@ -168,9 +168,10 @@ def test_sin_malla_pide_un_cubo(piezas):
     assert not r.passed and "Shift + A" in r.message and len(r.details["checklist"]) == 5
 
 
-def test_una_foto_vieja_sin_silueta_no_bloquea(piezas):
+def test_una_foto_sin_silueta_no_se_aprueba(piezas):
     r = silhouette(objetivo(piezas), escena_con(None))
-    assert r.passed and r.details["no_silhouette"]
+    assert not r.passed and r.details["no_silhouette"]
+    assert "Pendiente de verificación" in r.message
 
 
 def test_en_el_nivel_5_cuenta_el_tamano(piezas):

@@ -145,8 +145,9 @@ def _figura(esperada: SceneState, alumno: SceneState, perfil: Perfil, partes: Se
             a.punto(titulo or "Tu malla", False, "Agrega un cubo (Shift + A › Malla › Cubo): de ahí sale la figura.")
             return a
         if not con_silueta or modelo is None:
-            a.punto(titulo or "La silueta", True, "Actualiza el add-on Amatista Motor para que revise la silueta.",
-                    "Detalle")
+            a.punto(titulo or "La silueta", False,
+                    "No se pudo verificar la silueta. Actualiza Amatista Motor; si persiste, simplifica la malla y vuelve a comprobar.",
+                    "Revisar")
             return a
         from ..validators.silhouette import mejor_malla
 

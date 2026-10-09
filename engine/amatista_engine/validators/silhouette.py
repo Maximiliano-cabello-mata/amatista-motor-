@@ -63,10 +63,10 @@ def silhouette(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     obj, revision = mejor_malla(mallas, modelo, tramos, perfil.id)
     detalles["object"] = obj.name
     if revision is None:
-        # Fotos del add-on 3.4 o mallas enormes: no se puede revisar; no se bloquea al alumno.
+        # Sin evidencia no se aprueba: una captura antigua o demasiado grande debe repetirse.
         detalles["no_silhouette"] = True
-        return result(target, True, "Amatista no pudo medir la silueta de tu malla (actualiza el add-on "
-                                    "Amatista Motor para que la revise).", detalles)
+        return result(target, False, "Pendiente de verificación: Amatista no pudo medir la silueta de tu malla (actualiza el add-on "
+                                    "Amatista Motor; si persiste, simplifica la malla y vuelve a comprobar).", detalles)
 
     lista = lista_de_revision(revision)
     porcentaje = round(revision.puntaje * 100)

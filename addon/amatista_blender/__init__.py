@@ -26,7 +26,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (3, 5, 0),
+    "version": (3, 5, 1),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Prácticas guiadas de Amatista dentro de Blender",
