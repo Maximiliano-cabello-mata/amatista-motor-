@@ -9,9 +9,10 @@ no bloquear: Blender sigue abierto para experimentar.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 
 from ..models import PracticeDefinition, SceneState, ToolWarning
 
@@ -30,6 +31,33 @@ class Tool:
     category: str = ""
     description: str = ""
     detect: Dict[str, object] = field(default_factory=dict)
+    # Motor 3.4 (modo enfocado): teclas que la delatan en un paso, cómo se
+    # usa (pasos del diálogo «¿Cómo se usa?»), el error típico y la acción
+    # del botón «Usar» en Blender (tool, operator, menu, panel o tab).
+    keys: Tuple[str, ...] = ()
+    howto: Tuple[str, ...] = ()
+    mistake: str = ""
+    action: Dict[str, Any] = field(default_factory=dict)
+
+    def as_dict(self) -> Dict[str, Any]:
+        return {"id": self.id, "name": self.name, "shortcut": self.shortcut, "level": self.minimum_level,
+                "category": self.category, "description": self.description, "keys": list(self.keys),
+                "howto": list(self.howto), "mistake": self.mistake, "action": dict(self.action)}
+
+
+def _combos(teclas: Sequence[str]) -> set:
+    """("Shift", "D", "X") → {"Shift", "D", "X", "Shift+D", "D+X"}: teclas sueltas y combinaciones."""
+    teclas = [str(t).strip() for t in teclas if str(t).strip()]
+    salida = {t.lower() for t in teclas}
+    salida |= {f"{a}+{b}".lower() for a, b in zip(teclas, teclas[1:])}
+    return salida
+
+
+def _en_texto(tecla: str, texto: str) -> bool:
+    """¿El texto cita la tecla? «Shift+D», «pulsa S»... (mayúsculas exactas, palabra completa)."""
+    if not texto or not tecla:
+        return False
+    return re.search(rf"(?<![\w+.]){re.escape(tecla)}(?![\w+.])", texto) is not None
 
 
 class ToolRegistry:
@@ -48,6 +76,10 @@ class ToolRegistry:
                 category=t.get("category", ""),
                 description=t.get("description", ""),
                 detect=dict(t.get("detect", {})),
+                keys=tuple(t.get("keys", ())),
+                howto=tuple(t.get("howto", ())),
+                mistake=t.get("mistake", ""),
+                action=dict(t.get("action", {})),
             )
             for t in datos["tools"]
         )
@@ -60,6 +92,26 @@ class ToolRegistry:
 
     def all(self) -> Tuple[Tool, ...]:
         return tuple(sorted(self._tools.values(), key=lambda t: (t.minimum_level, t.category, t.name)))
+
+    def for_practice(self, practice: PracticeDefinition) -> Tuple[Tool, ...]:
+        """Las herramientas que la práctica permite, en el orden del autor (modo enfocado)."""
+        return tuple(t for t in (self.get(i) for i in practice.allowed_tools) if t is not None)
+
+    def for_step(self, practice: PracticeDefinition, keys: Iterable[Sequence[str]] = (),
+                 text: str = "") -> Tuple[Tool, ...]:
+        """Las herramientas de la práctica que usa el paso actual.
+
+        keys: las teclas de cada micro paso de la guía; text: el consejo y los
+        pasos escritos. Una herramienta cuenta si alguna de sus teclas aparece.
+        """
+        pulsadas = set()
+        for grupo in keys:
+            pulsadas |= _combos(grupo)
+        salida = []
+        for tool in self.for_practice(practice):
+            if any(k.lower() in pulsadas or _en_texto(k, text) for k in tool.keys):
+                salida.append(tool)
+        return tuple(salida)
 
     def detect_used(self, scene: SceneState) -> Tuple[str, ...]:
         """Herramientas cuya huella aparece en la escena."""

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from ..registry import ParamSpec as P
 from ..registry import ValidatorRegistry
-from . import animation, figure, lighting, logic, materials, mesh, objects, scene, shape, spatial, transforms
+from . import animation, figure, lighting, logic, materials, mesh, objects, recognize, scene, shape, spatial, transforms
 
 # Parámetros comunes del selector de objetos (validators/base.py).
 SELECTOR = (
@@ -283,6 +283,25 @@ def _registrar_v3(registry: ValidatorRegistry) -> None:
             P("parts", "reference", "Piezas del modelo (de «reference»)"),
             P("labels", "reference", "Nombres de los roles (de «roles»)"),
             P("flexible", "reference", "Grupos con cantidad libre (de «reference»)"),
+        ),
+        watch=TRANSFORMACION + ("OBJECT_DATA",),
+    )
+    # --- Motor 3.4: el motor reconoce la figura (figures/reconocer.py) ---
+    r(
+        "figure.recognize", recognize.recognize, label="Amatista reconoce la figura", category="forma",
+        description=("Reconoce la figura del modelo de referencia sin roles: deduce qué es cada pieza por su forma, "
+                     "revisa que las piezas se apoyen, se toquen y vayan a los lados como en el modelo, que nada "
+                     "flote y dice qué figura parece. La exigencia sube con el nivel (forma identificable en el 1, "
+                     "medidas exactas en el 5); las piezas de adorno no restan."),
+        params=(
+            P("strictness", "text", "Exigencia (forma, proporcion, cercana, medidas, exacta; vacío = la del nivel)"),
+            P("min_score", "float", "Parecido mínimo (0 a 1; vacío = el de la exigencia)"),
+            # Los pone el cargador desde «reference», «roles» y «level»; no se escriben a mano.
+            P("parts", "reference", "Piezas del modelo (de «reference»)"),
+            P("labels", "reference", "Nombres de los roles (de «roles»)"),
+            P("flexible", "reference", "Grupos con cantidad libre (de «reference»)"),
+            P("level", "reference", "Nivel de la práctica (de «level»)"),
+            P("title", "reference", "Nombre de la figura (de «reference.title»)"),
         ),
         watch=TRANSFORMACION + ("OBJECT_DATA",),
     )

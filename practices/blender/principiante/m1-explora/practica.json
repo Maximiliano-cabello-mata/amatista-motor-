@@ -121,8 +121,8 @@
     },
     {
       "id": "figura",
-      "title": "Se parece al muñeco del modelo",
-      "validator": "figure.resembles",
+      "title": "Amatista reconoce tu muñeco",
+      "validator": "figure.recognize",
       "params": {},
       "weight": 50,
       "requires": ["nariz-girada"],

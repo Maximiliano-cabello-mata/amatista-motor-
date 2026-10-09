@@ -250,8 +250,43 @@ def _barra(shader, x, y, ancho, alto, factor, color):
     _panel(shader, x + alto / 2, y + alto * 0.55, max(0.0, lleno - alto), alto * 0.3, (1, 1, 1, 0.22), alto * 0.15)
 
 
-def _alto_instruccion(paso, tam, ancho_texto):
-    return max(1, len(_partir(paso.text, tam, ancho_texto, 2))) * (tam + 5) + 6
+def _ancho_teclas(teclas, tam_chico, escala):
+    """Lo que ocupan el número y las teclas de un micro paso (igual al dibujarlo)."""
+    ancho = 16 * escala
+    for i, tecla in enumerate(teclas):
+        if i:
+            ancho += 12 * escala
+        ancho += max(_ancho(tecla, tam_chico) + 10 * escala, 18 * escala) + 2 * escala
+    return ancho + 6 * escala
+
+
+def _alto_instruccion(paso, tam, ancho_texto, escala=1.0, tam_chico=10):
+    # Mismo ancho que al dibujar: antes se suponían 120 px de teclas y con tres
+    # teclas el texto partía en más líneas de las calculadas y se salía de la tarjeta.
+    libre = ancho_texto - _ancho_teclas(paso.keys, tam_chico, escala)
+    lineas = max(1, len(_partir(paso.text, tam, libre, 2)))
+    return tam + 9 * escala + (lineas - 1) * (tam + 5 * escala)
+
+
+def _origen(contexto, margen, escala):
+    """Esquina inferior izquierda libre: a la derecha de la barra T y encima del
+    panel «Ajustar última operación» (que Blender abre abajo a la izquierda al
+    agregar un cubo y tapaba la tarjeta)."""
+    x, y = margen, margen + 24 * escala
+    area, ventana = contexto.area, contexto.region
+    if area is None or ventana is None:
+        return x, y
+    superpuestas = contexto.preferences.system.use_region_overlap
+    for region in area.regions:
+        if region.width <= 1 or region.height <= 1:
+            continue  # región escondida
+        if region.type == "TOOLS" and superpuestas:
+            x = max(x, region.x - ventana.x + region.width + 8 * escala)
+        elif region.type == "HUD":
+            arriba = region.y - ventana.y + region.height
+            if 0 < arriba < ventana.height * 0.6:
+                y = max(y, arriba + 10 * escala)
+    return x, y
 
 
 # --- Tarjetas -----------------------------------------------------------------------------------
@@ -417,10 +452,10 @@ def dibujar():
     instrucciones = list(g.instructions[:4]) if g and not g.completed else []
     alto = (70 if g else 98) * escala
     if g:
-        alto += len(lineas_feedback) * (tam + 5) + 8 * escala
-        alto += sum(_alto_instruccion(i, tam, ancho_texto - 120 * escala) for i in instrucciones)
+        alto += len(lineas_feedback) * (tam + 5 * escala) + 8 * escala
+        alto += sum(_alto_instruccion(i, tam, ancho_texto, escala, tam_chico) for i in instrucciones)
         alto += 22 * escala
-    x, y = margen, margen + 24 * escala
+    x, y = _origen(contexto, margen, escala)
 
     shader = gpu.shader.from_builtin("UNIFORM_COLOR")
     gpu.state.blend_set("ALPHA")
@@ -460,7 +495,7 @@ def dibujar():
     if g.tone == "cerca":
         color_tono = pal["acento"]
     for linea in lineas_feedback:
-        cursor -= tam + 5
+        cursor -= tam + 5 * escala
         _texto(x + relleno, cursor, linea, tam, color_tono)
     cursor -= 6 * escala
     for numero, paso in enumerate(instrucciones, start=1):
@@ -479,8 +514,8 @@ def dibujar():
         cx += 6 * escala
         lineas = _partir(paso.text, tam, x + ancho - relleno - cx, 2)
         for j, linea in enumerate(lineas):
-            _texto(cx, cursor - j * (tam + 5), linea, tam, TEXTO)
-        cursor -= (len(lineas) - 1) * (tam + 5)
+            _texto(cx, cursor - j * (tam + 5 * escala), linea, tam, TEXTO)
+        cursor -= (len(lineas) - 1) * (tam + 5 * escala)
     _rectangulo(shader, x + relleno, y + 26 * escala, ancho_texto, 1 * escala, (1, 1, 1, 0.06))
     _pie(x + relleno, y + 10 * escala, ancho_texto, tam_chico, g)
 

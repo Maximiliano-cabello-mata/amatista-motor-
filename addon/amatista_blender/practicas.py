@@ -16,7 +16,7 @@ from pathlib import Path
 import bpy
 from bpy.app.handlers import persistent
 
-from . import _motor, ajustes, aprendizaje, escenarios, guia, red, temas
+from . import _motor, ajustes, aprendizaje, enfoque, enlace, escenarios, guia, red, temas
 
 # Estado de la sesión de Blender (no se guarda en el .blend).
 ESTADO = {
@@ -70,6 +70,8 @@ def archivo_de_referencia(practica_id, nombre):
     carpeta = _CARPETAS_PRACTICA.get(practica_id)
     archivo = carpeta / nombre if carpeta else None
     return archivo if archivo and archivo.is_file() else None
+
+
 # Solo el modo desarrollador ve las prácticas de prueba y las archivadas (v2).
 CARPETAS_DESARROLLO = ("sandbox", "archivo")
 
@@ -233,10 +235,34 @@ def activar(context, datos, origen="paquete"):
         print(f"[Amatista] No se pudo aplicar el ambiente del tema: {error}")
     if preparada:
         guia.avisar("Escena lista", temas.voz(tema, preparada) if tema else preparada, "animo")
+    try:
+        enfoque.al_abrir_practica(resultado.practice, nueva)
+    except Exception as error:  # noqa: BLE001 - enfocar es comodidad: nunca impide practicar
+        print(f"[Amatista] No se pudo enfocar Blender: {error}")
     evaluar(context, "abrir")
     if nueva:
         _abrir_teoria(resultado.practice)
+    enlace.latir_pronto()
     return resultado
+
+
+def mostrar_en_amatista(context=None):
+    """Lleva la barra lateral a Amatista › Practicar (al abrir desde la plataforma)."""
+    context = context or bpy.context
+    wm = getattr(context, "window_manager", None)
+    if wm is not None and hasattr(wm, "amatista"):
+        wm.amatista.pestana = "practicar"
+    for ventana in getattr(wm, "windows", ()) or ():
+        for area in ventana.screen.areas:
+            if area.type == "VIEW_3D":
+                area.spaces.active.show_region_ui = True
+                for region in area.regions:
+                    if region.type == "UI":
+                        try:
+                            region.active_panel_category = "Amatista"
+                        except (AttributeError, TypeError, ValueError):
+                            pass
+    redibujar()
 
 
 def _abrir_teoria(practica):
@@ -260,6 +286,11 @@ def cerrar(context):
     sc.amatista.practica_json = ""
     ESTADO.update(reporte=None, clave=None, practica=None, sync="")
     guia.reiniciar()
+    try:
+        enfoque.desactivar()
+    except Exception as error:  # noqa: BLE001
+        print(f"[Amatista] No se pudo salir del modo enfocado: {error}")
+    enlace.latir_pronto()
     redibujar()
 
 
@@ -350,6 +381,7 @@ def evaluar(context=None, motivo="manual"):
         _invocar("amatista.felicitar")
     if anterior is None or anterior.progress != reporte.progress or anterior.completed != reporte.completed:
         programar_sincronizacion()
+        enlace.latir_pronto()  # la plataforma ve el avance en vivo
     return reporte
 
 
@@ -582,6 +614,9 @@ def _al_abrir(*_args):
     if bpy.context.scene and bpy.context.scene.amatista.practica_json:
         bpy.app.timers.register(lambda: (evaluar(bpy.context, "abrir"), None)[1], first_interval=0.3)
         bpy.app.timers.register(_ambiente_al_abrir, first_interval=0.35)
+    else:
+        enfoque.desactivar()
+    enfoque.al_abrir_archivo()
 
 
 def _ambiente_al_abrir():
@@ -592,6 +627,9 @@ def _ambiente_al_abrir():
             escenarios.aplicar_ambiente(sc, sc.amatista.practica_id)
         except Exception as error:  # noqa: BLE001
             print(f"[Amatista] No se pudo aplicar el ambiente del tema: {error}")
+        practica = practica_activa()
+        if practica is not None:
+            enfoque.al_abrir_practica(practica, nueva=False)  # las vistas del archivo nuevo
     return None
 
 

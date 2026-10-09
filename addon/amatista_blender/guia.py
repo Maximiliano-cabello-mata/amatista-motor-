@@ -209,6 +209,13 @@ def ejecutar_accion(context, accion, interactivo=True):
                 bpy.ops.mesh.primitive_cube_add()
         else:
             bpy.ops.mesh.primitive_cube_add()
+        practica = practicas.practica_activa(context)
+        if practica is not None and practica.infers_roles:
+            return "Agregamos un cubo: Amatista lo reconoce por su forma. Dale la forma del modelo con S y G."
+        if accion.role and context.active_object is not None:
+            # El rol venía en la acción y no se ponía: el alumno tenía que asignarlo a mano.
+            _motor.tagger.assign_role(context.active_object, accion.role)
+            return f"Agregamos un cubo y ya es «{practica.role_label(accion.role) if practica else accion.role}»."
         return "Agregamos un cubo. Ahora dile a Amatista qué es."
 
     texto = _accion_v3(context, accion, interactivo)

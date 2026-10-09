@@ -72,7 +72,24 @@ class AmatistaEngine:
             )
         return result
 
+    def infer_roles(self, practice: PracticeDefinition, scene: SceneState):
+        """Motor 3.4: roles deducidos por la forma para las mallas sin rol ({objeto: rol})."""
+        referencia = practice.reference
+        if not practice.infers_roles:
+            return {}
+        from .figures import inferir_roles
+        from .practice.loader import pieza_como_dict
+
+        partes = [pieza_como_dict(p) for p in referencia.compared if p.role]
+        return inferir_roles(partes, scene.objects) if partes else {}
+
     def evaluate(self, practice: PracticeDefinition, scene: SceneState) -> EvaluationReport:
+        # Motor 3.4: el alumno ya no tiene que poner roles; el motor reconoce cada pieza por su forma.
+        deducidos = self.infer_roles(practice, scene)
+        if deducidos:
+            from .figures import con_roles
+
+            scene = con_roles(scene, deducidos)
         results = tuple(self._validar(target, scene, practice) for target in practice.targets)
         by_id = {result.target_id: result for result in results}
         progress = calculate_progress(practice.targets, by_id)
@@ -103,6 +120,7 @@ class AmatistaEngine:
             needs_update=any(r.details.get("reason") == "unknown_validator" for r in results + vigilancia),
             guards=vigilancia,
             paused_by=pausa,
+            inferred_roles=tuple(sorted(deducidos.items())),
         )
 
     def guide(self, practice: PracticeDefinition, scene: SceneState, report: Optional[EvaluationReport] = None):

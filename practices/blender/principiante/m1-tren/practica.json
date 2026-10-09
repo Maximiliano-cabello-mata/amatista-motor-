@@ -85,7 +85,7 @@
       "weight": 15,
       "tip": "Cada vagón es un cubo. Agrega uno y después duplícalo con Shift+D.",
       "hints": [
-        "Shift+A › Malla › Cubo, y en la pestaña Amatista dile que es «Vagón».",
+        "Shift+A › Malla › Cubo: Amatista reconoce solo que es un vagón por su forma.",
         "Con el vagón seleccionado, Shift+D crea una copia que conserva el rol."
       ],
       "guide": {"why": "Un tren se arma con piezas sencillas: el cubo es la base de casi todo en 3D."}
@@ -114,7 +114,7 @@
       "requires": ["vagones"],
       "tip": "Las ruedas son cilindros: cuatro por vagón, dos de cada lado. Haz una y duplícala.",
       "hints": [
-        "Shift+A › Malla › Cilindro y asígnale el rol «Rueda».",
+        "Shift+A › Malla › Cilindro y aplánalo: Amatista lo reconoce como rueda.",
         "Cuando tengas las cuatro de un vagón, selecciónalas con Shift+clic y Shift+D las copia con su rol al otro vagón."
       ],
       "messages": {"pass": "¡Ocho ruedas listas!"}
@@ -182,7 +182,7 @@
       "validator": "object.count",
       "params": {"role": "chimenea", "primitive": "cylinder", "min": 1},
       "weight": 5,
-      "tip": "Un cilindro delgado y alto sobre la locomotora, con el rol «Chimenea» (S Z para estirarlo).",
+      "tip": "Un cilindro delgado y alto apoyado sobre la locomotora (S Z para estirarlo).",
       "requires": ["vagones"],
       "hints": [
         "Shift+A › Malla › Cilindro, S 0.3 y luego S Z 2.",
@@ -191,8 +191,8 @@
     },
     {
       "id": "figura",
-      "title": "Se parece al tren del modelo",
-      "validator": "figure.resembles",
+      "title": "Amatista reconoce tu tren",
+      "validator": "figure.recognize",
       "params": {},
       "weight": 15,
       "requires": ["ruedas-unidas", "tren-unido", "chimenea"],
@@ -202,7 +202,7 @@
         "Si una pieza se ve muy grande o muy chica junto a las demás, escálala con S."
       ],
       "guide": {
-        "why": "Pasar cada paso no basta: las piezas tienen que formar un tren. Amatista compara tu figura completa con el modelo, aunque sea más grande, más chica o esté girada."
+        "why": "Pasar cada paso no basta: las piezas tienen que formar un tren. Amatista reconoce tu figura completa: que las ruedas toquen el suelo y vayan a los dos lados, que la chimenea esté encima y que nada flote. En el nivel 1 las medidas son libres."
       }
     },
     {

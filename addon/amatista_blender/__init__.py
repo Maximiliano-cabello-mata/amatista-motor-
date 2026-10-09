@@ -11,13 +11,17 @@ Amatista Engine:
 - Desarrollador (Author): Tagger, Inspector, constructor de objetivos,
   depurador, compilador y publicación en Amatista.
 
+Motor 3.4: la plataforma maneja Blender (enlace.py: Blender late cada pocos
+segundos y recibe órdenes como «abrir esta práctica») y el modo enfocado
+(enfoque.py) deja a la vista solo las herramientas de la práctica.
+
 Nada pesado al importar: la red y la evaluación arrancan con temporizadores.
 Documentación: docs/motor/ en el repositorio.
 """
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (3, 3, 0),
+    "version": (3, 4, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Prácticas guiadas de Amatista dentro de Blender",
@@ -26,8 +30,8 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import ajustes, cuenta, desarrollo, escenarios, estado, operadores, practicas
-from .interfaz import aprender, dialogos, estilo, hud, paneles
+from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, operadores, practicas
+from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
 
 CLASES = (
     (ajustes.PreferenciasAmatista,)
@@ -35,6 +39,7 @@ CLASES = (
     + desarrollo.CLASES
     + dialogos.CLASES
     + aprender.CLASES
+    + herramientas.CLASES
     + paneles.CLASES
 )
 
@@ -55,6 +60,7 @@ def register():
     for clase in CLASES:
         bpy.utils.register_class(clase)
     practicas.register()
+    enlace.register()
     hud.register()
     bpy.app.timers.register(_primer_arranque, first_interval=1.5)
 
@@ -66,6 +72,8 @@ def unregister():
         escenarios.restaurar_todo()  # el cielo del tema vuelve a como estaba
     except Exception as error:  # noqa: BLE001 - desregistrar nunca debe fallar
         print(f"[Amatista] No se pudo restaurar el mundo: {error}")
+    enfoque.unregister()  # Blender completo otra vez, como estaba
+    enlace.unregister()
     hud.unregister()
     practicas.unregister()
     for clase in reversed(CLASES):

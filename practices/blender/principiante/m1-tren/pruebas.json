@@ -199,6 +199,30 @@
       "nombre": "Solución: el modelo de referencia, armado a mano (medidas ±8 %)",
       "construir": [{"referencia": {"variacion": 0.08, "semilla": 7}}, {"guardado": {"archivo": "/home/alumno/mi_tren.blend"}}],
       "espera": {"completada": true, "progreso_min": 100}
+    },
+    {
+      "nombre": "Motor 3.4: sin poner roles, Amatista reconoce cada pieza",
+      "construir": [{"referencia": {"roles": false, "variacion": 0.1, "semilla": 7}}, {"guardado": {"archivo": "/home/alumno/mi_tren.blend"}}],
+      "espera": {"completada": true, "progreso_min": 100}
+    },
+    {
+      "nombre": "Motor 3.4: con adornos propios (faro y bandera) sigue siendo un tren",
+      "construir": [
+        {"referencia": {"roles": false}},
+        {"esfera": {"nombre": "Faro", "dims": [0.3, 0.3, 0.3], "loc": [2.4, 0, 1.0]}},
+        {"cono": {"nombre": "Bandera", "dims": [0.2, 0.2, 0.4], "loc": [-1.15, 0, 1.55]}},
+        {"guardado": {"archivo": "/home/alumno/mi_tren.blend"}}
+      ],
+      "espera": {"completada": true}
+    },
+    {
+      "nombre": "Sin sentido: la chimenea flota sobre la locomotora",
+      "construir": [
+        {"referencia": {"sin": ["chimenea"], "roles": false}},
+        {"cilindro": {"nombre": "Chimenea", "dims": [0.4, 0.4, 0.7], "loc": [1.9, 0, 2.6]}},
+        {"guardado": {"archivo": "/home/alumno/mi_tren.blend"}}
+      ],
+      "espera": {"completada": false, "actual": "figura"}
     }
   ]
 }

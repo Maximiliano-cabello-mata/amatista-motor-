@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "3.3.0"
+VERSION_ADDON = "3.4.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -74,6 +74,18 @@ def _al_cambiar_hud(self, context):
     from .interfaz import hud
 
     hud.activar(self.mostrar_hud)
+
+
+def _al_cambiar_enfoque(self, context):
+    from . import enfoque, enlace, practicas
+
+    practica = practicas.practica_activa(context)
+    if practica is not None:
+        enfoque.ESTADO["rechazado"] = ""
+        enfoque.al_abrir_practica(practica, nueva=False)
+    elif self.enfoque == "nunca":
+        enfoque.desactivar()
+    enlace.latir_pronto()
 
 
 class PreferenciasAmatista(bpy.types.AddonPreferences):
@@ -140,6 +152,17 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         name="o tras (segundos)", description="Tiempo en el mismo paso antes de preguntar «¿Te ayudo?»",
         default=120, min=30, max=900,
     )
+    enfoque: bpy.props.EnumProperty(
+        name="Modo enfocado",
+        description="Esconde lo que la práctica no usa y deja a mano solo sus herramientas",
+        items=[
+            ("auto", "Según el nivel", "Enfocado en los niveles 1 y 2; Blender completo después", "AUTO", 0),
+            ("siempre", "Siempre", "Siempre solo las herramientas de la práctica", "HIDE_ON", 1),
+            ("nunca", "Nunca", "Blender completo, como siempre", "HIDE_OFF", 2),
+        ],
+        default="auto",
+        update=_al_cambiar_enfoque,
+    )
     avisar_herramientas: bpy.props.BoolProperty(
         name="Avisar herramientas de otro nivel",
         description="Muestra un aviso (no bloquea) si usas una herramienta de un nivel posterior",
@@ -176,6 +199,13 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         fila = sub.row(align=True)
         fila.prop(self, "ayuda_tras_intentos")
         fila.prop(self, "ayuda_tras_segundos")
+
+        caja = layout.box()
+        caja.label(text="Modo enfocado", icon="HIDE_ON")
+        caja.row().prop(self, "enfoque", expand=True)
+        nota = caja.row()
+        nota.active = False
+        nota.label(text="También lo puedes elegir en la plataforma, en «Mi Blender».")
 
         caja = layout.box()
         caja.label(text="Práctica", icon="PREFERENCES")

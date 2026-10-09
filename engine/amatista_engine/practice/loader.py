@@ -33,6 +33,7 @@ from .schema import (
     ARREGLOS,
     CAMPOS_PIEZA,
     CAMPOS_REFERENCIA,
+    EXIGENCIAS,
     MAX_PIEZAS,
     PRIMITIVAS_REFERENCIA,
     CAMPOS_OBJETIVO,
@@ -433,7 +434,17 @@ def _referencia(raw: Any, e: _Errores) -> Optional[ReferenceModel]:
     if not isinstance(luces, list) or not all(isinstance(x, dict) for x in luces):
         e.add("'reference.lights' debe ser una lista de luces {type, location, energy}")
         luces = []
+    exigencia = raw.get("strictness") or ""
+    if exigencia and exigencia not in EXIGENCIAS:
+        e.add(f"'reference.strictness' debe ser una de: {', '.join(EXIGENCIAS)}")
+        exigencia = ""
+    auto = raw.get("autoRoles")
+    if auto is not None and not isinstance(auto, bool):
+        e.add("'reference.autoRoles' debe ser true o false")
+        auto = None
     return ReferenceModel(
+        strictness=exigencia,
+        auto_roles=auto,
         lights=tuple(luces),
         flexible=tuple(flexibles),
         parts=tuple(piezas),
@@ -454,18 +465,31 @@ def _etiquetas(roles) -> Dict[str, str]:
     return {r.id: r.label for r in roles or () if r.label}
 
 
-def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[ReferenceModel], roles, e: _Errores):
-    """figure.resembles sin «parts» toma las piezas y la holgura de «reference» (y los nombres de los roles)."""
+FIGURAS = ("figure.resembles", "figure.recognize")
+
+
+def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[ReferenceModel], roles, e: _Errores,
+                    nivel: int = 1):
+    """figure.resembles y figure.recognize sin «parts» toman las piezas y la holgura de «reference».
+
+    También los nombres de los roles y, para figure.recognize (motor 3.4), el nivel, la exigencia y el título.
+    """
     salida = []
     for objetivo in objetivos:
-        if objetivo.validator == "figure.resembles" and "parts" not in objetivo.params:
+        if objetivo.validator in FIGURAS and "parts" not in objetivo.params:
             if referencia is None or not referencia.compared:
-                e.add(f"'{objetivo.id}': figure.resembles necesita 'reference' con piezas en la práctica")
+                e.add(f"'{objetivo.id}': {objetivo.validator} necesita 'reference' con piezas en la práctica")
             else:
                 params = {"tolerance": referencia.tolerance, "labels": _etiquetas(roles), **objetivo.params,
                           "parts": [pieza_como_dict(p) for p in referencia.compared]}
                 if referencia.flexible:
                     params.setdefault("flexible", list(referencia.flexible))
+                if objetivo.validator == "figure.recognize":
+                    params.setdefault("level", nivel)
+                    if referencia.strictness:
+                        params.setdefault("strictness", referencia.strictness)
+                    if referencia.title:
+                        params.setdefault("title", referencia.title)
                 objetivo = replace(objetivo, params=params)
         salida.append(objetivo)
     return salida
@@ -558,8 +582,8 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
 
     referencia = _referencia(data.get("reference"), e)
     roles = _roles(data.get("roles"), e)
-    targets = _con_referencia(targets, referencia, roles, e)
-    vigilantes = _con_referencia(vigilantes, referencia, roles, e)
+    targets = _con_referencia(targets, referencia, roles, e, level)
+    vigilantes = _con_referencia(vigilantes, referencia, roles, e, level)
 
     practica = PracticeDefinition(
         schema=schema,
@@ -643,9 +667,9 @@ def dump_practice(practice: PracticeDefinition) -> Dict[str, Any]:
         datos["pills"] = [_dump_pildora(p) for p in practice.pills]
     if practice.review:
         datos["review"] = list(practice.review)
-    datos["targets"] = [_dump_objetivo(t, practice.reference, practice.roles) for t in practice.targets]
+    datos["targets"] = [_dump_objetivo(t, practice.reference, practice.roles, practice.level) for t in practice.targets]
     if practice.guards:
-        datos["guards"] = [_dump_objetivo(g, practice.reference, practice.roles) for g in practice.guards]
+        datos["guards"] = [_dump_objetivo(g, practice.reference, practice.roles, practice.level) for g in practice.guards]
     if practice.reference is not None:
         datos["reference"] = _dump_referencia(practice.reference)
     return datos
@@ -684,6 +708,10 @@ def _dump_referencia(r: ReferenceModel) -> Dict[str, Any]:
         salida["flexible"] = list(r.flexible)
     if r.lights:
         salida["lights"] = [dict(x) for x in r.lights]
+    if r.strictness:
+        salida["strictness"] = r.strictness
+    if r.auto_roles is not None:
+        salida["autoRoles"] = r.auto_roles
     return salida
 
 
@@ -702,15 +730,20 @@ def _dump_pildora(p: PillDefinition) -> Dict[str, Any]:
     return salida
 
 
-def _dump_objetivo(t: TargetDefinition, referencia: Optional[ReferenceModel] = None, roles=()) -> Dict[str, Any]:
+def _dump_objetivo(t: TargetDefinition, referencia: Optional[ReferenceModel] = None, roles=(),
+                   nivel: int = 1) -> Dict[str, Any]:
     objetivo: Dict[str, Any] = {"id": t.id}
     if t.title:
         objetivo["title"] = t.title
     objetivo["validator"] = t.validator
     objetivo["params"] = dict(t.params)
-    if t.validator == "figure.resembles" and referencia is not None:
+    if t.validator in FIGURAS and referencia is not None:
         # Las piezas viven en «reference»; el objetivo solo guarda lo propio.
         objetivo["params"].pop("parts", None)
+        if t.validator == "figure.recognize":
+            for clave, valor in (("level", nivel), ("strictness", referencia.strictness), ("title", referencia.title)):
+                if objetivo["params"].get(clave) == valor:
+                    objetivo["params"].pop(clave)
         if objetivo["params"].get("tolerance") == referencia.tolerance:
             objetivo["params"].pop("tolerance")
         if objetivo["params"].get("labels") == _etiquetas(roles):

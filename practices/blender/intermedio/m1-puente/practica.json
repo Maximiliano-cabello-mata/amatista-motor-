@@ -57,8 +57,8 @@
       "validator": "role.count",
       "params": {"role": "tablero", "min": 1},
       "weight": 10,
-      "tip": "Un cubo plano y alargado con el rol «Tablero».",
-      "hints": ["S Z 0.1 lo aplana.", "En la pestaña Amatista dile que es «Tablero»."]
+      "tip": "Un cubo plano y alargado: Amatista lo reconoce como el tablero.",
+      "hints": ["S Z 0.1 lo aplana.", "Amatista lo reconoce por su forma; si no, ponle el rol «Tablero» en la pestaña Amatista."]
     },
     {
       "id": "tablones",
@@ -122,8 +122,8 @@
     },
     {
       "id": "figura",
-      "title": "Se parece al puente del modelo",
-      "validator": "figure.resembles",
+      "title": "Amatista reconoce tu puente",
+      "validator": "figure.recognize",
       "params": {},
       "weight": 15,
       "requires": ["sobre-pilares"],

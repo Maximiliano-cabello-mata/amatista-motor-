@@ -18,7 +18,7 @@ import time
 import bpy
 
 from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, integridad, practicas, red, temas
-from . import aprender, dialogos, estilo
+from . import aprender, dialogos, estilo, herramientas
 
 CATEGORIA = "Amatista"
 ESTADOS_SYNC = {
@@ -498,6 +498,28 @@ class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
                 _dibujar_detalle(contenedor, context, reporte.result(objetivo.id))
 
 
+class AMATISTA_PT_herramientas(_Base, bpy.types.Panel):
+    """Motor 3.4: solo las herramientas de la práctica, con «Usar» y «¿Cómo se usa?»."""
+
+    bl_idname = "AMATISTA_PT_herramientas"
+    bl_label = "Tus herramientas"
+    bl_parent_id = "AMATISTA_PT_principal"
+
+    @classmethod
+    def poll(cls, context):
+        return seccion(context, "practicar") and practicas.practica_activa(context) is not None
+
+    def draw_header(self, context):
+        self.layout.label(text="", icon="TOOL_SETTINGS")
+
+    def draw(self, context):
+        practica = practicas.practica_activa(context)
+        reporte = practicas.ESTADO["reporte"]
+        if practica is None or reporte is None:
+            return
+        herramientas.dibujar(self.layout, context, practica, reporte)
+
+
 class AMATISTA_PT_roles(_Base, bpy.types.Panel):
     bl_idname = "AMATISTA_PT_roles"
     bl_label = "Asignar rol"
@@ -515,6 +537,12 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
         layout = self.layout
         practica = practicas.practica_activa(context)
         obj = context.active_object
+        reporte = practicas.ESTADO["reporte"]
+        deducidos = dict(reporte.inferred_roles) if reporte is not None else {}
+        if practica.infers_roles:
+            # Motor 3.4: no hace falta poner roles; este panel solo corrige si Amatista se equivoca.
+            estilo.parrafo(layout, context, "Amatista reconoce cada pieza por su forma. Asigna un rol solo si "
+                           "se equivocó.", icon="INFO")
         if obj is None:
             estilo.parrafo(layout, context, "Selecciona un objeto para decirle a Amatista qué es.", icon="RESTRICT_SELECT_OFF")
         else:
@@ -523,18 +551,27 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
             fila.label(text=obj.name, icon="OBJECT_DATA")
             derecha = fila.row()
             derecha.alignment = "RIGHT"
-            derecha.label(text=practica.role_label(rol) if rol else "Sin rol")
+            if rol:
+                derecha.label(text=practica.role_label(rol))
+            elif obj.name in deducidos:
+                derecha.label(text=f"{practica.role_label(deducidos[obj.name])} (por su forma)")
+            elif practica.infers_roles and obj.type == "MESH":
+                derecha.label(text="Adorno")
+            else:
+                derecha.label(text="Sin rol")
             layout.prop(context.scene.amatista, "rol_elegido", text="Es")
             fila = layout.row(align=True)
             fila.scale_y = 1.3
             fila.operator("amatista.asignar_rol", text="Asignar rol", icon="CHECKMARK")
             fila.operator("amatista.quitar_rol", text="", icon="X")
-        conteo = autor.roles_en_escena(context)
+        conteo = {r: len(v) for r, v in autor.roles_en_escena(context).items()}
+        for rol in deducidos.values():
+            conteo[rol] = conteo.get(rol, 0) + 1
         if conteo:
             col = layout.column(align=True)
             col.active = False
             for rol in practica.roles:
-                col.label(text=f"{rol.label}: {len(conteo.get(rol.id, []))}", icon="DOT")
+                col.label(text=f"{rol.label}: {conteo.get(rol.id, 0)}", icon="DOT")
 
 
 # --- Aprender y Mi curso (motor v3) -----------------------------------------------------------
@@ -1009,6 +1046,7 @@ CLASES = (
     AMATISTA_PT_aprender,
     AMATISTA_PT_practica,
     AMATISTA_PT_curso,
+    AMATISTA_PT_herramientas,
     AMATISTA_PT_roles,
     AMATISTA_PT_objetivos,
     AMATISTA_PT_autor_borrador,

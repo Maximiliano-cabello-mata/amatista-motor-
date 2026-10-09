@@ -35,7 +35,10 @@ CAMPOS_PRACTICA = {
 CAMPOS_PILDORA = {"id", "title", "text", "keys", "visual", "trigger", "once", "check"}
 
 # Modelo de referencia (motor 3.3): piezas de la figura terminada.
-CAMPOS_REFERENCIA = {"title", "description", "tolerance", "parts", "objects", "camera", "flexible", "lights"}
+CAMPOS_REFERENCIA = {"title", "description", "tolerance", "parts", "objects", "camera", "flexible", "lights",
+                     "strictness", "autoRoles"}
+# Exigencia de figure.recognize (motor 3.4); sin «strictness» se toma la del nivel de la práctica.
+EXIGENCIAS = ("forma", "proporcion", "cercana", "medidas", "exacta")
 CAMPOS_PIEZA = {"primitive", "size", "location", "rotation", "role", "name", "color", "join", "segments",
                 "material", "compare"}
 PRIMITIVAS_REFERENCIA = ("cube", "cylinder", "sphere", "icosphere", "cone", "torus", "plane")

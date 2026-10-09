@@ -45,6 +45,10 @@ from .models import (
 
 Paso = GuideInstruction  # abreviatura: los entrenadores arman muchas
 
+# Nombres del menú Agregar › Malla de Blender (en español).
+PRIMITIVAS = {"cube": "Cubo", "cylinder": "Cilindro", "sphere": "Esfera UV", "icosphere": "Icoesfera",
+              "cone": "Cono", "torus": "Toroide", "plane": "Plano", "circle": "Círculo", "suzanne": "Mono"}
+
 
 @dataclass(frozen=True)
 class Contexto:
@@ -192,6 +196,7 @@ def coach_role_count(ctx: Contexto) -> Parcial:
     if ctx.result.passed:
         return Parcial(ctx.result.message, TONO_LOGRADO, highlights=_bien(con_rol, etiqueta))
 
+    auto = ctx.practice.infers_roles  # motor 3.4: Amatista reconoce las piezas por su forma
     if maximo is not None and encontrados > maximo:
         sobran = list(con_rol)[maximo:]
         return Parcial(
@@ -199,11 +204,25 @@ def coach_role_count(ctx: Contexto) -> Parcial:
             TONO_CERCA,
             (
                 _seleccionar(sobran[0].name),
-                Paso("Quítale el rol en la pestaña Amatista, o bórralo", ("X",)),
+                Paso("Bórralo" if auto else "Quítale el rol en la pestaña Amatista, o bórralo", ("X",)),
             ),
             _bien(list(con_rol)[:maximo], etiqueta)
             + tuple(Highlight(o.name, RESALTE_CORREGIR, "Sobra") for o in sobran),
             action=GuideAction("focus", "Mostrarme cuál sobra", tuple(o.name for o in sobran)),
+        )
+
+    if encontrados == 0 and auto:
+        clave = ctx.practice.reference_primitive(rol) or "cube"
+        primitiva = PRIMITIVAS.get(clave, "Cubo")
+        return Parcial(
+            f"Todavía no hay ningún «{etiqueta}». Agrégalo: Amatista lo reconoce por su forma.",
+            TONO_ANIMO,
+            (
+                Paso("Con el ratón sobre la vista 3D, abre el menú Agregar", ("Shift", "A")),
+                Paso(f"Elige Malla › {primitiva}"),
+                Paso("Dale la forma del modelo con S (escalar) y G (mover)", ("S",)),
+            ),
+            action=GuideAction("add_primitive", f"Agregar {primitiva.lower()} conmigo", primitive=clave),
         )
 
     if encontrados == 0:
@@ -240,7 +259,7 @@ def coach_role_count(ctx: Contexto) -> Parcial:
         TONO_CERCA if faltan == 1 else TONO_ANIMO,
         (
             _seleccionar(modelo.name),
-            Paso("Duplícalo: la copia conserva el rol", ("Shift", "D")),
+            Paso("Duplícalo: la copia es igual" if auto else "Duplícalo: la copia conserva el rol", ("Shift", "D")),
             Paso("Mueve la copia con el ratón y haz clic para dejarla", ("Clic",)),
         )
         + ((Paso(f"Repite hasta tener {minimo}"),) if faltan > 1 else ()),
@@ -591,6 +610,10 @@ def guide_guard(practice: PracticeDefinition, scene: SceneState, report: Evaluat
 
 def build_guidance(practice: PracticeDefinition, scene: SceneState, report: EvaluationReport) -> Guidance:
     """Guía del paso actual. Con la práctica terminada, la tarjeta de cierre."""
+    if report.inferred_roles:  # motor 3.4: la guía ve las piezas como las vio el motor
+        from ..figures.reconocer import con_roles
+
+        scene = con_roles(scene, dict(report.inferred_roles))
     pausa = guide_guard(practice, scene, report)
     if pausa is not None:
         return pausa

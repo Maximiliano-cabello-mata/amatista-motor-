@@ -73,10 +73,15 @@ def _items_plantillas(self, context):
     return items
 
 
+SIN_PLANTILLA = "__ninguna__"
+
+
 def _items_plantillas_practica(self, context):
     from . import _motor
 
-    items = [("", "Sin plantilla", "Solo lo mínimo")] + [
+    # Un identificador vacío en Blender es un título, no una opción: «Sin
+    # plantilla» no se podía elegir y Blender avisaba «matches no enum».
+    items = [(SIN_PLANTILLA, "Sin plantilla", "Solo lo mínimo")] + [
         (nombre, nombre.capitalize(), f"Práctica de tipo {nombre} con píldoras y objetivos de ejemplo")
         for nombre in sorted(_motor.practica.PLANTILLAS)
     ]

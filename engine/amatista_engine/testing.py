@@ -283,7 +283,14 @@ class Escena:
             else:
                 sueltas.append([pieza])
         rad = math.radians(giro)
+        inicio = len(self._objetos)
+        alturas = []  # (z mínima, z máxima, caja en planta) de cada pieza en el modelo, ya escalada
         for grupo_piezas in sueltas + list(unidas.values()):
+            cajas_modelo = [caja_rotada(_v(campo(p, "location")), _v(campo(p, "size")),
+                                        tuple(math.radians(a) for a in _v(campo(p, "rotation")))) for p in grupo_piezas]
+            alturas.append((min(c[0][2] for c in cajas_modelo) * escala, max(c[1][2] for c in cajas_modelo) * escala,
+                            tuple(min(c[0][i] for c in cajas_modelo) * escala for i in (0, 1)),
+                            tuple(max(c[1][i] for c in cajas_modelo) * escala for i in (0, 1))))
             primera = grupo_piezas[0]
             if len(grupo_piezas) == 1:  # pieza sola: con su medida local y su giro, como en Blender
                 rot = list(_v(campo(primera, "rotation")))
@@ -309,9 +316,40 @@ class Escena:
                 centro[2] = -caja[0][2]
             centro = [c + d for c, d in zip(centro, _v(desplazar))]
             rol = campo(primera, "role") if roles else ""
-            nombre = campo(primera, "name") or (rol or campo(primera, "primitive")).capitalize()
+            # Nombres únicos, como en Blender (Rueda, Rueda.001…).
+            nombre = self._nombre(campo(primera, "name") or (rol or campo(primera, "primitive")).capitalize())
             self.malla(campo(primera, "primitive"), nombre, dims=medidas, loc=centro, rot=rot, rol=rol or "")
+        if variacion:
+            self._apoyar(inicio, alturas)
         return self
+
+    def _apoyar(self, inicio: int, alturas) -> None:
+        """Una mano deja cada pieza apoyada donde el modelo la apoya (la cabeza sobre el cuerpo).
+
+        El ruido de la variación mueve medidas y lugares; sin esto, una pieza que
+        en el modelo descansa sobre otra quedaría flotando o hundida.
+        """
+        from dataclasses import replace as cambiar
+
+        if not alturas:
+            return
+        largo = max(a[1] for a in alturas) - min(a[0] for a in alturas) or 1.0
+        orden = sorted(range(len(alturas)), key=lambda i: alturas[i][0])
+        for i in orden:
+            zmin, _, pmin, pmax = alturas[i]
+            centro = ((pmin[0] + pmax[0]) / 2, (pmin[1] + pmax[1]) / 2)
+            soportes = [j for j in range(len(alturas)) if j != i and abs(alturas[j][1] - zmin) <= 0.03 * largo
+                        and alturas[j][2][0] <= centro[0] <= alturas[j][3][0]
+                        and alturas[j][2][1] <= centro[1] <= alturas[j][3][1]]
+            if not soportes:
+                continue
+            j = soportes[0]
+            obj, soporte = self._objetos[inicio + i], self._objetos[inicio + j]
+            deseado = soporte.caja()[1][2] - (alturas[j][1] - zmin)
+            dz = deseado - obj.caja()[0][2]
+            mover = lambda v: (v[0], v[1], round(v[2] + dz, 6))  # noqa: E731
+            self._objetos[inicio + i] = cambiar(obj, location=mover(obj.location), bbox_min=mover(obj.bbox_min),
+                                                bbox_max=mover(obj.bbox_max))
 
 
 # Pasos de pruebas.json → métodos del constructor.

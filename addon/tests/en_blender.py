@@ -344,6 +344,76 @@ def probar_temas(contexto):
     _limpiar()
 
 
+def probar_motor_34(contexto):
+    """Motor 3.4: modo enfocado, «Tus herramientas», enlace en vivo y figura sin roles."""
+    from amatista_blender import _motor, ajustes, enfoque, enlace, guia, practicas
+    from amatista_blender.interfaz import herramientas
+
+    catalogo = practicas.catalogo()
+    p = ajustes.prefs()
+    p.enfoque = "auto"
+    _limpiar()
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    vistas = [a for v in contexto.window_manager.windows for a in v.screen.areas if a.type == "VIEW_3D"]
+    revisar(enfoque.activo(), "nivel 1: Blender se enfoca al abrir la práctica")
+    revisar(getattr(bpy.types.VIEW3D_MT_add.draw, "_amatista", False), "enfoque: Shift+A muestra solo las piezas del modelo")
+    revisar(enfoque.ESTADO["primitivas"] == ("cube", "cylinder"), f"enfoque: piezas del tren {enfoque.ESTADO['primitivas']}")
+    if vistas:
+        espacio = vistas[0].spaces.active
+        revisar(not espacio.show_region_toolbar and espacio.show_region_ui, "enfoque: sin barra T, con la barra lateral")
+    menu = type("Menu", (), {"layout": Diseno()})()
+    bpy.types.VIEW3D_MT_add.draw(menu, contexto)
+    bpy.types.VIEW3D_MT_editor_menus.draw(menu, contexto)
+
+    todas, del_paso = herramientas.actuales(practicas.practica_activa(contexto))
+    revisar([t.id for t in todas][:3] == ["view.navigate", "view.numpad", "object.add"],
+            f"Tus herramientas: las de la práctica ({[t.id for t in todas]})")
+    revisar("object.add" in [t.id for t in del_paso], f"Tus herramientas: Agregar es la del primer paso ({[t.id for t in del_paso]})")
+    revisar(bpy.ops.amatista.usar_herramienta(herramienta="object.add") == {"FINISHED"}, "«Usar» Agregar no falla sin ventana")
+    bpy.ops.mesh.primitive_cube_add()
+    revisar(bpy.ops.amatista.usar_herramienta(herramienta="transform.scale") == {"FINISHED"}
+            and getattr(contexto.workspace.tools.from_space_view3d_mode("OBJECT"), "idname", "") == "builtin.scale",
+            "«Usar» Escalar elige la herramienta Escalar")
+    ayuda = type("Ayuda", (), {"layout": Diseno(), "herramienta": "transform.move"})()
+    herramientas.AMATISTA_OT_herramienta_ayuda.draw(ayuda, contexto)
+
+    # Órdenes de la plataforma (llegan en el latido) y ajustes de «Mi Blender».
+    revisar(enlace.cumplir({"id": "orden1", "tipo": "ver_todo"}) and not enfoque.activo(), "orden «ver todo» de la plataforma")
+    if vistas:
+        revisar(vistas[0].spaces.active.show_region_toolbar, "ver todo: la barra T vuelve como estaba")
+    revisar(not getattr(bpy.types.VIEW3D_MT_add.draw, "_amatista", False), "ver todo: Shift+A completo otra vez")
+    revisar(enlace.ESTADO["hecha"] == "orden1" and not enlace.cumplir({"id": "orden1", "tipo": "ver_todo"}),
+            "una orden repetida se cumple una sola vez")
+    enlace.cumplir({"id": "orden2", "tipo": "enfocar"})
+    revisar(enfoque.activo(), "orden «enfocar» de la plataforma")
+    datos = enlace._datos()
+    revisar(datos["practica_id"] == "blender.bp.m1.tren" and datos["enfocado"] and datos["orden_hecha"] == "orden2",
+            f"el latido lleva práctica, enfoque y la orden cumplida ({datos})")
+    revisar(enlace.aplicar_ajustes({"enfoque": "nunca", "tarjeta_3d": False, "acompanamiento": "tarjeta"})
+            and p.enfoque == "nunca" and not p.mostrar_hud and not enfoque.activo(),
+            "los ajustes de «Mi Blender» mandan: enfoque nunca y sin tarjeta 3D")
+    enlace.aplicar_ajustes({"enfoque": "auto", "tarjeta_3d": True, "acompanamiento": "acompanado", "otro": 1})
+    revisar(enfoque.activo(), "volver a «según el nivel» enfoca otra vez")
+
+    # La figura sin roles: Amatista reconoce las piezas por su forma.
+    _limpiar()
+    practica = practicas.practica_activa(contexto)
+    for parte in practica.reference.compared:
+        operador = getattr(bpy.ops.mesh, f"primitive_{parte.primitive}_add")
+        operador(location=parte.location, rotation=[r * 3.14159265 / 180 for r in parte.rotation])
+        obj = contexto.active_object
+        obj.dimensions = parte.size
+        obj.name = parte.name or parte.primitive
+    bpy.ops.object.select_all(action="DESELECT")
+    reporte = practicas.evaluar(contexto)
+    figura = reporte.result("figura")
+    revisar(figura.passed, f"el tren sin roles se reconoce ({figura.message})")
+    revisar(len(dict(reporte.inferred_roles)) == len(practica.reference.compared), "todas las piezas reconocidas por su forma")
+    practicas.cerrar(contexto)
+    revisar(not enfoque.activo(), "cerrar la práctica devuelve Blender completo")
+    _ = (_motor, guia)
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -378,10 +448,9 @@ def main():
     g = guia.guia_actual()
     revisar(g is not None and g.action.kind == "add_cube", "guía: escena vacía propone agregar un cubo")
     revisar(bpy.ops.amatista.hazlo_conmigo() == {"FINISHED"}, "Hazlo conmigo agrega el cubo")
+    # Motor 3.4: el cubo que agrega «Hazlo conmigo» ya llega con el rol del paso (antes se perdía).
+    revisar(_motor.tagger.get_role(contexto.active_object) == "cubierta", "Hazlo conmigo: el cubo ya es la cubierta")
     practicas.evaluar(contexto)
-    g = guia.guia_actual()
-    revisar(g.action.kind == "assign_role" and g.highlights[0].kind == "candidato", "guía: propone el cubo como cubierta")
-    bpy.ops.amatista.hazlo_conmigo()
     g = guia.guia_actual()
     revisar(g.target_id == "grosor" and g.action.kind == "scale" and g.action.value == 0.1,
             f"guía: escalar en Z por 0.1 ({g.action})")
@@ -393,7 +462,7 @@ def main():
     revisar(practicas.pistas(contexto).get("grosor") == 3, "Hazlo conmigo cuenta como guía paso a paso")
     revisar(any(a["titulo"].startswith("¡Listo!") for a in guia.ESTADO["avisos"]), "el acompañante celebra el paso")
     revisar(bpy.ops.amatista.mostrarme() == {"FINISHED"}, "Muéstrame selecciona lo del paso")
-    revisar(practicas.datos_intento(contexto)["ayudas"]["hazlo_conmigo"] == 3, "el intento cuenta las ayudas")
+    revisar(practicas.datos_intento(contexto)["ayudas"]["hazlo_conmigo"] == 2, "el intento cuenta las ayudas")
     for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj)
     contexto.scene.amatista.pistas_json = "{}"
@@ -443,7 +512,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "3.3.0", "el intento lleva la versión 3.3 del add-on")
+    revisar(datos["version_addon"] == "3.4.0", "el intento lleva la versión 3.4 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -479,9 +548,11 @@ def main():
 
     probar_v3(contexto)
     probar_temas(contexto)
+    probar_motor_34(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")
+    revisar(not getattr(bpy.types.VIEW3D_MT_editor_menus.draw, "_amatista", False), "desregistrar devuelve los menús de Blender")
 
 
 if __name__ == "__main__":

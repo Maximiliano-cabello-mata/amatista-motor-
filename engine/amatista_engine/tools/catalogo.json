@@ -1,40 +1,494 @@
 {
   "schema": "amatista.tools/1",
   "tools": [
-    {"id": "view.navigate", "name": "Navegar la vista", "shortcut": "Botón central · Shift+botón central", "minimumLevel": 1, "category": "vista", "description": "Gira y desplaza la vista sin mover los objetos."},
-    {"id": "object.add", "name": "Añadir objeto", "shortcut": "Shift+A", "minimumLevel": 1, "category": "objeto", "description": "Agrega una primitiva (cubo, cilindro, esfera...) en el cursor 3D."},
-    {"id": "transform.move", "name": "Mover", "shortcut": "G", "minimumLevel": 1, "category": "transformación", "description": "Cambia la posición de un objeto. G y luego X, Y o Z para limitarlo a un eje."},
-    {"id": "transform.rotate", "name": "Rotar", "shortcut": "R", "minimumLevel": 1, "category": "transformación", "description": "Gira un objeto. R y luego un eje y los grados (R Z 90)."},
-    {"id": "transform.scale", "name": "Escalar", "shortcut": "S", "minimumLevel": 1, "category": "transformación", "description": "Cambia el tamaño. S y luego Z para cambiar solo la altura."},
-    {"id": "object.duplicate", "name": "Duplicar", "shortcut": "Shift+D", "minimumLevel": 1, "category": "objeto", "description": "Crea una copia del objeto seleccionado y la deja lista para moverla."},
-    {"id": "object.delete", "name": "Eliminar", "shortcut": "X", "minimumLevel": 1, "category": "objeto", "description": "Borra el objeto seleccionado."},
-    {"id": "object.rename", "name": "Renombrar", "shortcut": "F2", "minimumLevel": 1, "category": "organización", "description": "Cambia el nombre del objeto activo."},
-    {"id": "collection.move", "name": "Mover a colección", "shortcut": "M", "minimumLevel": 1, "category": "organización", "description": "Organiza los objetos en colecciones."},
-    {"id": "file.save", "name": "Guardar", "shortcut": "Ctrl+S", "minimumLevel": 1, "category": "archivo", "description": "Guarda el archivo .blend."},
-    {"id": "material.basic", "name": "Color básico", "shortcut": "Propiedades › Material", "minimumLevel": 1, "category": "material", "description": "Asigna un material con un color.", "detect": {"material": true}},
-    {"id": "mesh.edit", "name": "Modo edición", "shortcut": "Tab", "minimumLevel": 2, "category": "malla", "description": "Edita vértices, aristas y caras de la malla.", "detect": {"mode": "EDIT"}},
-    {"id": "modifier.bevel", "name": "Biselar (modificador)", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Redondea los bordes sin editar la malla.", "detect": {"modifier": "BEVEL"}},
-    {"id": "modifier.mirror", "name": "Espejo", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Refleja la malla en un eje.", "detect": {"modifier": "MIRROR"}},
-    {"id": "modifier.array", "name": "Matriz", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Repite el objeto en fila.", "detect": {"modifier": "ARRAY"}},
-    {"id": "modifier.solidify", "name": "Solidificar", "shortcut": "Propiedades › Modificadores", "minimumLevel": 2, "category": "modificador", "description": "Da grosor a una superficie.", "detect": {"modifier": "SOLIDIFY"}},
-    {"id": "modifier.subdivision", "name": "Subdivisión", "shortcut": "Ctrl+1", "minimumLevel": 2, "category": "modificador", "description": "Suaviza la malla agregando geometría.", "detect": {"modifier": "SUBSURF"}},
-    {"id": "modifier.boolean", "name": "Booleano", "shortcut": "Propiedades › Modificadores", "minimumLevel": 3, "category": "modificador", "description": "Suma, resta o intersecta mallas.", "detect": {"modifier": "BOOLEAN"}},
-    {"id": "object.curve", "name": "Curvas", "shortcut": "Shift+A › Curva", "minimumLevel": 3, "category": "objeto", "description": "Objetos definidos por curvas en vez de malla.", "detect": {"object_type": "CURVE"}},
-    {"id": "sculpt", "name": "Escultura", "shortcut": "Espacio de trabajo Sculpting", "minimumLevel": 3, "category": "malla", "description": "Modela la malla como si fuera arcilla.", "detect": {"mode": "SCULPT"}},
-    {"id": "geometry_nodes", "name": "Nodos de geometría", "shortcut": "Espacio de trabajo Geometry Nodes", "minimumLevel": 4, "category": "procedural", "description": "Genera geometría con nodos.", "detect": {"modifier": "NODES"}},
-    {"id": "armature", "name": "Esqueleto (rigging)", "shortcut": "Shift+A › Armadura", "minimumLevel": 4, "category": "animación", "description": "Huesos para animar personajes.", "detect": {"object_type": "ARMATURE"}},
-    {"id": "physics.cloth", "name": "Simulación de tela", "shortcut": "Propiedades › Física", "minimumLevel": 5, "category": "simulación", "description": "Simula telas que caen y se arrugan.", "detect": {"modifier": "CLOTH"}},
-    {"id": "particles", "name": "Partículas", "shortcut": "Propiedades › Partículas", "minimumLevel": 5, "category": "simulación", "description": "Emite partículas o cabello.", "detect": {"modifier": "PARTICLE_SYSTEM"}},
-    {"id": "view.numpad", "name": "Vistas del teclado numérico", "shortcut": "1 frente · 3 lado · 7 arriba · 0 cámara", "minimumLevel": 1, "category": "vista", "description": "Cambia a vistas exactas: de frente, de lado, desde arriba o por la cámara."},
-    {"id": "mesh.extrude", "name": "Extruir", "shortcut": "E", "minimumLevel": 2, "category": "malla", "description": "Saca caras nuevas desde las seleccionadas. Si cancelas con clic derecho, las caras nuevas quedan encimadas: fusiónalas por distancia."},
-    {"id": "mesh.loopcut", "name": "Corte de bucle", "shortcut": "Ctrl+R", "minimumLevel": 2, "category": "malla", "description": "Agrega un anillo de aristas alrededor de la malla para tener más detalle donde se necesita."},
-    {"id": "mesh.merge", "name": "Fusionar", "shortcut": "M", "minimumLevel": 2, "category": "malla", "description": "Une vértices. «Por distancia» limpia los que quedaron encimados."},
-    {"id": "select.box", "name": "Selección de caja", "shortcut": "B", "minimumLevel": 2, "category": "selección", "description": "Arrastra un rectángulo para seleccionar varios elementos."},
-    {"id": "select.circle", "name": "Selección circular", "shortcut": "C", "minimumLevel": 2, "category": "selección", "description": "Pinta la selección con un círculo; rueda del ratón para cambiar su tamaño, Esc para salir."},
-    {"id": "material.principled", "name": "Principled BSDF", "shortcut": "Propiedades › Material", "minimumLevel": 2, "category": "material", "description": "El material físico de Blender: Color base, Metálico y Rugosidad bastan para empezar.", "detect": {"material": true}},
-    {"id": "light.add", "name": "Luces", "shortcut": "Shift+A › Luz", "minimumLevel": 1, "category": "escena", "description": "Área para sombras suaves, Sol para luz direccional pareja, Punto y Foco.", "detect": {"object_type": "LIGHT"}},
-    {"id": "camera.add", "name": "Cámara", "shortcut": "Shift+A › Cámara · Ctrl+Alt+0", "minimumLevel": 1, "category": "escena", "description": "La cámara define la foto final; Ctrl+Alt+0 la pone donde estás mirando.", "detect": {"object_type": "CAMERA"}},
-    {"id": "render.f12", "name": "Render final", "shortcut": "F12", "minimumLevel": 1, "category": "render", "description": "Hace la foto final desde la cámara activa con el motor elegido (EEVEE es instantáneo)."},
-    {"id": "anim.keyframe", "name": "Fotograma clave", "shortcut": "I", "minimumLevel": 2, "category": "animación", "description": "Guarda la posición, rotación o escala de un objeto en el fotograma actual.", "detect": {"animation": true}}
+    {
+      "id": "view.navigate",
+      "name": "Navegar la vista",
+      "shortcut": "Botón central · Shift+botón central",
+      "minimumLevel": 1,
+      "category": "vista",
+      "description": "Gira y desplaza la vista sin mover los objetos.",
+      "keys": ["Rueda"],
+      "action": {"operator": "view3d.view_all"},
+      "howto": [
+        "Pon el ratón sobre la vista 3D.",
+        "Mantén presionada la rueda y mueve el ratón: la vista gira.",
+        "Shift + rueda presionada: la vista se desplaza.",
+        "Gira la rueda para acercarte o alejarte."
+      ],
+      "mistake": "Mover la vista no mueve tus objetos: si algo «se movió», solo lo estás viendo desde otro lado."
+    },
+    {
+      "id": "object.add",
+      "name": "Añadir objeto",
+      "shortcut": "Shift+A",
+      "minimumLevel": 1,
+      "category": "objeto",
+      "description": "Agrega una primitiva (cubo, cilindro, esfera...) en el cursor 3D.",
+      "keys": ["Shift+A"],
+      "action": {"menu": "VIEW3D_MT_add"},
+      "howto": [
+        "Pon el ratón sobre la vista 3D.",
+        "Pulsa Shift + A: se abre el menú Agregar.",
+        "Entra a Malla y elige la forma (Cubo, Cilindro, Esfera…).",
+        "La forma aparece en el cursor 3D (la mira roja y blanca)."
+      ],
+      "mistake": "Si la forma no aparece donde esperabas, el cursor 3D estaba en otro lugar: Shift + C lo regresa al centro."
+    },
+    {
+      "id": "transform.move",
+      "name": "Mover",
+      "shortcut": "G",
+      "minimumLevel": 1,
+      "category": "transformación",
+      "description": "Cambia la posición de un objeto. G y luego X, Y o Z para limitarlo a un eje.",
+      "keys": ["G"],
+      "action": {"tool": "builtin.move"},
+      "howto": [
+        "Selecciona el objeto con clic.",
+        "Pulsa G y mueve el ratón.",
+        "Pulsa X, Y o Z para moverlo solo en ese eje.",
+        "Escribe un número (por ejemplo 2) y confirma con Enter o clic."
+      ],
+      "mistake": "Clic derecho o Esc cancela el movimiento y el objeto regresa a donde estaba."
+    },
+    {
+      "id": "transform.rotate",
+      "name": "Rotar",
+      "shortcut": "R",
+      "minimumLevel": 1,
+      "category": "transformación",
+      "description": "Gira un objeto. R y luego un eje y los grados (R Z 90).",
+      "keys": ["R"],
+      "action": {"tool": "builtin.rotate"},
+      "howto": ["Selecciona el objeto.", "Pulsa R y luego el eje: X, Y o Z.", "Escribe los grados (90) y pulsa Enter."],
+      "mistake": "Sin eje, el objeto gira hacia donde estás mirando: casi siempre conviene R y un eje."
+    },
+    {
+      "id": "transform.scale",
+      "name": "Escalar",
+      "shortcut": "S",
+      "minimumLevel": 1,
+      "category": "transformación",
+      "description": "Cambia el tamaño. S y luego Z para cambiar solo la altura.",
+      "keys": ["S"],
+      "action": {"tool": "builtin.scale"},
+      "howto": [
+        "Selecciona el objeto.",
+        "Pulsa S y aleja o acerca el ratón.",
+        "Pulsa Z (o X, Y) para cambiar solo esa medida.",
+        "Escribe el factor (0.5 = la mitad) y Enter."
+      ],
+      "mistake": "Escalar en un eje cambia la forma; escalar sin eje cambia todo el tamaño."
+    },
+    {
+      "id": "object.duplicate",
+      "name": "Duplicar",
+      "shortcut": "Shift+D",
+      "minimumLevel": 1,
+      "category": "objeto",
+      "description": "Crea una copia del objeto seleccionado y la deja lista para moverla.",
+      "keys": ["Shift+D"],
+      "action": {"operator": "object.duplicate_move", "invoke": true},
+      "howto": [
+        "Selecciona lo que quieres copiar.",
+        "Pulsa Shift + D: la copia ya se está moviendo.",
+        "Pulsa un eje (X) para llevarla en línea recta.",
+        "Clic para dejarla."
+      ],
+      "mistake": "Si cancelas con clic derecho, la copia queda encimada en el mismo lugar que el original."
+    },
+    {
+      "id": "object.delete",
+      "name": "Eliminar",
+      "shortcut": "X",
+      "minimumLevel": 1,
+      "category": "objeto",
+      "description": "Borra el objeto seleccionado.",
+      "keys": ["X"],
+      "action": {"operator": "object.delete", "invoke": true},
+      "howto": ["Selecciona el objeto.", "Pulsa X y confirma Eliminar."],
+      "mistake": "Ctrl + Z deshace si borraste algo por error."
+    },
+    {
+      "id": "object.rename",
+      "name": "Renombrar",
+      "shortcut": "F2",
+      "minimumLevel": 1,
+      "category": "organización",
+      "description": "Cambia el nombre del objeto activo.",
+      "keys": ["F2"],
+      "action": {"panel": "TOPBAR_PT_name"},
+      "howto": ["Selecciona el objeto.", "Pulsa F2.", "Escribe el nombre nuevo y pulsa Enter."],
+      "mistake": "Los nombres claros (Rueda, Techo) te ayudan a encontrar cada pieza en el Outliner."
+    },
+    {
+      "id": "collection.move",
+      "name": "Mover a colección",
+      "shortcut": "M",
+      "minimumLevel": 1,
+      "category": "organización",
+      "description": "Organiza los objetos en colecciones.",
+      "keys": ["M"],
+      "action": {"operator": "object.move_to_collection", "invoke": true},
+      "howto": ["Selecciona los objetos.", "Pulsa M.", "Elige una colección o «+ Nueva colección»."],
+      "mistake": "Una colección es como una carpeta: mover a una colección no mueve el objeto en la escena."
+    },
+    {
+      "id": "file.save",
+      "name": "Guardar",
+      "shortcut": "Ctrl+S",
+      "minimumLevel": 1,
+      "category": "archivo",
+      "description": "Guarda el archivo .blend.",
+      "keys": ["Ctrl+S"],
+      "action": {"operator": "wm.save_mainfile", "invoke": true},
+      "howto": ["Pulsa Ctrl + S.", "La primera vez, elige carpeta y escribe el nombre del archivo.", "Pulsa Guardar."],
+      "mistake": "Guarda seguido: si Blender se cierra, pierdes lo que no guardaste."
+    },
+    {
+      "id": "material.basic",
+      "name": "Color básico",
+      "shortcut": "Propiedades › Material",
+      "minimumLevel": 1,
+      "category": "material",
+      "description": "Asigna un material con un color.",
+      "detect": {"material": true},
+      "keys": [],
+      "action": {"tab": "MATERIAL"},
+      "howto": [
+        "Selecciona el objeto.",
+        "En Propiedades, abre la pestaña Material (la esfera roja).",
+        "Pulsa Nuevo y cambia el Color base."
+      ],
+      "mistake": "Si dos objetos comparten material, cambiar el color de uno cambia los dos."
+    },
+    {
+      "id": "mesh.edit",
+      "name": "Modo edición",
+      "shortcut": "Tab",
+      "minimumLevel": 2,
+      "category": "malla",
+      "description": "Edita vértices, aristas y caras de la malla.",
+      "detect": {"mode": "EDIT"},
+      "keys": ["Tab"],
+      "action": {"operator": "object.editmode_toggle"},
+      "howto": [
+        "Selecciona la malla.",
+        "Pulsa Tab para entrar al Modo edición.",
+        "1, 2 y 3 eligen vértices, aristas o caras.",
+        "Tab otra vez para volver al Modo objeto."
+      ],
+      "mistake": "En Modo edición solo cambias la malla seleccionada; para elegir otro objeto vuelve con Tab."
+    },
+    {
+      "id": "modifier.bevel",
+      "name": "Biselar (modificador)",
+      "shortcut": "Propiedades › Modificadores",
+      "minimumLevel": 2,
+      "category": "modificador",
+      "description": "Redondea los bordes sin editar la malla.",
+      "detect": {"modifier": "BEVEL"},
+      "keys": [],
+      "action": {"operator": "object.modifier_add", "props": {"type": "BEVEL"}},
+      "howto": [
+        "Selecciona el objeto.",
+        "Pulsa Usar (o Propiedades › Modificadores › Agregar › Bisel).",
+        "Sube Cantidad poco a poco y agrega Segmentos para redondear."
+      ],
+      "mistake": "Si el bisel se ve deforme, aplica la escala: Ctrl + A › Escala."
+    },
+    {
+      "id": "modifier.mirror",
+      "name": "Espejo",
+      "shortcut": "Propiedades › Modificadores",
+      "minimumLevel": 2,
+      "category": "modificador",
+      "description": "Refleja la malla en un eje.",
+      "detect": {"modifier": "MIRROR"},
+      "keys": [],
+      "action": {"operator": "object.modifier_add", "props": {"type": "MIRROR"}},
+      "howto": [
+        "Selecciona la mitad que modelaste.",
+        "Pulsa Usar (o agrega el modificador Espejo).",
+        "Elige el eje del espejo (X casi siempre) y activa Recortar."
+      ],
+      "mistake": "El espejo usa el origen del objeto: si la otra mitad sale lejos, el origen no está en el centro."
+    },
+    {
+      "id": "modifier.array",
+      "name": "Matriz",
+      "shortcut": "Propiedades › Modificadores",
+      "minimumLevel": 2,
+      "category": "modificador",
+      "description": "Repite el objeto en fila.",
+      "detect": {"modifier": "ARRAY"},
+      "keys": [],
+      "action": {"operator": "object.modifier_add", "props": {"type": "ARRAY"}},
+      "howto": [
+        "Selecciona la pieza que se repite.",
+        "Pulsa Usar (o agrega el modificador Matriz).",
+        "Cambia Cantidad y el Desplazamiento relativo para separarlas."
+      ],
+      "mistake": "La matriz repite en el eje local del objeto: si sale hacia otro lado, cambia el eje del desplazamiento."
+    },
+    {
+      "id": "modifier.solidify",
+      "name": "Solidificar",
+      "shortcut": "Propiedades › Modificadores",
+      "minimumLevel": 2,
+      "category": "modificador",
+      "description": "Da grosor a una superficie.",
+      "detect": {"modifier": "SOLIDIFY"},
+      "keys": [],
+      "action": {"operator": "object.modifier_add", "props": {"type": "SOLIDIFY"}},
+      "howto": ["Selecciona la superficie.", "Pulsa Usar (o agrega Solidificar).", "Cambia Grosor hasta que se vea sólida."],
+      "mistake": "Un grosor negativo crece hacia adentro: prueba con el signo contrario."
+    },
+    {
+      "id": "modifier.subdivision",
+      "name": "Subdivisión",
+      "shortcut": "Ctrl+1",
+      "minimumLevel": 2,
+      "category": "modificador",
+      "description": "Suaviza la malla agregando geometría.",
+      "detect": {"modifier": "SUBSURF"},
+      "keys": ["Ctrl+1"],
+      "action": {"operator": "object.modifier_add", "props": {"type": "SUBSURF"}},
+      "howto": ["Selecciona la malla.", "Pulsa Ctrl + 1 (o Usar).", "Sube Niveles para suavizar más (2 basta casi siempre)."],
+      "mistake": "Cada nivel multiplica los polígonos por cuatro: muchos niveles vuelven lento a Blender."
+    },
+    {
+      "id": "modifier.boolean",
+      "name": "Booleano",
+      "shortcut": "Propiedades › Modificadores",
+      "minimumLevel": 3,
+      "category": "modificador",
+      "description": "Suma, resta o intersecta mallas.",
+      "detect": {"modifier": "BOOLEAN"},
+      "keys": [],
+      "action": {"operator": "object.modifier_add", "props": {"type": "BOOLEAN"}},
+      "howto": [
+        "Selecciona el objeto principal.",
+        "Agrega el modificador Booleano.",
+        "Elige Diferencia, Unión o Intersección y el objeto cortador."
+      ],
+      "mistake": "Oculta el objeto cortador para ver el resultado."
+    },
+    {
+      "id": "object.curve",
+      "name": "Curvas",
+      "shortcut": "Shift+A › Curva",
+      "minimumLevel": 3,
+      "category": "objeto",
+      "description": "Objetos definidos por curvas en vez de malla.",
+      "detect": {"object_type": "CURVE"}
+    },
+    {
+      "id": "sculpt",
+      "name": "Escultura",
+      "shortcut": "Espacio de trabajo Sculpting",
+      "minimumLevel": 3,
+      "category": "malla",
+      "description": "Modela la malla como si fuera arcilla.",
+      "detect": {"mode": "SCULPT"}
+    },
+    {
+      "id": "geometry_nodes",
+      "name": "Nodos de geometría",
+      "shortcut": "Espacio de trabajo Geometry Nodes",
+      "minimumLevel": 4,
+      "category": "procedural",
+      "description": "Genera geometría con nodos.",
+      "detect": {"modifier": "NODES"}
+    },
+    {
+      "id": "armature",
+      "name": "Esqueleto (rigging)",
+      "shortcut": "Shift+A › Armadura",
+      "minimumLevel": 4,
+      "category": "animación",
+      "description": "Huesos para animar personajes.",
+      "detect": {"object_type": "ARMATURE"}
+    },
+    {
+      "id": "physics.cloth",
+      "name": "Simulación de tela",
+      "shortcut": "Propiedades › Física",
+      "minimumLevel": 5,
+      "category": "simulación",
+      "description": "Simula telas que caen y se arrugan.",
+      "detect": {"modifier": "CLOTH"}
+    },
+    {
+      "id": "particles",
+      "name": "Partículas",
+      "shortcut": "Propiedades › Partículas",
+      "minimumLevel": 5,
+      "category": "simulación",
+      "description": "Emite partículas o cabello.",
+      "detect": {"modifier": "PARTICLE_SYSTEM"}
+    },
+    {
+      "id": "view.numpad",
+      "name": "Vistas del teclado numérico",
+      "shortcut": "1 frente · 3 lado · 7 arriba · 0 cámara",
+      "minimumLevel": 1,
+      "category": "vista",
+      "description": "Cambia a vistas exactas: de frente, de lado, desde arriba o por la cámara.",
+      "keys": ["1", "3", "7", "0"],
+      "action": {"operator": "view3d.view_axis", "props": {"type": "FRONT"}},
+      "howto": [
+        "Pon el ratón sobre la vista 3D.",
+        "1 del teclado numérico: de frente. 3: de lado. 7: desde arriba.",
+        "0: lo que ve la cámara."
+      ],
+      "mistake": "Sin teclado numérico, usa el gizmo de ejes de la esquina: clic en X, Y o Z."
+    },
+    {
+      "id": "mesh.extrude",
+      "name": "Extruir",
+      "shortcut": "E",
+      "minimumLevel": 2,
+      "category": "malla",
+      "description": "Saca caras nuevas desde las seleccionadas. Si cancelas con clic derecho, las caras nuevas quedan encimadas: fusiónalas por distancia.",
+      "keys": ["E"],
+      "action": {"tool": "builtin.extrude_region", "mode": "EDIT"},
+      "howto": ["En Modo edición, selecciona una cara (3).", "Pulsa E y mueve el ratón.", "Clic para confirmar."],
+      "mistake": "Si cancelas con clic derecho, la cara nueva queda encimada: M › Por distancia la limpia."
+    },
+    {
+      "id": "mesh.loopcut",
+      "name": "Corte de bucle",
+      "shortcut": "Ctrl+R",
+      "minimumLevel": 2,
+      "category": "malla",
+      "description": "Agrega un anillo de aristas alrededor de la malla para tener más detalle donde se necesita.",
+      "keys": ["Ctrl+R"],
+      "action": {"tool": "builtin.loop_cut", "mode": "EDIT"},
+      "howto": [
+        "En Modo edición, pon el ratón sobre una arista.",
+        "Pulsa Ctrl + R: aparece el anillo amarillo.",
+        "Clic para cortar y mueve para deslizarlo; clic derecho lo deja al centro."
+      ],
+      "mistake": "Gira la rueda antes del clic para hacer varios cortes a la vez."
+    },
+    {
+      "id": "mesh.merge",
+      "name": "Fusionar",
+      "shortcut": "M",
+      "minimumLevel": 2,
+      "category": "malla",
+      "description": "Une vértices. «Por distancia» limpia los que quedaron encimados.",
+      "keys": ["M"],
+      "action": {"menu": "VIEW3D_MT_edit_mesh_merge", "mode": "EDIT"},
+      "howto": ["En Modo edición, selecciona los vértices.", "Pulsa M.", "Elige En el centro o Por distancia."],
+      "mistake": "«Por distancia» limpia los vértices encimados que dejó una extrusión cancelada."
+    },
+    {
+      "id": "select.box",
+      "name": "Selección de caja",
+      "shortcut": "B",
+      "minimumLevel": 2,
+      "category": "selección",
+      "description": "Arrastra un rectángulo para seleccionar varios elementos.",
+      "keys": ["B"],
+      "action": {"tool": "builtin.select_box"},
+      "howto": ["Pulsa B (o Usar).", "Arrastra un rectángulo sobre lo que quieres seleccionar."],
+      "mistake": "Con la vista en Sólido solo se seleccionan los elementos visibles: Alt + Z deja ver a través."
+    },
+    {
+      "id": "select.circle",
+      "name": "Selección circular",
+      "shortcut": "C",
+      "minimumLevel": 2,
+      "category": "selección",
+      "description": "Pinta la selección con un círculo; rueda del ratón para cambiar su tamaño, Esc para salir.",
+      "keys": ["C"],
+      "action": {"tool": "builtin.select_circle"},
+      "howto": [
+        "Pulsa C.",
+        "Pinta la selección con el círculo; la rueda cambia su tamaño.",
+        "Esc o clic derecho para terminar."
+      ],
+      "mistake": "Con el botón central pintas para quitar de la selección."
+    },
+    {
+      "id": "material.principled",
+      "name": "Principled BSDF",
+      "shortcut": "Propiedades › Material",
+      "minimumLevel": 2,
+      "category": "material",
+      "description": "El material físico de Blender: Color base, Metálico y Rugosidad bastan para empezar.",
+      "detect": {"material": true},
+      "keys": [],
+      "action": {"tab": "MATERIAL"},
+      "howto": [
+        "Selecciona el objeto y abre Propiedades › Material.",
+        "Pulsa Nuevo: es un Principled BSDF.",
+        "Cambia Color base, Metálico y Rugosidad."
+      ],
+      "mistake": "Para ver el color en la vista 3D, cambia el sombreado a Vista material (Z › Material)."
+    },
+    {
+      "id": "light.add",
+      "name": "Luces",
+      "shortcut": "Shift+A › Luz",
+      "minimumLevel": 1,
+      "category": "escena",
+      "description": "Área para sombras suaves, Sol para luz direccional pareja, Punto y Foco.",
+      "detect": {"object_type": "LIGHT"},
+      "keys": ["Shift+A"],
+      "action": {"menu": "VIEW3D_MT_light_add"},
+      "howto": ["Pulsa Shift + A › Luz.", "Elige Área, Sol, Punto o Foco.", "Muévela con G y apúntala con R."],
+      "mistake": "Una luz muy cerca quema el objeto: aléjala o baja su Potencia."
+    },
+    {
+      "id": "camera.add",
+      "name": "Cámara",
+      "shortcut": "Shift+A › Cámara · Ctrl+Alt+0",
+      "minimumLevel": 1,
+      "category": "escena",
+      "description": "La cámara define la foto final; Ctrl+Alt+0 la pone donde estás mirando.",
+      "detect": {"object_type": "CAMERA"},
+      "keys": ["Ctrl+Alt+0"],
+      "action": {"operator": "object.camera_add", "invoke": true},
+      "howto": ["Shift + A › Cámara.", "Mira la escena como quieres la foto.", "Ctrl + Alt + 0 pone la cámara en esa vista."],
+      "mistake": "El render usa la cámara activa: si hay varias, la activa tiene el triángulo relleno."
+    },
+    {
+      "id": "render.f12",
+      "name": "Render final",
+      "shortcut": "F12",
+      "minimumLevel": 1,
+      "category": "render",
+      "description": "Hace la foto final desde la cámara activa con el motor elegido (EEVEE es instantáneo).",
+      "keys": ["F12"],
+      "action": {"operator": "render.render", "invoke": true},
+      "howto": [
+        "Revisa que haya cámara y luz.",
+        "Pulsa F12: se abre la ventana del render.",
+        "Imagen › Guardar para guardar la foto."
+      ],
+      "mistake": "Si el render sale negro, falta luz o la cámara mira hacia otro lado."
+    },
+    {
+      "id": "anim.keyframe",
+      "name": "Fotograma clave",
+      "shortcut": "I",
+      "minimumLevel": 2,
+      "category": "animación",
+      "description": "Guarda la posición, rotación o escala de un objeto en el fotograma actual.",
+      "detect": {"animation": true},
+      "keys": ["I"],
+      "action": {"operator": "anim.keyframe_insert_menu", "invoke": true},
+      "howto": [
+        "Ve al fotograma (línea de tiempo).",
+        "Selecciona el objeto y pulsa I.",
+        "Elige Ubicación, Rotación o Escala.",
+        "Cambia de fotograma, mueve el objeto y vuelve a pulsar I."
+      ],
+      "mistake": "Si el objeto no se mueve al reproducir, falta un segundo fotograma clave."
+    }
   ]
 }

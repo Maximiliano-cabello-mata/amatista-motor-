@@ -297,6 +297,9 @@ class ReferenceModel:
     camera: Dict[str, Any] = field(default_factory=dict)
     flexible: Tuple[str, ...] = ()  # grupos donde la cantidad es libre (2 o 4 pilares, 3 o 5 casas)
     lights: Tuple[Dict[str, Any], ...] = ()  # luces para la imagen (tres puntos); no se comparan
+    # --- Motor 3.4: reconocimiento de figuras ---
+    strictness: str = ""  # forma | proporcion | cercana | medidas | exacta ("" = la del nivel)
+    auto_roles: Optional[bool] = None  # deducir roles por la forma (None = sí, si la práctica usa figure.recognize)
 
     @property
     def compared(self) -> Tuple[ReferencePart, ...]:
@@ -364,6 +367,25 @@ class PracticeDefinition:
         rol = next((r for r in self.roles if r.id == role_id), None)
         return rol.label if rol else role_id
 
+    @property
+    def infers_roles(self) -> bool:
+        """Motor 3.4: ¿el motor deduce los roles por la forma (el alumno no los pone)?
+
+        reference.autoRoles lo decide; si falta, solo donde el motor reconoce
+        la figura (figure.recognize).
+        """
+        if self.reference is None or not self.roles:
+            return False
+        if self.reference.auto_roles is not None:
+            return bool(self.reference.auto_roles)
+        return any(t.validator == "figure.recognize" for t in self.targets)
+
+    def reference_primitive(self, role_id: str) -> str:
+        """La primitiva con que el modelo arma ese rol («cube», «cylinder»…), o vacío."""
+        if self.reference is None:
+            return ""
+        return next((p.primitive for p in self.reference.parts if p.role == role_id and p.primitive), "")
+
 
 @dataclass(frozen=True)
 class ValidationResult:
@@ -414,6 +436,8 @@ class EvaluationReport:
     tool_warnings: Tuple[ToolWarning, ...] = ()
     tools_used: Tuple[str, ...] = ()
     needs_update: bool = False
+    # --- Motor 3.4: roles que el motor dedujo por la forma ({objeto: rol}) ---
+    inferred_roles: Tuple[Tuple[str, str], ...] = ()
     # --- Motor v3: vigilantes ---
     guards: Tuple[ValidationResult, ...] = ()
     paused_by: Optional[str] = None  # id del vigilante que pausa el progreso

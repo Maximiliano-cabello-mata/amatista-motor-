@@ -4,7 +4,7 @@ import json
 import bpy
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-from . import _motor, autor, practicas
+from . import _motor, autor, estado, practicas
 
 
 def _error(operador, error):
@@ -19,9 +19,10 @@ class AMATISTA_OT_autor_nuevo(bpy.types.Operator):
 
     def execute(self, context):
         a = context.scene.amatista_autor
-        autor.nuevo_borrador(a.nuevo_id, a.nuevo_titulo, a.nuevo_nivel, a.nueva_plantilla, a.nuevo_curso, a.nuevo_modulo)
+        plantilla = "" if a.nueva_plantilla == estado.SIN_PLANTILLA else a.nueva_plantilla
+        autor.nuevo_borrador(a.nuevo_id, a.nuevo_titulo, a.nuevo_nivel, plantilla, a.nuevo_curso, a.nuevo_modulo)
         self.report({"INFO"}, "Borrador creado. Cambia los textos marcados «Cambia este texto»."
-                    if a.nueva_plantilla else "Borrador creado. Declara roles y agrega objetivos.")
+                    if plantilla else "Borrador creado. Declara roles y agrega objetivos.")
         return {"FINISHED"}
 
 

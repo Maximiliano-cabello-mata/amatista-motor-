@@ -1,0 +1,84 @@
+{
+  "schema": "amatista.figuras/1",
+  "description": "Figuras conocidas con las que el motor compara la del alumno (motor 3.4). Si la figura se parece más a una de estas que a la de la práctica, el motor lo dice. Medidas en metros, Z hacia arriba, giro en grados.",
+  "figures": [
+    {
+      "id": "mesa",
+      "title": "Mesa",
+      "parts": [
+        {"primitive": "cube", "role": "cubierta", "size": [2.0, 1.2, 0.12], "location": [0, 0, 0.8]},
+        {"primitive": "cube", "role": "pata", "size": [0.12, 0.12, 0.74], "location": [0.9, 0.5, 0.37]},
+        {"primitive": "cube", "role": "pata", "size": [0.12, 0.12, 0.74], "location": [-0.9, 0.5, 0.37]},
+        {"primitive": "cube", "role": "pata", "size": [0.12, 0.12, 0.74], "location": [0.9, -0.5, 0.37]},
+        {"primitive": "cube", "role": "pata", "size": [0.12, 0.12, 0.74], "location": [-0.9, -0.5, 0.37]}
+      ]
+    },
+    {
+      "id": "silla",
+      "title": "Silla",
+      "parts": [
+        {"primitive": "cube", "role": "asiento", "size": [0.5, 0.5, 0.08], "location": [0, 0, 0.45]},
+        {"primitive": "cube", "role": "pata", "size": [0.06, 0.06, 0.41], "location": [0.21, 0.21, 0.205]},
+        {"primitive": "cube", "role": "pata", "size": [0.06, 0.06, 0.41], "location": [-0.21, 0.21, 0.205]},
+        {"primitive": "cube", "role": "pata", "size": [0.06, 0.06, 0.41], "location": [0.21, -0.21, 0.205]},
+        {"primitive": "cube", "role": "pata", "size": [0.06, 0.06, 0.41], "location": [-0.21, -0.21, 0.205]},
+        {"primitive": "cube", "role": "respaldo", "size": [0.5, 0.06, 0.55], "location": [0, 0.22, 0.765]}
+      ]
+    },
+    {
+      "id": "casa",
+      "title": "Casa",
+      "parts": [
+        {"primitive": "cube", "role": "muro", "size": [2.0, 2.0, 1.6], "location": [0, 0, 0.8]},
+        {"primitive": "cone", "role": "techo", "size": [2.8, 2.8, 1.0], "location": [0, 0, 2.1], "rotation": [0, 0, 45]}
+      ]
+    },
+    {
+      "id": "torre",
+      "title": "Torre",
+      "parts": [
+        {"primitive": "cylinder", "role": "piso", "size": [1.2, 1.2, 1.0], "location": [0, 0, 0.5]},
+        {"primitive": "cylinder", "role": "piso", "size": [0.9, 0.9, 1.0], "location": [0, 0, 1.5]},
+        {"primitive": "cone", "role": "punta", "size": [1.1, 1.1, 0.8], "location": [0, 0, 2.4]}
+      ]
+    },
+    {
+      "id": "coche",
+      "title": "Coche",
+      "parts": [
+        {"primitive": "cube", "role": "carroceria", "size": [3.0, 1.4, 0.6], "location": [0, 0, 0.6]},
+        {"primitive": "cube", "role": "cabina", "size": [1.6, 1.2, 0.5], "location": [-0.2, 0, 1.15]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.6, 0.6, 0.25], "location": [1.0, 0.75, 0.3], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.6, 0.6, 0.25], "location": [-1.0, 0.75, 0.3], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.6, 0.6, 0.25], "location": [1.0, -0.75, 0.3], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.6, 0.6, 0.25], "location": [-1.0, -0.75, 0.3], "rotation": [90, 0, 0]}
+      ]
+    },
+    {
+      "id": "muneco-de-nieve",
+      "title": "Muñeco de nieve",
+      "parts": [
+        {"primitive": "sphere", "role": "bola", "size": [1.2, 1.2, 1.2], "location": [0, 0, 0.6]},
+        {"primitive": "sphere", "role": "bola", "size": [0.85, 0.85, 0.85], "location": [0, 0, 1.55]},
+        {"primitive": "sphere", "role": "bola", "size": [0.6, 0.6, 0.6], "location": [0, 0, 2.2]}
+      ]
+    },
+    {
+      "id": "tren",
+      "title": "Tren de juguete",
+      "parts": [
+        {"primitive": "cube", "role": "vagon", "size": [2.2, 1.2, 1.1], "location": [1.25, 0, 0.9]},
+        {"primitive": "cube", "role": "vagon", "size": [2.0, 1.2, 1.0], "location": [-1.15, 0, 0.85]},
+        {"primitive": "cylinder", "role": "chimenea", "size": [0.4, 0.4, 0.7], "location": [1.9, 0, 1.8]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [0.65, 0.7, 0.35], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [1.85, 0.7, 0.35], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [0.65, -0.7, 0.35], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [1.85, -0.7, 0.35], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [-1.65, 0.7, 0.35], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [-0.65, 0.7, 0.35], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [-1.65, -0.7, 0.35], "rotation": [90, 0, 0]},
+        {"primitive": "cylinder", "role": "rueda", "size": [0.7, 0.7, 0.2], "location": [-0.65, -0.7, 0.35], "rotation": [90, 0, 0]}
+      ]
+    }
+  ]
+}
