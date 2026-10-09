@@ -507,6 +507,11 @@ def probar_motor_35(contexto):
     practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
     revisar(any("si" in o for o in practicas.datos_intento(contexto)["escena"]["objetos"]),
             "el intento de la espada sí manda la silueta")
+    import dataclasses
+    espada = practicas.practica_activa(contexto)
+    solo_ejemplo = dataclasses.replace(espada, targets=tuple(t for t in espada.targets if t.validator != "figure.silhouette"))
+    revisar(any("si" in o for o in practicas._foto_para_enviar(contexto.scene, solo_ejemplo)["objetos"]),
+            "example.matches conserva la silueta incluso sin un objetivo figure.silhouette")
     datos = json.loads(json.dumps(_motor.foto.scene_to_dict(foto)))
     llegada, enviada = _motor.foto.scene_from_dict(datos).objects[0].silhouette, foto.objects[0].silhouette
     revisar(llegada.eje == enviada.eje and all(abs(a - b) < 1e-3 for x, y in zip(llegada.anchos, enviada.anchos)

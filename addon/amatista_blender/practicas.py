@@ -630,7 +630,12 @@ def _sincronizar_programado():
 def _foto_para_enviar(sc, practica):
     """La foto del intento. La silueta de cada malla solo viaja si la práctica la usa (pesa más que lo demás)."""
     foto = _motor.foto.scene_to_dict(capturar(sc))
-    if not any(t.validator in ("figure.silhouette", "example.matches") for t in practica.targets):
+    usa_silueta = any(
+        t.validator == "figure.silhouette" or (
+            t.validator == "example.matches" and any(p.get("join") for p in t.params.get("parts", ()))
+        ) for t in practica.targets
+    )
+    if not usa_silueta:
         for objeto in foto.get("objetos") or ():
             objeto.pop("si", None)
     return foto
