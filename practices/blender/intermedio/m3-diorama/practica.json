@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bi.m3.diorama",
-  "version": 1,
+  "version": 2,
   "title": "Tu diorama en la galería",
   "level": 3,
   "description": "Montas tu aldea (o cualquier modelo tuyo) como diorama: encuadre, iluminación de tres puntos, motor de render y la imagen final guardada.",
@@ -14,6 +14,7 @@
   "course": {"id": "blender_intermedio", "module": 3, "lesson": "bi3_practica"},
   "starter": {
     "scene": "keep",
+    "from_practice": "blender.bi.m2.aldea",
     "note": "Trabaja sobre tu mi_aldea.blend (o cualquier modelo tuyo): Amatista no cambia nada al empezar."
   },
   "roles": {"diorama": {"label": "Diorama", "description": "La pieza principal que presentas en la galería."}},

@@ -142,6 +142,22 @@ class AMATISTA_OT_elegir_practica(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class AMATISTA_OT_empezar_de_nuevo(bpy.types.Operator):
+    bl_idname = "amatista.empezar_de_nuevo"
+    bl_label = "Empezar de nuevo"
+    bl_description = ("Abre la práctica en una escena limpia. Lo que hiciste no se borra: queda en una escena "
+                      "«(anterior)» del mismo archivo")
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
+    def execute(self, context):
+        texto = practicas.reiniciar(context)
+        if texto:
+            self.report({"INFO"}, texto)
+        return {"FINISHED"} if texto else {"CANCELLED"}
+
+
 class AMATISTA_OT_actualizar_catalogo(bpy.types.Operator):
     bl_idname = "amatista.actualizar_catalogo"
     bl_label = "Actualizar lista"
@@ -291,6 +307,7 @@ CLASES = (
     AMATISTA_OT_abrir_practica,
     AMATISTA_OT_practica_actual,
     AMATISTA_OT_elegir_practica,
+    AMATISTA_OT_empezar_de_nuevo,
     AMATISTA_OT_actualizar_catalogo,
     AMATISTA_OT_comprobar,
     AMATISTA_OT_sincronizar,

@@ -6,6 +6,7 @@
 
 Sale con código 1 si algo falla. No necesita red: el servidor no se usa.
 """
+import importlib
 import json
 import sys
 import tempfile
@@ -150,6 +151,13 @@ def _limpiar():
         bpy.data.objects.remove(obj)
 
 
+def _escena_nueva(contexto, nombre="Prueba"):
+    """Una escena sin práctica, como la de un Blender recién abierto."""
+    sc = bpy.data.scenes.new(nombre)
+    contexto.window_manager.windows[0].scene = sc
+    return sc
+
+
 def _inicio_de_blender():
     """El cubo, la luz y la cámara con los que abre Blender."""
     bpy.ops.mesh.primitive_cube_add(size=2)
@@ -175,15 +183,17 @@ def probar_v3(contexto):
 
     # Tren: la escena de inicio se vacía y la primera píldora es la de los ejes.
     _limpiar()
+    _escena_nueva(contexto, "Inicio")
     _inicio_de_blender()
     practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
-    revisar(not bpy.data.objects, "tren: se quitan el cubo, la luz y la cámara de inicio")
+    revisar(contexto.scene.name == "Inicio" and not bpy.data.objects,
+            "tren: en un Blender recién abierto se queda en su escena y quita el cubo, la luz y la cámara")
     principal = aprendizaje.pildora_principal()
     revisar(principal is not None, f"tren: hay teoría desde el inicio ({principal and principal.id})")
     g = guia.guia_actual()
     revisar(g.action is not None and g.action.kind in ("add_cube", "add_primitive"),
             f"tren: Hazlo conmigo agrega una pieza ({g.action})")
-    revisar(bpy.ops.amatista.hazlo_conmigo() == {"FINISHED"} and len(bpy.data.objects) == 1, "tren: se agrega la pieza")
+    revisar(bpy.ops.amatista.hazlo_conmigo() == {"FINISHED"} and len(contexto.scene.objects) == 1, "tren: se agrega la pieza")
     # Motor 3.3: «Así se debe ver» con la imagen y el plano del modelo de referencia.
     from amatista_blender.interfaz import estilo
 
@@ -320,26 +330,35 @@ def probar_temas(contexto):
         return all(abs(x - y) < 1e-4 for x, y in zip(a, b))
 
     _limpiar()
+    sc = _escena_nueva(contexto, "Temas")
+    sc.world = bpy.data.worlds.new("Mundo de prueba")
+    sc.world.color = (0.1, 0.2, 0.3)
     practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
     revisar(igual(sc.world.color, cielo("taller")), "abrir el tren pinta el cielo del taller")
     revisar(not bpy.data.objects, "el ambiente del tema no agrega objetos a la escena")
     foto = _motor.foto.scene_to_dict(practicas.capturar(sc))
     sc.world.color = (1.0, 0.0, 0.0)
     revisar(_motor.foto.scene_to_dict(practicas.capturar(sc)) == foto, "el color del mundo no entra en la foto del motor")
+    sc.world.color = cielo("taller")
     practicas.activar(contexto, catalogo["blender.bpi.m3.pelota"]["definicion"], "paquete")
-    revisar(igual(sc.world.color, cielo("circo")), "cambiar de práctica cambia el cielo (circo)")
+    revisar(contexto.scene.world is not None and igual(contexto.scene.world.color, cielo("circo")),
+            "cambiar de práctica cambia el cielo (circo)")
     pal = hud.paleta(practicas.practica_activa(contexto))
     revisar(pal["tema"]["id"] == "circo" and pal["jefe"] is not None, "la pelota es la práctica del jefe final del circo")
     dibujar_todo(contexto)  # paneles, diálogos y HUD con el tema activo
+    practicas.cerrar(contexto)
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    revisar(contexto.scene == sc, "volver al tren vuelve a su escena")
     practicas.cerrar(contexto)
     revisar(igual(sc.world.color, (0.1, 0.2, 0.3)), "cerrar la práctica devuelve el cielo original")
     revisar(escenarios.CIELO_PREVIO not in sc, "no queda rastro del cielo previo en la escena")
 
     sc.world = None
     practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
-    revisar(sc.world is not None and sc.world.name == escenarios.NOMBRE_MUNDO, "sin mundo: Amatista crea uno con el cielo")
+    revisar(sc.world is not None and sc.world.name.startswith(escenarios.NOMBRE_MUNDO), "sin mundo: Amatista crea uno con el cielo")
+    creado = sc.world.name if sc.world else ""
     practicas.cerrar(contexto)
-    revisar(sc.world is None and escenarios.NOMBRE_MUNDO not in bpy.data.worlds, "al cerrar, el mundo creado se quita")
+    revisar(sc.world is None and creado not in bpy.data.worlds, "al cerrar, el mundo creado se quita")
     dibujar_vista_3d(contexto)  # sin práctica: el HUD no dibuja nada y no falla
     _limpiar()
 
@@ -412,6 +431,115 @@ def probar_motor_34(contexto):
     practicas.cerrar(contexto)
     revisar(not enfoque.activo(), "cerrar la práctica devuelve Blender completo")
     _ = (_motor, guia)
+
+
+def probar_escena_por_practica(contexto):
+    """Add-on 3.5: abrir otra práctica no arrastra lo de la anterior (cada una tiene su escena)."""
+    from amatista_blender import practicas
+
+    catalogo = practicas.catalogo()
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    escena_tren = contexto.scene
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    contexto.active_object.name = "Locomotora"
+    practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
+    revisar(contexto.scene != escena_tren, "abrir otra práctica cambia de escena")
+    revisar("Locomotora" not in contexto.scene.objects,
+            f"la espada empieza sin lo del tren ({[o.name for o in contexto.scene.objects]})")
+    revisar(contexto.scene.amatista.practica_id == "blender.bp.m2.espada", "la escena nueva es la de la espada")
+    revisar("Locomotora" in escena_tren.objects, "lo del tren sigue en su escena (nada se borra)")
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    revisar(contexto.scene == escena_tren and "Locomotora" in contexto.scene.objects,
+            "volver al tren devuelve su escena con lo que hiciste")
+    practicas.cerrar(contexto)
+    practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
+    revisar("Locomotora" not in contexto.scene.objects, "aunque cierres el tren, la espada no lo hereda")
+    practicas.cerrar(contexto)
+
+
+def probar_motor_35(contexto):
+    """Motor 3.5: la espada se reconoce por su silueta y el instructor dice qué parte falta."""
+    from amatista_blender import _motor, practicas
+    from amatista_blender.interfaz import paneles
+
+    silueta = importlib.import_module(_motor.engine.__name__ + ".figures.silueta")
+    catalogo = practicas.catalogo()
+    practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
+    practica = practicas.practica_activa(contexto)
+    for obj in list(contexto.scene.objects):
+        bpy.data.objects.remove(obj)
+
+    def malla(nombre, piezas):
+        verts, aristas = [], []
+        for p in piezas:
+            puntos, lineas = silueta.malla_de_pieza(p.primitive, p.size, p.location, p.rotation, p.segments)
+            base = len(verts)
+            verts.extend(puntos)
+            aristas.extend((base + i, base + j) for i, j in lineas)
+        datos = bpy.data.meshes.new(nombre)
+        datos.from_pydata(verts, aristas, [])
+        obj = bpy.data.objects.new(nombre, datos)
+        contexto.scene.collection.objects.link(obj)
+        return obj
+
+    barra = malla("Espada", [p for p in practica.reference.compared if p.name != "Guarda"])
+    foto = _motor.adapter.capture_scene(contexto.scene)
+    revisar(foto.objects[0].silhouette is not None and foto.objects[0].silhouette.eje == 2,
+            "la foto lleva la silueta de la malla (a lo largo de Z)")
+    reporte = practicas.evaluar(contexto)
+    figura = reporte.result("silueta")
+    revisar(not figura.passed and "Guarda" in figura.message, f"sin guarda, el instructor la pide ({figura.message})")
+    titulo, lista = practicas.lista_instructor(reporte)
+    revisar(titulo and any(i["texto"] == "Guarda" and not i["ok"] for i in lista), f"la lista «Tu figura» marca la guarda ({lista})")
+    revisar(paneles.AMATISTA_PT_figura.poll(contexto), "el panel «Tu figura» aparece en Practicar")
+    bpy.data.objects.remove(barra)
+    espada = malla("Espada", practica.reference.compared)
+    contexto.view_layer.objects.active = espada
+    reporte = practicas.evaluar(contexto)
+    revisar(reporte.result("silueta").passed, f"la espada completa se reconoce ({reporte.result('silueta').message})")
+    bpy.ops.object.mode_set(mode="EDIT")
+    foto = _motor.adapter.capture_scene(contexto.scene)
+    revisar(foto.objects[0].silhouette is not None, "en Modo Edición también se mide la silueta (bmesh)")
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")  # desde Modo Edición
+    revisar(contexto.mode == "OBJECT", "cambiar de práctica en Modo Edición vuelve antes a Modo Objeto")
+    revisar(all("si" not in o for o in practicas.datos_intento(contexto)["escena"]["objetos"]),
+            "el intento del tren no manda siluetas (el tren no las usa)")
+    practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
+    revisar(any("si" in o for o in practicas.datos_intento(contexto)["escena"]["objetos"]),
+            "el intento de la espada sí manda la silueta")
+    datos = json.loads(json.dumps(_motor.foto.scene_to_dict(foto)))
+    llegada, enviada = _motor.foto.scene_from_dict(datos).objects[0].silhouette, foto.objects[0].silhouette
+    revisar(llegada.eje == enviada.eje and all(abs(a - b) < 1e-3 for x, y in zip(llegada.anchos, enviada.anchos)
+                                               for a, b in zip(x, y)), "la silueta viaja igual al servidor")
+    # La plataforma maneja la práctica: el latido lleva al instructor y las órdenes se cumplen.
+    from amatista_blender import enlace
+
+    detalle = enlace._datos().get("detalle") or {}
+    revisar(detalle.get("figura") and len(detalle.get("lista", [])) == 5 and detalle.get("modo") == "OBJECT",
+            f"el latido lleva el paso, el mensaje y la lista de la figura ({detalle})")
+    revisar(enlace.cumplir({"id": "o35a", "tipo": "comprobar", "datos": {"practica_id": "blender.bp.m2.espada"}}),
+            "orden «comprobar» desde la plataforma")
+    pistas_antes = sum(practicas.pistas(contexto).values())
+    enlace.cumplir({"id": "o35b", "tipo": "pista", "datos": {"practica_id": "blender.bp.m2.espada"}})
+    revisar(sum(practicas.pistas(contexto).values()) == pistas_antes + 1, "orden «pista»: se revela la siguiente")
+    revisar(not enlace.cumplir({"id": "o35c", "tipo": "pista", "datos": {"practica_id": "blender.bp.m1.tren"}}),
+            "una orden para otra práctica no se aplica a la abierta")
+    revisar(practicas.nombre_para_guardar(practica) == "mi_espada.blend", "guardar desde la plataforma usa mi_espada.blend")
+    escena_antes = contexto.scene
+    enlace.cumplir({"id": "o35d", "tipo": "reiniciar", "datos": {"practica_id": "blender.bp.m2.espada"}})
+    revisar(contexto.scene != escena_antes and not contexto.scene.objects
+            and contexto.scene.amatista.practica_id == "blender.bp.m2.espada",
+            "«empezar de nuevo»: escena limpia con la misma práctica")
+    revisar("Espada" in escena_antes.objects and escena_antes.name.endswith("(anterior)"),
+            "lo anterior no se borra: queda en la escena «(anterior)»")
+    enlace.cumplir({"id": "o35e", "tipo": "hazlo_conmigo", "datos": {"practica_id": "blender.bp.m2.espada"}})
+    revisar(len(contexto.scene.objects) == 1 and contexto.scene.objects[0].type == "MESH",
+            "«Hazlo conmigo» desde la plataforma agrega el cubo del primer paso")
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    practicas.activar(contexto, catalogo["blender.bp.m2.espada"]["definicion"], "paquete")
+    revisar(contexto.scene != escena_antes, "volver a la espada abre la escena nueva, no la anterior")
+    dibujar_todo(contexto)
+    practicas.cerrar(contexto)
 
 
 def main():
@@ -512,7 +640,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "3.4.0", "el intento lleva la versión 3.4 del add-on")
+    revisar(datos["version_addon"] == "3.5.0", "el intento lleva la versión 3.5 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -546,9 +674,11 @@ def main():
     revisar(json.loads(exportado.read_text())["targets"][0]["hints"], "exportar practice.json con pistas")
     contexto.window_manager.amatista.modo = "alumno"
 
+    probar_escena_por_practica(contexto)
     probar_v3(contexto)
     probar_temas(contexto)
     probar_motor_34(contexto)
+    probar_motor_35(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

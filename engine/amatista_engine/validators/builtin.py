@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from ..registry import ParamSpec as P
 from ..registry import ValidatorRegistry
-from . import animation, figure, lighting, logic, materials, mesh, objects, recognize, scene, shape, spatial, transforms
+from . import (animation, figure, lighting, logic, materials, mesh, objects, recognize, scene, shape, silhouette, spatial,
+               transforms)
 
 # Parámetros comunes del selector de objetos (validators/base.py).
 SELECTOR = (
@@ -304,6 +305,23 @@ def _registrar_v3(registry: ValidatorRegistry) -> None:
             P("title", "reference", "Nombre de la figura (de «reference.title»)"),
         ),
         watch=TRANSFORMACION + ("OBJECT_DATA",),
+    )
+    # --- Motor 3.5: la silueta de una figura hecha en una sola malla (figures/silueta.py) ---
+    r(
+        "figure.silhouette", silhouette.silhouette, label="Amatista reconoce la silueta", category="forma",
+        description=("Para figuras modeladas en una sola malla (una espada): corta la malla en rebanadas a lo largo y "
+                     "compara su silueta con la del modelo parte por parte (pomo, mango, guarda, hoja, punta). Dice qué "
+                     "parte falta o no tiene la medida y con qué tecla se arregla, y deja una lista de revisión. Lo que "
+                     "da sentido a la figura (una parte mucho más ancha que su vecina, la punta que se afila) se exige "
+                     "en todos los niveles; las medidas, según el nivel."),
+        params=SELECTOR + (
+            P("strictness", "text", "Exigencia (forma, proporcion, cercana, medidas, exacta; vacío = la del nivel)"),
+            # Los pone el cargador desde «reference» y «level»; no se escriben a mano.
+            P("parts", "reference", "Piezas del modelo (de «reference»)"),
+            P("level", "reference", "Nivel de la práctica (de «level»)"),
+            P("title", "reference", "Nombre de la figura (de «reference.title»)"),
+        ),
+        watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
     )
     r(
         "dimension.approx", figure.approx_dimension, label="Medida aproximada", category="transformaciones",

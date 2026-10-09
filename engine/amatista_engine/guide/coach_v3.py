@@ -7,6 +7,7 @@ una acción por línea, la tecla primero.
 """
 from __future__ import annotations
 
+import re
 from typing import Dict, Optional
 
 from ..validators.base import primitiva, selector
@@ -425,8 +426,49 @@ def coach_varies(ctx: Contexto) -> Parcial:
     )
 
 
+# --- Silueta de una malla (motor 3.5) ---------------------------------------------------
+
+_TECLAS = re.compile(r"\(([^()]*)\)")
+
+
+def _teclas_de(consejo: str):
+    """«…escálala hacia los lados (S, X).» → ("S", "X"); «(M › En el centro)» → ("M",)."""
+    teclas = []
+    for grupo in _TECLAS.findall(consejo or ""):
+        for parte in grupo.replace(" o ", ",").split(","):
+            parte = parte.split("›")[0].strip()
+            if parte and len(parte) <= 12 and parte not in teclas:
+                teclas.extend(t.strip() for t in parte.split("+") if t.strip())
+    return tuple(teclas[:4])
+
+
+def coach_silhouette(ctx: Contexto) -> Parcial:
+    """La lista del instructor: la primera parte pendiente es el paso; el resto se ve en la lista."""
+    d = ctx.result.details
+    nombre = d.get("object")
+    pendientes = [i for i in d.get("checklist") or [] if not i.get("ok") and i.get("consejo")]
+    if ctx.result.passed:
+        return Parcial(ctx.result.message, TONO_LOGRADO, highlights=_bien([o for o in ctx.scene.objects
+                                                                           if o.name == nombre], "Tu figura"))
+    if not nombre:
+        return Parcial(ctx.result.message, TONO_ANIMO,
+                       (Paso("Con el ratón sobre la vista 3D, abre el menú Agregar", ("Shift", "A")),
+                        Paso("Elige Malla › Cubo")),
+                       action=GuideAction("add_primitive", "Agregar un cubo conmigo", primitive="cube"))
+    pasos = [Paso("Entra a Modo Edición si no lo estás", ("Tab",))]
+    if pendientes:
+        primero = pendientes[0]
+        pasos.append(Paso(primero["consejo"], _teclas_de(primero["consejo"])))
+        if len(pendientes) > 1:
+            pasos.append(Paso(f"Después: {', '.join(i['texto'] for i in pendientes[1:])} (mira la lista «Tu figura»)"))
+    return Parcial(ctx.result.message, TONO_CERCA if len(pendientes) <= 1 else TONO_ANIMO, tuple(pasos),
+                   _corregir([nombre], pendientes[0]["texto"] if pendientes else "Revisa la forma"),
+                   action=GuideAction("edit_mode", "Entrar a Edición conmigo", (nombre,)))
+
+
 ENTRENADORES_V3: Dict[str, object] = {
     "object.count": coach_object_count,
+    "figure.silhouette": coach_silhouette,
     "shape.thinnest_axis": coach_thinnest,
     "shape.proportion": coach_proportion,
     "spatial.grounded": coach_grounded,

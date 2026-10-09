@@ -290,6 +290,7 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
         fila = layout.row(align=True)
         fila.operator("amatista.abrir_plataforma", text="Plataforma", icon="URL").ruta = "#/panel"
         fila.operator("amatista.elegir_practica", text="Otra práctica", icon="FILE_REFRESH")
+        fila.operator("amatista.empezar_de_nuevo", text="De nuevo", icon="LOOP_BACK")
 
     def _modelo(self, layout, context, practica, reporte):
         """«Así se debe ver»: la imagen del modelo de referencia (motor 3.3)."""
@@ -496,6 +497,48 @@ class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
                 op.objetivo = objetivo.id
             if depurar:
                 _dibujar_detalle(contenedor, context, reporte.result(objetivo.id))
+
+
+ICONO_LISTA = {"Bien": "CHECKMARK", "Detalle": "LIGHT"}
+
+
+class AMATISTA_PT_figura(_Base, bpy.types.Panel):
+    """Motor 3.5: la lista del instructor (qué partes del modelo ya tiene tu figura y qué falta)."""
+
+    bl_idname = "AMATISTA_PT_figura"
+    bl_label = "Tu figura"
+    bl_parent_id = "AMATISTA_PT_principal"
+
+    @classmethod
+    def poll(cls, context):
+        if not seccion(context, "practicar") or practicas.practica_activa(context) is None:
+            return False
+        return bool(practicas.lista_instructor()[1])
+
+    def draw_header(self, context):
+        self.layout.label(text="", icon="OUTLINER_OB_MESH")
+
+    def draw(self, context):
+        dibujar_lista(self.layout, context, *practicas.lista_instructor())
+
+
+def dibujar_lista(layout, context, titulo, lista, consejos=2):
+    """Cada parte con ✓, ! o una bombilla (detalle); los primeros consejos, abiertos."""
+    if not lista:
+        return
+    hechas = sum(1 for i in lista if i.get("ok"))
+    cabecera = layout.row()
+    cabecera.active = False
+    cabecera.label(text=f"{titulo}: {hechas} de {len(lista)} partes")
+    abiertos = 0
+    for item in lista:
+        estado = item.get("estado") or ("Bien" if item.get("ok") else "Falta")
+        fila = layout.row(align=True)
+        fila.alert = not item.get("ok")
+        fila.label(text=f"{item.get('texto', '')}: {estado.lower()}", icon=ICONO_LISTA.get(estado, "ERROR"))
+        if item.get("consejo") and abiertos < consejos:
+            abiertos += 1
+            estilo.parrafo(layout, context, item["consejo"], icon="BLANK1", alerta=False)
 
 
 class AMATISTA_PT_herramientas(_Base, bpy.types.Panel):
@@ -1046,6 +1089,7 @@ CLASES = (
     AMATISTA_PT_aprender,
     AMATISTA_PT_practica,
     AMATISTA_PT_curso,
+    AMATISTA_PT_figura,
     AMATISTA_PT_herramientas,
     AMATISTA_PT_roles,
     AMATISTA_PT_objetivos,

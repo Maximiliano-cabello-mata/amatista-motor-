@@ -199,12 +199,77 @@ def practica_borrador():
         return None
 
 
+USADA = "amatista_practica"  # marca en la escena: la práctica que se hizo en ella (aunque se cierre)
+USADA_EN = "amatista_practica_en"  # cuándo se abrió (si hay dos escenas de la misma práctica, gana la última)
+PREFIJO_ESCENA = "Amatista · "
+
+
+def _practica_de_escena(sc):
+    return sc.amatista.practica_id or sc.get(USADA, "")
+
+
+def _escena_para(context, practica, origen):
+    """Cada práctica tiene su propia escena de Blender (add-on 3.5).
+
+    Antes, abrir otra práctica la cargaba en la misma escena y lo de la
+    anterior seguía ahí (el tren aparecía en la práctica de la espada). Ahora:
+
+    - la escena actual sirve si nunca tuvo práctica o ya es la de esta;
+    - si la práctica sigue a la anterior (``starter.from_practice``: pintar
+      la nave que modelaste), se queda en la actual;
+    - si no, se vuelve a la escena de esta práctica o se crea una vacía.
+
+    Nada se borra: lo de la práctica anterior queda en su escena (selector
+    de escenas arriba a la derecha) y se recupera al volver a abrirla.
+    """
+    sc = escena(context)
+    anterior = _practica_de_escena(sc)
+    inicio = getattr(practica, "starter", None)
+    continua = bool(inicio is not None and inicio.from_practice and inicio.from_practice == anterior)
+    if not anterior or anterior == practica.id or origen == "borrador" or continua:
+        return sc, ""
+    suyas = [s for s in bpy.data.scenes if _practica_de_escena(s) == practica.id]
+    destino = max(suyas, key=lambda s: float(s.get(USADA_EN, 0.0)), default=None)  # la última en que trabajaste
+    creada = destino is None
+    if creada:
+        destino = bpy.data.scenes.new((PREFIJO_ESCENA + practica.title)[:63])
+        destino.unit_settings.system = sc.unit_settings.system
+    ventana = getattr(context, "window", None) or getattr(bpy.context, "window", None)
+    ventanas = [ventana] if ventana is not None else list(getattr(bpy.context.window_manager, "windows", ()))
+    if not ventanas:
+        raise RuntimeError("No hay una ventana de Blender para cambiar de escena")
+    _a_modo_objeto()  # la malla en edición se guarda antes de dejar su escena
+    ventanas[0].scene = destino
+    titulo = _titulo_de(anterior)
+    if creada:
+        return destino, f"Empiezas en una escena nueva. Lo de «{titulo}» quedó guardado en su escena."
+    return destino, f"Volviste a tu escena de esta práctica. Lo de «{titulo}» sigue en la suya."
+
+
+def _a_modo_objeto():
+    obj = getattr(bpy.context, "active_object", None)
+    if obj is not None and getattr(obj, "mode", "OBJECT") != "OBJECT":
+        try:
+            bpy.ops.object.mode_set(mode="OBJECT")
+        except RuntimeError as error:
+            print(f"[Amatista] No se pudo volver a Modo Objeto: {error}")
+
+
+def _titulo_de(practica_id):
+    meta = catalogo().get(practica_id) or {}
+    return meta.get("title") or practica_id
+
+
 def activar(context, datos, origen="paquete"):
-    """Abre una práctica (dict JSON) en la escena actual y la evalúa."""
+    """Abre una práctica (dict JSON) en su propia escena y la evalúa."""
     resultado = _motor.practica.compile_practice(datos)
     if resultado.practice is None:
         raise ValueError(resultado.errors[0] if resultado.errors else "Práctica inválida")
-    sc = escena(context)
+    sc, cambio = _escena_para(context, resultado.practice, origen)
+    if cambio:
+        context = bpy.context  # el contexto del operador sigue apuntando a la escena anterior
+    sc[USADA] = datos["id"]
+    sc[USADA_EN] = time.time()
     nueva = sc.amatista.practica_id != datos["id"]
     sc.amatista.practica_id = datos["id"]
     sc.amatista.practica_json = json.dumps(datos, ensure_ascii=False)
@@ -233,6 +298,8 @@ def activar(context, datos, origen="paquete"):
     except Exception as error:  # noqa: BLE001 - el ambiente es decoración: nunca impide practicar
         tema = None
         print(f"[Amatista] No se pudo aplicar el ambiente del tema: {error}")
+    if cambio:
+        guia.avisar("Práctica nueva, escena nueva", cambio, "animo")
     if preparada:
         guia.avisar("Escena lista", temas.voz(tema, preparada) if tema else preparada, "animo")
     try:
@@ -244,6 +311,62 @@ def activar(context, datos, origen="paquete"):
         _abrir_teoria(resultado.practice)
     enlace.latir_pronto()
     return resultado
+
+
+def reiniciar(context):
+    """«Empezar de nuevo» (motor 3.5): una escena limpia para la práctica, sin borrar nada.
+
+    La escena de antes se queda en el archivo con «(anterior)» en el nombre
+    y deja de ser la de la práctica: abrirla otra vez trae la nueva.
+    """
+    sc = escena(context)
+    practica = practica_activa(context)
+    if practica is None:
+        return None
+    datos = json.loads(sc.amatista.practica_json)
+    origen = sc.amatista.origen or "paquete"
+    _a_modo_objeto()
+    cerrar(context)
+    sc[USADA] = f"{practica.id}#anterior"
+    sc.name = (sc.name + " (anterior)")[:63]
+    nueva = bpy.data.scenes.new((PREFIJO_ESCENA + practica.title)[:63])
+    nueva.unit_settings.system = sc.unit_settings.system
+    ventana = getattr(context, "window", None) or (bpy.context.window_manager.windows[0]
+                                                   if bpy.context.window_manager.windows else None)
+    if ventana is None:
+        return None
+    ventana.scene = nueva
+    activar(bpy.context, datos, origen)
+    return f"Empiezas de nuevo en una escena limpia. Lo anterior quedó en «{sc.name}»."
+
+
+def nombre_para_guardar(practica):
+    """mi_espada.blend: el nombre que pide el paso «Guarda tu…» (file.named) o el de la práctica."""
+    for objetivo in getattr(practica, "targets", ()):
+        if objetivo.validator == "file.named" and objetivo.params.get("contains"):
+            return f"mi_{objetivo.params['contains']}.blend"
+    return f"mi_{practica.id.split('.')[-1]}.blend"
+
+
+def guardar_practica(context):
+    """«Guardar» desde la plataforma: el archivo de siempre o, si es nuevo, Documentos/Amatista/mi_….blend."""
+    practica = practica_activa(context)
+    if bpy.data.filepath:
+        bpy.ops.wm.save_mainfile()
+        return f"Guardado en {Path(bpy.data.filepath).name}."
+    if practica is None:
+        return None
+    carpeta = Path.home() / "Documents" / "Amatista"
+    if not (Path.home() / "Documents").exists():
+        carpeta = Path.home() / "Amatista"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    base = Path(nombre_para_guardar(practica)).stem
+    ruta, n = carpeta / f"{base}.blend", 1
+    while ruta.exists():  # nunca pisa un archivo que ya existe
+        n += 1
+        ruta = carpeta / f"{base}_{n}.blend"
+    bpy.ops.wm.save_as_mainfile(filepath=str(ruta))
+    return f"Guardado en {ruta}."
 
 
 def mostrar_en_amatista(context=None):
@@ -385,6 +508,29 @@ def evaluar(context=None, motivo="manual"):
     return reporte
 
 
+def lista_instructor(reporte=None):
+    """(título, [{texto, ok, estado, consejo}]) de la figura (motor 3.5), o (None, []).
+
+    La dan figure.silhouette y figure.recognize: qué partes del modelo ya
+    están y qué falta, con la tecla que lo arregla. Primero la del paso
+    actual; si el paso actual no es la figura, la de la figura.
+    """
+    reporte = reporte or ESTADO["reporte"]
+    if reporte is None:
+        return None, []
+    resultados = list(reporte.results)
+    actual = reporte.result(reporte.current_target_id) if reporte.current_target_id else None
+    if actual is not None:
+        resultados.insert(0, actual)
+    for r in resultados:
+        lista = (r.details or {}).get("checklist") if r is not None else None
+        if lista:
+            practica = ESTADO["practica"]
+            objetivo = practica.target(r.target_id) if practica is not None else None
+            return (objetivo.title if objetivo is not None and objetivo.title else r.target_id), list(lista)
+    return None, []
+
+
 def evaluar_pronto():
     if not bpy.app.timers.is_registered(_evaluar_ahora):
         bpy.app.timers.register(_evaluar_ahora, first_interval=0.05)
@@ -480,13 +626,22 @@ def _sincronizar_programado():
     return None
 
 
+def _foto_para_enviar(sc, practica):
+    """La foto del intento. La silueta de cada malla solo viaja si la práctica la usa (pesa más que lo demás)."""
+    foto = _motor.foto.scene_to_dict(capturar(sc))
+    if not any(t.validator == "figure.silhouette" for t in practica.targets):
+        for objeto in foto.get("objetos") or ():
+            objeto.pop("si", None)
+    return foto
+
+
 def datos_intento(context, modo="alumno"):
     sc = escena(context)
     practica = practica_activa(context)
     return {
         "practica_id": practica.id,
         "version": practica.version,
-        "escena": _motor.foto.scene_to_dict(capturar(sc)),
+        "escena": _foto_para_enviar(sc, practica),
         "pistas": pistas(context),
         "correcciones": sc.amatista.correcciones,
         "version_addon": ajustes.VERSION_ADDON,

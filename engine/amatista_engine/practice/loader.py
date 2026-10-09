@@ -217,7 +217,7 @@ def _objetivo(raw: Any, index: int, e: _Errores, ids: set, lista: str = "targets
         messages={k: v.strip() for k, v in mensajes.items() if k in ("pass", "fail") and v.strip()},
         optional=optional,
         guide=_guia(raw.get("guide"), f"{donde}guide", e),
-        fix=_arreglo(raw.get("fix"), f"{donde}fix", e) if lista == "guards" else None,
+        fix=_arreglo(raw.get("fix"), f"{donde}fix", e),
     )
 
 
@@ -457,15 +457,21 @@ def _referencia(raw: Any, e: _Errores) -> Optional[ReferenceModel]:
 
 
 def pieza_como_dict(pieza: ReferencePart) -> Dict[str, Any]:
-    return {"group": pieza.group, "role": pieza.role, "primitive": pieza.primitive, "size": list(pieza.size),
-            "location": list(pieza.location), "rotation": list(pieza.rotation), "join": pieza.join}
+    pieza_dict = {"group": pieza.group, "role": pieza.role, "primitive": pieza.primitive, "size": list(pieza.size),
+                  "location": list(pieza.location), "rotation": list(pieza.rotation), "join": pieza.join}
+    if pieza.name:  # figure.silhouette nombra las partes («Falta la parte «Guarda»»)
+        pieza_dict["name"] = pieza.name
+    if pieza.segments:
+        pieza_dict["segments"] = pieza.segments
+    return pieza_dict
 
 
 def _etiquetas(roles) -> Dict[str, str]:
     return {r.id: r.label for r in roles or () if r.label}
 
 
-FIGURAS = ("figure.resembles", "figure.recognize")
+FIGURAS = ("figure.resembles", "figure.recognize", "figure.silhouette")
+CON_NIVEL = ("figure.recognize", "figure.silhouette")  # reciben nivel, exigencia y título de la práctica
 
 
 def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[ReferenceModel], roles, e: _Errores,
@@ -480,11 +486,12 @@ def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[Refe
             if referencia is None or not referencia.compared:
                 e.add(f"'{objetivo.id}': {objetivo.validator} necesita 'reference' con piezas en la práctica")
             else:
-                params = {"tolerance": referencia.tolerance, "labels": _etiquetas(roles), **objetivo.params,
-                          "parts": [pieza_como_dict(p) for p in referencia.compared]}
-                if referencia.flexible:
+                propios = {} if objetivo.validator == "figure.silhouette" else {
+                    "tolerance": referencia.tolerance, "labels": _etiquetas(roles)}
+                params = {**propios, **objetivo.params, "parts": [pieza_como_dict(p) for p in referencia.compared]}
+                if referencia.flexible and objetivo.validator != "figure.silhouette":
                     params.setdefault("flexible", list(referencia.flexible))
-                if objetivo.validator == "figure.recognize":
+                if objetivo.validator in CON_NIVEL:
                     params.setdefault("level", nivel)
                     if referencia.strictness:
                         params.setdefault("strictness", referencia.strictness)
@@ -740,7 +747,7 @@ def _dump_objetivo(t: TargetDefinition, referencia: Optional[ReferenceModel] = N
     if t.validator in FIGURAS and referencia is not None:
         # Las piezas viven en «reference»; el objetivo solo guarda lo propio.
         objetivo["params"].pop("parts", None)
-        if t.validator == "figure.recognize":
+        if t.validator in CON_NIVEL:
             for clave, valor in (("level", nivel), ("strictness", referencia.strictness), ("title", referencia.title)):
                 if objetivo["params"].get(clave) == valor:
                     objetivo["params"].pop(clave)

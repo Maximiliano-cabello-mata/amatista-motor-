@@ -1,7 +1,7 @@
 """Escena ⇄ JSON compacto para enviarla al servidor.
 
-El add-on manda esta «foto» (nombres, tipos, roles, medidas; nunca la malla
-ni el .blend) y el servidor vuelve a evaluar la práctica con el mismo motor:
+El add-on manda esta «foto» (nombres, tipos, roles, medidas y la silueta;
+nunca la malla ni el .blend) y el servidor vuelve a evaluar la práctica con el mismo motor:
 el progreso que se guarda en Oracle lo calcula Amatista, no el cliente.
 
 Claves cortas por objeto (las del motor v3 son opcionales):
@@ -17,6 +17,7 @@ Claves cortas por objeto (las del motor v3 son opcionales):
     dv  entero                           vértices encimados
     sd  [[-, +], [-, +], [-, +]]         vértices a cada lado de cada eje local
     an  [{p, i, k: [[fotograma, valor]]}] fotogramas clave
+    si  {e, l, w: [[ancho, grueso]]}     silueta de la malla (motor 3.5): eje, largo y rebanadas
 
 y de la escena: activo, seleccion, camara, motor_render, renders, fotogramas.
 """
@@ -26,13 +27,14 @@ import math
 from typing import Any, Dict, Optional, Sequence
 
 from .errors import InvalidPracticeError
-from .models import AnimationChannel, MaterialInfo, ModifierInfo, SceneObject, SceneState
+from .models import AnimationChannel, MaterialInfo, ModifierInfo, SceneObject, SceneState, Silhouette
 
 MAX_OBJETOS = 500
 MAX_LISTA = 32
 MAX_NOMBRE = 120
 MAX_CANALES = 12
 MAX_CLAVES = 120
+MAX_REBANADAS = 64  # rebanadas de la silueta de una malla (motor 3.5)
 RUTAS_ANIMACION = ("location", "rotation_euler", "scale")
 
 
@@ -118,6 +120,9 @@ def _extras_v3(o: SceneObject, item: Dict[str, Any]) -> None:
         item["dv"] = o.duplicate_vertices
     if o.side_counts is not None:
         item["sd"] = [list(par) for par in o.side_counts]
+    if o.silhouette is not None:
+        item["si"] = {"e": o.silhouette.eje, "l": _r(o.silhouette.largo),
+                      "w": [[_r(a), _r(b)] for a, b in o.silhouette.anchos[:MAX_REBANADAS]]}
     if o.animation:
         item["an"] = [
             {"p": c.path, "i": c.index, "k": [[_r(f), _r(v)] for f, v in c.keys[:MAX_CLAVES]]}
@@ -220,6 +225,23 @@ def _animacion(valor) -> tuple:
     return tuple(canales)
 
 
+def _silueta(valor) -> Optional[Silhouette]:
+    """La silueta de la malla (motor 3.5); si viene rota, se ignora."""
+    if not isinstance(valor, dict):
+        return None
+    try:
+        eje = int(valor.get("e", 2))
+        largo = float(valor.get("l", 0.0))
+        anchos = tuple((max(0.0, float(a)), max(0.0, float(b))) for a, b in list(valor.get("w") or [])[:MAX_REBANADAS])
+    except (TypeError, ValueError):
+        return None
+    if eje not in (0, 1, 2) or not 0 < largo < 1e6 or len(anchos) < 4:
+        return None
+    if not all(math.isfinite(a) and math.isfinite(b) and a < 1e6 and b < 1e6 for a, b in anchos):
+        return None
+    return Silhouette(eje, largo, anchos)
+
+
 def _lados(valor):
     if valor is None:
         return None
@@ -283,6 +305,7 @@ def scene_from_dict(data: Dict[str, Any]) -> SceneState:
                 duplicate_vertices=_entero(crudo.get("dv")),
                 side_counts=_lados(crudo.get("sd")),
                 animation=_animacion(crudo.get("an")),
+                silhouette=_silueta(crudo.get("si")),
             )
         )
     archivo = str(data.get("archivo") or "")[:255]

@@ -7,7 +7,8 @@ Motor v3: además de medidas y roles captura los ajustes de los
 modificadores, los valores del Principled BSDF, luces y cámaras (hacia dónde
 miran), los fotogramas clave, los vértices encimados (lo que deja «E» y
 luego cancelar), de qué primitiva salió cada malla y cuántos renders se
-hicieron. Funciona en Blender 4.2 a 5.x (la API de acciones cambió en 4.4 y
+hicieron. Motor 3.5: la silueta de las mallas chicas (figures/silueta.py).
+Funciona en Blender 4.2 a 5.x (la API de acciones cambió en 4.4 y
 en 5.0).
 """
 
@@ -16,6 +17,7 @@ from . import tagger
 
 # Mallas más grandes no se revisan vértice por vértice (sería lento en cada cambio).
 MAX_VERTICES_SALUD = 50000
+MAX_VERTICES_SILUETA = 20000  # la silueta (motor 3.5) es para modelos low-poly
 DISTANCIA_ENCIMADOS = 1e-4
 RUTAS_ANIMACION = ("location", "rotation_euler", "scale")
 MAX_CLAVES = 120
@@ -40,7 +42,7 @@ def _vector(coordenadas):
 
 
 def _malla_viva(obj):
-    """(vértices como tuplas, índices de material de las caras) de la malla.
+    """(vértices como tuplas, índices de material de las caras, aristas) de la malla.
 
     En modo Edición la malla del objeto no se actualiza hasta salir: se lee
     con bmesh para ver lo que el alumno tiene delante.
@@ -51,10 +53,27 @@ def _malla_viva(obj):
             import bmesh
 
             bm = bmesh.from_edit_mesh(datos)
-            return [tuple(v.co) for v in bm.verts], [f.material_index for f in bm.faces]
+            bm.verts.index_update()
+            return ([tuple(v.co) for v in bm.verts], [f.material_index for f in bm.faces],
+                    [(e.verts[0].index, e.verts[1].index) for e in bm.edges])
         except Exception:  # noqa: BLE001
             pass
-    return [tuple(v.co) for v in datos.vertices], [p.material_index for p in datos.polygons]
+    return ([tuple(v.co) for v in datos.vertices], [p.material_index for p in datos.polygons],
+            [tuple(e.vertices) for e in datos.edges])
+
+
+def _silueta(obj, vertices, aristas):
+    """Silueta en el mundo (motor 3.5): solo mallas chicas, para revisar en vivo sin trabarse."""
+    if not aristas or len(vertices) > MAX_VERTICES_SILUETA:
+        return None
+    from ..figures.silueta import silueta_de_malla
+
+    matriz = obj.matrix_world
+    try:
+        mundo = [tuple(matriz @ _vector(co)) for co in vertices]
+        return silueta_de_malla(mundo, aristas)
+    except Exception:  # noqa: BLE001 - una malla rara no rompe la foto
+        return None
 
 
 def _encimados(vertices):
@@ -180,9 +199,9 @@ def capture_object(obj):
     datos = getattr(obj, "data", None)
     es_malla = obj.type == "MESH" and datos is not None
     caja_min, caja_max = _caja_mundo(obj)
-    vertices = indices_material = None
+    vertices = indices_material = aristas = None
     if es_malla:
-        vertices, indices_material = _malla_viva(obj)
+        vertices, indices_material, aristas = _malla_viva(obj)
     slots = [s.material.name if s.material else None for s in getattr(obj, "material_slots", ())]
     usados = None
     if es_malla:
@@ -219,6 +238,7 @@ def capture_object(obj):
         duplicate_vertices=_encimados(vertices) if es_malla else None,
         side_counts=_lados(vertices) if es_malla and len(vertices) <= MAX_VERTICES_SALUD else None,
         animation=_animacion(obj),
+        silhouette=_silueta(obj, vertices, aristas) if es_malla else None,
     )
 
 

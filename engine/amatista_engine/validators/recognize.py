@@ -43,6 +43,41 @@ def mensaje_relacion(relacion, detalle: Dict[str, Any], etiquetas: Dict[str, str
     return "Tu figura todavía no tiene la forma del modelo."
 
 
+PRIMITIVA_TEXTO = {"cube": "Cubo", "cylinder": "Cilindro", "sphere": "Esfera UV", "uv_sphere": "Esfera UV",
+                   "icosphere": "Icoesfera", "cone": "Cono", "torus": "Toroide", "plane": "Plano"}
+
+
+def lista_de_revision(r, partes, scene: SceneState, etiquetas: Dict[str, str], flexibles, perfil) -> list:
+    """La lista del instructor (motor 3.5): cada pieza del modelo y cada relación que da sentido a la figura."""
+    esperadas: Dict[str, set] = {}
+    primitivas: Dict[str, str] = {}
+    for i, pieza in enumerate(partes):
+        grupo = pieza.get("role") or pieza.get("primitive", "")
+        esperadas.setdefault(grupo, set()).add(pieza.get("join") or f"#{i}")
+        primitivas.setdefault(grupo, pieza.get("primitive", "cube"))
+    tienes: Dict[str, int] = {}
+    for obj in scene.objects:
+        grupo = r.deducidos.get(obj.name) or (obj.roles[0] if obj.roles else None)
+        if grupo:
+            tienes[grupo] = tienes.get(grupo, 0) + 1
+    lista = []
+    for grupo, juntas in esperadas.items():
+        nombre = _nombre_grupo(grupo, etiquetas)
+        falta = 0 if grupo in flexibles and tienes.get(grupo) else len(juntas) - tienes.get(grupo, 0)
+        consejo = ""
+        if falta > 0:
+            consejo = (f"Te {'falta' if falta == 1 else 'faltan'} {falta} «{nombre}»: Shift + A › Malla › "
+                       f"{PRIMITIVA_TEXTO.get(primitivas[grupo], 'Cubo')}.")
+        lista.append({"texto": nombre, "ok": falta <= 0, "estado": "Bien" if falta <= 0 else "Falta",
+                      "consejo": consejo})
+    for _, relacion, detalle in r.fallas[:4]:
+        lista.append({"texto": "Que tenga sentido", "ok": False, "estado": "Revisar",
+                      "consejo": mensaje_relacion(relacion, detalle, etiquetas)})
+    if r.forma < perfil.min_forma and r.peor and r.peor.get("tipo") not in ("vacia", "falta", "cantidad", "sin_roles"):
+        lista.append({"texto": "Proporciones", "ok": False, "estado": "Revisar", "consejo": mensaje_de(r.peor, etiquetas)})
+    return lista
+
+
 def recognize(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     partes = target.params.get("parts")
     if not isinstance(partes, list) or not partes:
@@ -61,6 +96,7 @@ def recognize(target: TargetDefinition, scene: SceneState) -> ValidationResult:
         "worst": r.peor, "orientation": r.orientacion, "inferred_roles": r.deducidos, "decorations": r.adornos,
         "failed_relations": [{"type": f[1].tipo, "group": f[1].grupo, **f[2]} for f in r.fallas[:5]],
         "critical": len(r.criticas),
+        "checklist": lista_de_revision(r, partes, scene, etiquetas, flexibles, perfil),
     }
     porcentaje = round(r.puntaje * 100)
 

@@ -15,13 +15,18 @@ Motor 3.4: la plataforma maneja Blender (enlace.py: Blender late cada pocos
 segundos y recibe órdenes como «abrir esta práctica») y el modo enfocado
 (enfoque.py) deja a la vista solo las herramientas de la práctica.
 
+Motor 3.5: cada práctica en su propia escena (abrir otra ya no arrastra lo
+de la anterior), la lista del instructor «Tu figura» (la silueta de la malla
+comparada parte por parte con el modelo) y la plataforma maneja la práctica
+(comprobar, pista, «Hazlo conmigo», guardar, empezar de nuevo).
+
 Nada pesado al importar: la red y la evaluación arrancan con temporizadores.
 Documentación: docs/motor/ en el repositorio.
 """
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (3, 4, 0),
+    "version": (3, 5, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Prácticas guiadas de Amatista dentro de Blender",

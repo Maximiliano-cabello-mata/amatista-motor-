@@ -252,13 +252,18 @@ class Escena:
         return scene_to_dict(self.construir())
 
     def referencia(self, piezas: Sequence[Any] = (), escala: float = 1.0, variacion: float = 0.0, semilla: int = 1,
-                   giro: int = 0, sin: Sequence[str] = (), roles: bool = True, desplazar=(0.0, 0.0, 0.0)) -> "Escena":
+                   giro: int = 0, sin: Sequence[str] = (), roles: bool = True, desplazar=(0.0, 0.0, 0.0),
+                   cambiar: Optional[Dict[str, Sequence[float]]] = None, vertices: Optional[int] = None,
+                   caras: Optional[int] = None) -> "Escena":
         """Arma la figura del modelo de referencia, como la haría un alumno (motor 3.3).
 
         escala agranda todo; variacion (0.2 = ±20 %) cambia al azar cada medida y
         lugar como lo haría una mano humana; giro (grados en Z) gira la figura en el
-        suelo; sin quita grupos («chimenea»); roles=False no asigna roles. Las piezas
-        con el mismo «join» salen como UN objeto (su caja). piezas: ReferencePart o dicts.
+        suelo; sin quita grupos («chimenea») o piezas por su nombre («Guarda»);
+        roles=False no asigna roles. Las piezas con el mismo «join» salen como UN
+        objeto (su caja) con la silueta de todas (motor 3.5); cambiar multiplica
+        las medidas de una pieza por su nombre ({"Hoja": [1, 1, 0.4]}) y vertices
+        y caras fijan los de esos objetos unidos. piezas: ReferencePart o dicts.
         """
         import random
 
@@ -270,13 +275,17 @@ class Escena:
         def campo(pieza, clave, defecto=None):
             return pieza.get(clave, defecto) if isinstance(pieza, dict) else getattr(pieza, clave, defecto)
 
+        def _medidas(pieza):
+            factor = (cambiar or {}).get(campo(pieza, "name") or "", (1.0, 1.0, 1.0))
+            return tuple(m * f for m, f in zip(_v(campo(pieza, "size")), _v(factor, (1.0, 1.0, 1.0))))
+
         unidas: Dict[str, List[Any]] = {}
         sueltas = []
         for pieza in piezas:
             if campo(pieza, "compare", True) is False:
                 continue
             grupo = campo(pieza, "role") or campo(pieza, "primitive")
-            if grupo in sin:
+            if grupo in sin or (campo(pieza, "name") or "") in sin:
                 continue
             if campo(pieza, "join"):
                 unidas.setdefault(campo(pieza, "join"), []).append(pieza)
@@ -300,7 +309,7 @@ class Escena:
                 base = centro[2] + caja[0][2]
                 rot[2] += giro
             else:  # piezas unidas: un objeto con la caja de todas
-                cajas = [caja_rotada(_v(campo(p, "location")), _v(campo(p, "size")),
+                cajas = [caja_rotada(_v(campo(p, "location")), _medidas(p),
                                      tuple(math.radians(a) for a in _v(campo(p, "rotation")))) for p in grupo_piezas]
                 minimo = [min(c[0][i] for c in cajas) for i in range(3)]
                 maximo = [max(c[1][i] for c in cajas) for i in range(3)]
@@ -318,10 +327,37 @@ class Escena:
             rol = campo(primera, "role") if roles else ""
             # Nombres únicos, como en Blender (Rueda, Rueda.001…).
             nombre = self._nombre(campo(primera, "name") or (rol or campo(primera, "primitive")).capitalize())
-            self.malla(campo(primera, "primitive"), nombre, dims=medidas, loc=centro, rot=rot, rol=rol or "")
+            if len(grupo_piezas) == 1:
+                self.malla(campo(primera, "primitive"), nombre, dims=medidas, loc=centro, rot=rot, rol=rol or "")
+                continue
+            self.malla("cube", nombre, dims=medidas, loc=centro, rot=rot, rol=rol or "", vertices=vertices,
+                       caras=caras)
+            self._objetos[-1] = replace(self._objetos[-1], silhouette=self._silueta_unida(
+                grupo_piezas, escala, giro, ruido, centro, campo, _medidas))
         if variacion:
             self._apoyar(inicio, alturas)
         return self
+
+    @staticmethod
+    def _silueta_unida(piezas, escala, giro, ruido, centro, campo, medidas):
+        """La silueta de unas piezas unidas, en el lugar donde quedó el objeto (motor 3.5)."""
+        from .figures.silueta import silueta_de_piezas
+
+        cajas = [caja_rotada(_v(campo(p, "location")), medidas(p),
+                             tuple(math.radians(a) for a in _v(campo(p, "rotation")))) for p in piezas]
+        medio = [(min(c[0][i] for c in cajas) + max(c[1][i] for c in cajas)) / 2 for i in range(3)]
+        rad = math.radians(giro)
+        movidas = []
+        for p in piezas:
+            loc = [(c - m) * escala for c, m in zip(_v(campo(p, "location")), medio)]
+            x, y = loc[0], loc[1]
+            loc[0], loc[1] = x * math.cos(rad) - y * math.sin(rad), x * math.sin(rad) + y * math.cos(rad)
+            rot = list(_v(campo(p, "rotation")))
+            rot[2] += giro
+            movidas.append({"primitive": campo(p, "primitive"), "segments": campo(p, "segments", 0) or 0,
+                            "size": [m * escala * ruido() for m in medidas(p)],
+                            "location": [a + b for a, b in zip(loc, centro)], "rotation": rot})
+        return silueta_de_piezas(movidas)
 
     def _apoyar(self, inicio: int, alturas) -> None:
         """Una mano deja cada pieza apoyada donde el modelo la apoya (la cabeza sobre el cuerpo).

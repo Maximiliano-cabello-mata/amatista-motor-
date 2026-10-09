@@ -60,6 +60,24 @@ class AnimationChannel:
 
 
 @dataclass(frozen=True)
+class Silhouette:
+    """Silueta de una malla: rebanadas a lo largo de su eje más largo, en el mundo (motor 3.5).
+
+    eje: 0, 1 o 2 (X, Y, Z). anchos: por rebanada, (medida en el primer eje
+    transversal, medida en el segundo), en metros; los ejes transversales son
+    los otros dos en orden (para Z: X e Y). La calcula figures/silueta.py.
+    """
+
+    eje: int
+    largo: float
+    anchos: Tuple[Tuple[float, float], ...]
+
+    @property
+    def transversales(self) -> Tuple[int, int]:
+        return tuple(i for i in range(3) if i != self.eje)  # type: ignore[return-value]
+
+
+@dataclass(frozen=True)
 class SceneObject:
     """Un objeto de la escena tal como lo entiende Amatista.
 
@@ -96,6 +114,7 @@ class SceneObject:
     duplicate_vertices: Optional[int] = None  # vértices encimados (E y luego cancelar)
     side_counts: Optional[Tuple[Tuple[int, int], ...]] = None  # vértices (-, +) por eje local
     animation: Tuple[AnimationChannel, ...] = ()
+    silhouette: Optional[Silhouette] = None  # motor 3.5: solo mallas chicas (figures/silueta.py)
 
     @property
     def role(self) -> Optional[str]:
