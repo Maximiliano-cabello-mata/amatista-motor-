@@ -60,6 +60,24 @@ class AnimationChannel:
 
 
 @dataclass(frozen=True)
+class Silhouette:
+    """Silueta de una malla: rebanadas a lo largo de su eje más largo, en el mundo (motor 3.5).
+
+    eje: 0, 1 o 2 (X, Y, Z). anchos: por rebanada, (medida en el primer eje
+    transversal, medida en el segundo), en metros; los ejes transversales son
+    los otros dos en orden (para Z: X e Y). La calcula figures/silueta.py.
+    """
+
+    eje: int
+    largo: float
+    anchos: Tuple[Tuple[float, float], ...]
+
+    @property
+    def transversales(self) -> Tuple[int, int]:
+        return tuple(i for i in range(3) if i != self.eje)  # type: ignore[return-value]
+
+
+@dataclass(frozen=True)
 class SceneObject:
     """Un objeto de la escena tal como lo entiende Amatista.
 
@@ -96,6 +114,7 @@ class SceneObject:
     duplicate_vertices: Optional[int] = None  # vértices encimados (E y luego cancelar)
     side_counts: Optional[Tuple[Tuple[int, int], ...]] = None  # vértices (-, +) por eje local
     animation: Tuple[AnimationChannel, ...] = ()
+    silhouette: Optional[Silhouette] = None  # motor 3.5: solo mallas chicas (figures/silueta.py)
 
     @property
     def role(self) -> Optional[str]:
@@ -307,6 +326,22 @@ class ReferenceModel:
 
 
 @dataclass(frozen=True)
+class ExampleDefinition:
+    """El ejemplo resuelto de la práctica, en código (motor 3.5): ejemplo/pasos.py.
+
+    steps: la solución como pasos ({"cubo": {...}}, {"material": {...}}…), el mismo
+    idioma de pruebas.json. check: aspectos que se revisan (vacío = todos los
+    que tiene el ejemplo). auto: el cargador agregó el objetivo «ejemplo».
+    """
+
+    steps: Tuple[Dict[str, Any], ...]
+    title: str = ""
+    description: str = ""
+    check: Tuple[str, ...] = ()
+    auto: bool = False
+
+
+@dataclass(frozen=True)
 class StarterDefinition:
     """Cómo empieza la escena: vacía, con lo que hay o armada por el add-on.
 
@@ -353,6 +388,8 @@ class PracticeDefinition:
     starter: StarterDefinition = field(default_factory=StarterDefinition)
     # --- Motor 3.3: modelo de referencia (cómo debe verse la figura) ---
     reference: Optional[ReferenceModel] = None
+    # --- Motor 3.5: el ejemplo resuelto (lo que espera la práctica, en código) ---
+    example: Optional[ExampleDefinition] = None
 
     def target(self, target_id: str) -> Optional[TargetDefinition]:
         return next((t for t in self.targets if t.id == target_id), None)

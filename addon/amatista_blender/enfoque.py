@@ -74,7 +74,8 @@ def primitivas_de(practica):
     referencia = getattr(practica, "reference", None)
     vistas = []
     for parte in getattr(referencia, "compared", ()) or ():  # el suelo de la escena no es una pieza
-        clave = "sphere" if parte.primitive == "uv_sphere" else parte.primitive
+        # Piezas unidas (una espada en una sola malla): se modelan desde un cubo en Modo Edición.
+        clave = "cube" if parte.join else ("sphere" if parte.primitive == "uv_sphere" else parte.primitive)
         if clave in PRIMITIVAS and clave not in vistas:
             vistas.append(clave)
     return tuple(vistas) or PRIMITIVAS_BASE

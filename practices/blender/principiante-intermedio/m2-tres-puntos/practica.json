@@ -228,5 +228,20 @@
       {"name": "Contraluz", "type": "SPOT", "location": [0, 5, 5], "energy": 800}
     ],
     "camera": {"location": [0, -10, 4], "target": [0, 0, 1]}
+  },
+  "example": {
+    "title": "Estudio de tres luces",
+    "description": "La nave en el estudio: luz principal y de relleno delante (una a cada lado), contraluz detrás, la cámara mirándola, EEVEE y un render.",
+    "steps": [
+      {"referencia": {}},
+      {"camara": {"loc": [0, -10, 4], "mira_a": [0, 0, 1]}},
+      {"luz": {"nombre": "Principal", "tipo": "AREA", "loc": [-4, -5, 4], "energia": 500, "mira_a": [0, 0, 1]}},
+      {"luz": {"nombre": "Relleno", "tipo": "AREA", "loc": [4, -5, 3], "energia": 200, "mira_a": [0, 0, 1]}},
+      {"luz": {"nombre": "Contraluz", "tipo": "SPOT", "loc": [0, 5, 5], "energia": 800, "mira_a": [0, 0, 1]}},
+      {"motor": "BLENDER_EEVEE_NEXT"},
+      {"renders": 1},
+      {"guardado": {"archivo": "mi_estudio.blend"}}
+    ],
+    "check": ["luces", "camara", "render", "archivo"]
   }
 }

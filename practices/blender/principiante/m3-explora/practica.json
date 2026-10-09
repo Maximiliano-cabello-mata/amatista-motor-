@@ -87,5 +87,10 @@
     ],
     "objects": {"Cojín": {"subsurf": 2, "smooth": true}},
     "camera": {"location": [3, -3.8, 2.4], "target": [0, 0, 0.2]}
+  },
+  "example": {
+    "title": "Cojín suave",
+    "description": "Un cubo aplastado, con la escala aplicada y Subdivisión en 2 niveles: queda como un cojín.",
+    "steps": [{"referencia": {}}, {"modificador": {"objeto": "Cojín", "tipo": "SUBSURF", "niveles": 2}}]
   }
 }

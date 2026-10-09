@@ -1,20 +1,32 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m2.espada",
-  "version": 2,
+  "version": 3,
   "title": "Espada low-poly",
   "level": 2,
-  "description": "Modela una espada (o una taza) low-poly en Modo Edición: extruye con E, corta con Ctrl+R y mantén la malla limpia.",
-  "intro": "Ahora entras a la pieza: en Modo Edición cambias sus vértices, aristas y caras. Parte de un cubo y dale forma de espada.",
-  "completion": "¡Tu primera malla modelada a mano! Se desbloquea el Módulo 3: Modificadores.",
+  "description": "Forja la espada de la imagen en una sola malla: parte de un cubo, alárgalo con E, marca la guarda con Ctrl + R y escálala, y afila la punta. Amatista revisa la silueta parte por parte.",
+  "intro": "En el Módulo 1 armaste figuras con piezas. Ahora entras a la pieza: en Modo Edición mueves sus caras, aristas y vértices. Vas a forjar UNA espada desde un cubo, siguiendo la imagen: pomo, mango, guarda, hoja y punta. Amatista te dice qué parte falta y con qué tecla se hace.",
+  "completion": "¡Forjaste tu primera malla a mano! Pomo, mango, guarda, hoja y punta en un solo objeto. Se desbloquea el Módulo 3: Modificadores.",
   "estimatedMinutes": 30,
   "blender": {"min": "4.2"},
   "skills": ["bl-modo-edicion", "bl-extruir", "bl-corte-bucle", "bl-malla-limpia", "bl-guardar-archivo"],
   "tags": ["principiante", "modulo-2", "modelado"],
   "course": {"id": "blender_principiante", "module": 2, "lesson": "bp2_practica", "next": "blender.bp.m3.explora"},
   "review": ["blender.bp.m1.tren#grs", "blender.bp.m1.tren#agregar"],
-  "roles": {"modelo": {"label": "Modelo", "description": "Tu espada (o taza): un solo objeto que modelas en Edición."}},
-  "tools": {"allowed": ["mesh.edit", "mesh.extrude", "mesh.loopcut", "mesh.merge", "select.box", "select.circle"]},
+  "tools": {
+    "allowed": [
+      "object.add",
+      "mesh.edit",
+      "mesh.extrude",
+      "mesh.loopcut",
+      "transform.scale",
+      "transform.move",
+      "mesh.merge",
+      "select.box",
+      "select.circle",
+      "file.save"
+    ]
+  },
   "pills": [
     {
       "id": "modos",
@@ -45,19 +57,32 @@
     {
       "id": "extruir",
       "title": "E: saca caras nuevas",
-      "text": "Selecciona una cara y pulsa E: sale una cara nueva que mueves con el ratón. Clic para dejarla. Así crece la hoja de la espada.",
+      "text": "Selecciona una cara y pulsa E: sale una cara nueva que mueves con el ratón. Clic para dejarla. Así crecen el mango y la hoja de la espada.",
       "keys": ["E"],
       "visual": "keys",
-      "trigger": {"on": "target", "target": "forma"},
+      "trigger": {"on": "target", "target": "alargar"},
       "check": {"question": "¿Qué tecla extruye?", "options": ["E", "R", "M"], "answer": 0}
     },
     {
       "id": "corte",
       "title": "Ctrl + R: corte de bucle",
-      "text": "Ctrl + R agrega un anillo de aristas alrededor de la malla. Úsalo para separar el mango de la guarda.",
+      "text": "Ctrl + R agrega un anillo de aristas alrededor de la malla. Haz uno donde va la guarda y escálalo hacia los lados con S: la guarda sobresale.",
       "keys": ["Ctrl", "R"],
       "visual": "keys",
-      "trigger": {"on": "target", "target": "detalle"}
+      "trigger": {"on": "target", "target": "silueta"}
+    },
+    {
+      "id": "afilar",
+      "title": "Afilar la punta",
+      "text": "Selecciona la cara del extremo de la hoja y escálala casi a cero (S, 0): los lados se juntan y la hoja termina en punta. También puedes juntar sus vértices con M › En el centro.",
+      "keys": ["S", "0"],
+      "visual": "keys",
+      "trigger": {"on": "target", "target": "silueta"},
+      "check": {
+        "question": "¿Cómo afilas la punta de la hoja?",
+        "options": ["Escalando la cara del extremo casi a cero", "Agregando un cono aparte", "Girando la hoja"],
+        "answer": 0
+      }
     },
     {
       "id": "fusionar",
@@ -76,90 +101,75 @@
   ],
   "targets": [
     {
-      "id": "modelo",
-      "title": "Tu modelo",
-      "validator": "role.count",
-      "params": {"role": "modelo", "equals": 1},
-      "weight": 10,
-      "tip": "Selecciona el cubo con el que vas a modelar y dile a Amatista que es tu modelo.",
-      "hints": ["Pestaña Amatista › Es: Modelo › Asignar rol."]
+      "id": "malla",
+      "title": "Empieza con un cubo",
+      "validator": "object.count",
+      "params": {"type": "MESH", "min": 1},
+      "weight": 5,
+      "tip": "Toda la espada sale de un solo cubo: agrégalo con Shift + A › Malla › Cubo.",
+      "hints": ["Con el ratón sobre la vista 3D: Shift + A › Malla › Cubo."]
     },
     {
-      "id": "forma",
-      "title": "Extruye la forma",
-      "validator": "mesh.face_count",
-      "params": {"role": "modelo", "min": 18},
-      "weight": 30,
-      "requires": ["modelo"],
-      "tip": "Tab, elige la cara de arriba (3 para caras) y extruye con E varias veces.",
+      "id": "alargar",
+      "title": "Alarga el cubo con E",
+      "validator": "logic.any",
+      "params": {
+        "options": [
+          {"validator": "shape.proportion", "params": {"type": "MESH", "axis": "z", "min_ratio": 3}},
+          {"validator": "shape.proportion", "params": {"type": "MESH", "axis": "x", "min_ratio": 3}},
+          {"validator": "shape.proportion", "params": {"type": "MESH", "axis": "y", "min_ratio": 3}}
+        ]
+      },
+      "weight": 20,
+      "requires": ["malla"],
+      "tip": "Una espada es larga: en Modo Edición extruye la cara de arriba varias veces hasta que mida al menos tres veces su ancho.",
       "hints": [
         "Tab para entrar a Edición y 3 para seleccionar caras.",
-        "Clic en la cara de arriba, E y mueve el ratón hacia arriba. Repite 3 veces."
+        "Clic en la cara de arriba, E y sube el ratón. Repite: cada extrusión es un tramo nuevo (mango, guarda, hoja)."
       ],
+      "messages": {"pass": "¡Ya es larga como una espada! Ahora dale sus partes."},
+      "fix": {"action": "edit_mode", "label": "Entrar a Edición conmigo"},
       "guide": {
-        "why": "Cada extrusión agrega caras: así la malla crece desde el cubo hasta la espada.",
+        "why": "Cada extrusión agrega un tramo: así el cubo crece hasta tener el largo de la espada, y cada tramo será una parte (mango, guarda, hoja).",
         "steps": [
           {"text": "Entra a Modo Edición", "keys": ["Tab"]},
           {"text": "Selección por caras", "keys": ["3"]},
-          {"text": "Elige la cara de arriba y extrúyela", "keys": ["Clic", "E"]},
-          {"text": "Sube el ratón y haz clic; repite", "keys": ["Clic"]}
+          {"text": "Clic en la cara de arriba y extrúyela", "keys": ["Clic", "E"]},
+          {"text": "Sube el ratón, clic, y repite 3 o 4 veces", "keys": ["Clic"]}
         ]
       }
     },
     {
-      "id": "proporcion",
-      "title": "Forma de espada (o de taza)",
-      "validator": "logic.any",
-      "params": {
-        "options": [
-          {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "z", "min_ratio": 3}},
-          {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "x", "min_ratio": 3}},
-          {"validator": "shape.proportion", "params": {"role": "modelo", "axis": "y", "min_ratio": 3}},
-          {
-            "validator": "shape.proportion",
-            "params": {"role": "modelo", "axis": "z", "min_ratio": 0.7, "max_ratio": 1.6}
-          }
-        ]
-      },
-      "weight": 20,
-      "requires": ["forma"],
-      "tip": "Una espada es larga: al menos tres veces más larga que ancha. Una taza es casi tan alta como ancha.",
+      "id": "silueta",
+      "title": "Forja la silueta: guarda, hoja y punta",
+      "validator": "figure.silhouette",
+      "params": {"type": "MESH"},
+      "weight": 45,
+      "requires": ["alargar"],
+      "tip": "Amatista compara tu malla con la espada de la imagen, parte por parte. La lista «Tu figura» dice qué parte falta y con qué tecla se hace.",
       "hints": [
-        "Sigue extruyendo la hoja hacia arriba hasta que sea larga.",
-        "En Edición, selecciona la punta y escálala (S) para afilarla."
-      ],
-      "messages": {"pass": "¡Ya tiene forma!"}
-    },
-    {
-      "id": "detalle",
-      "title": "Un corte de bucle",
-      "validator": "mesh.vertex_count",
-      "params": {"role": "modelo", "min": 20},
-      "weight": 15,
-      "requires": ["forma"],
-      "tip": "Ctrl+R sobre la hoja agrega un anillo de aristas para dar detalle.",
-      "hints": [
-        "Pasa el ratón por la hoja con Ctrl+R: verás una línea amarilla. Clic y luego clic derecho para dejarla centrada."
+        "La guarda: Ctrl + R para cortar un anillo donde va, y S para escalarlo hacia los lados.",
+        "La punta: selecciona la cara del extremo y escálala casi a cero (S, 0)."
       ]
     },
     {
       "id": "low-poly",
       "title": "Que siga siendo low-poly",
       "validator": "mesh.vertex_count",
-      "params": {"role": "modelo", "max": 250},
+      "params": {"type": "MESH", "max": 250},
       "weight": 10,
-      "requires": ["forma"],
+      "requires": ["alargar"],
       "tip": "Low-poly = pocos vértices. No subdividas toda la malla.",
-      "hints": ["Si tienes demasiados vértices, deshaz con Ctrl+Z el último corte o subdivisión."]
+      "hints": ["Si tienes demasiados vértices, deshaz con Ctrl + Z el último corte o subdivisión."]
     },
     {
       "id": "guardar",
       "title": "Guarda tu espada",
       "validator": "file.named",
       "params": {"contains": "espada"},
-      "weight": 15,
-      "requires": ["proporcion", "detalle"],
-      "tip": "Tab para volver a Objeto y Ctrl+Shift+S: mi_espada.blend (o mi_taza_espada.blend si hiciste la taza).",
+      "weight": 20,
+      "requires": ["silueta"],
+      "tip": "Tab para volver a Objeto y Ctrl + Shift + S: mi_espada.blend.",
       "hints": ["Archivo › Guardar como, con un nombre que incluya «espada»."]
     }
   ],
@@ -178,12 +188,11 @@
   ],
   "reference": {
     "title": "Espada low-poly",
-    "description": "Hoja larga y delgada con punta, guarda horizontal, mango y pomo: un solo objeto, al menos tres veces más alto que ancho. Si haces la taza: casi tan alta como ancha, con asa.",
+    "description": "Una espada en un solo objeto: pomo abajo, mango, guarda que sobresale a los lados, hoja larga y delgada, y punta afilada. Al menos tres veces más alta que ancha.",
     "tolerance": 0.35,
     "parts": [
       {
         "primitive": "sphere",
-        "role": "modelo",
         "name": "Pomo",
         "size": [0.28, 0.28, 0.28],
         "location": [0, 0, 0.14],
@@ -193,7 +202,6 @@
       },
       {
         "primitive": "cylinder",
-        "role": "modelo",
         "name": "Mango",
         "size": [0.18, 0.18, 0.75],
         "location": [0, 0, 0.62],
@@ -203,7 +211,6 @@
       },
       {
         "primitive": "cube",
-        "role": "modelo",
         "name": "Guarda",
         "size": [1.1, 0.26, 0.18],
         "location": [0, 0, 1.08],
@@ -212,7 +219,6 @@
       },
       {
         "primitive": "cube",
-        "role": "modelo",
         "name": "Hoja",
         "size": [0.3, 0.08, 2.6],
         "location": [0, 0, 2.47],
@@ -222,7 +228,6 @@
       },
       {
         "primitive": "cone",
-        "role": "modelo",
         "name": "Punta",
         "size": [0.3, 0.08, 0.45],
         "location": [0, 0, 4.0],
@@ -235,5 +240,11 @@
     ],
     "objects": {"espada": {"wire": true}},
     "camera": {"location": [5, -9, 3.2], "target": [0, 0, 2.0], "lens": 38}
+  },
+  "starter": {"scene": "empty", "note": "Empiezas con una escena vacía: la espada sale de un cubo que agregas tú."},
+  "example": {
+    "title": "Espada low-poly",
+    "description": "Una sola malla que sale de un cubo: pomo, mango, guarda ancha, hoja larga y punta afilada.",
+    "steps": [{"referencia": {"vertices": 48, "caras": 46}}, {"guardado": {"archivo": "mi_espada.blend"}}]
   }
 }

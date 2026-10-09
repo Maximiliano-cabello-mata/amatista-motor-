@@ -171,6 +171,15 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
             if context.window_manager.amatista.modo == "autor":
                 layout.prop(context.window_manager.amatista, "vista_previa", icon="HIDE_OFF")
 
+        from .. import ejemplo
+
+        if ejemplo.es_ejemplo(context.scene):
+            cuerpo = estilo.tarjeta(layout, "Estás viendo el ejemplo resuelto", icon="HIDE_OFF")
+            estilo.parrafo(cuerpo, context, "Gíralo, selecciónalo y revisa sus modificadores y materiales. Nada de "
+                           "esta escena cuenta para tu práctica.")
+            estilo.boton_principal(cuerpo, "amatista.volver_practica", "Volver a mi práctica", icon="LOOP_BACK",
+                                   escala=1.4)
+
         if modo_alumno(context):
             # Las tres secciones del alumno, como pestañas de una plataforma.
             fila = layout.row(align=True)
@@ -252,6 +261,7 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
             self._tarjeta_pausa(layout, context, practica, reporte)
 
         self._modelo(layout, context, practica, reporte)
+        self._ejemplo(layout, context, practica, reporte)
 
         g = guia.guia_actual()
         pildora = aprendizaje.pildora_principal()
@@ -290,6 +300,7 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
         fila = layout.row(align=True)
         fila.operator("amatista.abrir_plataforma", text="Plataforma", icon="URL").ruta = "#/panel"
         fila.operator("amatista.elegir_practica", text="Otra práctica", icon="FILE_REFRESH")
+        fila.operator("amatista.empezar_de_nuevo", text="De nuevo", icon="LOOP_BACK")
 
     def _modelo(self, layout, context, practica, reporte):
         """«Así se debe ver»: la imagen del modelo de referencia (motor 3.3)."""
@@ -308,6 +319,25 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
         fila.operator("amatista.ver_referencia", text="Ver grande", icon="ZOOM_IN").archivo = "referencia.jpg"
         if practicas.archivo_de_referencia(practica.id, "plano.svg"):
             fila.operator("amatista.ver_referencia", text="Plano con medidas", icon="DRIVER_DISTANCE").archivo = "plano.svg"
+
+    def _ejemplo(self, layout, context, practica, reporte):
+        """«El ejemplo resuelto» (motor 3.5): lo que espera la práctica, paso a paso, y verlo en Blender."""
+        from .. import ejemplo
+
+        pasos = ejemplo.instrucciones(practica)
+        if not pasos:
+            return
+        cuerpo = estilo.seccion(layout, context, "ejemplo", "El ejemplo resuelto", icon="SEQUENCE",
+                                cerrada=True)
+        if cuerpo is None:
+            return
+        if practica.example.description:
+            estilo.parrafo(cuerpo, context, practica.example.description)
+        for i, texto in enumerate(pasos, 1):
+            estilo.parrafo(cuerpo, context, f"{i}. {texto}", icon="BLANK1")
+        estilo.parrafo(cuerpo, context, "Amatista compara tu escena con este ejemplo: los nombres, el lugar, el "
+                       "tamaño y los colores son tuyos.", icon="INFO")
+        cuerpo.operator("amatista.ver_ejemplo", text="Verlo en Blender", icon="HIDE_OFF")
 
     def _tarjeta_pausa(self, layout, context, practica, reporte):
         """Un vigilante detuvo el progreso: aviso rojo con el arreglo a un clic."""
@@ -496,6 +526,53 @@ class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
                 op.objetivo = objetivo.id
             if depurar:
                 _dibujar_detalle(contenedor, context, reporte.result(objetivo.id))
+
+
+ICONO_LISTA = {"Bien": "CHECKMARK", "Detalle": "LIGHT"}
+
+
+class AMATISTA_PT_figura(_Base, bpy.types.Panel):
+    """Motor 3.5: la lista del instructor (qué partes del modelo ya tiene tu figura y qué falta)."""
+
+    bl_idname = "AMATISTA_PT_figura"
+    bl_label = "Comparado con el ejemplo"
+    bl_parent_id = "AMATISTA_PT_principal"
+
+    @classmethod
+    def poll(cls, context):
+        if not seccion(context, "practicar") or practicas.practica_activa(context) is None:
+            return False
+        return bool(practicas.lista_instructor()[1])
+
+    def draw_header(self, context):
+        self.layout.label(text="", icon="OUTLINER_OB_MESH")
+
+    def draw(self, context):
+        dibujar_lista(self.layout, context, *practicas.lista_instructor())
+        self.layout.operator("amatista.ver_ejemplo", text="Ver el ejemplo", icon="HIDE_OFF")
+
+
+def dibujar_lista(layout, context, titulo, lista, consejos=2):
+    """Cada punto con ✓, ! o una bombilla (detalle), agrupado por aspecto; los primeros consejos, abiertos."""
+    if not lista:
+        return
+    hechas = sum(1 for i in lista if i.get("ok"))
+    cabecera = layout.row()
+    cabecera.active = False
+    cabecera.label(text=f"{titulo}: {hechas} de {len(lista)}")
+    abiertos = 0
+    aspecto = None
+    for item in lista:
+        if item.get("aspecto") and item["aspecto"] != aspecto:
+            aspecto = item["aspecto"]
+            layout.label(text=aspecto, icon="DOT")
+        estado = item.get("estado") or ("Bien" if item.get("ok") else "Falta")
+        fila = layout.row(align=True)
+        fila.alert = not item.get("ok")
+        fila.label(text=f"{item.get('texto', '')}: {estado.lower()}", icon=ICONO_LISTA.get(estado, "ERROR"))
+        if item.get("consejo") and abiertos < consejos:
+            abiertos += 1
+            estilo.parrafo(layout, context, item["consejo"], icon="BLANK1", alerta=False)
 
 
 class AMATISTA_PT_herramientas(_Base, bpy.types.Panel):
@@ -1046,6 +1123,7 @@ CLASES = (
     AMATISTA_PT_aprender,
     AMATISTA_PT_practica,
     AMATISTA_PT_curso,
+    AMATISTA_PT_figura,
     AMATISTA_PT_herramientas,
     AMATISTA_PT_roles,
     AMATISTA_PT_objetivos,

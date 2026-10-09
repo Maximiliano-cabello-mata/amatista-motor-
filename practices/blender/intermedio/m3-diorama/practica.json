@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bi.m3.diorama",
-  "version": 1,
+  "version": 2,
   "title": "Tu diorama en la galería",
   "level": 3,
   "description": "Montas tu aldea (o cualquier modelo tuyo) como diorama: encuadre, iluminación de tres puntos, motor de render y la imagen final guardada.",
@@ -14,6 +14,7 @@
   "course": {"id": "blender_intermedio", "module": 3, "lesson": "bi3_practica"},
   "starter": {
     "scene": "keep",
+    "from_practice": "blender.bi.m2.aldea",
     "note": "Trabaja sobre tu mi_aldea.blend (o cualquier modelo tuyo): Amatista no cambia nada al empezar."
   },
   "roles": {"diorama": {"label": "Diorama", "description": "La pieza principal que presentas en la galería."}},
@@ -182,5 +183,19 @@
       {"name": "Contraluz", "type": "SPOT", "location": [0, 5, 5], "energy": 800}
     ],
     "camera": {"location": [0, -12, 5.5], "target": [0, 0, 1]}
+  },
+  "example": {
+    "title": "Diorama en la galería",
+    "description": "Tu aldea sobre una base, iluminada con tres puntos, encuadrada por la cámara, renderizada y guardada (EEVEE o Cycles).",
+    "steps": [
+      {"referencia": {}},
+      {"camara": {"loc": [0, -10, 4], "mira_a": [0, 0, 1]}},
+      {"luz": {"nombre": "Principal", "tipo": "AREA", "loc": [-4, -5, 4], "energia": 500, "mira_a": [0, 0, 1]}},
+      {"luz": {"nombre": "Relleno", "tipo": "AREA", "loc": [4, -5, 3], "energia": 200, "mira_a": [0, 0, 1]}},
+      {"luz": {"nombre": "Contraluz", "tipo": "SPOT", "loc": [0, 5, 5], "energia": 800, "mira_a": [0, 0, 1]}},
+      {"renders": 1},
+      {"guardado": {"archivo": "mi_diorama.blend"}}
+    ],
+    "check": ["luces", "camara", "render", "archivo"]
   }
 }

@@ -6,7 +6,10 @@ segundos con lo que está pasando (práctica, paso, progreso, si está
 enfocado) y en la respuesta recibe:
 
 - órdenes de la plataforma: abrir una práctica («Abrir en Blender»),
-  enfocar, ver todo Blender o volver a leer los ajustes. Cada orden trae un
+  enfocar, ver todo Blender o volver a leer los ajustes y, desde el motor
+  3.5, comprobar, pedir pista, «Hazlo conmigo», guardar, empezar de nuevo
+  (MANEJO) y ver el ejemplo resuelto o volver de él (ejemplo.py). El latido lleva lo que dice el instructor (detalle_vivo) para
+  que la lección lo muestre al lado de la práctica. Cada orden trae un
   id y se repite hasta que Blender avisa que la cumplió (orden_hecha), así
   que un latido perdido no pierde la orden;
 - los ajustes que el alumno eligió en «Mi Blender» de la plataforma
@@ -45,6 +48,34 @@ AJUSTES = {
 }
 
 
+def detalle_vivo():
+    """Lo que el instructor muestra ahora (motor 3.5): la lección lo enseña en vivo."""
+    from . import guia, practicas
+
+    g = guia.guia_actual()
+    reporte = practicas.ESTADO["reporte"]
+    if reporte is None:
+        return None
+    figura, lista = practicas.lista_instructor(reporte)
+    practica = practicas.ESTADO["practica"]
+    objetivo = practica.target(reporte.current_target_id) if practica is not None and reporte.current_target_id else None
+    reveladas = practicas.pistas().get(objetivo.id, 0) if objetivo is not None else 0
+    return {
+        "titulo": (g.title if g else "")[:120],
+        "mensaje": (g.feedback if g else "")[:500],
+        "numero": min(99, int(getattr(g, "step_number", 0) or 0)),
+        "total": min(99, int(getattr(g, "step_total", 0) or 0)),
+        "figura": (figura or "")[:120],
+        "lista": [{"texto": str(i.get("texto", ""))[:60], "ok": bool(i.get("ok")), "estado": str(i.get("estado", ""))[:20],
+                   "consejo": str(i.get("consejo", ""))[:400], "aspecto": str(i.get("aspecto", ""))[:40]}
+                  for i in lista[:16]],
+        "modo": str(getattr(bpy.context, "mode", "") or "")[:20],
+        "pistas": max(0, min(9, len(objetivo.hints) - reveladas)) if objetivo is not None else 0,
+        "accion": (g.action.label if g is not None and g.action is not None else "")[:80],
+        "completada": bool(reporte.completed),
+    }
+
+
 def _datos():
     from . import enfoque, practicas
 
@@ -55,13 +86,29 @@ def _datos():
     }
     sc = getattr(bpy.context, "scene", None)
     practica = practicas.practica_activa() if sc is not None else None
-    if practica is not None and sc.amatista.origen != "borrador":
+    if practica is None and sc is not None and sc.get("amatista_ejemplo"):  # mirando el ejemplo resuelto
+        datos["practica_id"] = str(sc["amatista_ejemplo"]).split("@")[0][:80]
+        detalle = None
+        try:
+            detalle = detalle_vivo()
+        except Exception as error:  # noqa: BLE001
+            print(f"[Amatista] Detalle del enlace: {error}")
+        if detalle:
+            datos["detalle"] = {**detalle, "modo": "EJEMPLO"}
+    elif practica is not None and sc.amatista.origen != "borrador":
         reporte = practicas.ESTADO["reporte"]
         datos["practica_id"] = practica.id[:80]
         if reporte is not None:
             datos["progreso"] = max(0, min(100, int(round(reporte.progress))))
             if reporte.current_target_id:
                 datos["paso"] = str(reporte.current_target_id)[:80]
+        try:
+            detalle = detalle_vivo()
+        except Exception as error:  # noqa: BLE001 - el detalle es un extra: el latido sale igual
+            detalle = None
+            print(f"[Amatista] Detalle del enlace: {error}")
+        if detalle:
+            datos["detalle"] = detalle
     if ESTADO["hecha"]:
         datos["orden_hecha"] = ESTADO["hecha"]
     return datos
@@ -141,7 +188,7 @@ def _terminada(orden_id):
 
 def cumplir(orden):
     """Ejecuta una orden de la plataforma una sola vez (aunque llegue repetida)."""
-    from . import enfoque, practicas
+    from . import enfoque, guia, practicas
 
     orden_id = str(orden["id"])
     if orden_id in ESTADO["cumplidas"]:
@@ -160,6 +207,33 @@ def cumplir(orden):
         practicas.abrir_por_id(context, datos["practica_id"], abierta)
         practicas.mostrar_en_amatista(context)
         return True
+    if tipo in ("ver_ejemplo", "volver_practica"):  # motor 3.5: el ejemplo resuelto en su escena
+        from . import ejemplo
+
+        try:
+            texto = ejemplo.ver_ejemplo(context) if tipo == "ver_ejemplo" else ejemplo.volver(context)
+        except Exception as error:  # noqa: BLE001 - una orden fallida nunca rompe Blender
+            texto = None
+            print(f"[Amatista] La plataforma pidió «{tipo}»: {error}")
+        if texto:
+            guia.avisar("Desde la plataforma", texto, "animo")
+        _terminada(orden_id)
+        return True
+    practica = practicas.practica_activa(context)
+    if datos.get("practica_id") and getattr(practica, "id", "") != datos["practica_id"]:
+        _terminada(orden_id)  # la orden era para otra práctica: no se aplica a la que está abierta
+        return False
+    if tipo in MANEJO:
+        try:
+            texto = MANEJO[tipo](context)
+        except Exception as error:  # noqa: BLE001 - una orden fallida nunca rompe Blender
+            texto = None
+            print(f"[Amatista] La plataforma pidió «{tipo}»: {error}")
+        if texto:
+            guia.avisar("Desde la plataforma", texto, "animo")
+        _terminada(orden_id)
+        practicas.evaluar(context, "plataforma")
+        return True
     if tipo == "enfocar":
         enfoque.activar(practicas.practica_activa(context))
     elif tipo == "ver_todo":
@@ -172,6 +246,59 @@ def cumplir(orden):
     _terminada(orden_id)
     practicas.redibujar()
     return True
+
+
+# --- La plataforma maneja la práctica (motor 3.5) --------------------------------------
+
+
+def _en_vista_3d(context, funcion):
+    """Corre funcion() como si el ratón estuviera sobre la vista 3D (las órdenes llegan en un temporizador)."""
+    from .interfaz.herramientas import _vista_3d
+
+    ventana, area, region = _vista_3d(context)
+    if ventana is None or area is None or bpy.app.background:
+        return funcion()
+    with context.temp_override(window=ventana, area=area, region=region):
+        return funcion()
+
+
+def _comprobar(context):
+    from . import practicas
+
+    reporte = practicas.evaluar(context, "manual")
+    return f"Comprobado: {reporte.progress:.0f} %." if reporte is not None else None
+
+
+def _pista(context):
+    from . import practicas
+
+    revelada = practicas.pedir_pista(context)
+    return f"Pista: {revelada.text}" if revelada is not None else "No quedan pistas en este paso."
+
+
+def _hazlo_conmigo(context):
+    from . import guia
+
+    if guia.guia_actual() is None or guia.guia_actual().action is None:
+        return "Este paso no necesita ayuda."
+    _en_vista_3d(context, lambda: bpy.ops.amatista.hazlo_conmigo())
+    return None  # el operador ya avisa en Blender
+
+
+def _guardar(context):
+    from . import practicas
+
+    return practicas.guardar_practica(context)
+
+
+def _reiniciar(context):
+    from . import practicas
+
+    return practicas.reiniciar(context)
+
+
+MANEJO = {"comprobar": _comprobar, "pista": _pista, "hazlo_conmigo": _hazlo_conmigo, "guardar": _guardar,
+          "reiniciar": _reiniciar}
 
 
 def _latidor():

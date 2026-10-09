@@ -8,17 +8,9 @@
   "intro": "Antes de pintar tu nave, prueba el Principled BSDF en una esfera.",
   "completion": "¡Hiciste un metal pulido! En la siguiente lección verás los tres controles con calma.",
   "estimatedMinutes": 8,
-  "blender": {
-    "min": "4.2"
-  },
-  "skills": [
-    "bl-materiales"
-  ],
-  "tags": [
-    "exploracion",
-    "principiante-intermedio",
-    "modulo-1"
-  ],
+  "blender": {"min": "4.2"},
+  "skills": ["bl-materiales"],
+  "tags": ["exploracion", "principiante-intermedio", "modulo-1"],
   "course": {
     "id": "blender_principiante_intermedio",
     "module": 1,
@@ -29,41 +21,22 @@
     "scene": "empty",
     "note": "Empiezas con la escena vacía (Ctrl+Z la recupera). Es una exploración corta: tu avance queda registrado."
   },
-  "tools": {
-    "allowed": [
-      "object.add",
-      "material.principled"
-    ]
-  },
+  "tools": {"allowed": ["object.add", "material.principled"]},
   "pills": [
     {
       "id": "vista-material",
       "title": "Mira los materiales",
       "text": "Z › Vista previa de material (o el tercer círculo arriba a la derecha) muestra los colores y brillos reales.",
-      "keys": [
-        "Z"
-      ],
-      "trigger": {
-        "on": "start"
-      }
+      "keys": ["Z"],
+      "trigger": {"on": "start"}
     },
     {
       "id": "perillas",
       "title": "Metálico y Rugosidad",
       "text": "Metálico en 1 hace metal. Rugosidad baja = espejo pulido; alta = mate como goma.",
       "visual": "tab:MATERIAL",
-      "trigger": {
-        "on": "target",
-        "target": "metal"
-      },
-      "check": {
-        "question": "Para un metal pulido, ¿cómo va la Rugosidad?",
-        "options": [
-          "Baja",
-          "Alta"
-        ],
-        "answer": 0
-      }
+      "trigger": {"on": "target", "target": "metal"},
+      "check": {"question": "Para un metal pulido, ¿cómo va la Rugosidad?", "options": ["Baja", "Alta"], "answer": 0}
     }
   ],
   "targets": [
@@ -71,55 +44,39 @@
       "id": "esfera",
       "title": "Agrega una esfera",
       "validator": "object.exists",
-      "params": {
-        "primitive": "sphere"
-      },
+      "params": {"primitive": "sphere"},
       "weight": 20,
       "tip": "Shift+A › Malla › Esfera UV.",
-      "hints": [
-        "Shift+A sobre la vista 3D.",
-        "Malla › Esfera UV."
-      ]
+      "hints": ["Shift+A sobre la vista 3D.", "Malla › Esfera UV."]
     },
     {
       "id": "material",
       "title": "Dale un material",
       "validator": "material.exists",
-      "params": {
-        "primitive": "sphere"
-      },
+      "params": {"primitive": "sphere"},
       "weight": 25,
-      "requires": [
-        "esfera"
-      ],
+      "requires": ["esfera"],
       "tip": "Pestaña Material (bola roja) › Nuevo.",
-      "hints": [
-        "En Propiedades busca la bola roja y a cuadros.",
-        "Pulsa «Nuevo»."
-      ]
+      "hints": ["En Propiedades busca la bola roja y a cuadros.", "Pulsa «Nuevo»."]
     },
     {
       "id": "metal",
       "title": "Hazlo metal pulido",
       "validator": "material.matches",
-      "params": {
-        "primitive": "sphere",
-        "metallic_min": 0.8,
-        "roughness_max": 0.3,
-        "label": "metal pulido"
-      },
+      "params": {"primitive": "sphere", "metallic_min": 0.8, "roughness_max": 0.3, "label": "metal pulido"},
       "weight": 55,
-      "requires": [
-        "material"
-      ],
+      "requires": ["material"],
       "tip": "Metálico 1 y Rugosidad 0.2.",
-      "hints": [
-        "Arrastra Metálico hasta 1.",
-        "Baja la Rugosidad hasta 0.2."
-      ]
+      "hints": ["Arrastra Metálico hasta 1.", "Baja la Rugosidad hasta 0.2."]
     }
   ],
-  "review": [
-    "blender.bp.m3.explora#filtro"
-  ]
+  "review": ["blender.bp.m3.explora#filtro"],
+  "example": {
+    "title": "Esfera de cromo",
+    "description": "Una esfera con un material metálico y pulido: Metálico en 1 y Rugosidad baja.",
+    "steps": [
+      {"esfera": {"nombre": "Esfera"}},
+      {"material": {"objeto": "Esfera", "nombre": "Cromo", "metal": 1, "rugosidad": 0.15}}
+    ]
+  }
 }

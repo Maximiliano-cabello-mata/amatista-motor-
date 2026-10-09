@@ -565,6 +565,11 @@ def guide_target(
     instrucciones = parcial.instructions
     if guia is not None and guia.steps and not result.passed:
         instrucciones = tuple(Paso(p.text, p.keys) for p in guia.steps)
+    accion = parcial.action
+    if target.fix is not None and not result.passed:  # «Hazlo conmigo» propio del paso (motor 3.5)
+        objetos = accion.objects if accion is not None else ()
+        accion = GuideAction(target.fix.action, target.fix.label or (accion.label if accion else "Hazlo conmigo"),
+                             objetos)
     # El mensaje propio del autor (messages.fail/pass) manda sobre el generado.
     propio = target.messages.get("pass" if result.passed else "fail")
     return Guidance(
@@ -578,7 +583,7 @@ def guide_target(
         instructions=instrucciones,
         highlights=parcial.highlights,
         cues=() if result.passed else parcial.cues,
-        action=None if result.passed else parcial.action,
+        action=None if result.passed else accion,
         completed=bool(result.passed),
     )
 

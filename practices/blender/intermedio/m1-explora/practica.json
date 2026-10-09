@@ -77,5 +77,15 @@
     ],
     "objects": {"Tabla": {"array": {"count": 5, "axis": "y", "gap": 0.1}, "bevel": 0.03}},
     "camera": {"location": [6, -8, 6], "target": [0, 0, 0]}
+  },
+  "example": {
+    "title": "Tabla repetida con Array",
+    "description": "Una tabla repetida con Array y con los bordes suavizados con Bisel.",
+    "steps": [
+      {"referencia": {}},
+      {"modificador": {"objeto": "Tabla", "tipo": "ARRAY"}},
+      {"modificador": {"objeto": "Tabla", "tipo": "BEVEL"}}
+    ],
+    "check": ["modificadores"]
   }
 }

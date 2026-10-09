@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Union
 from ..errors import InvalidPracticeError
 from ..models import (
     CoursePlace,
+    ExampleDefinition,
     FixDefinition,
     GuideStepDefinition,
     Hint,
@@ -31,6 +32,7 @@ from ..models import (
 )
 from .schema import (
     ARREGLOS,
+    CAMPOS_EJEMPLO,
     CAMPOS_PIEZA,
     CAMPOS_REFERENCIA,
     EXIGENCIAS,
@@ -217,7 +219,7 @@ def _objetivo(raw: Any, index: int, e: _Errores, ids: set, lista: str = "targets
         messages={k: v.strip() for k, v in mensajes.items() if k in ("pass", "fail") and v.strip()},
         optional=optional,
         guide=_guia(raw.get("guide"), f"{donde}guide", e),
-        fix=_arreglo(raw.get("fix"), f"{donde}fix", e) if lista == "guards" else None,
+        fix=_arreglo(raw.get("fix"), f"{donde}fix", e),
     )
 
 
@@ -457,15 +459,21 @@ def _referencia(raw: Any, e: _Errores) -> Optional[ReferenceModel]:
 
 
 def pieza_como_dict(pieza: ReferencePart) -> Dict[str, Any]:
-    return {"group": pieza.group, "role": pieza.role, "primitive": pieza.primitive, "size": list(pieza.size),
-            "location": list(pieza.location), "rotation": list(pieza.rotation), "join": pieza.join}
+    pieza_dict = {"group": pieza.group, "role": pieza.role, "primitive": pieza.primitive, "size": list(pieza.size),
+                  "location": list(pieza.location), "rotation": list(pieza.rotation), "join": pieza.join}
+    if pieza.name:  # figure.silhouette nombra las partes («Falta la parte «Guarda»»)
+        pieza_dict["name"] = pieza.name
+    if pieza.segments:
+        pieza_dict["segments"] = pieza.segments
+    return pieza_dict
 
 
 def _etiquetas(roles) -> Dict[str, str]:
     return {r.id: r.label for r in roles or () if r.label}
 
 
-FIGURAS = ("figure.resembles", "figure.recognize")
+FIGURAS = ("figure.resembles", "figure.recognize", "figure.silhouette")
+CON_NIVEL = ("figure.recognize", "figure.silhouette")  # reciben nivel, exigencia y título de la práctica
 
 
 def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[ReferenceModel], roles, e: _Errores,
@@ -480,11 +488,12 @@ def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[Refe
             if referencia is None or not referencia.compared:
                 e.add(f"'{objetivo.id}': {objetivo.validator} necesita 'reference' con piezas en la práctica")
             else:
-                params = {"tolerance": referencia.tolerance, "labels": _etiquetas(roles), **objetivo.params,
-                          "parts": [pieza_como_dict(p) for p in referencia.compared]}
-                if referencia.flexible:
+                propios = {} if objetivo.validator == "figure.silhouette" else {
+                    "tolerance": referencia.tolerance, "labels": _etiquetas(roles)}
+                params = {**propios, **objetivo.params, "parts": [pieza_como_dict(p) for p in referencia.compared]}
+                if referencia.flexible and objetivo.validator != "figure.silhouette":
                     params.setdefault("flexible", list(referencia.flexible))
-                if objetivo.validator == "figure.recognize":
+                if objetivo.validator in CON_NIVEL:
                     params.setdefault("level", nivel)
                     if referencia.strictness:
                         params.setdefault("strictness", referencia.strictness)
@@ -493,6 +502,87 @@ def _con_referencia(objetivos: List[TargetDefinition], referencia: Optional[Refe
                 objetivo = replace(objetivo, params=params)
         salida.append(objetivo)
     return salida
+
+
+# --- Motor 3.5: el ejemplo resuelto y la revisión autónoma ---------------------------------
+
+OBJETIVO_EJEMPLO = "ejemplo"
+PESO_EJEMPLO = 15
+# Lo que el cargador inyecta en example.matches (no se escribe a mano ni se exporta).
+INYECTADOS_EJEMPLO = ("steps", "check", "parts", "labels", "flexible", "level", "title")
+
+
+def _ejemplo(raw: Any, referencia: Optional[ReferenceModel], e: _Errores) -> Optional[ExampleDefinition]:
+    """«example»: la solución de la práctica en pasos. Ver docs/motor/referencia/14_ejemplo_y_revision.md."""
+    from ..ejemplo import ASPECTOS, revisar_pasos
+
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        e.add("'example' debe ser un objeto {title, description, steps, check}")
+        return None
+    extra = set(raw) - CAMPOS_EJEMPLO
+    if extra:
+        e.add(f"'example' no reconoce: {', '.join(sorted(extra))}")
+    partes = [pieza_como_dict(p) for p in referencia.compared] if referencia is not None else []
+    errores = revisar_pasos(raw.get("steps"), partes)
+    for error in errores:
+        e.add(error)
+    revisa = raw.get("check") or []
+    if not isinstance(revisa, list) or not all(a in ASPECTOS for a in revisa):
+        e.add(f"'example.check' debe ser una lista de: {', '.join(ASPECTOS)}")
+        revisa = []
+    if errores:
+        return None
+    return ExampleDefinition(
+        steps=tuple(raw["steps"]),
+        title=str(raw.get("title") or "").strip(),
+        description=str(raw.get("description") or "").strip(),
+        check=tuple(revisa),
+    )
+
+
+def _con_ejemplo(objetivos: List[TargetDefinition], ejemplo: Optional[ExampleDefinition],
+                 referencia: Optional[ReferenceModel], roles, nivel: int):
+    """example.matches recibe el ejemplo; si la práctica no lo usa, se agrega al final de la ruta."""
+    if ejemplo is None:
+        return objetivos, ejemplo
+    titulo = ejemplo.title or (referencia.title if referencia is not None else "")
+    inyectados: Dict[str, Any] = {"steps": list(ejemplo.steps), "level": nivel}
+    if ejemplo.check:
+        inyectados["check"] = list(ejemplo.check)
+    if titulo:
+        inyectados["title"] = titulo
+    usa_modelo = any(next(iter(p)) == "referencia" for p in ejemplo.steps)
+    if usa_modelo and referencia is not None and referencia.compared:  # la figura del ejemplo es la de «reference»
+        inyectados["parts"] = [pieza_como_dict(p) for p in referencia.compared]
+        if referencia.flexible:
+            inyectados["flexible"] = list(referencia.flexible)
+        if referencia.strictness:
+            inyectados["strictness"] = referencia.strictness
+    if _etiquetas(roles):
+        inyectados["labels"] = _etiquetas(roles)
+    salida = [replace(t, params={**inyectados, **t.params}) if t.validator == "example.matches" else t
+              for t in objetivos]
+    if any(t.validator == "example.matches" and not t.params.get("aspects") for t in objetivos):
+        return salida, ejemplo
+    ids = {t.id for t in objetivos}
+    objetivo_id = OBJETIVO_EJEMPLO if OBJETIVO_EJEMPLO not in ids else "coincide-con-el-ejemplo"
+    salida.append(TargetDefinition(
+        id=objetivo_id,
+        title="Tu práctica coincide con el ejemplo",
+        validator="example.matches",
+        params=inyectados,
+        weight=PESO_EJEMPLO,
+        hints=(
+            Hint(1, "Mira la lista «Comparado con el ejemplo»: cada punto que falta dice cómo hacerlo."),
+            Hint(2, "Abre el ejemplo resuelto (botón «Ver el ejemplo») y compáralo con tu escena; vuelve con "
+                    "«Volver a mi práctica»."),
+        ),
+        guide=TargetGuide(why=("El ejemplo resuelto es lo que propone la plataforma: Amatista revisa que tu práctica "
+                               "tenga lo mismo, con libertad en los nombres, el lugar, el tamaño y los colores.")),
+    ))
+    return salida, replace(ejemplo, auto=True)
 
 
 def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
@@ -584,6 +674,9 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
     roles = _roles(data.get("roles"), e)
     targets = _con_referencia(targets, referencia, roles, e, level)
     vigilantes = _con_referencia(vigilantes, referencia, roles, e, level)
+    ejemplo = _ejemplo(data.get("example"), referencia, e)
+    if targets and len(targets) < MAX_OBJETIVOS:
+        targets, ejemplo = _con_ejemplo(targets, ejemplo, referencia, roles, level)
 
     practica = PracticeDefinition(
         schema=schema,
@@ -608,6 +701,7 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
         place=_lugar(data.get("course"), e),
         starter=_inicio(data.get("starter"), e),
         reference=referencia,
+        example=ejemplo,
     )
     if e.lista:
         raise InvalidPracticeError(e.lista[0], e.lista)
@@ -667,11 +761,22 @@ def dump_practice(practice: PracticeDefinition) -> Dict[str, Any]:
         datos["pills"] = [_dump_pildora(p) for p in practice.pills]
     if practice.review:
         datos["review"] = list(practice.review)
-    datos["targets"] = [_dump_objetivo(t, practice.reference, practice.roles, practice.level) for t in practice.targets]
+    datos["targets"] = [_dump_objetivo(t, practice.reference, practice.roles, practice.level) for t in practice.targets
+                        if not (practice.example is not None and practice.example.auto and t is practice.targets[-1])]
     if practice.guards:
         datos["guards"] = [_dump_objetivo(g, practice.reference, practice.roles, practice.level) for g in practice.guards]
     if practice.reference is not None:
         datos["reference"] = _dump_referencia(practice.reference)
+    if practice.example is not None:
+        ejemplo: Dict[str, Any] = {}
+        if practice.example.title:
+            ejemplo["title"] = practice.example.title
+        if practice.example.description:
+            ejemplo["description"] = practice.example.description
+        ejemplo["steps"] = list(practice.example.steps)
+        if practice.example.check:
+            ejemplo["check"] = list(practice.example.check)
+        datos["example"] = ejemplo
     return datos
 
 
@@ -737,10 +842,15 @@ def _dump_objetivo(t: TargetDefinition, referencia: Optional[ReferenceModel] = N
         objetivo["title"] = t.title
     objetivo["validator"] = t.validator
     objetivo["params"] = dict(t.params)
+    if t.validator == "example.matches":
+        for clave in INYECTADOS_EJEMPLO:
+            objetivo["params"].pop(clave, None)
+        if referencia is not None and objetivo["params"].get("strictness") == referencia.strictness:
+            objetivo["params"].pop("strictness")
     if t.validator in FIGURAS and referencia is not None:
         # Las piezas viven en «reference»; el objetivo solo guarda lo propio.
         objetivo["params"].pop("parts", None)
-        if t.validator == "figure.recognize":
+        if t.validator in CON_NIVEL:
             for clave, valor in (("level", nivel), ("strictness", referencia.strictness), ("title", referencia.title)):
                 if objetivo["params"].get(clave) == valor:
                     objetivo["params"].pop(clave)

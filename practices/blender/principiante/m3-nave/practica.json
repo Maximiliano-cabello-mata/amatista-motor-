@@ -225,5 +225,16 @@
     ],
     "objects": {"nave": {"bevel": 0.04}},
     "camera": {"location": [6, -7, 4.5], "target": [0, 0, 1]}
+  },
+  "example": {
+    "title": "Nave espacial simétrica",
+    "description": "Modelas solo la mitad −X de la nave; el Espejo en X dibuja la otra y la Subdivisión la suaviza.",
+    "steps": [
+      {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-"}},
+      {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}},
+      {"modificador": {"objeto": "Nave", "tipo": "SUBSURF", "niveles": 2}},
+      {"guardado": {"archivo": "mi_nave.blend"}}
+    ],
+    "check": ["malla", "modificadores", "archivo"]
   }
 }
