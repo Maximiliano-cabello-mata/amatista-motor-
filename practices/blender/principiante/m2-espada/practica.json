@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m2.espada",
-  "version": 3,
+  "version": 4,
   "title": "Espada low-poly",
   "level": 2,
   "description": "Forja la espada de la imagen en una sola malla: parte de un cubo, alárgalo con E, marca la guarda con Ctrl + R y escálala, y afila la punta. Amatista revisa la silueta parte por parte.",
@@ -146,7 +146,7 @@
       "params": {"type": "MESH"},
       "weight": 45,
       "requires": ["alargar"],
-      "tip": "Amatista compara tu malla con la espada de la imagen, parte por parte. La lista «Tu figura» dice qué parte falta y con qué tecla se hace.",
+      "tip": "Amatista compara tu malla con la espada de la imagen, parte por parte. La lista «Comparado con el ejemplo» dice qué parte falta y con qué tecla se hace.",
       "hints": [
         "La guarda: Ctrl + R para cortar un anillo donde va, y S para escalarlo hacia los lados.",
         "La punta: selecciona la cara del extremo y escálala casi a cero (S, 0)."

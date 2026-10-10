@@ -3,8 +3,9 @@
 Cada plantilla es el esqueleto de un tipo de práctica del plan de estudios
 con píldoras, objetivos, pistas y vigilantes ya conectados. El autor cambia
 textos y números; la estructura pedagógica (teoría breve al empezar, un
-objetivo por idea, guardar al final) ya viene puesta. Todas compilan: lo
-comprueba engine/tests/test_v3_herramientas.py.
+objetivo por idea, guardar al final) ya viene puesta, y cada una trae un
+ejemplo resuelto («example», motor 3.5) que completa su propia práctica.
+Todas compilan: lo comprueba engine/tests/test_v3_herramientas.py.
 """
 from __future__ import annotations
 
@@ -33,6 +34,12 @@ _MALLA_LIMPIA = {
 }
 
 
+def _ejemplo(titulo: str, pasos: List[Dict[str, Any]], archivo: str = "mi_practica.blend") -> Dict[str, Any]:
+    """El ejemplo resuelto (motor 3.5): la solución en pasos. Debe completar la práctica (lo revisa «probar»)."""
+    return {"title": titulo, "description": f"{CAMBIA}: cómo es la solución, en una frase.",
+            "steps": pasos + [{"guardado": {"archivo": archivo}}]}
+
+
 def _pildora(pid: str, titulo: str, texto: str, **extra) -> Dict[str, Any]:
     return {"id": pid, "title": titulo, "text": texto, "trigger": {"on": "start"}, **extra}
 
@@ -41,6 +48,7 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
     "vacia": {
         "level": 1,
         "pills": [_pildora("idea", "La idea de hoy", f"{CAMBIA}: una idea, dos frases como máximo.")],
+        "example": _ejemplo("Un cubo", [{"cubo": {"nombre": "Cubo"}}]),
         "targets": [
             {"id": "paso-1", "title": "Primer paso", "validator": "object.count", "params": {"type": "MESH", "min": 1},
              "weight": 10, "tip": CAMBIA, "hints": [CAMBIA]},
@@ -56,6 +64,11 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
             {"id": "grs", "title": "G, R y S", "text": "G mueve, R rota y S escala. Luego X, Y o Z para un solo eje.",
              "keys": ["G", "R", "S"], "visual": "keys", "trigger": {"on": "selection"}},
         ],
+        "example": _ejemplo("Base con dos piezas", [
+            {"cubo": {"nombre": "Base", "dims": [2, 2, 0.5], "loc": [0, 0, 0.25], "rol": "base"}},
+            {"cilindro": {"nombre": "Pieza", "dims": [0.5, 0.5, 1], "loc": [1.25, 0, 0.5], "rol": "pieza"}},
+            {"cilindro": {"nombre": "Pieza.001", "dims": [0.5, 0.5, 1], "loc": [-1.25, 0, 0.5], "rol": "pieza"}},
+        ]),
         "targets": [
             {"id": "base", "title": "La base", "validator": "role.count", "params": {"role": "base", "equals": 1},
              "weight": 10, "tip": CAMBIA, "hints": [CAMBIA]},
@@ -82,6 +95,9 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
             {"id": "fusionar", "title": "M › Por distancia", "text": "Si cancelaste una extrusión, M › Por distancia "
              "une los vértices encimados.", "keys": ["M"], "trigger": {"on": "guard", "target": "malla-limpia"}},
         ],
+        "example": _ejemplo("Cubo extruido", [
+            {"cubo": {"nombre": "Modelo", "rol": "modelo", "vertices": 16, "caras": 14}},
+        ]),
         "targets": [
             {"id": "modelo", "title": "Tu modelo", "validator": "role.count", "params": {"role": "modelo", "equals": 1},
              "weight": 10, "tip": CAMBIA, "hints": [CAMBIA]},
@@ -102,6 +118,10 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
             _pildora("llave", "La llave inglesa", "Los modificadores son filtros que cambian la forma sin tocar tu "
                      "malla. Viven en la llave inglesa de Propiedades.", visual="tab:MODIFIER"),
         ],
+        "example": _ejemplo("Modelo con Espejo", [
+            {"cubo": {"nombre": "Modelo", "rol": "modelo"}},
+            {"modificador": {"objeto": "Modelo", "tipo": "MIRROR"}},
+        ]),
         "targets": [
             {"id": "modelo", "title": "Tu modelo", "validator": "role.count", "params": {"role": "modelo", "equals": 1},
              "weight": 10, "tip": CAMBIA, "hints": [CAMBIA]},
@@ -121,6 +141,12 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
             _pildora("principled", "Tres controles", "Del Principled BSDF basta con Color base, Metálico y Rugosidad.",
                      visual="tab:MATERIAL"),
         ],
+        "example": _ejemplo("Dos materiales", [
+            {"cubo": {"nombre": "Caja"}},
+            {"material": {"objeto": "Caja", "nombre": "Rojo", "color": [0.8, 0.1, 0.1]}},
+            {"esfera": {"nombre": "Bola", "loc": [3, 0, 0]}},
+            {"material": {"objeto": "Bola", "nombre": "Metal", "metal": 1, "rugosidad": 0.2}},
+        ]),
         "targets": [
             {"id": "materiales", "title": "Materiales distintos", "validator": "material.distinct", "params": {"min": 2},
              "weight": 30, "tip": CAMBIA, "hints": [CAMBIA]},
@@ -132,6 +158,14 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
     "iluminacion": {
         "level": 2,
         "pills": [_pildora("luces", "Área y Sol", "Área da sombras suaves; Sol, luz pareja desde una dirección.")],
+        "example": _ejemplo("Estudio de tres puntos", [
+            {"cubo": {"nombre": "Modelo", "loc": [0, 0, 1]}},
+            {"camara": {"loc": [0, -8, 2], "mira_a": [0, 0, 1]}},
+            {"luz": {"nombre": "Principal", "tipo": "AREA", "loc": [-4, -4, 4], "energia": 1000, "mira_a": [0, 0, 1]}},
+            {"luz": {"nombre": "Relleno", "tipo": "AREA", "loc": [4, -4, 3], "energia": 400, "mira_a": [0, 0, 1]}},
+            {"luz": {"nombre": "Contraluz", "tipo": "AREA", "loc": [0, 4, 4], "energia": 800, "mira_a": [0, 0, 1]}},
+            {"renders": 1},
+        ]),
         "targets": [
             {"id": "camara", "title": "Cámara activa", "validator": "camera.active", "weight": 15, "tip": CAMBIA,
              "hints": [CAMBIA]},
@@ -146,6 +180,10 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
         "level": 2,
         "pills": [_pildora("clave", "Fotograma clave", "I guarda la posición del objeto en el fotograma actual.",
                            keys=["I"], visual="keys")],
+        "example": _ejemplo("Pelota que sube y baja", [
+            {"esfera": {"nombre": "Pelota", "loc": [0, 0, 3]}},
+            {"animar": {"objeto": "Pelota", "propiedad": "location", "eje": "z", "claves": [[1, 3], [12, 0], [24, 3]]}},
+        ]),
         "targets": [
             {"id": "claves", "title": "Fotogramas clave", "validator": "animation.keyframes",
              "params": {"primitive": "sphere", "property": "location", "axis": "z", "min": 3}, "weight": 30,
@@ -184,4 +222,8 @@ def nuevas_pruebas(practica_id: str, plantilla: str) -> Dict[str, Any]:
         {"nombre": "Escena vacía", "construir": [], "espera": {"completada": False, "actual": primer}},
         {"nombre": "Escena de inicio de Blender", "construir": [{"inicial": True}], "espera": {"completada": False}},
     ]
+    ejemplo = PLANTILLAS[plantilla].get("example")
+    if ejemplo:  # la solución: los mismos pasos del ejemplo resuelto
+        casos.append({"nombre": "Solución (el ejemplo resuelto)", "construir": copy.deepcopy(ejemplo["steps"]),
+                      "espera": {"completada": True, "progreso_min": 100}})
     return {"schema": "amatista.practice-tests/1", "practica": practica_id, "casos": casos}

@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m3.nave",
-  "version": 2,
+  "version": 3,
   "title": "Nave espacial simétrica",
   "level": 2,
   "description": "Modela solo la mitad de una nave y deja que los modificadores Espejo y Subdivisión hagan el resto, sin destruir tu malla.",
@@ -129,7 +129,7 @@
       "weight": 15,
       "requires": ["forma"],
       "tip": "Ctrl+2 en Modo Objeto agrega Subdivisión con nivel 2.",
-      "hints": ["Si el nivel está en 4 o más, bájalo en la llave inglesa (Niveles Vista)."]
+      "hints": ["Si el nivel está en 4 o más, bájalo en la llave inglesa (Niveles Viewport)."]
     },
     {
       "id": "guardar",
@@ -230,7 +230,7 @@
     "title": "Nave espacial simétrica",
     "description": "Modelas solo la mitad −X de la nave; el Espejo en X dibuja la otra y la Subdivisión la suaviza.",
     "steps": [
-      {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-"}},
+      {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "vertices": 28, "caras": 26, "mitad": "x-"}},
       {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}},
       {"modificador": {"objeto": "Nave", "tipo": "SUBSURF", "niveles": 2}},
       {"guardado": {"archivo": "mi_nave.blend"}}

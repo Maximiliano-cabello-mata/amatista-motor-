@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m2.explora",
-  "version": 1,
+  "version": 2,
   "title": "Calentamiento: entra al Modo Edición",
   "level": 2,
   "description": "Entras al cubo con Tab, extruyes una cara y haces un corte en bucle. Amatista registra cada cambio de la malla.",
@@ -81,8 +81,8 @@
     {
       "id": "salir",
       "title": "Vuelve al Modo Objeto",
-      "validator": "object.exists",
-      "params": {"primitive": "cube"},
+      "validator": "scene.mode",
+      "params": {"mode": "OBJECT"},
       "weight": 10,
       "requires": ["cortada"],
       "tip": "Tab para salir: así Blender guarda la malla.",

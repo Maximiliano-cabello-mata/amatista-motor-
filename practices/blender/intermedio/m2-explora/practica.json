@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bi.m2.explora",
-  "version": 1,
+  "version": 2,
   "title": "Calentamiento: ordena en colecciones",
   "level": 3,
   "description": "Agregas varias piezas y las guardas en una colección con nombre. Amatista registra cómo organizas tu escena.",
@@ -51,7 +51,7 @@
       "weight": 70,
       "requires": ["cubos"],
       "tip": "Selecciona las tres piezas, M › Nueva colección, y llámala Casas.",
-      "hints": ["A selecciona todo; Shift+clic quita la luz y la cámara.", "M › + Nueva colección › escribe Casas."]
+      "hints": ["Clic en la primera pieza y Shift+clic en las demás (o A para seleccionar todo).", "M › + Nueva colección › escribe Casas."]
     }
   ],
   "review": ["blender.bi.m1.explora#bisel"],

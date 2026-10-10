@@ -286,6 +286,10 @@ def escribir_indice() -> None:
     escribir(INDICE, {"schema": "amatista.references/1", "practicas": indice})
 
 
+# Validadores que revisan la figura, en orden de preferencia (figure.resembles queda por compatibilidad).
+FIGURAS = ("figure.recognize", "figure.silhouette", "figure.resembles")
+
+
 def procesar(carpeta: Path, motor, render: bool, muestras: int) -> dict:
     import bpy
     from amatista_engine.blender.adapter import capture_scene
@@ -299,12 +303,19 @@ def procesar(carpeta: Path, motor, render: bool, muestras: int) -> dict:
     armar(bpy, referencia, etiquetas)
     escena = capture_scene()
     reporte = motor.evaluate(practica, escena)
-    figura = next((r for r in reporte.results if r.validator == "figure.resembles"), None)
+    figura = next((r for v in FIGURAS for r in reporte.results if r.validator == v), None)
     pendientes = [r.target_id for r in reporte.results if not r.passed]
     resumen = {"practica": practica.id, "figura": None, "objetos": len(escena.objects),
                "progreso": round(reporte.progress), "pendientes": pendientes}
     if figura is not None:
         resumen["figura"] = {"pasa": figura.passed, "parecido": figura.details.get("score"), "mensaje": figura.message}
+    else:  # sin validador de figura: el aspecto «La figura» de la revisión contra el ejemplo
+        ejemplo = next((r for r in reporte.results if r.validator == "example.matches"), None)
+        aspecto = next((a for a in (ejemplo.details.get("aspects") or []) if a.get("id") == "figura"), None) \
+            if ejemplo is not None else None
+        if aspecto is not None:
+            resumen["figura"] = {"pasa": aspecto["ok"], "parecido": ejemplo.details.get("score"),
+                                 "mensaje": f"La figura del ejemplo: {'coincide' if aspecto['ok'] else 'no coincide'}"}
     if render:
         _luces(bpy, referencia)
         _camara(bpy, referencia)

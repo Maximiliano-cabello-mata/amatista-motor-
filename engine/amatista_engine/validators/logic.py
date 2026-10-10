@@ -23,7 +23,8 @@ def opciones(target: TargetDefinition) -> List[Dict[str, Any]]:
     if not isinstance(crudas, list) or not 2 <= len(crudas) <= MAX_OPCIONES:
         raise ValueError(f"logic.any necesita «options» con 2 a {MAX_OPCIONES} opciones")
     for opcion in crudas:
-        if not isinstance(opcion, dict) or not isinstance(opcion.get("validator"), str):
+        if (not isinstance(opcion, dict) or not isinstance(opcion.get("validator"), str)
+                or not isinstance(opcion.get("params") or {}, dict)):
             raise ValueError("cada opción de logic.any necesita «validator» y «params»")
         if opcion["validator"] == "logic.any":
             raise ValueError("logic.any no se puede anidar")

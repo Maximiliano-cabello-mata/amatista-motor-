@@ -144,12 +144,24 @@ def count_ok(found: int, minimo: Optional[int], maximo: Optional[int]) -> bool:
     return (minimo is None or found >= minimo) and (maximo is None or found <= maximo)
 
 
+# Plurales que no salen de quitar la «s» o el «es».
+IRREGULARES = {"luces": "luz", "veces": "vez", "cruces": "cruz", "lápices": "lápiz", "peces": "pez",
+               "voces": "voz", "raíces": "raíz", "focos": "foco"}
+
+
 def singular(que: str) -> str:
-    """«esferas» → «esfera», «materiales distintos» → «material distinto» (hasta « en …»)."""
+    """«esferas» → «esfera», «luces» → «luz», «materiales distintos» → «material distinto» (hasta « en …»).
+
+    Lo que va entre comillas («Rueda») es un nombre y no cambia.
+    """
     cabeza, sep, resto = que.partition(" en ")
     palabras = []
     for p in cabeza.split(" "):
-        if p.endswith("es") and len(p) > 4 and p[-3] in "lrnd":
+        if p.startswith("«") or p.endswith("»"):
+            pass
+        elif p.lower() in IRREGULARES:
+            p = IRREGULARES[p.lower()]
+        elif p.endswith("es") and len(p) > 4 and p[-3] in "lrnd":
             p = p[:-2]
         elif p.endswith("s") and p[:1].islower() and len(p) > 3:
             p = p[:-1]
@@ -158,10 +170,16 @@ def singular(que: str) -> str:
 
 
 def count_message(found: int, minimo: Optional[int], maximo: Optional[int], que: str) -> str:
-    """Mensajes generados (sección 22 de la especificación)."""
-    if found == 1 and not (minimo is not None and minimo == maximo):
+    """Mensajes generados (sección 22 de la especificación).
+
+    Un nombre entre comillas («Vagón», la etiqueta de un rol) no lleva plural: «Tienes 2 de tipo «Vagón»».
+    """
+    exacto = minimo is not None and minimo == maximo
+    if found == 1 and not exacto:
         que = singular(que)
-    if minimo is not None and minimo == maximo:
+    if not exacto and que.startswith("«"):
+        que = f"de tipo {que}"
+    if exacto:
         if found == minimo:
             return f"{found}/{minimo} {que}. Objetivo completado."
         if found == 0:

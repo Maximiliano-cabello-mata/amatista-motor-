@@ -415,6 +415,10 @@ def escena_desde_pasos(pasos: List[Dict[str, Any]], practica=None) -> SceneState
 
     {"referencia": {"variacion": 0.2}} arma el modelo de referencia de la práctica.
     """
+    from .ejemplo.pasos import revisar_argumentos
+
+    if not isinstance(pasos, list):
+        raise ValueError("«construir» debe ser una lista de pasos (cubo, luz, material…)")
     e = Escena()
     for i, paso in enumerate(pasos):
         if not isinstance(paso, dict) or len(paso) != 1:
@@ -422,20 +426,28 @@ def escena_desde_pasos(pasos: List[Dict[str, Any]], practica=None) -> SceneState
         clave, args = next(iter(paso.items()))
         if clave not in PASOS:
             raise ValueError(f"construir[{i}]: paso desconocido «{clave}» (usa: {', '.join(sorted(PASOS))})")
+        errores = revisar_argumentos(clave, args, f"construir[{i}].{clave}")
+        if errores:
+            raise ValueError("; ".join(errores))
         metodo = getattr(e, PASOS[clave])
-        if clave == "referencia":
-            if practica is None or practica.reference is None:
-                raise ValueError(f"construir[{i}]: «referencia» necesita una práctica con «reference»")
-            e.referencia(practica.reference.parts, **(args if isinstance(args, dict) else {}))
-            continue
-        if isinstance(args, dict):
-            metodo(**args)
-        elif isinstance(args, list):
-            metodo(*args)
-        elif args is None or args is True:
-            metodo()
-        else:
-            metodo(args)
+        try:
+            if clave == "referencia":
+                if practica is None or practica.reference is None:
+                    raise ValueError(f"construir[{i}]: «referencia» necesita una práctica con «reference»")
+                e.referencia(practica.reference.parts, **(args if isinstance(args, dict) else {}))
+            elif isinstance(args, dict):
+                metodo(**args)
+            elif isinstance(args, list):
+                metodo(*args)
+            elif args is None or args is True:
+                metodo()
+            else:
+                metodo(args)
+        except ValueError:
+            raise
+        except Exception as error:  # noqa: BLE001 — un dato raro de la escena de prueba, no un error del motor
+            texto = error.args[0] if isinstance(error, KeyError) and error.args else (str(error) or type(error).__name__)
+            raise ValueError(f"construir[{i}] («{clave}»): {texto}") from error
     return e.construir()
 
 

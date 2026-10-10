@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bi.m3.diorama",
-  "version": 2,
+  "version": 3,
   "title": "Tu diorama en la galería",
   "level": 3,
   "description": "Montas tu aldea (o cualquier modelo tuyo) como diorama: encuadre, iluminación de tres puntos, motor de render y la imagen final guardada.",
@@ -110,7 +110,7 @@
   "review": ["blender.bi.m3.explora#motores", "blender.bpi.m2.tres-puntos#tres-puntos"],
   "reference": {
     "title": "Diorama en la galería",
-    "description": "Tu aldea sobre una base, encuadrada por la cámara y con luz de tres puntos; el render final se hace en Cycles.",
+    "description": "Tu aldea sobre una base, encuadrada por la cámara y con luz de tres puntos; el render final se hace en EEVEE o Cycles.",
     "tolerance": 0.35,
     "parts": [
       {

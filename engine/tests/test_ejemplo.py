@@ -265,3 +265,106 @@ def test_ejemplo_no_aprueba_silueta_omitida():
     resultado = revisar(practica, sin_evidencia)
     assert not resultado.passed
     assert any(not i['ok'] and 'silueta' in i['consejo'] for i in resultado.details['checklist'])
+
+
+# --- Auditoría del motor 3.5 (2026-10): errores del autor en español, nunca «Error interno» -----------
+
+
+def _base(**extra):
+    datos = {"schema": "amatista.practice/2", "id": "prueba.auditoria", "title": "Prueba", "level": 2,
+             "targets": [{"id": "malla", "title": "Una malla", "validator": "object.exists",
+                          "params": {"type": "MESH"}, "weight": 10}],
+             "example": {"steps": [{"cubo": {"nombre": "Caja"}}, {"guardado": {"archivo": "mi_caja.blend"}}]}}
+    datos.update(extra)
+    return datos
+
+
+@pytest.mark.parametrize("cambio,texto", [
+    ({"targets": [{"id": "t", "validator": "file.saved", "hints": [{"text": "a", "level": "x"}]}]}, "level"),
+    ({"reference": {"parts": [{"primitive": "cube", "size": [1, 1, 1], "segments": "x"}]}}, "segments"),
+    ({"example": {"steps": [{"cubo": {}}], "check": [["a"]]}}, "example.check"),
+    ({"example": {"steps": [{"cubo": {"dims": [1, 2]}}]}}, "example.steps[0].cubo.dims"),
+    ({"example": {"steps": [{"luz": {"tipo": 3}}]}}, "example.steps[0].luz.tipo"),
+    ({"example": {"steps": [{"guardado": {"archivo": 5}}]}}, "example.steps[0].guardado.archivo"),
+    ({"example": {"steps": [{"guardado": "mi_x.blend"}]}}, "example.steps[0].guardado"),
+    ({"example": {"steps": [{"luz": "SUN"}]}}, "example.steps[0].luz"),
+    ({"example": {"steps": [{"cubo": {"color": [1, 0, 0]}}]}}, "no admite «color»"),
+    ({"example": {"steps": [{"modificador": {"objeto": "Nadie", "tipo": "BEVEL"}}]}}, "example.steps[0]"),
+    ({"example": {"steps": [{"cubo": {}}], "check": ["luz"]}}, "no es un aspecto"),
+    ({"example": {"steps": [{"cubo": {}}], "check": ["luces"]}}, "no tiene «luces»"),
+])
+def test_el_cargador_solo_lanza_errores_de_practica(cambio, texto):
+    with pytest.raises(InvalidPracticeError) as error:
+        parse_practice(_base(**cambio))
+    assert any(texto in e for e in error.value.errors), error.value.errors
+
+
+def test_aspects_de_un_example_matches_se_validan():
+    objetivo = {"id": "solo-luz", "title": "Luz", "validator": "example.matches", "params": {"aspects": ["luz"]},
+                "weight": 5}
+    with pytest.raises(InvalidPracticeError, match="solo-luz.params.aspects"):
+        parse_practice(_base(targets=_base()["targets"] + [objetivo]))
+    objetivo["params"]["aspects"] = ["materiales"]  # el ejemplo no tiene materiales
+    with pytest.raises(InvalidPracticeError, match="no tiene «materiales»"):
+        parse_practice(_base(targets=_base()["targets"] + [objetivo]))
+
+
+def test_example_matches_sin_aspectos_no_aprueba():
+    from amatista_engine.models import TargetDefinition
+    from amatista_engine.validators.example import matches
+
+    objetivo = TargetDefinition(id="e", validator="example.matches",
+                                params={"steps": [{"cubo": {}}], "aspects": ["luces"]})
+    r = matches(objetivo, Escena().construir())
+    assert r.passed is False
+
+
+def test_la_camara_debe_ser_la_activa():
+    practica = practica_simple([{"cubo": {}}, {"camara": {"loc": [0, -8, 2], "mira_a": [0, 0, 0]}}], check=["camara"])
+    inactiva = Escena().cubo().camara("Cam", loc=(0, -8, 2), mira_a=(0, 0, 0), activa=False).construir()
+    r = revisar(practica, inactiva)
+    assert not r.passed and "no es la cámara activa" in r.message
+    activa = Escena().cubo().camara("Cam", loc=(0, -8, 2), mira_a=(0, 0, 0)).construir()
+    assert revisar(practica, activa).passed
+
+
+def test_con_40_objetivos_el_ejemplo_igual_se_agrega():
+    objetivos = [{"id": f"t{i}", "title": "T", "validator": "object.exists", "params": {"type": "MESH"},
+                  "weight": 1} for i in range(40)]
+    practica = parse_practice(_base(targets=objetivos))
+    assert len(practica.targets) == 41 and practica.targets[-1].validator == "example.matches"
+    assert practica.example.auto
+    assert len(dump_practice(practica)["targets"]) == 40
+    con_propio = objetivos[:39] + [{"id": "ej", "title": "E", "validator": "example.matches", "weight": 1}]
+    practica = parse_practice(_base(targets=con_propio))
+    assert practica.targets[-1].params["steps"]  # recibe los pasos aunque haya 40 objetivos
+
+
+def test_dump_conserva_lo_que_escribio_el_autor():
+    propio = {"id": "luces", "title": "Mis luces", "validator": "example.matches",
+              "params": {"aspects": ["archivo"], "level": 4, "title": "Mi archivo"}, "weight": 5}
+    practica = parse_practice(_base(targets=_base()["targets"] + [propio]))
+    params = next(t for t in dump_practice(practica)["targets"] if t["id"] == "luces")["params"]
+    assert params == {"aspects": ["archivo"], "level": 4, "title": "Mi archivo"}
+    otra = parse_practice(dump_practice(practica))
+    assert next(t for t in otra.targets if t.id == "luces").params["level"] == 4
+
+
+def test_el_archivo_del_ejemplo_y_file_named_coinciden():
+    from amatista_engine.practice import compile_practice
+
+    guardar = {"id": "guardar", "title": "Guarda", "validator": "file.named", "params": {"contains": "caja"},
+               "weight": 5}
+    datos = _base(targets=_base()["targets"] + [guardar])
+    assert compile_practice(datos).ok
+    datos["example"]["steps"][-1] = {"guardado": {"archivo": "mi_caja_pintada.blend"}}
+    assert any("caja_pintada" in e for e in compile_practice(datos).errors)
+
+
+def test_describir_usa_nombres_de_rol_y_menciona_las_caras():
+    partes = [{"primitive": "cylinder", "role": "rueda"}, {"primitive": "cube", "role": "vagon", "name": "Vagón"}]
+    texto = describir([{"referencia": {}}], partes, {"rueda": "Rueda"})[0]
+    assert "Rueda" in texto and "Vagón" in texto and "rueda," not in texto
+    assert "26 caras" in describir([{"cubo": {"caras": 26}}])[0]
+    assert "Subdivisión de superficie" in describir([{"cubo": {"nombre": "A"}},
+                                                     {"modificador": {"objeto": "A", "tipo": "SUBSURF"}}])[1]

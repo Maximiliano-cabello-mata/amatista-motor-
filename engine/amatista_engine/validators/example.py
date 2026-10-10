@@ -25,6 +25,8 @@ def matches(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     perfil = perfil_para(nivel, text(target, "strictness") or "")
     esperada = escena_esperada(pasos, partes)
     aspectos = target.params.get("aspects") or target.params.get("check") or None
+    if aspectos is not None and (not isinstance(aspectos, list) or not all(isinstance(a, str) for a in aspectos)):
+        raise ValueError("example.matches: «aspects» debe ser una lista de aspectos (figura, materiales…)")
     revision = revisar_ejemplo(
         esperada, scene, perfil, nivel, lo_que_pide(pasos), aspectos, partes,
         [str(g) for g in target.params.get("flexible") or []], dict(target.params.get("labels") or {}),
@@ -42,6 +44,9 @@ def matches(target: TargetDefinition, scene: SceneState) -> ValidationResult:
         if detalles_extra:
             mensaje += f" Un detalle: {detalles_extra[0]['consejo']}"
         return result(target, True, mensaje, detalles)
+    if not revision.aspectos:
+        return result(target, False, "No hay nada del ejemplo que revisar en este paso: los aspectos pedidos no "
+                                     "están en el ejemplo resuelto (avisa a quien escribió la práctica).", detalles)
     pendiente = revision.pendientes[0]
     consejo = pendiente["consejo"] or f"Compara «{pendiente['texto']}» con el ejemplo."
     faltan = sum(1 for a in revision.aspectos if not a.aprobado)

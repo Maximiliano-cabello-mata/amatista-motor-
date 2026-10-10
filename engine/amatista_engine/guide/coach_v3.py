@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from typing import Dict, Optional
 
+from ..terminos import MODIFICADORES
 from ..validators.base import primitiva, selector
 from .coach import (
     TONO_ANIMO,
@@ -28,8 +29,7 @@ NOMBRE_PRIMITIVA = {
     "cube": "Cubo", "cylinder": "Cilindro", "sphere": "Esfera UV", "icosphere": "Icoesfera", "cone": "Cono",
     "torus": "Toroide", "plane": "Plano", "circle": "Círculo", "suzanne": "Mono",
 }
-NOMBRE_MODIFICADOR = {"MIRROR": "Espejo (Mirror)", "SUBSURF": "Superficie de subdivisión", "BEVEL": "Biselar",
-                      "ARRAY": "Matriz (Array)", "SOLIDIFY": "Solidificar"}
+NOMBRE_MODIFICADOR = MODIFICADORES  # uno solo para todo el motor (terminos.py)
 
 
 def _fallidos(ctx: Contexto):
@@ -250,7 +250,7 @@ def coach_modifier_configured(ctx: Contexto) -> Parcial:
     if motivo == "levels":
         return Parcial(ctx.result.message, TONO_CERCA,
                        (_seleccionar(objeto), Paso("Abre la llave inglesa (Modificadores)"),
-                        Paso("Cambia «Niveles de vista» (Levels Viewport)"),
+                        Paso("Cambia «Niveles Viewport» (Levels Viewport)"),
                         Paso("Atajo: Ctrl + un número pone esos niveles", ("Ctrl", "2"))),
                        _corregir([objeto], "Niveles"),
                        action=GuideAction("open_tab", "Abrir Modificadores", objetos, tab="MODIFIER"))

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ..models import SceneState, TargetDefinition, ValidationResult
+from ..terminos import MODIFICADORES, nombre_modificador
 from .base import count_message, count_ok, count_rule, describe, result, select, selector, text
 
 
@@ -42,12 +43,13 @@ def modifier_exists(target: TargetDefinition, scene: SceneState) -> ValidationRe
     objetos = select(scene, sel)
     que = describe(sel)
     sin = [o.name for o in objetos if modificador not in o.modifiers]
+    nombre = nombre_modificador(modificador)
     return result(
         target,
         bool(objetos) and not sin,
-        f"«{que}» ya tiene el modificador {modificador}."
+        f"«{que}» ya tiene el modificador {nombre}."
         if objetos and not sin
-        else (f"No hay objetos «{que}»." if not objetos else f"Agrega el modificador {modificador} a «{sin[0]}»."),
+        else (f"No hay objetos «{que}»." if not objetos else f"Agrega el modificador {nombre} a «{sin[0]}»."),
         {"selector": sel, "modifier": modificador, "missing": sin},
     )
 
@@ -145,11 +147,8 @@ def one_side(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     )
 
 
-# Nombre del modificador como lo muestra Blender en español.
-NOMBRES_MODIFICADOR = {
-    "MIRROR": "Espejo", "SUBSURF": "Subdivisión de superficie", "BEVEL": "Biselar", "SOLIDIFY": "Solidificar",
-    "ARRAY": "Arreglo", "BOOLEAN": "Booleano", "DECIMATE": "Diezmar", "WEIGHTED_NORMAL": "Normales ponderadas",
-}
+# Nombre del modificador para el alumno (uno solo para todo el motor: terminos.py).
+NOMBRES_MODIFICADOR = MODIFICADORES
 
 
 def modifier_configured(target: TargetDefinition, scene: SceneState) -> ValidationResult:

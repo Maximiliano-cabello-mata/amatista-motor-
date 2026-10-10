@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m1.explora",
-  "version": 2,
+  "version": 3,
   "title": "Explora la vista 3D: un muñeco de nieve",
   "level": 1,
   "description": "Tu primer contacto con Blender conectado a Amatista: armas un muñeco de nieve con tres esferas y una nariz de cono. Agregas formas, las subes con G, las escalas con S y giras la nariz con R.",
@@ -42,7 +42,7 @@
     {
       "id": "orbitar",
       "title": "Gira alrededor",
-      "text": "Rueda presionada para orbitar, Shift + rueda para desplazarte y rueda para acercarte. Mover la vista no cambia tu escena.",
+      "text": "Rueda presionada para orbitar, Shift + rueda presionada para desplazarte y rueda para acercarte. Mover la vista no cambia tu escena.",
       "keys": ["Rueda", "Shift"],
       "trigger": {"on": "start"}
     },

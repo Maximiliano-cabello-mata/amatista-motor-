@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from dataclasses import replace
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 from ..errors import InvalidPracticeError
 from ..models import (
@@ -102,7 +102,11 @@ def _pistas(raw: Any, donde: str, e: _Errores) -> tuple:
         if isinstance(pista, str) and pista.strip():
             pistas.append(Hint(level=nivel, text=pista.strip()))
         elif isinstance(pista, dict) and isinstance(pista.get("text"), str) and pista["text"].strip():
-            pistas.append(Hint(level=int(pista.get("level", nivel)), text=pista["text"].strip()))
+            nivel_pista = pista.get("level", nivel)
+            if isinstance(nivel_pista, bool) or not isinstance(nivel_pista, int) or nivel_pista < 1:
+                e.add(f"'{donde}[{nivel - 1}].level' debe ser un entero >= 1")
+                nivel_pista = nivel
+            pistas.append(Hint(level=nivel_pista, text=pista["text"].strip()))
         else:
             e.add(f"'{donde}[{nivel - 1}]' debe ser texto o {{level, text}}")
     niveles = [p.level for p in pistas]
@@ -406,6 +410,10 @@ def _referencia(raw: Any, e: _Errores) -> Optional[ReferenceModel]:
         if not isinstance(material, dict):
             e.add(f"'{donde}.material' debe ser un objeto")
             material = {}
+        segmentos = pieza.get("segments") or 0
+        if isinstance(segmentos, bool) or not isinstance(segmentos, int) or not 0 <= segmentos <= 256:
+            e.add(f"'{donde}.segments' debe ser un entero entre 0 y 256 (0 = los de Blender)")
+            segmentos = 0
         piezas.append(ReferencePart(
             primitive=primitiva,
             size=_vector(pieza.get("size"), f"{donde}.size", e, positivo=True),
@@ -415,7 +423,7 @@ def _referencia(raw: Any, e: _Errores) -> Optional[ReferenceModel]:
             name=str(pieza.get("name") or ""),
             color=str(pieza.get("color") or ""),
             join=str(pieza.get("join") or ""),
-            segments=int(pieza.get("segments") or 0),
+            segments=segmentos,
             material=material,
             compare=pieza.get("compare", True) is not False,
         ))
@@ -512,9 +520,27 @@ PESO_EJEMPLO = 15
 INYECTADOS_EJEMPLO = ("steps", "check", "parts", "labels", "flexible", "level", "title")
 
 
+def _aspectos_validos(valor: Any, donde: str, disponibles: List[str], e: _Errores) -> List[str]:
+    """Una lista de aspectos (figura, materiales…) que el ejemplo tiene de verdad; si no, un error con la ruta."""
+    from ..ejemplo import ASPECTOS
+
+    if not isinstance(valor, list) or not all(isinstance(a, str) for a in valor):
+        e.add(f"'{donde}' debe ser una lista de: {', '.join(ASPECTOS)}")
+        return []
+    desconocidos = [a for a in valor if a not in ASPECTOS]
+    if desconocidos:
+        e.add(f"'{donde}': «{desconocidos[0]}» no es un aspecto (usa: {', '.join(ASPECTOS)})")
+        return []
+    faltan = [a for a in valor if a not in disponibles]
+    if faltan:
+        e.add(f"'{donde}': el ejemplo no tiene «{faltan[0]}» que revisar (tiene: {', '.join(disponibles) or 'nada'})")
+        return []
+    return list(valor)
+
+
 def _ejemplo(raw: Any, referencia: Optional[ReferenceModel], e: _Errores) -> Optional[ExampleDefinition]:
     """«example»: la solución de la práctica en pasos. Ver docs/motor/referencia/14_ejemplo_y_revision.md."""
-    from ..ejemplo import ASPECTOS, revisar_pasos
+    from ..ejemplo import revisar_pasos
 
     if raw is None:
         return None
@@ -528,12 +554,9 @@ def _ejemplo(raw: Any, referencia: Optional[ReferenceModel], e: _Errores) -> Opt
     errores = revisar_pasos(raw.get("steps"), partes)
     for error in errores:
         e.add(error)
-    revisa = raw.get("check") or []
-    if not isinstance(revisa, list) or not all(a in ASPECTOS for a in revisa):
-        e.add(f"'example.check' debe ser una lista de: {', '.join(ASPECTOS)}")
-        revisa = []
     if errores:
         return None
+    revisa = _aspectos_validos(raw.get("check") or [], "example.check", aspectos_de(raw["steps"], partes), e)
     return ExampleDefinition(
         steps=tuple(raw["steps"]),
         title=str(raw.get("title") or "").strip(),
@@ -542,11 +565,15 @@ def _ejemplo(raw: Any, referencia: Optional[ReferenceModel], e: _Errores) -> Opt
     )
 
 
-def _con_ejemplo(objetivos: List[TargetDefinition], ejemplo: Optional[ExampleDefinition],
-                 referencia: Optional[ReferenceModel], roles, nivel: int):
-    """example.matches recibe el ejemplo; si la práctica no lo usa, se agrega al final de la ruta."""
-    if ejemplo is None:
-        return objetivos, ejemplo
+def aspectos_de(pasos: Sequence[Dict[str, Any]], partes: Sequence[Dict[str, Any]]) -> List[str]:
+    """Los aspectos que tiene un ejemplo (pasos ya revisados)."""
+    from ..ejemplo import aspectos_del_ejemplo, escena_esperada, lo_que_pide
+
+    return aspectos_del_ejemplo(escena_esperada(pasos, partes), lo_que_pide(pasos))
+
+
+def _inyectados(ejemplo: ExampleDefinition, referencia: Optional[ReferenceModel], roles, nivel: int) -> Dict[str, Any]:
+    """Lo que el cargador pone en cada example.matches (y lo que dump_practice no exporta si no cambió)."""
     titulo = ejemplo.title or (referencia.title if referencia is not None else "")
     inyectados: Dict[str, Any] = {"steps": list(ejemplo.steps), "level": nivel}
     if ejemplo.check:
@@ -562,9 +589,29 @@ def _con_ejemplo(objetivos: List[TargetDefinition], ejemplo: Optional[ExampleDef
             inyectados["strictness"] = referencia.strictness
     if _etiquetas(roles):
         inyectados["labels"] = _etiquetas(roles)
+    return inyectados
+
+
+def _con_ejemplo(objetivos: List[TargetDefinition], ejemplo: Optional[ExampleDefinition],
+                 referencia: Optional[ReferenceModel], roles, nivel: int, e: _Errores):
+    """example.matches recibe el ejemplo; si la práctica no lo usa, se agrega al final de la ruta.
+
+    El objetivo que se agrega no cuenta para el máximo de objetivos (MAX_OBJETIVOS cuenta los del autor).
+    """
+    usados = [t for t in objetivos if t.validator == "example.matches"]
+    if ejemplo is None:
+        for t in usados:
+            e.add(f"'{t.id}': example.matches necesita «example» (el ejemplo resuelto) en la práctica")
+        return objetivos, ejemplo
+    partes = [pieza_como_dict(p) for p in referencia.compared] if referencia is not None else []
+    disponibles = aspectos_de(ejemplo.steps, partes)
+    for t in usados:
+        if "aspects" in t.params:
+            _aspectos_validos(t.params["aspects"], f"{t.id}.params.aspects", disponibles, e)
+    inyectados = _inyectados(ejemplo, referencia, roles, nivel)
     salida = [replace(t, params={**inyectados, **t.params}) if t.validator == "example.matches" else t
               for t in objetivos]
-    if any(t.validator == "example.matches" and not t.params.get("aspects") for t in objetivos):
+    if any(not t.params.get("aspects") for t in usados):
         return salida, ejemplo
     ids = {t.id for t in objetivos}
     objetivo_id = OBJETIVO_EJEMPLO if OBJETIVO_EJEMPLO not in ids else "coincide-con-el-ejemplo"
@@ -586,6 +633,17 @@ def _con_ejemplo(objetivos: List[TargetDefinition], ejemplo: Optional[ExampleDef
 
 
 def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
+    """JSON → PracticeDefinition. Cualquier dato mal escrito sale como InvalidPracticeError, nunca como otro error."""
+    try:
+        return _parse_practice(data)
+    except InvalidPracticeError:
+        raise
+    except (TypeError, ValueError, AttributeError, IndexError, KeyError, RecursionError) as error:
+        detalle = error.args[0] if isinstance(error, KeyError) and error.args else error
+        raise InvalidPracticeError(f"La práctica tiene un dato que no se puede leer: {detalle}") from error
+
+
+def _parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
     if not isinstance(data, dict):
         raise InvalidPracticeError("La práctica debe ser un objeto JSON")
     e = _Errores()
@@ -675,8 +733,8 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
     targets = _con_referencia(targets, referencia, roles, e, level)
     vigilantes = _con_referencia(vigilantes, referencia, roles, e, level)
     ejemplo = _ejemplo(data.get("example"), referencia, e)
-    if targets and len(targets) < MAX_OBJETIVOS:
-        targets, ejemplo = _con_ejemplo(targets, ejemplo, referencia, roles, level)
+    if targets:
+        targets, ejemplo = _con_ejemplo(targets, ejemplo, referencia, roles, level, e)
 
     practica = PracticeDefinition(
         schema=schema,
@@ -761,10 +819,14 @@ def dump_practice(practice: PracticeDefinition) -> Dict[str, Any]:
         datos["pills"] = [_dump_pildora(p) for p in practice.pills]
     if practice.review:
         datos["review"] = list(practice.review)
-    datos["targets"] = [_dump_objetivo(t, practice.reference, practice.roles, practice.level) for t in practice.targets
+    inyectados = (_inyectados(practice.example, practice.reference, practice.roles, practice.level)
+                  if practice.example is not None else {})
+    datos["targets"] = [_dump_objetivo(t, practice.reference, practice.roles, practice.level, inyectados)
+                        for t in practice.targets
                         if not (practice.example is not None and practice.example.auto and t is practice.targets[-1])]
     if practice.guards:
-        datos["guards"] = [_dump_objetivo(g, practice.reference, practice.roles, practice.level) for g in practice.guards]
+        datos["guards"] = [_dump_objetivo(g, practice.reference, practice.roles, practice.level, inyectados)
+                           for g in practice.guards]
     if practice.reference is not None:
         datos["reference"] = _dump_referencia(practice.reference)
     if practice.example is not None:
@@ -836,17 +898,17 @@ def _dump_pildora(p: PillDefinition) -> Dict[str, Any]:
 
 
 def _dump_objetivo(t: TargetDefinition, referencia: Optional[ReferenceModel] = None, roles=(),
-                   nivel: int = 1) -> Dict[str, Any]:
+                   nivel: int = 1, inyectados: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     objetivo: Dict[str, Any] = {"id": t.id}
     if t.title:
         objetivo["title"] = t.title
     objetivo["validator"] = t.validator
     objetivo["params"] = dict(t.params)
     if t.validator == "example.matches":
-        for clave in INYECTADOS_EJEMPLO:
-            objetivo["params"].pop(clave, None)
-        if referencia is not None and objetivo["params"].get("strictness") == referencia.strictness:
-            objetivo["params"].pop("strictness")
+        # Solo se quita lo que puso el cargador: lo que el autor escribió distinto se conserva.
+        for clave, valor in (inyectados or {}).items():
+            if clave in objetivo["params"] and objetivo["params"][clave] == valor:
+                objetivo["params"].pop(clave)
     if t.validator in FIGURAS and referencia is not None:
         # Las piezas viven en «reference»; el objetivo solo guarda lo propio.
         objetivo["params"].pop("parts", None)

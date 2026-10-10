@@ -11,7 +11,7 @@ aspecto por aspecto. Cada aspecto aparece solo si el ejemplo lo tiene:
     materiales     metálico, pulido o rugoso, vidrio y, en los niveles 4 y 5, el color
     colecciones    los objetos agrupados como en el ejemplo
     luces          las luces del ejemplo por tipo
-    camara         una cámara activa que mira al modelo
+    camara         una cámara activa (la de F12) que mira al modelo
     animacion      las mismas propiedades animadas, con sus claves y su recorrido
     render         el motor de render y el render (F12)
     archivo        guardado con el nombre del ejemplo
@@ -76,7 +76,8 @@ class RevisionEjemplo:
 
     @property
     def aprobada(self) -> bool:
-        return all(a.aprobado for a in self.aspectos)
+        """Sin ningún aspecto que revisar no hay nada aprobado (un «check» que no coincide con el ejemplo)."""
+        return bool(self.aspectos) and all(a.aprobado for a in self.aspectos)
 
     @property
     def lista(self) -> List[Dict[str, Any]]:
@@ -391,7 +392,7 @@ def _luces(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
     total_ok = sum(tiene.values()) >= sum(pedidas.values())
     for tipo, cuantas in pedidas.items():
         nombre, articulo = LUCES.get(tipo, (tipo, tipo))
-        texto = f"{cuantas} {'luces' if cuantas > 1 else 'luz'} {nombre}" if tipo != "SUN" else f"{cuantas} Sol"
+        texto = f"{cuantas} {'luces' if cuantas > 1 else 'luz'} de tipo {nombre}"
         consejo = (f"Agrega {articulo} (Shift + A › Luz › {nombre})" +
                    (f": el ejemplo usa {cuantas}." if cuantas > 1 else "."))
         if tiene.get(tipo, 0) >= cuantas:
@@ -411,8 +412,13 @@ def _camara(esperada: SceneState, alumno: SceneState) -> Aspecto:
     if not esperada.active_camera:
         return a
     cam = alumno.object_by_name(alumno.active_camera) if alumno.active_camera else None
-    cam = cam or next((o for o in alumno.objects if o.object_type == "CAMERA"), None)
-    a.punto("Una cámara", cam is not None, "Agrega una cámara (Shift + A › Cámara) y hazla la activa (Ctrl + 0).")
+    cam = cam if cam is not None and cam.object_type == "CAMERA" else None
+    otra = next((o for o in alumno.objects if o.object_type == "CAMERA"), None)
+    consejo = ("Agrega una cámara (Shift + A › Cámara) y hazla la activa (Ctrl + 0 del teclado numérico)."
+               if otra is None else
+               f"Ya tienes «{_nombre_obj(otra)}», pero no es la cámara activa: selecciónala y pulsa Ctrl + 0 del "
+               "teclado numérico.")
+    a.punto("Una cámara activa", cam is not None, consejo)
     mallas = _mallas(alumno)
     if cam is not None and mallas:
         minimos = [o.caja()[0] for o in mallas]
@@ -478,14 +484,18 @@ def _render(esperada: SceneState, alumno: SceneState, pide: Dict[str, Any]) -> A
     return a
 
 
+def palabra_archivo(archivo: str) -> str:
+    """Como file.named: basta que el nombre lleve la palabra del ejemplo («mi_pelota.blend» → «pelota»)."""
+    palabra = archivo.lower().rsplit(".", 1)[0]
+    return palabra[3:] if palabra.startswith("mi_") else palabra
+
+
 def _archivo(alumno: SceneState, pide: Dict[str, Any]) -> Aspecto:
     a = Aspecto("archivo")
     archivo = pide.get("archivo")
     if not archivo:
         return a
-    # Como file.named: basta que el nombre lleve la palabra del ejemplo («mi_pelota» → «pelota»).
-    palabra = archivo.lower().rsplit(".", 1)[0]
-    palabra = palabra[3:] if palabra.startswith("mi_") else palabra
+    palabra = palabra_archivo(archivo)
     igual = alumno.file_saved and palabra in alumno.file_name.lower()
     consejo = f"Archivo › Guardar como (Ctrl + Shift + S) y llámalo «{archivo}»."
     if alumno.file_saved and not igual:

@@ -73,13 +73,15 @@ def register_builtin_validators(registry: ValidatorRegistry) -> None:
     r(
         "transform.scale_applied", transforms.scale_applied, label="Escala aplicada", category="transformaciones",
         description="La escala del objeto es 1 en los tres ejes (Ctrl+A › Escala).",
-        params=SELECTOR, watch=TRANSFORMACION, selects=True,
+        params=SELECTOR + (P("tolerance", "float", "Tolerancia", default=0.0001),), watch=TRANSFORMACION, selects=True,
     )
     r(
         "spatial.below", transforms.below, label="Debajo de", category="relaciones",
         description="Los objetos quedan debajo de otro (por ejemplo, patas bajo la cubierta).",
         params=SELECTOR + (
-            P("reference_role", "role", "Rol de referencia", required=True),
+            P("reference_role", "role", "Rol de referencia (o «reference»)"),
+            P("reference", "text", "Nombre de referencia (o «reference_role»)"),
+            P("inside", "bool", "El centro queda dentro de la huella de la referencia", default=True),
             P("tolerance", "float", "Tolerancia", default=0.02),
         ),
         watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
@@ -122,6 +124,11 @@ def register_builtin_validators(registry: ValidatorRegistry) -> None:
         "scene.light_exists", scene.light_exists, label="Luz", category="escena",
         description="La escena tiene luces (de un tipo, si se indica: AREA, SUN, POINT, SPOT).",
         params=CANTIDAD + (P("light_type", "light_type", "Tipo de luz"),), watch=("OBJECT_ADDED", "OBJECT_DATA"),
+    )
+    r(
+        "scene.mode", scene.scene_mode, label="Modo de Blender", category="escena",
+        description="Blender está en un modo: Modo Objeto (OBJECT) o Modo Edición (EDIT).",
+        params=(P("mode", "text", "Modo (OBJECT, EDIT)", default="OBJECT"),),
     )
     r(
         "file.saved", scene.file_saved, label="Archivo guardado", category="archivo",
@@ -297,6 +304,7 @@ def _registrar_v3(registry: ValidatorRegistry) -> None:
         params=(
             P("strictness", "text", "Exigencia (forma, proporcion, cercana, medidas, exacta; vacío = la del nivel)"),
             P("min_score", "float", "Parecido mínimo (0 a 1; vacío = el de la exigencia)"),
+            P("tolerance", "float", "Holgura de medidas en la exigencia «cercana» (de «reference.tolerance»)"),
             # Los pone el cargador desde «reference», «roles» y «level»; no se escriben a mano.
             P("parts", "reference", "Piezas del modelo (de «reference»)"),
             P("labels", "reference", "Nombres de los roles (de «roles»)"),

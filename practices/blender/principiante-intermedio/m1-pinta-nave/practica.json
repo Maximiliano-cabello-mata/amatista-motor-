@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bpi.m1.pinta-nave",
-  "version": 2,
+  "version": 3,
   "title": "Pinta tu nave",
   "level": 2,
   "description": "Dale materiales a tu nave con el Principled BSDF: cristal en la cabina, metal brillante y metal quemado en los motores.",
@@ -136,7 +136,7 @@
       "params": {"contains": "nave"},
       "weight": 20,
       "requires": ["cristal", "metal-brillante", "metal-quemado"],
-      "tip": "Ctrl+Shift+S: mi_nave_pintada.blend.",
+      "tip": "Ctrl+S guarda tu mi_nave.blend (o Ctrl+Shift+S con otro nombre que incluya «nave»).",
       "hints": ["Archivo › Guardar como, con un nombre que incluya «nave»."]
     }
   ],
@@ -237,7 +237,7 @@
           "piezas": ["Motor izquierdo", "Motor derecho"]
         }
       },
-      {"guardado": {"archivo": "mi_nave_pintada.blend"}}
+      {"guardado": {"archivo": "mi_nave.blend"}}
     ],
     "check": ["materiales", "archivo"]
   }

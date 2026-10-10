@@ -7,7 +7,7 @@
     validadores  catálogo de validadores (o --md para regenerar la referencia)
     plan         mapa del plan de estudios (practices/blender/cursos.json)
 
-Documentación: docs/motor/referencia/08_herramientas_de_autor.md.
+Documentación: docs/motor/referencia/08_practicas_v3_y_herramientas.md.
 """
 import sys
 from pathlib import Path

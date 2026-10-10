@@ -28,6 +28,19 @@ def file_named(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     )
 
 
+MODOS = {"OBJECT": "Modo Objeto", "EDIT": "Modo Edición", "SCULPT": "Modo Escultura", "POSE": "Modo Pose"}
+
+
+def scene_mode(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Blender está en un modo (params.mode: OBJECT, EDIT…). «EDIT» acepta EDIT_MESH, EDIT_CURVE…"""
+    pedido = (text(target, "mode") or "OBJECT").upper()
+    actual = str(scene.mode or "OBJECT").upper()
+    ok = actual == pedido or actual.startswith(pedido + "_")
+    nombre = MODOS.get(pedido, pedido)
+    mensaje = f"Estás en {nombre}." if ok else f"Pasa a {nombre} (Tab cambia entre Modo Objeto y Modo Edición)."
+    return result(target, ok, mensaje, {"mode": actual, "expected": pedido})
+
+
 def collection_contains(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     coleccion = text(target, "collection", required=True)
     rol = text(target, "role")
@@ -42,7 +55,7 @@ def collection_contains(target: TargetDefinition, scene: SceneState) -> Validati
     )
 
 
-TIPOS_LUZ = {"POINT": "puntuales", "SUN": "de sol", "SPOT": "foco", "AREA": "de área"}
+TIPOS_LUZ = {"POINT": "luces puntuales", "SUN": "soles", "SPOT": "focos", "AREA": "luces de área"}
 
 
 def _por_tipo(target: TargetDefinition, scene: SceneState, tipo: str, nombre: str) -> ValidationResult:
@@ -53,7 +66,7 @@ def _por_tipo(target: TargetDefinition, scene: SceneState, tipo: str, nombre: st
         if tipo_luz not in TIPOS_LUZ:
             raise ValueError("light_type debe ser POINT, SUN, SPOT o AREA")
         objetos = [o for o in objetos if (o.light_type or "").upper() == tipo_luz]
-        nombre = f"luces {TIPOS_LUZ[tipo_luz]}"
+        nombre = TIPOS_LUZ[tipo_luz]
     return result(
         target,
         count_ok(len(objetos), minimo, maximo),

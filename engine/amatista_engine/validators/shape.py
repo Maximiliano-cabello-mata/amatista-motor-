@@ -79,8 +79,9 @@ def proportion(target: TargetDefinition, scene: SceneState) -> ValidationResult:
     if not fallan:
         mensaje = f"Las proporciones de «{que}» están bien."
     else:
-        mensaje = (
-            f"«{fallan[0]['object']}» mide en {eje.upper()} {fallan[0]['value']:g} veces su ancho; "
-            f"se busca al menos {minimo:g}."
-        )
-    return result(target, not fallan, mensaje, {"selector": sel, "axis": eje, "min": minimo, "failed": fallan})
+        valor = fallan[0]["value"]
+        veces = "vez" if valor == 1 else "veces"
+        limite = f"como máximo {maximo:g}" if valor > maximo else f"al menos {minimo:g}"
+        mensaje = f"«{fallan[0]['object']}» mide en {eje.upper()} {valor:g} {veces} su ancho; se busca {limite}."
+    return result(target, not fallan, mensaje, {"selector": sel, "axis": eje, "min": minimo,
+                                                 "max": None if maximo == float("inf") else maximo, "failed": fallan})

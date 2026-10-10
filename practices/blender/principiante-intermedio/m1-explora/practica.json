@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bpi.m1.explora",
-  "version": 1,
+  "version": 2,
   "title": "Calentamiento: tu primer material",
   "level": 2,
   "description": "Una esfera, un material y dos perillas: Metálico y Rugosidad. Amatista registra el material que logras.",
@@ -66,8 +66,8 @@
       "params": {"primitive": "sphere", "metallic_min": 0.8, "roughness_max": 0.3, "label": "metal pulido"},
       "weight": 55,
       "requires": ["material"],
-      "tip": "Metálico 1 y Rugosidad 0.2.",
-      "hints": ["Arrastra Metálico hasta 1.", "Baja la Rugosidad hasta 0.2."]
+      "tip": "Metálico 1 y Rugosidad baja (0.15, como en el ejemplo).",
+      "hints": ["Arrastra Metálico hasta 1.", "Baja la Rugosidad hasta 0.15 (cualquier valor hasta 0.3 sirve)."]
     }
   ],
   "review": ["blender.bp.m3.explora#filtro"],

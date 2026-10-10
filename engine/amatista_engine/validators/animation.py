@@ -4,8 +4,8 @@ from __future__ import annotations
 from ..models import SceneState, TargetDefinition, ValidationResult
 from .base import describe, number, result, select, selector, text
 
-PROPIEDADES = {"location": "posición", "rotation_euler": "rotación", "scale": "escala"}
-ALIAS = {"location": "location", "posicion": "location", "rotation": "rotation_euler",
+PROPIEDADES = {"location": "ubicación", "rotation_euler": "rotación", "scale": "escala"}
+ALIAS = {"location": "location", "posicion": "location", "ubicacion": "location", "rotation": "rotation_euler",
          "rotation_euler": "rotation_euler", "rotacion": "rotation_euler", "scale": "scale", "escala": "scale"}
 
 

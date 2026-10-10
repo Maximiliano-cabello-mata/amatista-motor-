@@ -36,6 +36,25 @@
       }
     },
     {
+      "nombre": "Cortado pero todavía en Modo Edición",
+      "construir": [
+        {
+          "cubo": {
+            "nombre": "Cube",
+            "vertices": 16,
+            "caras": 14
+          }
+        },
+        {
+          "modo": "EDIT_MESH"
+        }
+      ],
+      "espera": {
+        "completada": false,
+        "actual": "salir"
+      }
+    },
+    {
       "nombre": "Solución: extruido y cortado",
       "construir": [
         {

@@ -14,6 +14,8 @@ título o sin pistas.
 """
 from __future__ import annotations
 
+import json
+import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -51,8 +53,65 @@ class CompileResult:
         }
 
 
+TEXTOS = ("text", "role", "axis", "primitive", "object_type", "light_type", "modifier", "collection")
+
+
+def _tipo_incorrecto(tipo: str, valor: Any) -> str:
+    """Qué debería ser un parámetro según su tipo registrado ("" = está bien)."""
+    if tipo == "int":
+        ok = isinstance(valor, int) and not isinstance(valor, bool) or (
+            isinstance(valor, float) and math.isfinite(valor) and valor.is_integer())
+        return "" if ok else "un número entero"
+    if tipo == "float":
+        ok = isinstance(valor, (int, float)) and not isinstance(valor, bool) and math.isfinite(valor)
+        return "" if ok else "un número"
+    if tipo == "bool":
+        return "" if isinstance(valor, bool) else "true o false"
+    if tipo in TEXTOS:
+        return "" if isinstance(valor, str) else "un texto"
+    return ""
+
+
+def _revisar_tipos(target, spec, errores) -> bool:
+    """Los parámetros tienen el tipo que leen los validadores (así nada termina en «Error interno»)."""
+    donde = f"Objetivo «{target.id}»"
+    antes = len(errores)
+    tipos = {nombre: "text" for nombre in SELECTORES} if spec.selects else {}
+    tipos.update({p.name: p.kind for p in spec.params})
+    for nombre, valor in target.params.items():
+        problema = _tipo_incorrecto(tipos.get(nombre, ""), valor)
+        if problema:
+            errores.append(f"{donde}: «{nombre}» debe ser {problema} (es {json.dumps(valor, ensure_ascii=False)}).")
+    for nombre in ("equals", "min", "max"):
+        valor = target.params.get(nombre)
+        if tipos.get(nombre) == "int" and not _tipo_incorrecto("int", valor) and valor < 0:
+            errores.append(f"{donde}: «{nombre}» no puede ser negativo.")
+    for param in spec.params:
+        if param.required and param.kind in TEXTOS and target.params.get(param.name) == "":
+            errores.append(f"{donde}: «{param.name}» ({param.label}) no puede estar vacío.")
+    propiedad = target.params.get("property")
+    if spec.id.startswith("animation.") and isinstance(propiedad, str):
+        from ..validators.animation import ALIAS
+
+        if propiedad.lower() not in ALIAS:
+            errores.append(f"{donde}: «property» debe ser location, rotation_euler o scale (es «{propiedad}»).")
+    tipo_luz = target.params.get("light_type")
+    if isinstance(tipo_luz, str) and tipo_luz and tipo_luz.upper() not in ("POINT", "SUN", "SPOT", "AREA"):
+        errores.append(f"{donde}: «light_type» debe ser POINT, SUN, SPOT o AREA (es «{tipo_luz}»).")
+    if spec.id == "material.matches":
+        from ..validators.materials import CONDICIONES
+
+        if not any(c in target.params for c in CONDICIONES):
+            errores.append(f"{donde}: material.matches necesita al menos una condición ({', '.join(CONDICIONES)}).")
+    if spec.selects and spec.id in ("object.exists",) and not any(target.params.get(k) for k in SELECTORES):
+        errores.append(f"{donde}: {target.validator} necesita a qué objetos aplicarse (role, name, name_prefix o type).")
+    return len(errores) == antes
+
+
 def _revisar_parametros(target, spec, roles_declarados, errores, avisos, registry=None):
     donde = f"Objetivo «{target.id}»"
+    if not _revisar_tipos(target, spec, errores):
+        return
     for param in spec.params:
         if param.required and param.name not in target.params:
             errores.append(f"{donde}: {target.validator} necesita el parámetro «{param.name}» ({param.label}).")
@@ -60,6 +119,8 @@ def _revisar_parametros(target, spec, roles_declarados, errores, avisos, registr
     conocidos |= {"tolerance", "reference", "reference_role", "inside"}
     if spec.id == "logic.any":
         _revisar_opciones(target, errores, avisos, registry)
+    if spec.id == "spatial.below" and not (target.params.get("reference_role") or target.params.get("reference")):
+        errores.append(f"{donde}: spatial.below necesita «reference_role» o «reference» (el objeto de arriba).")
     for nombre in target.params:
         if nombre not in conocidos:
             avisos.append(f"{donde}: {target.validator} no usa el parámetro «{nombre}» (se ignora).")
@@ -152,6 +213,28 @@ def _revisar_v2(practica, registry, tools, errores, avisos):
         errores.append("course.next no puede ser la misma práctica.")
 
 
+def _revisar_archivo_del_ejemplo(practica, errores) -> None:
+    """El archivo del ejemplo y file.named piden lo mismo: lo que acepta uno lo acepta el otro."""
+    if practica.example is None:
+        return
+    from ..ejemplo import lo_que_pide
+    from ..ejemplo.revision import palabra_archivo
+
+    archivo = lo_que_pide(practica.example.steps).get("archivo")
+    if not archivo:
+        return
+    palabra = palabra_archivo(archivo)
+    for target in practica.targets:
+        contiene = str(target.params.get("contains") or "").lower()
+        if target.validator != "file.named" or not contiene:
+            continue
+        if contiene not in archivo.lower() or palabra not in contiene:
+            errores.append(
+                f"Objetivo «{target.id}»: pide un nombre con «{contiene}», pero el ejemplo guarda «{archivo}» y su "
+                f"revisión pide «{palabra}». Usa en el ejemplo un archivo cuya palabra sea «{contiene}» "
+                f"(por ejemplo mi_{contiene}.blend).")
+
+
 def compile_practice(
     data: Any,
     registry: Optional[ValidatorRegistry] = None,
@@ -196,6 +279,8 @@ def compile_practice(
         if not target.hints and not target.optional:
             avisos.append(f"Objetivo «{target.id}»: sin pistas.")
 
+    _revisar_archivo_del_ejemplo(practica, errores)
+
     from ..pedagogy.graph import find_cycle
 
     ciclo = find_cycle(practica.targets)
@@ -205,10 +290,8 @@ def compile_practice(
     for tool_id in practica.allowed_tools + practica.warn_tools:
         if tool_id not in tools:
             avisos.append(f"La herramienta «{tool_id}» no está en el catálogo de Amatista Engine.")
-    roles_usados = {t.params.get("role") for t in practica.targets} | {
-        t.params.get("reference_role") for t in practica.targets
-    }
-    roles_usados |= {g.params.get("role") for g in practica.guards}
+    roles_usados = {t.params.get(clave) for t in practica.targets + practica.guards
+                    for clave in ("role", "reference_role") if isinstance(t.params.get(clave), str)}
     _revisar_v2(practica, registry, tools, errores, avisos)
     for rol in roles - roles_usados:
         avisos.append(f"El rol «{rol}» está declarado pero ningún objetivo lo usa.")

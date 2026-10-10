@@ -153,7 +153,10 @@ def probar(rutas: Sequence[str], detalle: bool = False) -> int:
             continue
         if practica.example is not None:  # motor 3.5: el ejemplo resuelto debe completar su propia práctica
             total += 1
-            fallas = _ejemplo_completa(motor, practica)
+            try:
+                fallas = _ejemplo_completa(motor, practica)
+            except Exception as error:  # noqa: BLE001 — se reporta, no se interrumpe la herramienta
+                fallas = [f"el ejemplo no se pudo evaluar: {error}"]
             if fallas:
                 fallidos += 1
                 print(_color(f"✗ {practica.id}: el ejemplo resuelto no completa la práctica", ROJO))
@@ -163,17 +166,31 @@ def probar(rutas: Sequence[str], detalle: bool = False) -> int:
         if not archivo.exists():
             print(_color(f"· {practica.id}: sin {PRUEBAS}", AMARILLO))
             continue
-        pruebas = _leer(archivo)
-        if pruebas.get("practica") != practica.id:
+        try:
+            pruebas = _leer(archivo)
+        except (OSError, ValueError) as error:
+            print(_color(f"✗ {archivo}: {error}", ROJO))
+            fallidos += 1
+            continue
+        if not isinstance(pruebas, dict) or pruebas.get("practica") != practica.id:
             print(_color(f"✗ {archivo}: «practica» debe ser {practica.id}", ROJO))
             fallidos += 1
             continue
         print(practica.id)
-        for caso in pruebas.get("casos") or []:
+        casos = pruebas.get("casos") or []
+        if not isinstance(casos, list):
+            print(_color(f"✗ {archivo}: «casos» debe ser una lista", ROJO))
+            fallidos += 1
+            continue
+        for caso in casos:
             total += 1
+            if not isinstance(caso, dict):
+                fallidos += 1
+                print(_color(f"  ✗ caso {total}: debe ser un objeto {{nombre, construir, espera}}", ROJO))
+                continue
             try:
                 fallas = comprobar_caso(motor, practica, caso)
-            except (ValueError, KeyError, TypeError, InvalidPracticeError) as error:
+            except Exception as error:  # noqa: BLE001 — una escena mal escrita se reporta, no rompe «probar»
                 fallas = [f"la escena de prueba no es válida: {error}"]
             if fallas:
                 fallidos += 1
@@ -182,7 +199,7 @@ def probar(rutas: Sequence[str], detalle: bool = False) -> int:
                     print(_color(f"      {falla}", ROJO))
             else:
                 print(_color(f"  ✓ {caso.get('nombre')}", VERDE))
-            if detalle:
+            if detalle and not fallas:
                 _tabla(motor, practica, escena_de_caso(caso, practica))
     print(f"{total - fallidos} de {total} casos correctos")
     return 1 if fallidos else 0
@@ -250,7 +267,8 @@ def nueva(practica_id: str, plantilla: str, titulo: str, curso: str, modulo: int
         json.dumps(nuevas_pruebas(practica_id, plantilla), ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     print(_color(f"✓ Creada {destino / ARCHIVO} (plantilla {plantilla}) y {destino / PRUEBAS}", VERDE))
-    print("  Siguiente: edita los textos, agrega el caso «Solución» a pruebas.json y corre «probar».")
+    print("  Siguiente: edita los textos y el ejemplo resuelto («example»), ajusta el caso «Solución» de "
+          "pruebas.json y corre «probar».")
     return 0
 
 

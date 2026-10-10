@@ -1,7 +1,7 @@
 {
   "schema": "amatista.practice/2",
   "id": "blender.bp.m1.tren",
-  "version": 3,
+  "version": 4,
   "title": "Tren de juguete",
   "level": 1,
   "description": "Arma un tren de juguete que se vea como el modelo: locomotora con chimenea, un vagón y ocho ruedas de pie. Agregas con Shift+A, escalas con S, giras con R y ensamblas con G. Las medidas no tienen que ser exactas: tiene que verse como un tren.",
@@ -240,7 +240,7 @@
       {
         "primitive": "cube",
         "role": "vagon",
-        "name": "Vagon",
+        "name": "Vagón",
         "size": [2.0, 1.2, 1.0],
         "location": [-1.15, 0, 0.85],
         "color": "#2e86c1"

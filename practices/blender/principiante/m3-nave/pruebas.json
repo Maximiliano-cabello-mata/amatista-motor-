@@ -23,7 +23,7 @@
     {
       "nombre": "Subdivisión exagerada (nivel 5)",
       "construir": [
-        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-"}},
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "vertices": 28, "caras": 26, "mitad": "x-"}},
         {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}},
         {"modificador": {"objeto": "Nave", "tipo": "SUBSURF", "niveles": 5}}
       ],
@@ -32,7 +32,7 @@
     {
       "nombre": "Caras encimadas: pausa y fusionar",
       "construir": [
-        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-", "encimados": 4}},
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "vertices": 28, "caras": 26, "mitad": "x-", "encimados": 4}},
         {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}}
       ],
       "espera": {"completada": false, "pausa": "malla-limpia", "accion": "merge_by_distance", "pildoras": ["fusionar"]}
@@ -40,7 +40,7 @@
     {
       "nombre": "Solución: media nave con Espejo, Subdivisión 2 y guardada",
       "construir": [
-        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "caras": 26, "mitad": "x-"}},
+        {"cubo": {"nombre": "Nave", "dims": [3, 4, 1], "rol": "nave", "vertices": 28, "caras": 26, "mitad": "x-"}},
         {"modificador": {"objeto": "Nave", "tipo": "MIRROR"}},
         {"modificador": {"objeto": "Nave", "tipo": "SUBSURF", "niveles": 2}},
         {"guardado": {"archivo": "mi_nave.blend"}}
