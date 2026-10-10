@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-colecciones", "bl-materiales", "bl-ensamblar"],
   "tags": ["intermedio", "modulo-2", "proyecto"],
-  "course": {"id": "blender_intermedio", "module": 2, "lesson": "bi2_practica", "next": "blender.bi.m3.explora"},
+  "course": {"id": "blender_intermedio", "module": 2, "lesson": "bi2_practica", "next": "blender.bi.m3.diorama"},
   "starter": {"scene": "empty", "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."},
   "roles": {
     "casa": {"label": "Casa", "description": "Un cubo: el cuerpo de la casa."},
@@ -119,7 +119,7 @@
       "hints": ["Archivo › Guardar como."]
     }
   ],
-  "review": ["blender.bi.m2.explora#m", "blender.bpi.m1.explora#perillas"],
+  "review": ["blender.bi.m1.puente#medidas", "blender.bpi.m1.pinta-nave#principled"],
   "reference": {
     "title": "Aldea ordenada",
     "description": "Tres casas (cubos) de colores distintos, cada una con su techo de cono de 4 lados ENCIMA, no al lado. Casas en la colección «Casas» y techos en «Techos».",

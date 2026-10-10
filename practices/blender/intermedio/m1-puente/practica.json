@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-array", "bl-bisel", "bl-aplicar-escala", "bl-ensamblar"],
   "tags": ["intermedio", "modulo-1", "proyecto"],
-  "course": {"id": "blender_intermedio", "module": 1, "lesson": "bi1_practica", "next": "blender.bi.m2.explora"},
+  "course": {"id": "blender_intermedio", "module": 1, "lesson": "bi1_practica", "next": "blender.bi.m2.aldea"},
   "starter": {"scene": "empty", "note": "Empiezas con la escena vacía (Ctrl+Z la recupera)."},
   "roles": {
     "tablero": {"label": "Tablero", "description": "El piso del puente: un cubo plano y largo."},
@@ -159,7 +159,7 @@
       "hints": ["Archivo › Guardar como."]
     }
   ],
-  "review": ["blender.bi.m1.explora#array", "blender.bp.m3.explora#escala"],
+  "review": ["blender.bp.m3.nave#escala", "blender.bp.m3.nave#llave"],
   "reference": {
     "title": "Puente de madera",
     "description": "Un tablero largo de tablones (Array) apoyado sobre pilares biselados que bajan hasta el suelo, entre dos orillas. La cantidad de pilares es libre (2, 3 o 4); el tablero va encima de ellos.",

@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-luces", "bl-luz-area", "bl-camara", "bl-tres-puntos", "bl-eevee", "bl-render"],
   "tags": ["principiante-intermedio", "modulo-2", "iluminacion", "render"],
-  "course": {"id": "blender_principiante_intermedio", "module": 2, "lesson": "bpi2_practica", "next": "blender.bpi.m3.explora"},
+  "course": {"id": "blender_principiante_intermedio", "module": 2, "lesson": "bpi2_practica", "next": "blender.bpi.m3.pelota"},
   "review": ["blender.bpi.m1.pinta-nave#principled", "blender.bpi.m1.pinta-nave#vista-material", "blender.bp.m1.tren#grs"],
   "starter": {
     "scene": "empty",

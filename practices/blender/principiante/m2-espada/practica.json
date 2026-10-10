@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-modo-edicion", "bl-extruir", "bl-corte-bucle", "bl-malla-limpia", "bl-guardar-archivo"],
   "tags": ["principiante", "modulo-2", "modelado"],
-  "course": {"id": "blender_principiante", "module": 2, "lesson": "bp2_practica", "next": "blender.bp.m3.explora"},
+  "course": {"id": "blender_principiante", "module": 2, "lesson": "bp2_practica", "next": "blender.bp.m3.nave"},
   "review": ["blender.bp.m1.tren#grs", "blender.bp.m1.tren#agregar"],
   "tools": {
     "allowed": [
