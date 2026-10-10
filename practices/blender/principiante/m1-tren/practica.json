@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-navegar-vista", "bl-agregar-primitivas", "bl-transformar", "bl-guardar-archivo"],
   "tags": ["principiante", "modulo-1", "ensamblar"],
-  "course": {"id": "blender_principiante", "module": 1, "lesson": "bp1_practica", "next": "blender.bp.m2.explora"},
+  "course": {"id": "blender_principiante", "module": 1, "lesson": "bp1_practica", "next": "blender.bp.m2.espada"},
   "starter": {
     "scene": "empty",
     "note": "Empieza con la escena vacía: el cubo, la luz y la cámara de inicio se quitan (puedes deshacer con Ctrl+Z)."

@@ -57,6 +57,10 @@ def _activo():
     escena = bpy.context.scene
     if escena is None or not escena.amatista.practica_json:
         return None
+    from . import hud
+
+    if hud.del_taller(escena):
+        return None  # el taller dibuja su propio molde
     return guia.guia_actual()
 
 

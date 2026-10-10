@@ -2,9 +2,11 @@
 
 practices/blender/cursos.json (formato amatista.curriculum/1) dice qué
 cursos hay (Principiante, Principiante-Intermedio, Intermedio, Avanzado),
-qué módulos tiene cada uno y qué prácticas tiene cada módulo: la de
-exploración («explore», a mitad del módulo, entre teoría y teoría) y la que
-lo cierra («practice»). Teoría y Blender se intercalan. El add-on lo
+qué módulos tiene cada uno y qué prácticas tiene cada módulo: la que lo
+cierra («practice», el proyecto) y, desde el motor 5, su taller («taller»:
+las habilidades del módulo, en practices/blender/habilidades.json), que
+reemplaza a la exploración de antes («explore», que sigue leyéndose para
+planes viejos). Teoría y Blender se intercalan. El add-on lo
 usa para dibujar el mapa del curso y decidir qué se desbloquea; la
 plataforma usa los mismos ids.
 
@@ -33,7 +35,8 @@ class ModuleEntry:
     title: str
     practice: str  # id de la práctica que lo cierra ('' si aún no existe)
     project: str = ""
-    explore: str = ""  # práctica corta de exploración a mitad del módulo ('' si no tiene)
+    explore: str = ""  # práctica corta de exploración a mitad del módulo ('' si no tiene; motor 5: el taller)
+    taller: str = ""  # motor 5: el taller del módulo (practices/blender/habilidades.json)
 
     @property
     def sequence(self) -> Tuple[str, ...]:
@@ -81,7 +84,7 @@ def load_curriculum(data: Dict[str, Any]) -> Curriculum:
             raise InvalidPracticeError(f"Curso {c.get('id')}: dificultad inválida (usa {', '.join(DIFICULTADES)})")
         modulos = tuple(
             ModuleEntry(int(m["number"]), str(m["title"]), str(m.get("practice") or ""), str(m.get("project") or ""),
-                        str(m.get("explore") or ""))
+                        str(m.get("explore") or ""), str(m.get("taller") or ""))
             for m in c.get("modules") or []
         )
         cursos.append(CourseEntry(

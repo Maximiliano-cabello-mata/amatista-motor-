@@ -114,7 +114,7 @@
       "hints": ["Archivo › Guardar como."]
     }
   ],
-  "review": ["blender.bi.m3.explora#motores", "blender.bpi.m2.tres-puntos#tres-puntos"],
+  "review": ["blender.bpi.m2.tres-puntos#tres-puntos", "blender.bpi.m2.tres-puntos#camara"],
   "reference": {
     "title": "Diorama en la galería",
     "description": "Tu aldea sobre una base, encuadrada por la cámara y con luz de tres puntos; el render final se hace en EEVEE o Cycles.",

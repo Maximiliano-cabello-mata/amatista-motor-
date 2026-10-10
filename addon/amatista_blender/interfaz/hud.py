@@ -493,13 +493,20 @@ def _sello(shader, x, y, ancho, escala, pal):
     return alto + 14 * escala
 
 
+def del_taller(escena):
+    """Add-on 5: en la actividad o el proyecto del taller manda la tarjeta del taller (taller/vista)."""
+    from ..taller import sesion
+
+    return sesion.cubre(escena)
+
+
 def dibujar():
     p = ajustes.prefs()
     if p is not None and not p.mostrar_hud:
         return
     contexto = bpy.context
     escena = contexto.scene
-    if escena is None or not escena.amatista.practica_json:
+    if escena is None or not escena.amatista.practica_json or del_taller(escena):
         return
     practica = practicas.practica_activa(contexto)
     reporte = practicas.ESTADO["reporte"]

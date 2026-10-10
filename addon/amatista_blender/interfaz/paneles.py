@@ -1,20 +1,18 @@
 """Paneles de la barra lateral de la vista 3D (N › Amatista).
 
-Modo Alumno (Student), motor v3: tres secciones como en una plataforma
-educativa, elegidas con las pestañas de arriba:
-    Aprender   la teoría de este momento (píldoras), las demás ideas de la
-               práctica y el repaso espaciado
-    Practicar  Motor 4: la misión de ahora y nada más (qué hacer, sus teclas,
-               «Muéstrame cómo» y sus herramientas). Debajo, cerrados: «Tu
-               ruta» (las partes y sus misiones), «Tus herramientas»,
-               «Comparado con el ejemplo» y «Más» (el modelo, el ejemplo,
-               la teoría, el tema y la plataforma)
-    Mi curso   el mapa de los cursos (Principiante, Principiante-Intermedio…)
-               con lo terminado, lo disponible y lo bloqueado
+Add-on 5 (Amatista Taller): el alumno ve el encabezado (cuenta y avisos) y
+el panel mínimo del taller (taller/panel.py): la actividad de ahora,
+«Continuar», «Pausa», «Mi isla» y «Abrir la plataforma». La instrucción
+vive en la tarjeta de la vista 3D y los cursos, en la plataforma.
+
+Las secciones de la versión 4 (Aprender, Practicar con «Tu ruta», «Tus
+herramientas», «Comparado con el ejemplo», «Asignar rol», «Más» y «Mi
+curso») solo aparecen con una práctica suelta abierta (una que no es el
+proyecto de un taller, como las del archivo o las de un instructor) y en
+la vista previa del modo desarrollador.
+
 Modo Desarrollador (Author): Borrador · Tagger · Inspector · Objetivos ·
                              Validación y depurador · Publicar
-Vista previa: el borrador exactamente como lo verá el alumno (sin
-diagnóstico).
 """
 import time
 
@@ -42,8 +40,25 @@ def modo_autor(context):
     return ajustes.es_desarrollador() and context.window_manager.amatista.modo == "autor"
 
 
+def vista_previa(context):
+    """La vista previa del modo desarrollador (ahí siguen las secciones de la versión 4)."""
+    wm = context.window_manager.amatista
+    return ajustes.es_desarrollador() and wm.modo == "autor" and wm.vista_previa
+
+
+def secciones_v4(context):
+    """Las pestañas de la versión 4: en la vista previa y en una práctica suelta (que no es de un taller)."""
+    if vista_previa(context):
+        return True
+    if not modo_alumno(context) or practicas.practica_activa(context) is None:
+        return False
+    from ..taller import sesion
+
+    return not sesion.cubre(context.scene)
+
+
 def seccion(context, nombre):
-    return modo_alumno(context) and context.window_manager.amatista.pestana == nombre
+    return secciones_v4(context) and context.window_manager.amatista.pestana == nombre
 
 
 ICONO_PLAN = {
@@ -183,8 +198,8 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
             estilo.boton_principal(cuerpo, "amatista.volver_practica", "Volver a mi práctica", icon="LOOP_BACK",
                                    escala=1.4)
 
-        if modo_alumno(context):
-            # Las tres secciones del alumno, como pestañas de una plataforma.
+        if secciones_v4(context):
+            # Las tres secciones de la versión 4, solo para prácticas sueltas (no son de un taller).
             fila = layout.row(align=True)
             fila.scale_y = 1.45
             fila.prop(context.window_manager.amatista, "pestana", expand=True)
@@ -897,7 +912,7 @@ def dibujar_mapa(layout, context, solo_siguiente=False):
             derecha.alignment = "RIGHT"
             derecha.active = False
             derecha.label(text=tema["nombre"], icon=icono_tema(tema))
-            # Teoría y Blender se intercalan: exploración a mitad del módulo y práctica de cierre.
+            # El proyecto del módulo (motor 5: sus habilidades se aprenden antes en el taller).
             for practica_id in modulo.sequence:
                 estado = estados.get(practica_id, "bloqueado")
                 propio, icono = ICONO_PLAN.get(estado, ("pendiente", None))

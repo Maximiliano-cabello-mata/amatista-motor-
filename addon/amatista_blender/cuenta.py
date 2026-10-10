@@ -41,6 +41,17 @@ def _guardar_cuenta(respuesta):
     practicas.refrescar_catalogo()
     practicas.cargar_practica_actual()
     red.vaciar_cola()
+    _sincronizar_taller()
+
+
+def _sincronizar_taller():
+    """Add-on 5: el avance del taller (lo hecho sin cuenta pasa a la cuenta) y el del servidor."""
+    from .taller import datos
+
+    try:
+        datos.sincronizar()
+    except Exception as error:  # noqa: BLE001 - sincronizar nunca rompe el vínculo
+        print(f"[Amatista] Taller: {error}")
 
 
 def iniciar_vinculo(al_terminar=None):
@@ -189,4 +200,5 @@ def al_iniciar():
         if ajustes.prefs() and ajustes.prefs().token:
             practicas.cargar_practica_actual()
             red.vaciar_cola()
+            _sincronizar_taller()
     return None

@@ -1,15 +1,6 @@
 {
   "schema": "amatista.references/1",
   "practicas": {
-    "blender.bi.m1.explora": {
-      "carpeta": "intermedio/m1-explora",
-      "titulo": "Tabla repetida con Array",
-      "descripcion": "Una tabla larga (cerca de 6 × 1 × 0.2 m) repetida con Array a lo ancho, con un Bisel pequeño que suaviza los bordes.",
-      "holgura": 35,
-      "medidas": [6.0, 5.4, 0.2],
-      "imagen": true,
-      "plano": true
-    },
     "blender.bi.m1.puente": {
       "carpeta": "intermedio/m1-puente",
       "titulo": "Puente de madera",
@@ -31,18 +22,9 @@
     "blender.bi.m3.diorama": {
       "carpeta": "intermedio/m3-diorama",
       "titulo": "Diorama en la galería",
-      "descripcion": "Tu aldea sobre una base, encuadrada por la cámara y con luz de tres puntos; el render final se hace en Cycles.",
+      "descripcion": "Tu aldea sobre una base, encuadrada por la cámara y con luz de tres puntos; el render final se hace en EEVEE o Cycles.",
       "holgura": 35,
       "medidas": [11.0, 6.0, 0.4],
-      "imagen": true,
-      "plano": true
-    },
-    "blender.bp.m1.explora": {
-      "carpeta": "principiante/m1-explora",
-      "titulo": "Muñeco de nieve",
-      "descripcion": "Tres esferas apiladas, de mayor a menor (cerca de 1.6, 1.15 y 0.8 m), la de abajo en el suelo, y un cono pequeño como nariz apuntando al frente. ±35 % en las medidas está bien.",
-      "holgura": 35,
-      "medidas": [1.6, 1.65, 3.35],
       "imagen": true,
       "plano": true
     },
@@ -58,27 +40,9 @@
     "blender.bp.m2.espada": {
       "carpeta": "principiante/m2-espada",
       "titulo": "Espada low-poly",
-      "descripcion": "Hoja larga y delgada con punta, guarda horizontal, mango y pomo: un solo objeto, al menos tres veces más alto que ancho. Si haces la taza: casi tan alta como ancha, con asa.",
+      "descripcion": "Una espada en un solo objeto: pomo abajo, mango, guarda que sobresale a los lados, hoja larga y delgada, y punta afilada. Al menos tres veces más alta que ancha.",
       "holgura": 35,
       "medidas": [1.1, 0.28, 4.22],
-      "imagen": true,
-      "plano": true
-    },
-    "blender.bp.m2.explora": {
-      "carpeta": "principiante/m2-explora",
-      "titulo": "Cubo extruido",
-      "descripcion": "Un solo objeto: el cubo con su cara de arriba extruida (E) y un corte en bucle (Ctrl+R) que agrega un anillo de aristas.",
-      "holgura": 35,
-      "medidas": [2.0, 2.0, 3.2],
-      "imagen": true,
-      "plano": true
-    },
-    "blender.bp.m3.explora": {
-      "carpeta": "principiante/m3-explora",
-      "titulo": "Cojín suave",
-      "descripcion": "Un cubo aplastado (cerca de 2 × 2 × 0.6 m) con la escala aplicada y Subdivisión de superficie nivel 2: las esquinas se redondean sin tocar la malla.",
-      "holgura": 35,
-      "medidas": [2.0, 2.0, 0.6],
       "imagen": true,
       "plano": true
     },

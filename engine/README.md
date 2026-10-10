@@ -1,17 +1,18 @@
 # Amatista Engine (motor)
 
-Python puro (3.11+, sin dependencias ni `bpy`): lee una práctica `amatista.practice/1` o `/2`, evalúa una foto de la escena y decide progreso, paso actual, pistas y autonomía; desde la etapa 2 también arma la guía del paso (qué hacer, teclas, qué resaltar) y decide cuándo acompañar; desde la etapa 3 (motor v3) elige las píldoras de teoría, pausa el progreso con vigilantes, lleva el repaso espaciado y lee el plan de estudios. Desde el motor 3.4 reconoce la figura por la forma de sus piezas y, desde el 3.5, su silueta cuando está hecha en una sola malla. En el motor 3.5 **el ejemplo manda**: cada práctica trae su ejemplo resuelto en código (`example.steps`) y el motor revisa la escena del alumno contra él, aspecto por aspecto, con el validador `example.matches` (42 validadores en total). Lo usan el add-on de Blender (copia dentro del `.zip`) y el backend (que vuelve a evaluar cada intento).
+Python puro (3.11+, sin dependencias ni `bpy`): lee una práctica `amatista.practice/1` o `/2`, evalúa una foto de la escena y decide progreso, paso actual, pistas y autonomía; desde la etapa 2 también arma la guía del paso (qué hacer, teclas, qué resaltar) y decide cuándo acompañar; desde la etapa 3 (motor v3) elige las píldoras de teoría, pausa el progreso con vigilantes, lleva el repaso espaciado y lee el plan de estudios. Desde el motor 3.4 reconoce la figura por la forma de sus piezas y, desde el 3.5, su silueta cuando está hecha en una sola malla. En el motor 3.5 **el ejemplo manda**: cada práctica trae su ejemplo resuelto en código (`example.steps`) y el motor revisa la escena del alumno contra él, aspecto por aspecto, con el validador `example.matches`. En el motor 5 (**Amatista Taller**, `taller/`) la unidad deja de ser la práctica y pasa a ser la **habilidad**: un catálogo de 33 habilidades en 9 talleres (`practices/blender/habilidades.json`), un modelo del alumno BKT con olvido y repaso de Leitner, el plan de qué toca ahora, la escalera de pistas con freno y el **molde** que revisa pieza por pieza (validador `taller.molde`, 43 validadores en total). Lo usan el add-on de Blender (copia dentro del `.zip`) y el backend (que vuelve a evaluar cada intento).
 
 ```
 amatista_engine/
 ├─ engine.py, bootstrap.py    AmatistaEngine y create_default_engine()
 ├─ models.py, snapshot.py     SceneState / SceneObject y su (de)serialización segura
 ├─ practice/                  loader (validación con errores en español; agrega el objetivo del ejemplo), compiler, schema, templates (plantillas), plano (SVG)
-├─ validators/                los 42 validadores y su registro (builtin.py), incluido example.matches
+├─ validators/                los 43 validadores y su registro (builtin.py), incluidos example.matches y taller.molde
 ├─ ejemplo/                   el ejemplo resuelto: la escena esperada (pasos.py) y la revisión contra ella (revision.py)
 ├─ figures/                   reconocer la figura (reconocer.py) y su silueta (silueta.py)
 ├─ pedagogy/                  pistas por niveles, progreso, autonomía, grafo de habilidades, píldoras (pills) y repaso (spaced)
-├─ curriculum.py              plan de estudios (amatista.curriculum/1) y desbloqueo
+├─ taller/                    motor 5: habilidades (catálogo amatista.skill/1), modelo del alumno, actividades y plan, molde, pistas, demostraciones y repaso
+├─ curriculum.py              plan de estudios (amatista.curriculum/1, con el taller de cada módulo) y desbloqueo
 ├─ testing.py, cli.py         escenas de prueba (Escena) y la terminal de autor
 ├─ guide/                     etapa 2: guía paso a paso (coach) y acompañante (companion)
 ├─ tools/                     catálogo de herramientas de Blender y avisos de nivel

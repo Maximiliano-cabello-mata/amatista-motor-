@@ -234,7 +234,8 @@ def _escena_para(context, practica, origen):
     anterior = _practica_de_escena(sc)
     inicio = getattr(practica, "starter", None)
     continua = bool(inicio is not None and inicio.from_practice and inicio.from_practice == anterior)
-    if not anterior or anterior == practica.id or origen == "borrador" or continua:
+    del_taller = bool(sc is not None and sc.get("amatista_taller"))  # add-on 5: esa escena se vacía en cada actividad
+    if not del_taller and (not anterior or anterior == practica.id or origen == "borrador" or continua):
         return sc, ""
     suyas = [s for s in bpy.data.scenes if _practica_de_escena(s) == practica.id]
     destino = max(suyas, key=lambda s: float(s.get(USADA_EN, 0.0)), default=None)  # la última en que trabajaste
@@ -248,6 +249,8 @@ def _escena_para(context, practica, origen):
         raise RuntimeError("No hay una ventana de Blender para cambiar de escena")
     _a_modo_objeto()  # la malla en edición se guarda antes de dejar su escena
     ventanas[0].scene = destino
+    if del_taller or not anterior:
+        return destino, ""  # del taller al proyecto: la tarjeta del taller ya lo dice
     titulo = _titulo_de(anterior)
     if anterior.endswith("#ejemplo"):  # se abrió desde la escena del ejemplo resuelto
         if creada:
@@ -272,6 +275,13 @@ def _titulo_de(practica_id):
     practica_id = practica_id.split("#")[0]
     meta = catalogo().get(practica_id) or {}
     return meta.get("title") or practica_id
+
+
+def _taller():
+    """La sesión del taller (add-on 5); se importa tarde porque el taller usa este módulo."""
+    from .taller import sesion
+
+    return sesion
 
 
 def activar(context, datos, origen="paquete"):
@@ -320,6 +330,10 @@ def activar(context, datos, origen="paquete"):
         enfoque.al_abrir_practica(resultado.practice, nueva)
     except Exception as error:  # noqa: BLE001 - enfocar es comodidad: nunca impide practicar
         print(f"[Amatista] No se pudo enfocar Blender: {error}")
+    try:
+        _taller().al_abrir_practica(resultado.practice, origen)  # add-on 5: el proyecto de un taller
+    except Exception as error:  # noqa: BLE001 - el taller nunca impide practicar
+        print(f"[Amatista] Taller al abrir: {error}")
     evaluar(context, "abrir")
     if nueva:
         _abrir_teoria(resultado.practice)
@@ -517,17 +531,24 @@ def evaluar(context=None, motivo="manual"):
     except Exception as error:  # noqa: BLE001 - la ruta nunca impide evaluar
         print(f"[Amatista] Error en la ruta: {error}")
     try:
+        # Add-on 5: si es el proyecto de un taller, el taller pone el molde y la tarjeta (y celebra él).
+        del_taller = _taller().al_evaluar_practica(context, practica, foto, reporte)
+    except Exception as error:  # noqa: BLE001 - el taller nunca impide evaluar
+        del_taller = False
+        print(f"[Amatista] Taller al evaluar: {error}")
+    try:
         aprendizaje.actualizar_pildoras(practica, foto, reporte)
         nueva = aprendizaje.pildora_principal()
-        if motivo != "abrir" and nueva is not None and nueva.id in aprendizaje.ESTADO["nuevas"]:
+        if motivo != "abrir" and not del_taller and nueva is not None and nueva.id in aprendizaje.ESTADO["nuevas"]:
             guia.avisar(f"Teoría: {nueva.title}", "Míralo en N › Amatista › Aprender.", "cerca")
     except Exception as error:  # noqa: BLE001
         print(f"[Amatista] Error en las píldoras: {error}")
     redibujar()
-    _avisar_herramientas(sc, reporte)
+    if not del_taller:
+        _avisar_herramientas(sc, reporte)
     if reporte.completed and sc.amatista.origen != "borrador":
         aprendizaje.marcar_completada(practica.id)
-    if reporte.completed and not sc.amatista.celebrada and motivo != "abrir":
+    if reporte.completed and not sc.amatista.celebrada and motivo != "abrir" and not del_taller:
         sc.amatista.celebrada = True
         _invocar("amatista.felicitar")
     if anterior is None or anterior.progress != reporte.progress or anterior.completed != reporte.completed:

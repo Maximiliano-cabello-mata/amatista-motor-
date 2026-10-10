@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "4.0.0"
+VERSION_ADDON = "5.0.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -120,7 +120,7 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
     )
     mostrar_hud: bpy.props.BoolProperty(
         name="Tarjeta en la vista 3D",
-        description="Muestra el progreso y el paso actual sobre la vista 3D",
+        description="Muestra la tarjeta de la actividad (y el molde) sobre la vista 3D",
         default=True,
         update=_al_cambiar_hud,
     )
@@ -147,7 +147,7 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
     )
     animaciones: bpy.props.BoolProperty(
         name="Animaciones",
-        description="La tarjeta de la misión entra deslizándose, celebra lo cumplido y la tecla que toca respira",
+        description="La tarjeta entra deslizándose, el molde late en la pieza que toca y se celebra lo logrado",
         default=True,
     )
     preparar_herramienta: bpy.props.BoolProperty(
@@ -201,17 +201,10 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
             caja.operator("amatista.vincular", icon="LINKED")
 
         caja = layout.box()
-        caja.label(text="Acompañamiento", icon="HEART")
-        caja.row().prop(self, "acompanamiento", expand=True)
-        sub = caja.column()
-        sub.active = self.acompanamiento != "silencioso"
-        sub.prop(self, "resaltar_3d")
-        sub.prop(self, "dialogo_por_mision")
-        sub.prop(self, "animaciones")
-        sub.prop(self, "preparar_herramienta")
-        fila = sub.row(align=True)
-        fila.prop(self, "ayuda_tras_intentos")
-        fila.prop(self, "ayuda_tras_segundos")
+        caja.label(text="En la vista 3D", icon="HEART")
+        caja.prop(self, "mostrar_hud")
+        caja.prop(self, "animaciones")
+        caja.prop(self, "sincronizar_solo")
 
         caja = layout.box()
         caja.label(text="Modo enfocado", icon="HIDE_ON")
@@ -220,12 +213,21 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         nota.active = False
         nota.label(text="También lo puedes elegir en la plataforma, en «Mi Blender».")
 
-        caja = layout.box()
-        caja.label(text="Práctica", icon="PREFERENCES")
-        caja.prop(self, "comprobar_solo")
-        caja.prop(self, "sincronizar_solo")
-        caja.prop(self, "mostrar_hud")
-        caja.prop(self, "avisar_herramientas")
+        if self.modo_desarrollador:
+            # Add-on 5: el taller decide la ayuda (escalera con freno); esto queda para las prácticas sueltas.
+            caja = layout.box()
+            caja.label(text="Prácticas sueltas (desarrollo)", icon="PREFERENCES")
+            caja.row().prop(self, "acompanamiento", expand=True)
+            sub = caja.column()
+            sub.active = self.acompanamiento != "silencioso"
+            sub.prop(self, "resaltar_3d")
+            sub.prop(self, "dialogo_por_mision")
+            sub.prop(self, "preparar_herramienta")
+            fila = sub.row(align=True)
+            fila.prop(self, "ayuda_tras_intentos")
+            fila.prop(self, "ayuda_tras_segundos")
+            caja.prop(self, "comprobar_solo")
+            caja.prop(self, "avisar_herramientas")
 
         caja = layout.box()
         caja.label(text="Avanzado", icon="TOOL_SETTINGS")

@@ -11,7 +11,10 @@ enfocado) y en la respuesta recibe:
   (MANEJO) y ver el ejemplo resuelto o volver de él (ejemplo.py). El latido lleva lo que dice el instructor (detalle_vivo) para
   que la lección lo muestre al lado de la práctica. Cada orden trae un
   id y se repite hasta que Blender avisa que la cumplió (orden_hecha), así
-  que un latido perdido no pierde la orden;
+  que un latido perdido no pierde la orden. Desde el add-on 5 también
+  llegan las del taller (taller_abrir, taller_continuar, taller_pista…,
+  taller.sesion.ORDENES) y el latido lleva la actividad del taller en
+  detalle.taller, con la que la lección se ve igual que la tarjeta 3D;
 - los ajustes que el alumno eligió en «Mi Blender» de la plataforma
   (enfoque, acompañamiento, avisos y tarjeta 3D), que mandan sobre los de
   Blender. El servidor manda solo los que el alumno eligió: lo demás queda
@@ -142,9 +145,33 @@ def _datos():
             print(f"[Amatista] Detalle del enlace: {error}")
         if detalle:
             datos["detalle"] = detalle
+    vivo = _taller_vivo(sc)
+    if vivo is not None:
+        (practica_id, progreso, paso), info = vivo
+        if "practica_id" not in datos:  # una actividad corta del taller: no es una práctica del paquete
+            datos.update(practica_id=practica_id, progreso=progreso, paso=paso)
+        detalle = datos.get("detalle") or {"titulo": info["actividad"]["titulo"][:120],
+                                           "mensaje": info["mensaje"][:500]}
+        datos["detalle"] = {**detalle, "taller": info}
     if ESTADO["hecha"]:
         datos["orden_hecha"] = ESTADO["hecha"]
     return datos
+
+
+def _taller_vivo(sc):
+    """Add-on 5: ((practica_id, progreso, paso), detalle.taller) si el taller manda en esta escena."""
+    from .taller import sesion
+
+    if sc is None or not sesion.cubre(sc):
+        return None
+    try:
+        latido, info = sesion.datos_latido(), sesion.detalle()
+    except Exception as error:  # noqa: BLE001 - el detalle es un extra: el latido sale igual
+        print(f"[Amatista] Detalle del taller: {error}")
+        return None
+    if latido is None or info is None:
+        return None
+    return latido, info
 
 
 def latir(forzar=False):
@@ -239,6 +266,20 @@ def cumplir(orden):
     tipo = orden.get("tipo")
     datos = orden.get("datos") or {}
     context = bpy.context
+    from .taller import sesion
+
+    if tipo in sesion.ORDENES:  # add-on 5: la lección maneja el taller
+        ESTADO["cumplidas"] = (ESTADO["cumplidas"] + [orden_id])[-20:]
+        try:
+            texto = _en_vista_3d(context, lambda: sesion.orden(bpy.context, tipo, datos))
+        except Exception as error:  # noqa: BLE001 - una orden fallida nunca rompe Blender
+            texto = None
+            print(f"[Amatista] La plataforma pidió «{tipo}»: {error}")
+        if texto:
+            sesion.avisar(texto)
+        practicas.mostrar_en_amatista(context)
+        _terminada(orden_id)
+        return True
     if tipo == "abrir_practica" and datos.get("practica_id"):
         def abierta(error):
             if error:

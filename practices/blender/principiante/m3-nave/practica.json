@@ -11,7 +11,7 @@
   "blender": {"min": "4.2"},
   "skills": ["bl-modificadores", "bl-espejo", "bl-subdivision", "bl-aplicar-escala", "bl-malla-limpia"],
   "tags": ["principiante", "modulo-3", "modificadores"],
-  "course": {"id": "blender_principiante", "module": 3, "lesson": "bp3_practica", "next": "blender.bpi.m1.explora"},
+  "course": {"id": "blender_principiante", "module": 3, "lesson": "bp3_practica", "next": "blender.bpi.m1.pinta-nave"},
   "review": ["blender.bp.m2.espada#extruir", "blender.bp.m2.espada#fusionar", "blender.bp.m2.espada#modos"],
   "roles": {"nave": {"label": "Nave", "description": "El cuerpo de tu nave: un solo objeto con sus modificadores."}},
   "tools": {"allowed": ["mesh.edit", "mesh.extrude", "mesh.loopcut", "mesh.merge", "select.box", "select.circle"]},

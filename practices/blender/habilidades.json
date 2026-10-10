@@ -1,0 +1,10670 @@
+{
+ "schema": "amatista.skill/1",
+ "ruta": "blender",
+ "titulo": "Habilidades de Blender",
+ "habilidades": [
+  {
+   "id": "bl-agregar-primitivas",
+   "titulo": "Agregar formas",
+   "que": "Todo en 3D empieza con formas simples: cubos, cilindros y esferas. Shift + A las agrega donde está la mira roja.",
+   "teclas": [
+    "Shift+A",
+    "Malla"
+   ],
+   "como": "Shift + A abre el menú Agregar; en Malla eliges la forma.",
+   "herramientas": [
+    "object.add",
+    "object.delete"
+   ],
+   "nivel": 1,
+   "demo": {
+    "pasos": [
+     {
+      "vista": {
+       "tipo": "orbita"
+      },
+      "texto": "La mira roja y blanca es el cursor 3D"
+     },
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Caja",
+       "loc": [
+        0,
+        0,
+        0
+       ]
+      },
+      "texto": "Shift + A › Malla › Cubo"
+     },
+     {
+      "borrar": {
+       "objeto": "Caja"
+      },
+      "texto": "X borra lo que está seleccionado"
+     },
+     {
+      "agregar": {
+       "primitiva": "cylinder",
+       "nombre": "Lata",
+       "loc": [
+        0,
+        0,
+        0
+       ]
+      },
+      "texto": "Shift + A › Malla › Cilindro"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "caja",
+     "pide": "Agrega un cubo en el centro del mundo.",
+     "nombre": "Cubo",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        0
+       ],
+       "name": "Cubo"
+      }
+     ],
+     "minutos": 1
+    },
+    {
+     "id": "cambia",
+     "pide": "Cambia la esfera por un cilindro: bórrala y agrega el cilindro en su lugar.",
+     "molde": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        0
+       ],
+       "name": "Cilindro"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         0
+        ],
+        "name": "Esfera"
+       }
+      ]
+     },
+     "minutos": 1
+    },
+    {
+     "id": "cono",
+     "pide": "Agrega un cono en el centro del mundo.",
+     "molde": [
+      {
+       "primitive": "cone",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        0
+       ],
+       "name": "Cono"
+      }
+     ],
+     "minutos": 1
+    }
+   ],
+   "reto": {
+    "id": "esfera",
+    "pide": "Sin ayuda: agrega una esfera.",
+    "piezas": [
+     {
+      "primitive": "sphere",
+      "size": [
+       2,
+       2,
+       2
+      ],
+      "location": [
+       0,
+       0,
+       1
+      ],
+      "name": "Esfera"
+     }
+    ],
+    "minutos": 1
+   },
+   "repaso": {
+    "id": "cilindro",
+    "pide": "Un minuto: agrega un cilindro.",
+    "piezas": [
+     {
+      "primitive": "cylinder",
+      "size": [
+       2,
+       2,
+       2
+      ],
+      "location": [
+       0,
+       0,
+       1
+      ],
+      "name": "Cilindro"
+     }
+    ],
+    "minutos": 1
+   },
+   "bkt": {
+    "L0": 0.2,
+    "T": 0.2,
+    "G": 0.15,
+    "S": 0.08
+   }
+  },
+  {
+   "id": "bl-mover",
+   "titulo": "Mover y mirar",
+   "que": "G mueve la pieza; X, Y o Z la dejan ir en un solo eje. Mira de frente (1) o desde arriba (7) para acertar.",
+   "teclas": [
+    "G",
+    "X|Y|Z",
+    "1|3|7"
+   ],
+   "como": "G y luego el eje; mueve el ratón y confirma con clic.",
+   "herramientas": [
+    "transform.move",
+    "view.numpad",
+    "view.navigate"
+   ],
+   "requiere": [
+    "bl-agregar-primitivas"
+   ],
+   "nivel": 1,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Caja",
+       "loc": [
+        0,
+        0,
+        2.5
+       ]
+      },
+      "texto": "La caja flota"
+     },
+     {
+      "vista": {
+       "tipo": "frente"
+      },
+      "texto": "1: de frente se ve que flota"
+     },
+     {
+      "mover": {
+       "objeto": "Caja",
+       "eje": "z",
+       "a": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "G, Z: solo sube y baja"
+     },
+     {
+      "vista": {
+       "tipo": "arriba"
+      },
+      "texto": "7: desde arriba ves el lugar en el suelo"
+     },
+     {
+      "mover": {
+       "objeto": "Caja",
+       "eje": "x",
+       "a": [
+        2,
+        0,
+        1
+       ]
+      },
+      "texto": "G, X: de lado a lado"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "baja",
+     "pide": "La caja flota: bájala hasta que toque el suelo.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         3.5
+        ],
+        "name": "Caja"
+       }
+      ]
+     },
+     "minutos": 1
+    },
+    {
+     "id": "marca",
+     "pide": "Lleva la pelota a su lugar marcado, apoyada en el suelo.",
+     "molde": [
+      {
+       "primitive": "sphere",
+       "size": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "location": [
+        3,
+        2,
+        0.75
+       ],
+       "name": "Pelota"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "location": [
+         0,
+         0,
+         0.75
+        ],
+        "name": "Pelota"
+       }
+      ]
+     },
+     "minutos": 2
+    },
+    {
+     "id": "encima",
+     "pide": "Sube la pelota y déjala apoyada encima de la caja.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      },
+      {
+       "primitive": "sphere",
+       "size": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "location": [
+        0,
+        0,
+        2.75
+       ],
+       "name": "Pelota"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Caja"
+       },
+       {
+        "primitive": "sphere",
+        "size": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "location": [
+         3,
+         0,
+         0.75
+        ],
+        "name": "Pelota"
+       }
+      ]
+     },
+     "minutos": 2
+    }
+   ],
+   "reto": {
+    "id": "torre",
+    "pide": "Sin ayuda: apila la pelota encima de la caja.",
+    "piezas": [
+     {
+      "primitive": "cube",
+      "size": [
+       2,
+       2,
+       2
+      ],
+      "location": [
+       0,
+       0,
+       1
+      ],
+      "name": "Caja"
+     },
+     {
+      "primitive": "sphere",
+      "size": [
+       1.5,
+       1.5,
+       1.5
+      ],
+      "location": [
+       0,
+       0,
+       2.75
+      ],
+      "name": "Pelota"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        -2,
+        1,
+        1
+       ],
+       "name": "Caja"
+      },
+      {
+       "primitive": "sphere",
+       "size": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "location": [
+        2,
+        -1,
+        3
+       ],
+       "name": "Pelota"
+      }
+     ]
+    },
+    "minutos": 2
+   },
+   "repaso": {
+    "id": "al-suelo",
+    "pide": "Un minuto: baja la caja al suelo.",
+    "piezas": [
+     {
+      "primitive": "cube",
+      "size": [
+       2,
+       2,
+       2
+      ],
+      "location": [
+       0,
+       0,
+       1
+      ],
+      "name": "Caja"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        1,
+        -1,
+        4
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "libre": false,
+    "minutos": 1
+   }
+  },
+  {
+   "id": "bl-escalar-eje",
+   "titulo": "Estirar en un solo eje",
+   "que": "S cambia el tamaño. Con X, Y o Z después, la pieza se estira solo en ese eje: así nacen tablas y postes.",
+   "teclas": [
+    "S",
+    "X|Y|Z"
+   ],
+   "como": "S y luego el eje; mueve el ratón y confirma con clic.",
+   "herramientas": [
+    "transform.scale",
+    "transform.move"
+   ],
+   "requiere": [
+    "bl-agregar-primitivas",
+    "bl-mover"
+   ],
+   "nivel": 1,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Tabla",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "escalar": {
+       "objeto": "Tabla",
+       "eje": "x",
+       "medidas": [
+        3,
+        2,
+        2
+       ]
+      },
+      "texto": "S, X: más larga"
+     },
+     {
+      "escalar": {
+       "objeto": "Tabla",
+       "eje": "y",
+       "medidas": [
+        3,
+        1,
+        2
+       ]
+      },
+      "texto": "S, Y: más angosta"
+     },
+     {
+      "escalar": {
+       "objeto": "Tabla",
+       "eje": "z",
+       "medidas": [
+        3,
+        1,
+        0.2
+       ]
+      },
+      "texto": "S, Z: plana"
+     },
+     {
+      "mover": {
+       "objeto": "Tabla",
+       "eje": "z",
+       "a": [
+        0,
+        0,
+        0.1
+       ]
+      },
+      "texto": "G, Z: al suelo"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "tabla",
+     "pide": "Una tabla larga y plana, apoyada en el suelo.",
+     "nombre": "Tabla",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        3,
+        1,
+        0.2
+       ],
+       "location": [
+        0,
+        0,
+        0.1
+       ],
+       "name": "Tabla"
+      }
+     ]
+    },
+    {
+     "id": "poste",
+     "pide": "Un poste alto y delgado, parado en el suelo.",
+     "molde": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        0.4,
+        0.4,
+        3
+       ],
+       "location": [
+        0,
+        0,
+        1.5
+       ],
+       "name": "Poste"
+      }
+     ]
+    },
+    {
+     "id": "ladrillo",
+     "pide": "Un ladrillo: el doble de largo que de ancho y bajito.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        1,
+        0.6
+       ],
+       "location": [
+        0,
+        0,
+        0.3
+       ],
+       "name": "Ladrillo"
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "banca",
+    "pide": "Sin ayuda: una banca con un asiento largo sobre dos patas.",
+    "piezas": [
+     {
+      "primitive": "cube",
+      "size": [
+       3,
+       0.8,
+       0.2
+      ],
+      "location": [
+       0,
+       0,
+       1.1
+      ],
+      "name": "Asiento"
+     },
+     {
+      "primitive": "cube",
+      "size": [
+       0.3,
+       0.8,
+       1
+      ],
+      "location": [
+       -1.2,
+       0,
+       0.5
+      ],
+      "name": "Pata"
+     },
+     {
+      "primitive": "cube",
+      "size": [
+       0.3,
+       0.8,
+       1
+      ],
+      "location": [
+       1.2,
+       0,
+       0.5
+      ],
+      "name": "Pata"
+     }
+    ],
+    "minutos": 3
+   },
+   "repaso": {
+    "id": "poste",
+    "pide": "Un minuto: un poste alto y delgado.",
+    "piezas": [
+     {
+      "primitive": "cylinder",
+      "size": [
+       0.4,
+       0.4,
+       3
+      ],
+      "location": [
+       0,
+       0,
+       1.5
+      ],
+      "name": "Poste"
+     }
+    ],
+    "minutos": 1
+   },
+   "errores": {
+    "tamano": "Estira solo en el eje que falta: S y luego X, Y o Z."
+   }
+  },
+  {
+   "id": "bl-rotar",
+   "titulo": "Girar",
+   "que": "R gira la pieza. R, X y 90 la ponen de pie: así una moneda se vuelve rueda.",
+   "teclas": [
+    "R",
+    "X|Y|Z",
+    "90"
+   ],
+   "como": "R, el eje y 90; Enter para confirmar.",
+   "herramientas": [
+    "transform.rotate"
+   ],
+   "requiere": [
+    "bl-agregar-primitivas",
+    "bl-escalar-eje"
+   ],
+   "nivel": 1,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cylinder",
+       "nombre": "Rueda",
+       "loc": [
+        0,
+        0,
+        0.12
+       ]
+      }
+     },
+     {
+      "escalar": {
+       "objeto": "Rueda",
+       "eje": "z",
+       "medidas": [
+        1,
+        1,
+        0.25
+       ]
+      },
+      "texto": "S, Z: una moneda"
+     },
+     {
+      "rotar": {
+       "objeto": "Rueda",
+       "eje": "x",
+       "grados": 90,
+       "giro": [
+        90,
+        0,
+        0
+       ]
+      },
+      "texto": "R, X, 90: de pie"
+     },
+     {
+      "mover": {
+       "objeto": "Rueda",
+       "eje": "z",
+       "a": [
+        0,
+        0,
+        0.5
+       ]
+      },
+      "texto": "G, Z: que toque el suelo"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "rueda",
+     "pide": "Pon de pie la rueda, tocando el suelo.",
+     "nombre": "Rueda",
+     "molde": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        1,
+        1,
+        0.25
+       ],
+       "location": [
+        0,
+        0,
+        0.5
+       ],
+       "rotation": [
+        90,
+        0,
+        0
+       ],
+       "name": "Rueda"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cylinder",
+        "size": [
+         1,
+         1,
+         0.25
+        ],
+        "location": [
+         0,
+         0,
+         0.125
+        ],
+        "name": "Rueda"
+       }
+      ]
+     }
+    },
+    {
+     "id": "puerta",
+     "pide": "Abre la puerta: gírala un cuarto de vuelta.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        1.2,
+        0.1,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "rotation": [
+        0,
+        0,
+        90
+       ],
+       "name": "Puerta"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         1.2,
+         0.1,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Puerta"
+       }
+      ]
+     }
+    },
+    {
+     "id": "rampa",
+     "pide": "Inclina la tabla para hacer una rampa que baja hasta el suelo.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        3,
+        1,
+        0.2
+       ],
+       "location": [
+        0,
+        0,
+        0.6
+       ],
+       "rotation": [
+        0,
+        -20,
+        0
+       ],
+       "name": "Rampa"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         3,
+         1,
+         0.2
+        ],
+        "location": [
+         0,
+         0,
+         0.6
+        ],
+        "name": "Rampa"
+       }
+      ]
+     }
+    }
+   ],
+   "reto": {
+    "id": "dos-ruedas",
+    "pide": "Sin ayuda: dos ruedas de pie, una al lado de la otra.",
+    "piezas": [
+     {
+      "primitive": "cylinder",
+      "size": [
+       1,
+       1,
+       0.25
+      ],
+      "location": [
+       -0.8,
+       0,
+       0.5
+      ],
+      "rotation": [
+       90,
+       0,
+       0
+      ],
+      "name": "Rueda"
+     },
+     {
+      "primitive": "cylinder",
+      "size": [
+       1,
+       1,
+       0.25
+      ],
+      "location": [
+       0.8,
+       0,
+       0.5
+      ],
+      "rotation": [
+       90,
+       0,
+       0
+      ],
+      "name": "Rueda"
+     }
+    ],
+    "minutos": 2
+   },
+   "repaso": {
+    "id": "rueda",
+    "pide": "Un minuto: pon de pie esta rueda.",
+    "piezas": [
+     {
+      "primitive": "cylinder",
+      "size": [
+       1,
+       1,
+       0.25
+      ],
+      "location": [
+       0,
+       0,
+       0.5
+      ],
+      "rotation": [
+       90,
+       0,
+       0
+      ],
+      "name": "Rueda"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        1,
+        1,
+        0.25
+       ],
+       "location": [
+        0,
+        0,
+        0.125
+       ],
+       "name": "Rueda"
+      }
+     ]
+    },
+    "minutos": 1
+   }
+  },
+  {
+   "id": "bl-duplicar",
+   "titulo": "Duplicar piezas",
+   "que": "Shift + D copia la pieza tal cual, con su tamaño y su giro. Haz una rueda bien y cópiala.",
+   "teclas": [
+    "Shift+D",
+    "X|Y|Z"
+   ],
+   "como": "Shift + D, luego el eje para llevar la copia en línea recta.",
+   "herramientas": [
+    "object.duplicate",
+    "transform.move"
+   ],
+   "requiere": [
+    "bl-mover"
+   ],
+   "nivel": 1,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cylinder",
+       "nombre": "Poste",
+       "loc": [
+        -2,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "duplicar": {
+       "objeto": "Poste",
+       "nombre": "Poste.001",
+       "eje": "x",
+       "a": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Shift + D, X: la copia en fila"
+     },
+     {
+      "duplicar": {
+       "objeto": "Poste.001",
+       "nombre": "Poste.002",
+       "eje": "x",
+       "a": [
+        2,
+        0,
+        1
+       ]
+      },
+      "texto": "Otra vez: tres iguales"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "par",
+     "pide": "Copia la rueda: dos ruedas iguales, una al lado de la otra.",
+     "molde": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        1,
+        1,
+        0.25
+       ],
+       "location": [
+        -0.8,
+        0,
+        0.5
+       ],
+       "rotation": [
+        90,
+        0,
+        0
+       ],
+       "name": "Rueda"
+      },
+      {
+       "primitive": "cylinder",
+       "size": [
+        1,
+        1,
+        0.25
+       ],
+       "location": [
+        0.8,
+        0,
+        0.5
+       ],
+       "rotation": [
+        90,
+        0,
+        0
+       ],
+       "name": "Rueda"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cylinder",
+        "size": [
+         1,
+         1,
+         0.25
+        ],
+        "location": [
+         -0.8,
+         0,
+         0.5
+        ],
+        "rotation": [
+         90,
+         0,
+         0
+        ],
+        "name": "Rueda"
+       }
+      ]
+     }
+    },
+    {
+     "id": "cerca",
+     "pide": "Una cerca: tres postes iguales en fila.",
+     "molde": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        0.3,
+        0.3,
+        1.6
+       ],
+       "location": [
+        -1.5,
+        0,
+        0.8
+       ],
+       "name": "Poste"
+      },
+      {
+       "primitive": "cylinder",
+       "size": [
+        0.3,
+        0.3,
+        1.6
+       ],
+       "location": [
+        0,
+        0,
+        0.8
+       ],
+       "name": "Poste"
+      },
+      {
+       "primitive": "cylinder",
+       "size": [
+        0.3,
+        0.3,
+        1.6
+       ],
+       "location": [
+        1.5,
+        0,
+        0.8
+       ],
+       "name": "Poste"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cylinder",
+        "size": [
+         0.3,
+         0.3,
+         1.6
+        ],
+        "location": [
+         -1.5,
+         0,
+         0.8
+        ],
+        "name": "Poste"
+       }
+      ]
+     }
+    },
+    {
+     "id": "escalones",
+     "pide": "Tres escalones: copia la caja y súbela un poco cada vez.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        2,
+        0.5
+       ],
+       "location": [
+        0,
+        0,
+        0.25
+       ],
+       "name": "Escalón"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        2,
+        0.5
+       ],
+       "location": [
+        1,
+        0,
+        0.75
+       ],
+       "name": "Escalón"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        2,
+        0.5
+       ],
+       "location": [
+        2,
+        0,
+        1.25
+       ],
+       "name": "Escalón"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         1,
+         2,
+         0.5
+        ],
+        "location": [
+         0,
+         0,
+         0.25
+        ],
+        "name": "Escalón"
+       }
+      ]
+     },
+     "minutos": 3
+    }
+   ],
+   "reto": {
+    "id": "fila",
+    "pide": "Sin ayuda: cuatro cajas iguales en fila.",
+    "piezas": [
+     {
+      "primitive": "cube",
+      "size": [
+       1,
+       1,
+       1
+      ],
+      "location": [
+       -2.25,
+       0,
+       0.5
+      ],
+      "name": "Caja"
+     },
+     {
+      "primitive": "cube",
+      "size": [
+       1,
+       1,
+       1
+      ],
+      "location": [
+       -0.75,
+       0,
+       0.5
+      ],
+      "name": "Caja"
+     },
+     {
+      "primitive": "cube",
+      "size": [
+       1,
+       1,
+       1
+      ],
+      "location": [
+       0.75,
+       0,
+       0.5
+      ],
+      "name": "Caja"
+     },
+     {
+      "primitive": "cube",
+      "size": [
+       1,
+       1,
+       1
+      ],
+      "location": [
+       2.25,
+       0,
+       0.5
+      ],
+      "name": "Caja"
+     }
+    ],
+    "minutos": 2
+   }
+  },
+  {
+   "id": "bl-guardar-archivo",
+   "titulo": "Guardar tu trabajo",
+   "que": "Ctrl + S guarda. La primera vez Blender pregunta el nombre: ponle uno que vas a reconocer.",
+   "teclas": [
+    "Ctrl+S"
+   ],
+   "como": "Ctrl + S; escribe el nombre y pulsa Guardar.",
+   "herramientas": [
+    "file.save"
+   ],
+   "nivel": 1,
+   "demo": {
+    "pasos": [
+     {
+      "guardar": {
+       "archivo": "mi_primer_archivo.blend"
+      },
+      "texto": "Ctrl + S y un nombre que reconozcas"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "nombre",
+     "pide": "Guarda este archivo con un nombre que tenga la palabra «taller».",
+     "objetivos": [
+      {
+       "id": "nombre",
+       "title": "Archivo con nombre",
+       "validator": "file.named",
+       "params": {
+        "contains": "taller"
+       }
+      },
+      {
+       "id": "guardado",
+       "title": "Sin cambios pendientes",
+       "validator": "file.saved"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Caja"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "guardado": {
+        "archivo": "/home/alumno/mi_taller.blend"
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "guardado",
+    "pide": "Sin ayuda: guarda los cambios de tu archivo.",
+    "objetivos": [
+     {
+      "id": "guardado",
+      "title": "Sin cambios pendientes",
+      "validator": "file.saved"
+     }
+    ],
+    "minutos": 1,
+    "solucion": [
+     {
+      "guardado": {
+       "archivo": "/home/alumno/mi_archivo.blend"
+      }
+     }
+    ]
+   },
+   "bkt": {
+    "L0": 0.25,
+    "T": 0.3,
+    "G": 0.2,
+    "S": 0.05
+   }
+  },
+  {
+   "id": "bl-modo-edicion",
+   "titulo": "Editar la malla",
+   "que": "Tab entra al Modo Edición: ahí mueves vértices, aristas y caras sueltas. Otra vez Tab y vuelves.",
+   "teclas": [
+    "Tab",
+    "1|2|3"
+   ],
+   "como": "Tab; 3 para elegir caras; clic en una y G para moverla; Tab para salir.",
+   "herramientas": [
+    "mesh.edit",
+    "select.box"
+   ],
+   "requiere": [
+    "bl-agregar-primitivas"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Caja",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Una caja de siempre"
+     },
+     {
+      "editar": {
+       "objeto": "Caja"
+      },
+      "texto": "Tab: ahora se ven sus puntos"
+     },
+     {
+      "texto": "3: eliges caras; clic en la de arriba",
+      "teclas": [
+       "3"
+      ]
+     },
+     {
+      "extruir": {
+       "objeto": "Caja",
+       "medidas": [
+        2,
+        2,
+        4
+       ],
+       "a": [
+        0,
+        0,
+        2
+       ]
+      },
+      "texto": "G, Z: solo esa cara sube",
+      "teclas": [
+       "G",
+       "Z"
+      ]
+     },
+     {
+      "editar": {
+       "objeto": "Caja"
+      },
+      "texto": "Tab: vuelves al Modo Objeto"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "sube",
+     "pide": "Tab, 3 y clic en la cara de arriba: súbela con G Z hasta el doble de alto y vuelve con Tab.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        4
+       ],
+       "location": [
+        0,
+        0,
+        2
+       ],
+       "name": "Caja"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Caja"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         4
+        ],
+        "loc": [
+         0,
+         0,
+         2
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "ancha",
+     "pide": "Agranda solo la cara de arriba con S hasta el doble: la caja queda como una maceta.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        4,
+        4,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Maceta"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Maceta"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Maceta",
+        "dims": [
+         4,
+         4,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "lado",
+    "pide": "Sin ayuda: en Modo Edición lleva la cara derecha de la caja dos metros hacia afuera.",
+    "piezas": [
+     {
+      "primitive": "cube",
+      "size": [
+       4,
+       2,
+       2
+      ],
+      "location": [
+       1,
+       0,
+       1
+      ],
+      "name": "Caja"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 2,
+    "libre": false,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        4,
+        2,
+        2
+       ],
+       "loc": [
+        1,
+        0,
+        1
+       ]
+      }
+     }
+    ]
+   },
+   "repaso": {
+    "id": "un-minuto",
+    "pide": "Un minuto: Tab, sube la cara de arriba hasta el doble y vuelve con Tab.",
+    "piezas": [
+     {
+      "primitive": "cube",
+      "size": [
+       2,
+       2,
+       4
+      ],
+      "location": [
+       0,
+       0,
+       2
+      ],
+      "name": "Caja"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 1,
+    "libre": false,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        4
+       ],
+       "loc": [
+        0,
+        0,
+        2
+       ]
+      }
+     }
+    ]
+   },
+   "errores": {
+    "modo": "Sigues en Modo Edición: Tab para volver y que Amatista lo vea."
+   }
+  },
+  {
+   "id": "bl-extruir",
+   "titulo": "Extruir",
+   "que": "E saca una cara nueva desde la que elegiste: así crecen brazos, patas y la hoja de una espada.",
+   "teclas": [
+    "Tab",
+    "3",
+    "E"
+   ],
+   "como": "Tab, 3, clic en la cara, E y mueve el ratón; clic para confirmar.",
+   "herramientas": [
+    "mesh.edit",
+    "mesh.extrude"
+   ],
+   "requiere": [
+    "bl-modo-edicion"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Torre",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Una caja"
+     },
+     {
+      "editar": {
+       "objeto": "Torre"
+      },
+      "texto": "Tab y 3: caras"
+     },
+     {
+      "extruir": {
+       "objeto": "Torre",
+       "medidas": [
+        2,
+        2,
+        4
+       ],
+       "a": [
+        0,
+        0,
+        2
+       ]
+      },
+      "texto": "E: sale una cara nueva hacia arriba"
+     },
+     {
+      "vista": {
+       "tipo": "frente"
+      },
+      "texto": "1: de frente se ven los lados nuevos"
+     },
+     {
+      "editar": {
+       "objeto": "Torre"
+      },
+      "texto": "Tab para salir"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "torre",
+     "pide": "Elige la cara de arriba y extrúyela con E hasta que la torre mida el doble.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        4
+       ],
+       "location": [
+        0,
+        0,
+        2
+       ],
+       "name": "Torre"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "caras",
+       "title": "Tiene caras nuevas (no la estiraste con S)",
+       "validator": "mesh.face_count",
+       "params": {
+        "min": 10,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Torre"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Torre",
+        "dims": [
+         2,
+         2,
+         4
+        ],
+        "loc": [
+         0,
+         0,
+         2
+        ],
+        "caras": 10,
+        "vertices": 12
+       }
+      }
+     ]
+    },
+    {
+     "id": "brazo",
+     "pide": "Saca un brazo de lado: elige la cara derecha y extrúyela con E dos metros.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        4,
+        2,
+        2
+       ],
+       "location": [
+        1,
+        0,
+        1
+       ],
+       "name": "Cuerpo"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "caras",
+       "title": "Tiene caras nuevas (no la estiraste con S)",
+       "validator": "mesh.face_count",
+       "params": {
+        "min": 10,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Cuerpo"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Cuerpo",
+        "dims": [
+         4,
+         2,
+         2
+        ],
+        "loc": [
+         1,
+         0,
+         1
+        ],
+        "caras": 10,
+        "vertices": 12
+       }
+      }
+     ]
+    },
+    {
+     "id": "escalon",
+     "pide": "Dos extrusiones: sube la cara de arriba, achícala con S y vuelve a extruir.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        4
+       ],
+       "location": [
+        0,
+        0,
+        2
+       ],
+       "name": "Poste"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "caras",
+       "title": "Dos extrusiones: 14 caras o más",
+       "validator": "mesh.face_count",
+       "params": {
+        "min": 14,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Poste"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Poste",
+        "dims": [
+         2,
+         2,
+         4
+        ],
+        "loc": [
+         0,
+         0,
+         2
+        ],
+        "caras": 14,
+        "vertices": 16
+       }
+      }
+     ],
+     "solo_dibujo": true
+    }
+   ],
+   "reto": {
+    "id": "pata",
+    "pide": "Sin ayuda: extruye una cara hacia abajo para que la caja tenga una pata.",
+    "objetivos": [
+     {
+      "id": "caras",
+      "title": "Tiene caras nuevas",
+      "validator": "mesh.face_count",
+      "params": {
+       "min": 10,
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "objeto",
+      "title": "Vuelve al Modo Objeto (Tab)",
+      "validator": "scene.mode",
+      "params": {
+       "mode": "OBJECT"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        3
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        4
+       ],
+       "loc": [
+        0,
+        0,
+        2
+       ],
+       "caras": 10,
+       "vertices": 12
+      }
+     }
+    ]
+   },
+   "repaso": {
+    "id": "arriba",
+    "pide": "Un minuto: extruye la cara de arriba con E.",
+    "objetivos": [
+     {
+      "id": "caras",
+      "title": "Tiene caras nuevas",
+      "validator": "mesh.face_count",
+      "params": {
+       "min": 10,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 1,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        3
+       ],
+       "loc": [
+        0,
+        0,
+        1.5
+       ],
+       "caras": 10
+      }
+     }
+    ]
+   },
+   "errores": {
+    "tamano": "Si la estiraste con S en Modo Objeto no hay caras nuevas: Tab, 3 y E."
+   }
+  },
+  {
+   "id": "bl-corte-bucle",
+   "titulo": "Corte de bucle",
+   "que": "Ctrl + R corta la malla con un anillo de aristas: más puntos donde quieres doblar o dar forma.",
+   "teclas": [
+    "Tab",
+    "Ctrl+R",
+    "Rueda"
+   ],
+   "como": "Tab; Ctrl + R sobre la malla; la rueda pone más cortes; clic, clic derecho.",
+   "herramientas": [
+    "mesh.edit",
+    "mesh.loopcut"
+   ],
+   "requiere": [
+    "bl-modo-edicion"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Tabla",
+       "loc": [
+        0,
+        0,
+        0.5
+       ],
+       "medidas": [
+        4,
+        1,
+        1
+       ]
+      },
+      "texto": "Una tabla larga"
+     },
+     {
+      "editar": {
+       "objeto": "Tabla"
+      },
+      "texto": "Tab"
+     },
+     {
+      "corte": {
+       "objeto": "Tabla"
+      },
+      "texto": "Ctrl + R: aparece un anillo amarillo"
+     },
+     {
+      "texto": "La rueda del ratón: tres anillos",
+      "teclas": [
+       "Rueda"
+      ]
+     },
+     {
+      "texto": "Clic y clic derecho: quedan en su lugar",
+      "teclas": [
+       "Clic",
+       "Clic derecho"
+      ]
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "mitad",
+     "pide": "Corta la caja por la mitad: Tab, Ctrl + R sobre una arista y dos clics.",
+     "objetivos": [
+      {
+       "id": "vertices",
+       "title": "Un corte: 12 puntos o más",
+       "validator": "mesh.vertex_count",
+       "params": {
+        "min": 12,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Caja"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ],
+        "vertices": 12,
+        "caras": 10
+       }
+      }
+     ]
+    },
+    {
+     "id": "tres",
+     "pide": "Tres cortes a lo largo de la tabla: Ctrl + R y gira la rueda antes del clic.",
+     "objetivos": [
+      {
+       "id": "vertices",
+       "title": "Tres cortes: 20 puntos o más",
+       "validator": "mesh.vertex_count",
+       "params": {
+        "min": 20,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         4,
+         1,
+         1
+        ],
+        "location": [
+         0,
+         0,
+         0.5
+        ],
+        "name": "Tabla"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Tabla",
+        "dims": [
+         4,
+         1,
+         1
+        ],
+        "loc": [
+         0,
+         0,
+         0.5
+        ],
+        "vertices": 20,
+        "caras": 18
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "columna",
+    "pide": "Sin ayuda: dos cortes de bucle en la columna.",
+    "objetivos": [
+     {
+      "id": "vertices",
+      "title": "Dos cortes: 16 puntos o más",
+      "validator": "mesh.vertex_count",
+      "params": {
+       "min": 16,
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "objeto",
+      "title": "Vuelve al Modo Objeto (Tab)",
+      "validator": "scene.mode",
+      "params": {
+       "mode": "OBJECT"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        1,
+        4
+       ],
+       "location": [
+        0,
+        0,
+        2
+       ],
+       "name": "Columna"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Columna",
+       "dims": [
+        1,
+        1,
+        4
+       ],
+       "loc": [
+        0,
+        0,
+        2
+       ],
+       "vertices": 16,
+       "caras": 14
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-malla-limpia",
+   "titulo": "Malla limpia",
+   "que": "Si cancelas una extrusión quedan puntos encimados. M › Por distancia los junta y la malla queda limpia.",
+   "teclas": [
+    "Tab",
+    "A",
+    "M"
+   ],
+   "como": "Tab; A elige todo; M y «Por distancia»; Tab para salir.",
+   "herramientas": [
+    "mesh.edit",
+    "mesh.merge"
+   ],
+   "requiere": [
+    "bl-modo-edicion"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Caja",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Esta caja tiene puntos repetidos"
+     },
+     {
+      "editar": {
+       "objeto": "Caja"
+      },
+      "texto": "Tab y A: todo elegido",
+      "teclas": [
+       "Tab",
+       "A"
+      ]
+     },
+     {
+      "texto": "M › Por distancia",
+      "teclas": [
+       "M"
+      ]
+     },
+     {
+      "texto": "Abajo dice cuántos puntos quitó"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "encimados",
+     "pide": "Esta caja tiene puntos encimados: Tab, A y M › Por distancia.",
+     "objetivos": [
+      {
+       "id": "limpia",
+       "title": "Sin puntos encimados",
+       "validator": "mesh.no_duplicates",
+       "params": {
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Caja",
+        "duplicada": true
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "rueda",
+     "pide": "La rueda también quedó con puntos repetidos: límpiala igual.",
+     "objetivos": [
+      {
+       "id": "limpia",
+       "title": "Sin puntos encimados",
+       "validator": "mesh.no_duplicates",
+       "params": {
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cylinder",
+        "size": [
+         2,
+         2,
+         0.4
+        ],
+        "location": [
+         0,
+         0,
+         0.2
+        ],
+        "name": "Rueda",
+        "duplicada": true
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cilindro": {
+        "nombre": "Rueda",
+        "dims": [
+         2,
+         2,
+         0.4
+        ],
+        "loc": [
+         0,
+         0,
+         0.2
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "dos",
+    "pide": "Sin ayuda: deja limpias las dos piezas.",
+    "objetivos": [
+     {
+      "id": "limpia",
+      "title": "Sin puntos encimados",
+      "validator": "mesh.no_duplicates",
+      "params": {
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        -2,
+        0,
+        1
+       ],
+       "name": "Caja",
+       "duplicada": true
+      },
+      {
+       "primitive": "cylinder",
+       "size": [
+        1,
+        1,
+        2
+       ],
+       "location": [
+        2,
+        0,
+        1
+       ],
+       "name": "Poste",
+       "duplicada": true
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        -2,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "cilindro": {
+       "nombre": "Poste",
+       "dims": [
+        1,
+        1,
+        2
+       ],
+       "loc": [
+        2,
+        0,
+        1
+       ]
+      }
+     }
+    ]
+   },
+   "bkt": {
+    "L0": 0.15,
+    "T": 0.25,
+    "G": 0.15,
+    "S": 0.08
+   }
+  },
+  {
+   "id": "bl-aplicar-escala",
+   "titulo": "Aplicar la escala",
+   "que": "Después de estirar con S, Ctrl + A › Escala deja la escala en 1: modificadores y medidas salen bien.",
+   "teclas": [
+    "Ctrl+A"
+   ],
+   "como": "Elige la pieza; Ctrl + A y «Escala». Se ve igual, pero en el panel N la escala vuelve a 1.",
+   "herramientas": [
+    "transform.scale"
+   ],
+   "requiere": [
+    "bl-escalar-eje"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Tabla",
+       "loc": [
+        0,
+        0,
+        0.25
+       ],
+       "medidas": [
+        4,
+        1,
+        0.5
+       ]
+      },
+      "texto": "Una tabla estirada con S"
+     },
+     {
+      "texto": "En el panel N dice Escala 2 · 0.5 · 0.25",
+      "teclas": [
+       "N"
+      ]
+     },
+     {
+      "aplicar": {
+       "objeto": "Tabla"
+      },
+      "texto": "Ctrl + A › Escala"
+     },
+     {
+      "texto": "Se ve igual; ahora la escala es 1"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "tabla",
+     "pide": "La tabla está estirada: aplica su escala con Ctrl + A › Escala.",
+     "objetivos": [
+      {
+       "id": "escala",
+       "title": "Escala aplicada (1, 1, 1)",
+       "validator": "transform.scale_applied",
+       "params": {
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         4,
+         1,
+         0.5
+        ],
+        "location": [
+         0,
+         0,
+         0.25
+        ],
+        "name": "Tabla",
+        "escalada": true
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Tabla",
+        "dims": [
+         4,
+         1,
+         0.5
+        ],
+        "loc": [
+         0,
+         0,
+         0.25
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "poste",
+     "pide": "Aplica la escala del poste también.",
+     "objetivos": [
+      {
+       "id": "escala",
+       "title": "Escala aplicada (1, 1, 1)",
+       "validator": "transform.scale_applied",
+       "params": {
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cylinder",
+        "size": [
+         0.6,
+         0.6,
+         3
+        ],
+        "location": [
+         0,
+         0,
+         1.5
+        ],
+        "name": "Poste",
+        "escalada": true
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cilindro": {
+        "nombre": "Poste",
+        "dims": [
+         0.6,
+         0.6,
+         3
+        ],
+        "loc": [
+         0,
+         0,
+         1.5
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "dos",
+    "pide": "Sin ayuda: aplica la escala de las dos piezas a la vez.",
+    "objetivos": [
+     {
+      "id": "escala",
+      "title": "Escala aplicada en todo",
+      "validator": "transform.scale_applied",
+      "params": {
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        3,
+        1,
+        0.4
+       ],
+       "location": [
+        -2,
+        0,
+        0.2
+       ],
+       "name": "Tabla",
+       "escalada": true
+      },
+      {
+       "primitive": "cylinder",
+       "size": [
+        0.5,
+        0.5,
+        2
+       ],
+       "location": [
+        2,
+        0,
+        1
+       ],
+       "name": "Poste",
+       "escalada": true
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Tabla",
+       "dims": [
+        3,
+        1,
+        0.4
+       ],
+       "loc": [
+        -2,
+        0,
+        0.2
+       ]
+      }
+     },
+     {
+      "cilindro": {
+       "nombre": "Poste",
+       "dims": [
+        0.5,
+        0.5,
+        2
+       ],
+       "loc": [
+        2,
+        0,
+        1
+       ]
+      }
+     }
+    ]
+   },
+   "errores": {
+    "escala": "Todavía tiene escala: Ctrl + A y elige «Escala»."
+   }
+  },
+  {
+   "id": "bl-espejo",
+   "titulo": "Espejo",
+   "que": "El modificador Espejo dibuja la otra mitad: modelas un lado y el otro sale igual, al revés.",
+   "teclas": [
+    "Ctrl+A"
+   ],
+   "como": "Llave inglesa › Agregar modificador › Generar › Espejo; deja marcado el eje X.",
+   "herramientas": [
+    "modifier.mirror"
+   ],
+   "requiere": [
+    "bl-aplicar-escala"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Ala",
+       "loc": [
+        1.5,
+        0,
+        1
+       ],
+       "medidas": [
+        2,
+        1,
+        0.3
+       ]
+      },
+      "texto": "Media nave: un ala"
+     },
+     {
+      "texto": "Llave inglesa › Agregar modificador › Espejo"
+     },
+     {
+      "modificador": {
+       "objeto": "Ala",
+       "tipo": "MIRROR",
+       "ejes": [
+        true,
+        false,
+        false
+       ]
+      },
+      "texto": "Eje X: aparece la otra ala"
+     },
+     {
+      "vista": {
+       "tipo": "arriba"
+      },
+      "texto": "7: desde arriba las dos alas son iguales"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "ala",
+     "pide": "Media nave: ponle Espejo en X para que aparezca la otra ala.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        1,
+        0.3
+       ],
+       "location": [
+        1.5,
+        0,
+        1
+       ],
+       "name": "Ala"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        1,
+        0.3
+       ],
+       "location": [
+        -1.5,
+        0,
+        1
+       ],
+       "name": "Otra ala"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "espejo",
+       "title": "Espejo en el eje X",
+       "validator": "modifier.configured",
+       "params": {
+        "modifier": "MIRROR",
+        "axis": "x",
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         1,
+         0.3
+        ],
+        "location": [
+         1.5,
+         0,
+         1
+        ],
+        "name": "Ala",
+        "origen": [
+         0,
+         0,
+         1
+        ]
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Ala",
+        "dims": [
+         2,
+         1,
+         0.3
+        ],
+        "loc": [
+         1.5,
+         0,
+         1
+        ],
+        "mitad": "x+"
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Ala",
+        "tipo": "MIRROR",
+        "ejes": [
+         true,
+         false,
+         false
+        ]
+       }
+      }
+     ],
+     "solo_dibujo": true
+    },
+    {
+     "id": "casco",
+     "pide": "Medio casco: Espejo en X y modela solo esa mitad.",
+     "objetivos": [
+      {
+       "id": "espejo",
+       "title": "Espejo en el eje X",
+       "validator": "modifier.configured",
+       "params": {
+        "modifier": "MIRROR",
+        "axis": "x",
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "mitad",
+       "title": "La malla sigue de un solo lado",
+       "validator": "mesh.one_side",
+       "params": {
+        "axis": "x",
+        "tolerance": 2,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         1,
+         2,
+         1.5
+        ],
+        "location": [
+         -0.5,
+         0,
+         0.75
+        ],
+        "name": "Casco",
+        "origen": [
+         0,
+         0,
+         0.75
+        ]
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Casco",
+        "dims": [
+         1,
+         2,
+         1.5
+        ],
+        "loc": [
+         -0.5,
+         0,
+         0.75
+        ],
+        "mitad": "x-"
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Casco",
+        "tipo": "MIRROR",
+        "ejes": [
+         true,
+         false,
+         false
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "antena",
+    "pide": "Sin ayuda: que la antena aparezca a los dos lados con Espejo.",
+    "objetivos": [
+     {
+      "id": "espejo",
+      "title": "Espejo en el eje X",
+      "validator": "modifier.configured",
+      "params": {
+       "modifier": "MIRROR",
+       "axis": "x",
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        0.2,
+        0.2,
+        2
+       ],
+       "location": [
+        1,
+        0,
+        1
+       ],
+       "name": "Antena",
+       "origen": [
+        0,
+        0,
+        1
+       ]
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cilindro": {
+       "nombre": "Antena",
+       "dims": [
+        0.2,
+        0.2,
+        2
+       ],
+       "loc": [
+        1,
+        0,
+        1
+       ],
+       "mitad": "x+"
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Antena",
+       "tipo": "MIRROR",
+       "ejes": [
+        true,
+        false,
+        false
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-subdivision",
+   "titulo": "Suavizar",
+   "que": "Ctrl + 2 agrega Subdivisión: la caja se vuelve redonda sin cambiar sus puntos. Más nivel, más suave.",
+   "teclas": [
+    "Ctrl+2"
+   ],
+   "como": "Elige la pieza y Ctrl + 2 (o Llave inglesa › Generar › Subdivisión).",
+   "herramientas": [
+    "modifier.subdivision"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Piedra",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Una caja dura"
+     },
+     {
+      "modificador": {
+       "objeto": "Piedra",
+       "tipo": "SUBSURF",
+       "niveles": 2
+      },
+      "texto": "Ctrl + 2: se redondea",
+      "teclas": [
+       "Ctrl+2"
+      ]
+     },
+     {
+      "vista": {
+       "tipo": "orbita"
+      },
+      "texto": "Sus puntos siguen siendo 8"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "piedra",
+     "pide": "Convierte la caja en una piedra redonda con Ctrl + 2.",
+     "objetivos": [
+      {
+       "id": "suave",
+       "title": "Subdivisión de nivel 2 o más",
+       "validator": "modifier.configured",
+       "params": {
+        "modifier": "SUBSURF",
+        "min_levels": 2,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         1.4
+        ],
+        "location": [
+         0,
+         0,
+         0.7
+        ],
+        "name": "Piedra"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Piedra",
+        "dims": [
+         2,
+         2,
+         1.4
+        ],
+        "loc": [
+         0,
+         0,
+         0.7
+        ]
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Piedra",
+        "tipo": "SUBSURF",
+        "niveles": 2
+       }
+      }
+     ]
+    },
+    {
+     "id": "cojin",
+     "pide": "Un cojín: suaviza la caja aplanada con nivel 1 o 2, no más.",
+     "objetivos": [
+      {
+       "id": "suave",
+       "title": "Subdivisión de nivel 1 a 2",
+       "validator": "modifier.configured",
+       "params": {
+        "modifier": "SUBSURF",
+        "min_levels": 1,
+        "max_levels": 2,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         0.6
+        ],
+        "location": [
+         0,
+         0,
+         0.3
+        ],
+        "name": "Cojin"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Cojin",
+        "dims": [
+         2,
+         2,
+         0.6
+        ],
+        "loc": [
+         0,
+         0,
+         0.3
+        ]
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Cojin",
+        "tipo": "SUBSURF",
+        "niveles": 1
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "huevo",
+    "pide": "Sin ayuda: un huevo suave a partir del cilindro.",
+    "objetivos": [
+     {
+      "id": "suave",
+      "title": "Subdivisión",
+      "validator": "modifier.configured",
+      "params": {
+       "modifier": "SUBSURF",
+       "min_levels": 1,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        1.4,
+        1.4,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Huevo"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cilindro": {
+       "nombre": "Huevo",
+       "dims": [
+        1.4,
+        1.4,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Huevo",
+       "tipo": "SUBSURF",
+       "niveles": 2
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-modificadores",
+   "titulo": "La pila de modificadores",
+   "que": "Los modificadores se apilan en la llave inglesa y se aplican de arriba hacia abajo: Espejo primero, luego Subdivisión.",
+   "teclas": [
+    "Ctrl+2"
+   ],
+   "como": "Llave inglesa: agrega Espejo y después Subdivisión; arrastra para cambiar el orden.",
+   "herramientas": [
+    "modifier.mirror",
+    "modifier.subdivision"
+   ],
+   "requiere": [
+    "bl-espejo",
+    "bl-subdivision"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Nave",
+       "loc": [
+        1,
+        0,
+        1
+       ],
+       "medidas": [
+        2,
+        2,
+        1
+       ]
+      },
+      "texto": "Media nave"
+     },
+     {
+      "modificador": {
+       "objeto": "Nave",
+       "tipo": "MIRROR",
+       "ejes": [
+        true,
+        false,
+        false
+       ]
+      },
+      "texto": "1: Espejo"
+     },
+     {
+      "modificador": {
+       "objeto": "Nave",
+       "tipo": "SUBSURF",
+       "niveles": 2
+      },
+      "texto": "2: Subdivisión, debajo",
+      "teclas": [
+       "Ctrl+2"
+      ]
+     },
+     {
+      "vista": {
+       "tipo": "orbita"
+      },
+      "texto": "Las dos mitades se suavizan juntas"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "nave",
+     "pide": "Media nave: Espejo en X y, debajo, Subdivisión.",
+     "objetivos": [
+      {
+       "id": "espejo",
+       "title": "Espejo en el eje X",
+       "validator": "modifier.configured",
+       "params": {
+        "modifier": "MIRROR",
+        "axis": "x",
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "suave",
+       "title": "Subdivisión",
+       "validator": "modifier.configured",
+       "params": {
+        "modifier": "SUBSURF",
+        "min_levels": 1,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         1
+        ],
+        "location": [
+         1,
+         0,
+         1
+        ],
+        "name": "Nave",
+        "origen": [
+         0,
+         0,
+         1
+        ]
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Nave",
+        "dims": [
+         2,
+         2,
+         1
+        ],
+        "loc": [
+         1,
+         0,
+         1
+        ],
+        "mitad": "x+"
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Nave",
+        "tipo": "MIRROR",
+        "ejes": [
+         true,
+         false,
+         false
+        ]
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Nave",
+        "tipo": "SUBSURF",
+        "niveles": 2
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "robot",
+    "pide": "Sin ayuda: media cabeza de robot con Espejo y Subdivisión.",
+    "objetivos": [
+     {
+      "id": "espejo",
+      "title": "Espejo en el eje X",
+      "validator": "modifier.configured",
+      "params": {
+       "modifier": "MIRROR",
+       "axis": "x",
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "suave",
+      "title": "Subdivisión",
+      "validator": "modifier.configured",
+      "params": {
+       "modifier": "SUBSURF",
+       "min_levels": 1,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        2,
+        2
+       ],
+       "location": [
+        0.5,
+        0,
+        1
+       ],
+       "name": "Cabeza",
+       "origen": [
+        0,
+        0,
+        1
+       ]
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Cabeza",
+       "dims": [
+        1,
+        2,
+        2
+       ],
+       "loc": [
+        0.5,
+        0,
+        1
+       ],
+       "mitad": "x+"
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Cabeza",
+       "tipo": "MIRROR",
+       "ejes": [
+        true,
+        false,
+        false
+       ]
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Cabeza",
+       "tipo": "SUBSURF",
+       "niveles": 2
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-material-nuevo",
+   "titulo": "Ponerle material",
+   "que": "Propiedades › Material › Nuevo y cambia el Color base. Z › Vista de material para ver los colores.",
+   "teclas": [
+    "Z"
+   ],
+   "como": "Elige la pieza; esfera roja de la derecha (Material) › Nuevo › Color base.",
+   "herramientas": [
+    "material.basic",
+    "material.principled"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "sphere",
+       "nombre": "Pelota",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Una pelota gris"
+     },
+     {
+      "texto": "Propiedades › Material › Nuevo"
+     },
+     {
+      "material": {
+       "objeto": "Pelota",
+       "color": [
+        0.85,
+        0.2,
+        0.2
+       ],
+       "nombre": "Rojo"
+      },
+      "texto": "Color base: rojo"
+     },
+     {
+      "texto": "Z › Vista de material: así lo ves",
+      "teclas": [
+       "Z"
+      ]
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "pelota",
+     "pide": "Pinta la pelota: Material › Nuevo y elige su Color base.",
+     "objetivos": [
+      {
+       "id": "material",
+       "title": "La pelota tiene material",
+       "validator": "material.exists",
+       "params": {
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Pelota"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Pelota",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Pelota",
+        "nombre": "Rojo",
+        "color": [
+         0.85,
+         0.2,
+         0.2
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "dos",
+     "pide": "Dos piezas, dos colores: cada una con su propio material.",
+     "objetivos": [
+      {
+       "id": "material",
+       "title": "Cada pieza tiene material",
+       "validator": "material.exists",
+       "params": {
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "distintos",
+       "title": "Dos materiales distintos",
+       "validator": "material.distinct",
+       "params": {
+        "min": 2
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         -1.5,
+         0,
+         1
+        ],
+        "name": "Caja"
+       },
+       {
+        "primitive": "cone",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         1.5,
+         0,
+         1
+        ],
+        "name": "Cono"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         -1.5,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "cono": {
+        "nombre": "Cono",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         1.5,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Caja",
+        "nombre": "Azul",
+        "color": [
+         0.2,
+         0.3,
+         0.9
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Cono",
+        "nombre": "Naranja",
+        "color": [
+         1.0,
+         0.5,
+         0.1
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "tres",
+    "pide": "Sin ayuda: tres piezas de tres colores.",
+    "objetivos": [
+     {
+      "id": "material",
+      "title": "Cada pieza tiene material",
+      "validator": "material.exists",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "distintos",
+      "title": "Tres materiales distintos",
+      "validator": "material.distinct",
+      "params": {
+       "min": 3
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "location": [
+        -2.5,
+        0,
+        0.75
+       ],
+       "name": "Caja"
+      },
+      {
+       "primitive": "sphere",
+       "size": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "location": [
+        0,
+        0,
+        0.75
+       ],
+       "name": "Pelota"
+      },
+      {
+       "primitive": "cylinder",
+       "size": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "location": [
+        2.5,
+        0,
+        0.75
+       ],
+       "name": "Lata"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "loc": [
+        -2.5,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "esfera": {
+       "nombre": "Pelota",
+       "dims": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "loc": [
+        0,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "cilindro": {
+       "nombre": "Lata",
+       "dims": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "loc": [
+        2.5,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Caja",
+       "nombre": "A",
+       "color": [
+        0.9,
+        0.2,
+        0.2
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Pelota",
+       "nombre": "B",
+       "color": [
+        0.2,
+        0.8,
+        0.3
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Lata",
+       "nombre": "C",
+       "color": [
+        0.2,
+        0.3,
+        0.9
+       ]
+      }
+     }
+    ]
+   },
+   "bkt": {
+    "L0": 0.2,
+    "T": 0.25,
+    "G": 0.2,
+    "S": 0.08
+   }
+  },
+  {
+   "id": "bl-principled",
+   "titulo": "Metal, plástico y vidrio",
+   "que": "Tres perillas bastan: Metálico (metal), Rugosidad (brillo o mate) y Transmisión (vidrio).",
+   "teclas": [],
+   "como": "En Material: sube Metálico para metal, baja Rugosidad para brillo, Transmisión para vidrio.",
+   "herramientas": [
+    "material.principled"
+   ],
+   "requiere": [
+    "bl-material-nuevo"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "sphere",
+       "nombre": "Esfera",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Una esfera con material"
+     },
+     {
+      "material": {
+       "objeto": "Esfera",
+       "color": [
+        0.8,
+        0.8,
+        0.85
+       ],
+       "nombre": "Metal"
+      },
+      "texto": "Metálico: 1"
+     },
+     {
+      "texto": "Rugosidad baja: brilla como cuchara"
+     },
+     {
+      "texto": "Rugosidad alta: mate como goma"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "metal",
+     "pide": "Haz que la esfera parezca metal: Metálico al máximo y Rugosidad baja.",
+     "objetivos": [
+      {
+       "id": "metal",
+       "title": "Un metal brillante",
+       "validator": "material.matches",
+       "params": {
+        "metallic_min": 0.8,
+        "roughness_max": 0.4,
+        "label": "metal brillante"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Esfera"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Esfera",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Esfera",
+        "nombre": "Metal",
+        "metal": 1.0,
+        "rugosidad": 0.2
+       }
+      }
+     ]
+    },
+    {
+     "id": "goma",
+     "pide": "Ahora goma mate: nada de Metálico y Rugosidad alta.",
+     "objetivos": [
+      {
+       "id": "goma",
+       "title": "Goma mate",
+       "validator": "material.matches",
+       "params": {
+        "metallic_max": 0.2,
+        "roughness_min": 0.7,
+        "label": "goma mate"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Caja"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Caja",
+        "nombre": "Goma",
+        "metal": 0.0,
+        "rugosidad": 0.9
+       }
+      }
+     ]
+    },
+    {
+     "id": "vidrio",
+     "pide": "Un vaso de vidrio: Transmisión al máximo y Rugosidad muy baja.",
+     "objetivos": [
+      {
+       "id": "vidrio",
+       "title": "Vidrio",
+       "validator": "material.matches",
+       "params": {
+        "transmission_min": 0.8,
+        "roughness_max": 0.2,
+        "label": "vidrio"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cylinder",
+        "size": [
+         1,
+         1,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Vaso"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cilindro": {
+        "nombre": "Vaso",
+        "dims": [
+         1,
+         1,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Vaso",
+        "nombre": "Vidrio",
+        "transmision": 1.0,
+        "rugosidad": 0.05
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "dos",
+    "pide": "Sin ayuda: una esfera de metal y una caja de goma mate.",
+    "objetivos": [
+     {
+      "id": "metal",
+      "title": "Un metal brillante",
+      "validator": "material.matches",
+      "params": {
+       "metallic_min": 0.8,
+       "roughness_max": 0.4
+      }
+     },
+     {
+      "id": "goma",
+      "title": "Goma mate",
+      "validator": "material.matches",
+      "params": {
+       "metallic_max": 0.2,
+       "roughness_min": 0.7
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "sphere",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        -1.5,
+        0,
+        1
+       ],
+       "name": "Esfera"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        1.5,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "esfera": {
+       "nombre": "Esfera",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        -1.5,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        1.5,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Esfera",
+       "nombre": "Metal",
+       "metal": 1.0,
+       "rugosidad": 0.2
+      }
+     },
+     {
+      "material": {
+       "objeto": "Caja",
+       "nombre": "Goma",
+       "metal": 0.0,
+       "rugosidad": 0.9
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-varios-materiales",
+   "titulo": "Dos materiales en una pieza",
+   "que": "En Modo Edición eliges caras y «Asignar» les pone otro material: una pieza, dos colores.",
+   "teclas": [
+    "Tab",
+    "3"
+   ],
+   "como": "Agrega un segundo material con +; Tab, elige caras y pulsa «Asignar».",
+   "herramientas": [
+    "material.basic",
+    "mesh.edit"
+   ],
+   "requiere": [
+    "bl-material-nuevo",
+    "bl-modo-edicion"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cylinder",
+       "nombre": "Lata",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Una lata con un material"
+     },
+     {
+      "texto": "+ y Nuevo: un segundo material"
+     },
+     {
+      "editar": {
+       "objeto": "Lata"
+      },
+      "texto": "Tab, 3 y clic en la tapa"
+     },
+     {
+      "material": {
+       "objeto": "Lata",
+       "color": [
+        0.9,
+        0.75,
+        0.2
+       ],
+       "nombre": "Tapa"
+      },
+      "texto": "Asignar: la tapa cambia"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "lata",
+     "pide": "Una lata de dos colores: la tapa con otro material (Tab, caras y Asignar).",
+     "objetivos": [
+      {
+       "id": "distintos",
+       "title": "Dos materiales pintan caras",
+       "validator": "material.distinct",
+       "params": {
+        "min": 2
+       }
+      },
+      {
+       "id": "una",
+       "title": "Sigue siendo una sola pieza",
+       "validator": "object.count",
+       "params": {
+        "equals": 1,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "objeto",
+       "title": "Vuelve al Modo Objeto (Tab)",
+       "validator": "scene.mode",
+       "params": {
+        "mode": "OBJECT"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cylinder",
+        "size": [
+         1.5,
+         1.5,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Lata"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cilindro": {
+        "nombre": "Lata",
+        "dims": [
+         1.5,
+         1.5,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Lata",
+        "nombre": "Lata",
+        "color": [
+         0.8,
+         0.1,
+         0.1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Lata",
+        "nombre": "Tapa",
+        "color": [
+         0.9,
+         0.75,
+         0.2
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "dado",
+    "pide": "Sin ayuda: una caja con la cara de arriba de otro color.",
+    "objetivos": [
+     {
+      "id": "distintos",
+      "title": "Dos materiales pintan caras",
+      "validator": "material.distinct",
+      "params": {
+       "min": 2
+      }
+     },
+     {
+      "id": "una",
+      "title": "Una sola pieza",
+      "validator": "object.count",
+      "params": {
+       "equals": 1,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Caja",
+       "nombre": "Blanco",
+       "color": [
+        0.9,
+        0.9,
+        0.9
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Caja",
+       "nombre": "Rojo",
+       "color": [
+        0.9,
+        0.1,
+        0.1
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-luces",
+   "titulo": "Agregar una luz",
+   "que": "Shift + A › Luz: Área ilumina suave como una ventana; Sol ilumina todo desde lejos.",
+   "teclas": [
+    "Shift+A",
+    "G",
+    "R"
+   ],
+   "como": "Shift + A › Luz › Área; súbela con G Z y apúntala al modelo con R.",
+   "herramientas": [
+    "light.add"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Modelo",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Tu modelo, a oscuras"
+     },
+     {
+      "luz": {
+       "nombre": "Area",
+       "tipo": "AREA",
+       "loc": [
+        3,
+        -3,
+        4
+       ],
+       "energia": 500
+      },
+      "texto": "Shift + A › Luz › Área"
+     },
+     {
+      "texto": "G Z la sube; R la apunta al modelo",
+      "teclas": [
+       "G",
+       "Z",
+       "R"
+      ]
+     },
+     {
+      "texto": "Z › Vista renderizada: ya se ve la luz",
+      "teclas": [
+       "Z"
+      ]
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "area",
+     "pide": "Ilumina el modelo con una luz de Área por encima y de lado.",
+     "objetivos": [
+      {
+       "id": "luz",
+       "title": "Una luz de Área",
+       "validator": "scene.light_exists",
+       "params": {
+        "min": 1,
+        "light_type": "AREA"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Modelo"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Modelo",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Area",
+        "tipo": "AREA",
+        "loc": [
+         3,
+         -3,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "sol",
+     "pide": "Ahora un Sol: luz de día para toda la escena.",
+     "objetivos": [
+      {
+       "id": "luz",
+       "title": "Una luz de Sol",
+       "validator": "scene.light_exists",
+       "params": {
+        "min": 1,
+        "light_type": "SUN"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Modelo"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Modelo",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Sol",
+        "tipo": "SUN",
+        "loc": [
+         0,
+         0,
+         8
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "dos",
+    "pide": "Sin ayuda: una luz de Área y un Sol.",
+    "objetivos": [
+     {
+      "id": "area",
+      "title": "Una luz de Área",
+      "validator": "scene.light_exists",
+      "params": {
+       "min": 1,
+       "light_type": "AREA"
+      }
+     },
+     {
+      "id": "sol",
+      "title": "Un Sol",
+      "validator": "scene.light_exists",
+      "params": {
+       "min": 1,
+       "light_type": "SUN"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Modelo"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Modelo",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Area",
+       "tipo": "AREA",
+       "loc": [
+        3,
+        -3,
+        4
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Sol",
+       "tipo": "SUN",
+       "loc": [
+        0,
+        0,
+        8
+       ]
+      }
+     }
+    ]
+   },
+   "bkt": {
+    "L0": 0.2,
+    "T": 0.25,
+    "G": 0.2,
+    "S": 0.08
+   }
+  },
+  {
+   "id": "bl-tres-puntos",
+   "titulo": "Tres puntos de luz",
+   "que": "Principal fuerte a un lado, relleno más suave al otro y contraluz detrás: el modelo se despega del fondo.",
+   "teclas": [
+    "Shift+A",
+    "Shift+D"
+   ],
+   "como": "Una luz principal; Shift + D para el relleno (más suave) y la contraluz detrás.",
+   "herramientas": [
+    "light.add"
+   ],
+   "requiere": [
+    "bl-luces"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Modelo",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "El modelo"
+     },
+     {
+      "luz": {
+       "nombre": "Principal",
+       "tipo": "AREA",
+       "loc": [
+        4,
+        -4,
+        4
+       ],
+       "energia": 1000
+      },
+      "texto": "1: la principal, fuerte"
+     },
+     {
+      "luz": {
+       "nombre": "Relleno",
+       "tipo": "AREA",
+       "loc": [
+        -4,
+        -4,
+        2
+       ],
+       "energia": 300
+      },
+      "texto": "2: el relleno, más suave"
+     },
+     {
+      "luz": {
+       "nombre": "Contraluz",
+       "tipo": "AREA",
+       "loc": [
+        0,
+        5,
+        4
+       ],
+       "energia": 700
+      },
+      "texto": "3: la contraluz, detrás"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "estudio",
+     "pide": "Tres luces al modelo: principal, relleno más suave y contraluz detrás.",
+     "objetivos": [
+      {
+       "id": "tres",
+       "title": "Principal, relleno y contraluz",
+       "validator": "light.three_point"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Modelo"
+       },
+       {
+        "tipo": "camara",
+        "name": "Camara",
+        "location": [
+         0,
+         -9,
+         3
+        ],
+        "mira": [
+         0,
+         0,
+         1
+        ]
+       }
+      ]
+     },
+     "minutos": 3,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Modelo",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "camara": {
+        "nombre": "Camara",
+        "loc": [
+         0,
+         -9,
+         3
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Principal",
+        "tipo": "AREA",
+        "loc": [
+         4,
+         -4,
+         4
+        ],
+        "energia": 1000,
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Relleno",
+        "tipo": "AREA",
+        "loc": [
+         -4,
+         -4,
+         2
+        ],
+        "energia": 300,
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Contraluz",
+        "tipo": "AREA",
+        "loc": [
+         0,
+         5,
+         4
+        ],
+        "energia": 700,
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "retrato",
+    "pide": "Sin ayuda: ilumina la esfera con tres puntos de luz.",
+    "objetivos": [
+     {
+      "id": "tres",
+      "title": "Principal, relleno y contraluz",
+      "validator": "light.three_point"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "sphere",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Esfera"
+      },
+      {
+       "tipo": "camara",
+       "name": "Camara",
+       "location": [
+        0,
+        -9,
+        3
+       ],
+       "mira": [
+        0,
+        0,
+        1
+       ]
+      }
+     ]
+    },
+    "minutos": 3,
+    "solucion": [
+     {
+      "esfera": {
+       "nombre": "Esfera",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        0,
+        -9,
+        3
+       ],
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Principal",
+       "tipo": "AREA",
+       "loc": [
+        4,
+        -4,
+        4
+       ],
+       "energia": 1000,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Relleno",
+       "tipo": "AREA",
+       "loc": [
+        -4,
+        -4,
+        2
+       ],
+       "energia": 300,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Contraluz",
+       "tipo": "AREA",
+       "loc": [
+        0,
+        5,
+        4
+       ],
+       "energia": 700,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-camara",
+   "titulo": "Encuadrar con la cámara",
+   "que": "La cámara es tus ojos en el render. Ctrl + Alt + 0 la pone donde estás mirando; 0 mira por ella.",
+   "teclas": [
+    "Ctrl+Alt+0",
+    "0"
+   ],
+   "como": "Shift + A › Cámara; mira el modelo como te guste y Ctrl + Alt + 0; revisa con 0.",
+   "herramientas": [
+    "camera.add",
+    "view.numpad"
+   ],
+   "requiere": [
+    "bl-mover"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Modelo",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "El modelo"
+     },
+     {
+      "vista": {
+       "tipo": "orbita"
+      },
+      "texto": "Míralo desde donde te guste"
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        6,
+        -6,
+        4
+       ],
+       "mira": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Ctrl + Alt + 0: la cámara va ahí",
+      "teclas": [
+       "Ctrl+Alt+0"
+      ]
+     },
+     {
+      "vista": {
+       "tipo": "camara"
+      },
+      "texto": "0: miras por la cámara"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "encuadre",
+     "pide": "Pon una cámara que encuadre todo el modelo (Ctrl + Alt + 0).",
+     "objetivos": [
+      {
+       "id": "camara",
+       "title": "Hay una cámara",
+       "validator": "scene.camera_exists",
+       "params": {
+        "min": 1
+       }
+      },
+      {
+       "id": "encuadre",
+       "title": "El modelo entra en la cámara",
+       "validator": "camera.frames",
+       "params": {
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Modelo"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Modelo",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "camara": {
+        "nombre": "Camara",
+        "loc": [
+         6,
+         -6,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "dos",
+     "pide": "Que las dos piezas entren en la foto de la cámara.",
+     "objetivos": [
+      {
+       "id": "camara",
+       "title": "Hay una cámara",
+       "validator": "scene.camera_exists",
+       "params": {
+        "min": 1
+       }
+      },
+      {
+       "id": "encuadre",
+       "title": "Las dos piezas entran en la cámara",
+       "validator": "camera.frames",
+       "params": {
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         -2,
+         0,
+         1
+        ],
+        "name": "Caja"
+       },
+       {
+        "primitive": "sphere",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         2,
+         0,
+         1
+        ],
+        "name": "Pelota"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         -2,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "esfera": {
+        "nombre": "Pelota",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         2,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "camara": {
+        "nombre": "Camara",
+        "loc": [
+         0,
+         -10,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "torre",
+    "pide": "Sin ayuda: una cámara que encuadre la torre completa.",
+    "objetivos": [
+     {
+      "id": "camara",
+      "title": "Hay una cámara",
+      "validator": "scene.camera_exists",
+      "params": {
+       "min": 1
+      }
+     },
+     {
+      "id": "encuadre",
+      "title": "La torre entra en la cámara",
+      "validator": "camera.frames",
+      "params": {
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        1,
+        5
+       ],
+       "location": [
+        0,
+        0,
+        2.5
+       ],
+       "name": "Torre"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Torre",
+       "dims": [
+        1,
+        1,
+        5
+       ],
+       "loc": [
+        0,
+        0,
+        2.5
+       ]
+      }
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        9,
+        -9,
+        4
+       ],
+       "mira_a": [
+        0,
+        0,
+        2.5
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-render",
+   "titulo": "Hacer el render",
+   "que": "F12 saca la foto final desde la cámara, con sus luces y materiales. Imagen › Guardar como para guardarla.",
+   "teclas": [
+    "F12"
+   ],
+   "como": "Con cámara y luz: F12; espera la imagen; Imagen › Guardar como.",
+   "herramientas": [
+    "render.f12"
+   ],
+   "requiere": [
+    "bl-camara"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Modelo",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Modelo, luz y cámara listos"
+     },
+     {
+      "render": {},
+      "texto": "F12: se abre una ventana con la foto"
+     },
+     {
+      "texto": "Imagen › Guardar como: tu primer render"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "foto",
+     "pide": "Tu primer render: F12 con la cámara y la luz que ya están.",
+     "objetivos": [
+      {
+       "id": "render",
+       "title": "Hiciste el render (F12)",
+       "validator": "render.done"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Modelo"
+       },
+       {
+        "tipo": "luz",
+        "name": "Luz",
+        "light_type": "AREA",
+        "location": [
+         3,
+         -3,
+         4
+        ],
+        "mira": [
+         0,
+         0,
+         1
+        ]
+       },
+       {
+        "tipo": "camara",
+        "name": "Camara",
+        "location": [
+         6,
+         -6,
+         4
+        ],
+        "mira": [
+         0,
+         0,
+         1
+        ]
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Modelo",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Luz",
+        "tipo": "AREA",
+        "loc": [
+         3,
+         -3,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "camara": {
+        "nombre": "Camara",
+        "loc": [
+         6,
+         -6,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "renders": 1
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "estudio",
+    "pide": "Sin ayuda: luz, cámara que encuadre y render.",
+    "objetivos": [
+     {
+      "id": "luz",
+      "title": "Hay luz",
+      "validator": "scene.light_exists",
+      "params": {
+       "min": 1
+      }
+     },
+     {
+      "id": "encuadre",
+      "title": "El modelo entra en la cámara",
+      "validator": "camera.frames",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "render",
+      "title": "Hiciste el render (F12)",
+      "validator": "render.done"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Modelo"
+      }
+     ]
+    },
+    "minutos": 3,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Modelo",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Area",
+       "tipo": "AREA",
+       "loc": [
+        3,
+        -3,
+        4
+       ]
+      }
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        6,
+        -6,
+        4
+       ],
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "renders": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-fotograma-clave",
+   "titulo": "Fotograma clave",
+   "que": "I guarda dónde está la pieza en este cuadro. Cambia de cuadro, muévela, otra I: Blender anima entre las dos.",
+   "teclas": [
+    "I",
+    "G"
+   ],
+   "como": "Cuadro 1: I › Ubicación; cuadro 24: G para moverla e I otra vez; Espacio para verla.",
+   "herramientas": [
+    "anim.keyframe",
+    "transform.move"
+   ],
+   "requiere": [
+    "bl-mover"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "sphere",
+       "nombre": "Pelota",
+       "loc": [
+        -3,
+        0,
+        1
+       ]
+      },
+      "texto": "Cuadro 1: la pelota a la izquierda"
+     },
+     {
+      "clave": {
+       "objeto": "Pelota",
+       "a": [
+        -3,
+        0,
+        1
+       ]
+      },
+      "texto": "I › Ubicación"
+     },
+     {
+      "texto": "Ve al cuadro 24 en la línea de tiempo"
+     },
+     {
+      "clave": {
+       "objeto": "Pelota",
+       "a": [
+        3,
+        0,
+        1
+       ]
+      },
+      "texto": "G, X y otra I",
+      "teclas": [
+       "G",
+       "X",
+       "I"
+      ]
+     },
+     {
+      "texto": "Espacio: se mueve sola",
+      "teclas": [
+       "Espacio"
+      ]
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "cruza",
+     "pide": "Que la pelota cruce: clave en el cuadro 1 y en el 24, en otro lugar.",
+     "objetivos": [
+      {
+       "id": "claves",
+       "title": "Dos claves de ubicación",
+       "validator": "animation.keyframes",
+       "params": {
+        "property": "location",
+        "axis": "x",
+        "min": 2,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "mueve",
+       "title": "Se mueve de lado a lado",
+       "validator": "animation.varies",
+       "params": {
+        "property": "location",
+        "axis": "x",
+        "min_delta": 2,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "location": [
+         -3,
+         0,
+         0.75
+        ],
+        "name": "Pelota"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Pelota",
+        "dims": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "loc": [
+         -3,
+         0,
+         0.75
+        ]
+       }
+      },
+      {
+       "animar": {
+        "objeto": "Pelota",
+        "propiedad": "location",
+        "eje": "x",
+        "claves": [
+         [
+          1,
+          -3
+         ],
+         [
+          24,
+          3
+         ]
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "gira",
+     "pide": "Un molino que gira: clave de rotación en Z en el cuadro 1 y en el 48.",
+     "objetivos": [
+      {
+       "id": "claves",
+       "title": "Dos claves de rotación",
+       "validator": "animation.keyframes",
+       "params": {
+        "property": "rotation_euler",
+        "axis": "z",
+        "min": 2,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         3,
+         0.3,
+         0.3
+        ],
+        "location": [
+         0,
+         0,
+         2
+        ],
+        "name": "Aspa"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Aspa",
+        "dims": [
+         3,
+         0.3,
+         0.3
+        ],
+        "loc": [
+         0,
+         0,
+         2
+        ]
+       }
+      },
+      {
+       "animar": {
+        "objeto": "Aspa",
+        "propiedad": "rotation_euler",
+        "eje": "z",
+        "claves": [
+         [
+          1,
+          0
+         ],
+         [
+          48,
+          6.28
+         ]
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "sube",
+    "pide": "Sin ayuda: que la caja suba del suelo en dos segundos.",
+    "objetivos": [
+     {
+      "id": "sube",
+      "title": "Sube",
+      "validator": "animation.varies",
+      "params": {
+       "property": "location",
+       "axis": "z",
+       "min_delta": 1.5,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "animar": {
+       "objeto": "Caja",
+       "propiedad": "location",
+       "eje": "z",
+       "claves": [
+        [
+         1,
+         1
+        ],
+        [
+         48,
+         4
+        ]
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-rebote",
+   "titulo": "Un rebote",
+   "que": "Un rebote son tres claves: arriba, en el suelo y arriba otra vez. Lo que cae acelera.",
+   "teclas": [
+    "I",
+    "G",
+    "Z"
+   ],
+   "como": "Cuadro 1 arriba (I), cuadro 12 en el suelo (I), cuadro 24 arriba (I).",
+   "herramientas": [
+    "anim.keyframe",
+    "transform.move"
+   ],
+   "requiere": [
+    "bl-fotograma-clave"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "sphere",
+       "nombre": "Pelota",
+       "loc": [
+        0,
+        0,
+        4
+       ]
+      },
+      "texto": "Cuadro 1: arriba"
+     },
+     {
+      "clave": {
+       "objeto": "Pelota",
+       "a": [
+        0,
+        0,
+        4
+       ]
+      },
+      "texto": "I"
+     },
+     {
+      "clave": {
+       "objeto": "Pelota",
+       "a": [
+        0,
+        0,
+        0.75
+       ]
+      },
+      "texto": "Cuadro 12: toca el suelo, I"
+     },
+     {
+      "clave": {
+       "objeto": "Pelota",
+       "a": [
+        0,
+        0,
+        4
+       ]
+      },
+      "texto": "Cuadro 24: arriba otra vez, I"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "pelota",
+     "pide": "Haz rebotar la pelota una vez: arriba, en el suelo y arriba.",
+     "objetivos": [
+      {
+       "id": "rebota",
+       "title": "Baja, toca el suelo y vuelve a subir",
+       "validator": "animation.varies",
+       "params": {
+        "property": "location",
+        "axis": "z",
+        "bounce": true,
+        "ground": true,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "location": [
+         0,
+         0,
+         4
+        ],
+        "name": "Pelota"
+       }
+      ]
+     },
+     "minutos": 3,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Pelota",
+        "dims": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "loc": [
+         0,
+         0,
+         4
+        ]
+       }
+      },
+      {
+       "animar": {
+        "objeto": "Pelota",
+        "propiedad": "location",
+        "eje": "z",
+        "claves": [
+         [
+          1,
+          4
+         ],
+         [
+          12,
+          0.75
+         ],
+         [
+          24,
+          4
+         ]
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "caja",
+    "pide": "Sin ayuda: que la caja caiga, toque el suelo y rebote.",
+    "objetivos": [
+     {
+      "id": "rebota",
+      "title": "Rebota en el suelo",
+      "validator": "animation.varies",
+      "params": {
+       "property": "location",
+       "axis": "z",
+       "bounce": true,
+       "ground": true,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        1,
+        1
+       ],
+       "location": [
+        0,
+        0,
+        4
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 3,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        1,
+        1,
+        1
+       ],
+       "loc": [
+        0,
+        0,
+        4
+       ]
+      }
+     },
+     {
+      "animar": {
+       "objeto": "Caja",
+       "propiedad": "location",
+       "eje": "z",
+       "claves": [
+        [
+         1,
+         4
+        ],
+        [
+         12,
+         0.5
+        ],
+        [
+         24,
+         3
+        ]
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-squash-stretch",
+   "titulo": "Encoger y estirar",
+   "que": "Al tocar el suelo la pelota se aplasta y al subir se estira: escala en Z con claves.",
+   "teclas": [
+    "S",
+    "Z",
+    "I"
+   ],
+   "como": "En el cuadro del golpe: S Z para aplastarla e I › Escala; antes y después, normal.",
+   "herramientas": [
+    "anim.keyframe",
+    "transform.scale"
+   ],
+   "requiere": [
+    "bl-fotograma-clave"
+   ],
+   "nivel": 2,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "sphere",
+       "nombre": "Pelota",
+       "loc": [
+        0,
+        0,
+        0.75
+       ]
+      },
+      "texto": "La pelota en el suelo"
+     },
+     {
+      "escalar": {
+       "objeto": "Pelota",
+       "medidas": [
+        1.9,
+        1.9,
+        1.0
+       ]
+      },
+      "texto": "S Z: se aplasta",
+      "teclas": [
+       "S",
+       "Z"
+      ]
+     },
+     {
+      "texto": "I › Escala",
+      "teclas": [
+       "I"
+      ]
+     },
+     {
+      "escalar": {
+       "objeto": "Pelota",
+       "medidas": [
+        1.5,
+        1.5,
+        1.5
+       ]
+      },
+      "texto": "Unos cuadros después vuelve a ser redonda"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "golpe",
+     "pide": "Aplasta la pelota en el cuadro del golpe y que vuelva a ser redonda después.",
+     "objetivos": [
+      {
+       "id": "claves",
+       "title": "Claves de escala en Z",
+       "validator": "animation.keyframes",
+       "params": {
+        "property": "scale",
+        "axis": "z",
+        "min": 2,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "cambia",
+       "title": "La escala cambia",
+       "validator": "animation.varies",
+       "params": {
+        "property": "scale",
+        "axis": "z",
+        "min_delta": 0.2,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "location": [
+         0,
+         0,
+         0.75
+        ],
+        "name": "Pelota"
+       }
+      ]
+     },
+     "minutos": 3,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Pelota",
+        "dims": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "loc": [
+         0,
+         0,
+         0.75
+        ]
+       }
+      },
+      {
+       "animar": {
+        "objeto": "Pelota",
+        "propiedad": "scale",
+        "eje": "z",
+        "claves": [
+         [
+          10,
+          1
+         ],
+         [
+          12,
+          0.6
+         ],
+         [
+          15,
+          1
+         ]
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "gelatina",
+    "pide": "Sin ayuda: que la caja se aplaste y se estire como gelatina.",
+    "objetivos": [
+     {
+      "id": "cambia",
+      "title": "La escala cambia",
+      "validator": "animation.varies",
+      "params": {
+       "property": "scale",
+       "axis": "z",
+       "min_delta": 0.2,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 3,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "animar": {
+       "objeto": "Caja",
+       "propiedad": "scale",
+       "eje": "z",
+       "claves": [
+        [
+         1,
+         1
+        ],
+        [
+         6,
+         0.6
+        ],
+        [
+         12,
+         1.3
+        ]
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-medida-exacta",
+   "titulo": "Medidas exactas",
+   "que": "En el panel N, Dimensiones acepta números: escribe 4 m y la pieza mide exactamente eso.",
+   "teclas": [
+    "N"
+   ],
+   "como": "N abre el panel; en Dimensiones haz doble clic, escribe la medida y Enter.",
+   "herramientas": [
+    "transform.scale"
+   ],
+   "requiere": [
+    "bl-escalar-eje"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Tabla",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Un cubo de 2 m"
+     },
+     {
+      "texto": "N: el panel con Dimensiones",
+      "teclas": [
+       "N"
+      ]
+     },
+     {
+      "escalar": {
+       "objeto": "Tabla",
+       "medidas": [
+        4,
+        2,
+        2
+       ]
+      },
+      "texto": "X: 4 m"
+     },
+     {
+      "escalar": {
+       "objeto": "Tabla",
+       "medidas": [
+        4,
+        0.5,
+        0.1
+       ]
+      },
+      "texto": "Y: 0,5 m · Z: 0,1 m"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "tabla",
+     "pide": "Una tabla de 4 m de largo, 0,5 m de ancho y 0,1 m de grueso (panel N).",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        4,
+        0.5,
+        0.1
+       ],
+       "location": [
+        0,
+        0,
+        0.05
+       ],
+       "name": "Tabla"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "largo",
+       "title": "Largo: 4 m",
+       "validator": "dimension.approx",
+       "params": {
+        "axis": "x",
+        "value": 4,
+        "tolerance": 0.03,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "ancho",
+       "title": "Ancho: 0,5 m",
+       "validator": "dimension.approx",
+       "params": {
+        "axis": "y",
+        "value": 0.5,
+        "tolerance": 0.05,
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Tabla"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Tabla",
+        "dims": [
+         4,
+         0.5,
+         0.1
+        ],
+        "loc": [
+         0,
+         0,
+         0.05
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "poste",
+     "pide": "Un poste de 3 m de alto y 0,3 m de lado, apoyado en el suelo.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        0.3,
+        0.3,
+        3
+       ],
+       "location": [
+        0,
+        0,
+        1.5
+       ],
+       "name": "Poste"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "alto",
+       "title": "Alto: 3 m",
+       "validator": "dimension.approx",
+       "params": {
+        "axis": "z",
+        "value": 3,
+        "tolerance": 0.03,
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "suelo",
+       "title": "Apoyado en el suelo",
+       "validator": "spatial.grounded",
+       "params": {
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Poste"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Poste",
+        "dims": [
+         0.3,
+         0.3,
+         3
+        ],
+        "loc": [
+         0,
+         0,
+         1.5
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "escalon",
+    "pide": "Sin ayuda: un escalón de 1,2 m de largo, 0,3 m de fondo y 0,2 m de alto.",
+    "objetivos": [
+     {
+      "id": "largo",
+      "title": "Largo: 1,2 m",
+      "validator": "dimension.approx",
+      "params": {
+       "axis": "x",
+       "value": 1.2,
+       "tolerance": 0.05,
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "fondo",
+      "title": "Fondo: 0,3 m",
+      "validator": "dimension.approx",
+      "params": {
+       "axis": "y",
+       "value": 0.3,
+       "tolerance": 0.05,
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "alto",
+      "title": "Alto: 0,2 m",
+      "validator": "dimension.approx",
+      "params": {
+       "axis": "z",
+       "value": 0.2,
+       "tolerance": 0.05,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        1.2,
+        0.3,
+        0.2
+       ],
+       "loc": [
+        0,
+        0,
+        0.1
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-array",
+   "titulo": "Repetir con Matriz",
+   "que": "El modificador Matriz (Array) repite la pieza en fila: tablas de un puente, escalones, una cerca.",
+   "teclas": [],
+   "como": "Llave inglesa › Generar › Matriz; sube «Cantidad»; Desfase relativo para la separación.",
+   "herramientas": [
+    "modifier.array"
+   ],
+   "requiere": [
+    "bl-aplicar-escala"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Tabla",
+       "loc": [
+        0,
+        0,
+        0.1
+       ],
+       "medidas": [
+        0.5,
+        3,
+        0.2
+       ]
+      },
+      "texto": "Una tabla"
+     },
+     {
+      "texto": "Llave inglesa › Generar › Matriz"
+     },
+     {
+      "modificador": {
+       "objeto": "Tabla",
+       "tipo": "ARRAY",
+       "cuenta": 6
+      },
+      "texto": "Cantidad: 6"
+     },
+     {
+      "vista": {
+       "tipo": "arriba"
+      },
+      "texto": "7: seis tablas en fila"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "tablas",
+     "pide": "Seis tablas en fila: ponle Matriz a la tabla y sube la Cantidad.",
+     "objetivos": [
+      {
+       "id": "matriz",
+       "title": "Tiene Matriz",
+       "validator": "modifier.exists",
+       "params": {
+        "modifier": "ARRAY",
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         0.5,
+         3,
+         0.2
+        ],
+        "location": [
+         0,
+         0,
+         0.1
+        ],
+        "name": "Tabla"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Tabla",
+        "dims": [
+         0.5,
+         3,
+         0.2
+        ],
+        "loc": [
+         0,
+         0,
+         0.1
+        ]
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Tabla",
+        "tipo": "ARRAY"
+       }
+      }
+     ]
+    },
+    {
+     "id": "cerca",
+     "pide": "Una cerca: el poste repetido con Matriz y separado (Desfase relativo mayor que 1).",
+     "objetivos": [
+      {
+       "id": "matriz",
+       "title": "Tiene Matriz",
+       "validator": "modifier.exists",
+       "params": {
+        "modifier": "ARRAY",
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         0.3,
+         0.3,
+         1.5
+        ],
+        "location": [
+         0,
+         0,
+         0.75
+        ],
+        "name": "Poste"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Poste",
+        "dims": [
+         0.3,
+         0.3,
+         1.5
+        ],
+        "loc": [
+         0,
+         0,
+         0.75
+        ]
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Poste",
+        "tipo": "ARRAY"
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "escalera",
+    "pide": "Sin ayuda: una fila de escalones con Matriz.",
+    "objetivos": [
+     {
+      "id": "matriz",
+      "title": "Tiene Matriz",
+      "validator": "modifier.exists",
+      "params": {
+       "modifier": "ARRAY",
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1.2,
+        0.3,
+        0.2
+       ],
+       "location": [
+        0,
+        0,
+        0.1
+       ],
+       "name": "Escalon"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Escalon",
+       "dims": [
+        1.2,
+        0.3,
+        0.2
+       ],
+       "loc": [
+        0,
+        0,
+        0.1
+       ]
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Escalon",
+       "tipo": "ARRAY"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-bisel",
+   "titulo": "Biselar los bordes",
+   "que": "Ningún borde real es filoso: el modificador Bisel redondea las aristas y la luz las dibuja.",
+   "teclas": [
+    "Ctrl+B"
+   ],
+   "como": "Llave inglesa › Generar › Bisel; ajusta Cantidad y Segmentos (2 o 3).",
+   "herramientas": [
+    "modifier.bevel"
+   ],
+   "requiere": [
+    "bl-aplicar-escala"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Caja",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Bordes filosos"
+     },
+     {
+      "modificador": {
+       "objeto": "Caja",
+       "tipo": "BEVEL",
+       "ancho": 0.1
+      },
+      "texto": "Bisel: los bordes se redondean"
+     },
+     {
+      "vista": {
+       "tipo": "orbita"
+      },
+      "texto": "La luz brilla en el borde"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "caja",
+     "pide": "Redondea los bordes de la caja con el modificador Bisel.",
+     "objetivos": [
+      {
+       "id": "bisel",
+       "title": "Tiene Bisel",
+       "validator": "modifier.exists",
+       "params": {
+        "modifier": "BEVEL",
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Caja"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Caja",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Caja",
+        "tipo": "BEVEL"
+       }
+      }
+     ]
+    },
+    {
+     "id": "viga",
+     "pide": "Una viga con escala aplicada y bordes biselados.",
+     "objetivos": [
+      {
+       "id": "escala",
+       "title": "Escala aplicada (el bisel sale parejo)",
+       "validator": "transform.scale_applied",
+       "params": {
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "bisel",
+       "title": "Tiene Bisel",
+       "validator": "modifier.exists",
+       "params": {
+        "modifier": "BEVEL",
+        "type": "MESH"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         4,
+         0.4,
+         0.4
+        ],
+        "location": [
+         0,
+         0,
+         0.2
+        ],
+        "name": "Viga",
+        "escalada": true
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Viga",
+        "dims": [
+         4,
+         0.4,
+         0.4
+        ],
+        "loc": [
+         0,
+         0,
+         0.2
+        ]
+       }
+      },
+      {
+       "modificador": {
+        "objeto": "Viga",
+        "tipo": "BEVEL"
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "mesa",
+    "pide": "Sin ayuda: bisela la tabla de la mesa.",
+    "objetivos": [
+     {
+      "id": "bisel",
+      "title": "Tiene Bisel",
+      "validator": "modifier.exists",
+      "params": {
+       "modifier": "BEVEL",
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        3,
+        1.5,
+        0.2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Tabla"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Tabla",
+       "dims": [
+        3,
+        1.5,
+        0.2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Tabla",
+       "tipo": "BEVEL"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-ensamblar",
+   "titulo": "Ensamblar piezas",
+   "que": "Las piezas se tocan, no se cruzan ni flotan: mira de frente (1) y de lado (3) para apoyarlas justo.",
+   "teclas": [
+    "G",
+    "Z",
+    "1|3"
+   ],
+   "como": "G Z para apoyar; 1 y 3 para revisar de frente y de lado que se toquen.",
+   "herramientas": [
+    "transform.move",
+    "view.numpad"
+   ],
+   "requiere": [
+    "bl-mover"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Pilar",
+       "loc": [
+        0,
+        0,
+        1
+       ],
+       "medidas": [
+        0.5,
+        0.5,
+        2
+       ]
+      },
+      "texto": "Un pilar"
+     },
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Tablero",
+       "loc": [
+        0,
+        0,
+        3
+       ],
+       "medidas": [
+        3,
+        1,
+        0.2
+       ]
+      },
+      "texto": "La tabla flota"
+     },
+     {
+      "vista": {
+       "tipo": "frente"
+      },
+      "texto": "1: se ve el hueco"
+     },
+     {
+      "mover": {
+       "objeto": "Tablero",
+       "eje": "z",
+       "a": [
+        0,
+        0,
+        2.1
+       ]
+      },
+      "texto": "G Z: justo encima del pilar"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "encima",
+     "pide": "Apoya la tabla justo encima del pilar: que se toquen, sin hueco.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        0.5,
+        0.5,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Pilar"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        3,
+        1,
+        0.2
+       ],
+       "location": [
+        0,
+        0,
+        2.1
+       ],
+       "name": "Tablero"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "encima",
+       "title": "La tabla descansa sobre el pilar",
+       "validator": "spatial.on_top",
+       "params": {
+        "name": "Tablero",
+        "reference": "Pilar"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         0.5,
+         0.5,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Pilar"
+       },
+       {
+        "primitive": "cube",
+        "size": [
+         3,
+         1,
+         0.2
+        ],
+        "location": [
+         1,
+         0,
+         3.5
+        ],
+        "name": "Tablero"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Pilar",
+        "dims": [
+         0.5,
+         0.5,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "cubo": {
+        "nombre": "Tablero",
+        "dims": [
+         3,
+         1,
+         0.2
+        ],
+        "loc": [
+         0,
+         0,
+         2.1
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "puente",
+     "pide": "Un puente chico: la tabla apoyada en los dos pilares.",
+     "molde": [
+      {
+       "primitive": "cube",
+       "size": [
+        0.5,
+        0.5,
+        1
+       ],
+       "location": [
+        -1.5,
+        0,
+        0.5
+       ],
+       "name": "Pilar"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        0.5,
+        0.5,
+        1
+       ],
+       "location": [
+        1.5,
+        0,
+        0.5
+       ],
+       "name": "Pilar 2"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        4,
+        1,
+        0.2
+       ],
+       "location": [
+        0,
+        0,
+        1.1
+       ],
+       "name": "Tablero"
+      }
+     ],
+     "objetivos": [
+      {
+       "id": "toca",
+       "title": "La tabla toca los pilares",
+       "validator": "spatial.touching",
+       "params": {
+        "name": "Tablero",
+        "reference_primitive": "cube"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         0.5,
+         0.5,
+         1
+        ],
+        "location": [
+         -1.5,
+         0,
+         0.5
+        ],
+        "name": "Pilar"
+       },
+       {
+        "primitive": "cube",
+        "size": [
+         0.5,
+         0.5,
+         1
+        ],
+        "location": [
+         1.5,
+         0,
+         0.5
+        ],
+        "name": "Pilar 2"
+       },
+       {
+        "primitive": "cube",
+        "size": [
+         4,
+         1,
+         0.2
+        ],
+        "location": [
+         0,
+         2,
+         2
+        ],
+        "name": "Tablero"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Pilar",
+        "dims": [
+         0.5,
+         0.5,
+         1
+        ],
+        "loc": [
+         -1.5,
+         0,
+         0.5
+        ]
+       }
+      },
+      {
+       "cubo": {
+        "nombre": "Pilar 2",
+        "dims": [
+         0.5,
+         0.5,
+         1
+        ],
+        "loc": [
+         1.5,
+         0,
+         0.5
+        ]
+       }
+      },
+      {
+       "cubo": {
+        "nombre": "Tablero",
+        "dims": [
+         4,
+         1,
+         0.2
+        ],
+        "loc": [
+         0,
+         0,
+         1.1
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "banco",
+    "pide": "Sin ayuda: un banco con el asiento apoyado sobre dos patas.",
+    "objetivos": [
+     {
+      "id": "toca",
+      "title": "El asiento toca las patas",
+      "validator": "spatial.touching",
+      "params": {
+       "name": "Asiento",
+       "reference_primitive": "cube"
+      }
+     },
+     {
+      "id": "suelo",
+      "title": "Las patas en el suelo",
+      "validator": "spatial.grounded",
+      "params": {
+       "name_prefix": "Pata"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        0.3,
+        0.3,
+        0.8
+       ],
+       "location": [
+        -2,
+        1,
+        0.4
+       ],
+       "name": "Pata"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        0.3,
+        0.3,
+        0.8
+       ],
+       "location": [
+        2,
+        -1,
+        0.4
+       ],
+       "name": "Pata 2"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        0.6,
+        0.15
+       ],
+       "location": [
+        0,
+        0,
+        2
+       ],
+       "name": "Asiento"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Pata",
+       "dims": [
+        0.3,
+        0.3,
+        0.8
+       ],
+       "loc": [
+        -0.8,
+        0,
+        0.4
+       ]
+      }
+     },
+     {
+      "cubo": {
+       "nombre": "Pata 2",
+       "dims": [
+        0.3,
+        0.3,
+        0.8
+       ],
+       "loc": [
+        0.8,
+        0,
+        0.4
+       ]
+      }
+     },
+     {
+      "cubo": {
+       "nombre": "Asiento",
+       "dims": [
+        2,
+        0.6,
+        0.15
+       ],
+       "loc": [
+        0,
+        0,
+        0.875
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-renombrar",
+   "titulo": "Nombres que se entienden",
+   "que": "F2 cambia el nombre: «Casa» y «Techo» se encuentran rápido; «Cube.014» no.",
+   "teclas": [
+    "F2"
+   ],
+   "como": "Elige la pieza; F2, escribe el nombre y Enter (o doble clic en el Outliner).",
+   "herramientas": [
+    "object.rename"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Cube.014",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "¿Qué es «Cube.014»?"
+     },
+     {
+      "texto": "F2: escribe «Casa»",
+      "teclas": [
+       "F2"
+      ]
+     },
+     {
+      "texto": "En el Outliner ahora se encuentra"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "casa",
+     "pide": "Ponle «Casa» a la caja y «Techo» al cono (F2).",
+     "objetivos": [
+      {
+       "id": "casa",
+       "title": "Hay una «Casa»",
+       "validator": "object.exists",
+       "params": {
+        "name": "Casa"
+       }
+      },
+      {
+       "id": "techo",
+       "title": "Hay un «Techo»",
+       "validator": "object.exists",
+       "params": {
+        "name": "Techo"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Cube.014"
+       },
+       {
+        "primitive": "cone",
+        "size": [
+         2.6,
+         2.6,
+         1.2
+        ],
+        "location": [
+         0,
+         0,
+         2.6
+        ],
+        "name": "Cone.003"
+       }
+      ]
+     },
+     "minutos": 1,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Casa",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "cono": {
+        "nombre": "Techo",
+        "dims": [
+         2.6,
+         2.6,
+         1.2
+        ],
+        "loc": [
+         0,
+         0,
+         2.6
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "arbol",
+    "pide": "Sin ayuda: llama «Tronco» y «Copa» a las piezas del árbol.",
+    "objetivos": [
+     {
+      "id": "tronco",
+      "title": "Hay un «Tronco»",
+      "validator": "object.exists",
+      "params": {
+       "name": "Tronco"
+      }
+     },
+     {
+      "id": "copa",
+      "title": "Hay una «Copa»",
+      "validator": "object.exists",
+      "params": {
+       "name": "Copa"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cylinder",
+       "size": [
+        0.4,
+        0.4,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Cylinder.002"
+      },
+      {
+       "primitive": "sphere",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        2.8
+       ],
+       "name": "Sphere.007"
+      }
+     ]
+    },
+    "minutos": 1,
+    "solucion": [
+     {
+      "cilindro": {
+       "nombre": "Tronco",
+       "dims": [
+        0.4,
+        0.4,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "esfera": {
+       "nombre": "Copa",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        2.8
+       ]
+      }
+     }
+    ]
+   },
+   "bkt": {
+    "L0": 0.25,
+    "T": 0.3,
+    "G": 0.2,
+    "S": 0.05
+   }
+  },
+  {
+   "id": "bl-colecciones",
+   "titulo": "Colecciones",
+   "que": "M › Nueva colección guarda piezas juntas como en carpetas: «Casas», «Árboles». Se esconden y se encuentran juntas.",
+   "teclas": [
+    "M"
+   ],
+   "como": "Elige las piezas; M › + Nueva colección; escribe el nombre y Aceptar.",
+   "herramientas": [
+    "collection.move"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Casa",
+       "loc": [
+        -2,
+        0,
+        1
+       ]
+      },
+      "texto": "Varias casas sueltas"
+     },
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Casa 2",
+       "loc": [
+        2,
+        0,
+        1
+       ]
+      },
+      "texto": "Elige las dos"
+     },
+     {
+      "coleccion": {
+       "nombre": "Casas"
+      },
+      "texto": "M › Nueva colección: «Casas»"
+     },
+     {
+      "texto": "En el Outliner quedan juntas"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "casas",
+     "pide": "Lleva las dos casas a una colección nueva llamada «Casas» (M).",
+     "objetivos": [
+      {
+       "id": "casas",
+       "title": "«Casas» tiene las dos casas",
+       "validator": "collection.contains",
+       "params": {
+        "collection": "Casas",
+        "min": 2
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         -2,
+         0,
+         1
+        ],
+        "name": "Casa"
+       },
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         2,
+         0,
+         1
+        ],
+        "name": "Casa 2"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Casa",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         -2,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "cubo": {
+        "nombre": "Casa 2",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         2,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "coleccion": {
+        "nombre": "Casas",
+        "objetos": [
+         "Casa",
+         "Casa 2"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "dos",
+     "pide": "Dos colecciones: «Casas» con las cajas y «Arboles» con las esferas.",
+     "objetivos": [
+      {
+       "id": "casas",
+       "title": "«Casas» con las dos cajas",
+       "validator": "collection.contains",
+       "params": {
+        "collection": "Casas",
+        "min": 2
+       }
+      },
+      {
+       "id": "arboles",
+       "title": "«Arboles» con las dos esferas",
+       "validator": "collection.contains",
+       "params": {
+        "collection": "Arboles",
+        "min": 2
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         -3,
+         0,
+         1
+        ],
+        "name": "Casa"
+       },
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         -3,
+         3,
+         1
+        ],
+        "name": "Casa 2"
+       },
+       {
+        "primitive": "sphere",
+        "size": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "location": [
+         3,
+         0,
+         0.75
+        ],
+        "name": "Arbol"
+       },
+       {
+        "primitive": "sphere",
+        "size": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "location": [
+         3,
+         3,
+         0.75
+        ],
+        "name": "Arbol 2"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Casa",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         -3,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "cubo": {
+        "nombre": "Casa 2",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         -3,
+         3,
+         1
+        ]
+       }
+      },
+      {
+       "esfera": {
+        "nombre": "Arbol",
+        "dims": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "loc": [
+         3,
+         0,
+         0.75
+        ]
+       }
+      },
+      {
+       "esfera": {
+        "nombre": "Arbol 2",
+        "dims": [
+         1.5,
+         1.5,
+         1.5
+        ],
+        "loc": [
+         3,
+         3,
+         0.75
+        ]
+       }
+      },
+      {
+       "coleccion": {
+        "nombre": "Casas",
+        "objetos": [
+         "Casa",
+         "Casa 2"
+        ]
+       }
+      },
+      {
+       "coleccion": {
+        "nombre": "Arboles",
+        "objetos": [
+         "Arbol",
+         "Arbol 2"
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "rocas",
+    "pide": "Sin ayuda: guarda las tres rocas en la colección «Rocas».",
+    "objetivos": [
+     {
+      "id": "rocas",
+      "title": "«Rocas» con las tres",
+      "validator": "collection.contains",
+      "params": {
+       "collection": "Rocas",
+       "min": 3
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "icosphere",
+       "size": [
+        1,
+        1,
+        0.8
+       ],
+       "location": [
+        -2,
+        0,
+        0.4
+       ],
+       "name": "Roca"
+      },
+      {
+       "primitive": "icosphere",
+       "size": [
+        1.2,
+        1,
+        0.9
+       ],
+       "location": [
+        0,
+        1,
+        0.45
+       ],
+       "name": "Roca 2"
+      },
+      {
+       "primitive": "icosphere",
+       "size": [
+        0.8,
+        0.8,
+        0.6
+       ],
+       "location": [
+        2,
+        0,
+        0.3
+       ],
+       "name": "Roca 3"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "malla": {
+       "primitiva": "icosphere",
+       "nombre": "Roca",
+       "dims": [
+        1,
+        1,
+        0.8
+       ],
+       "loc": [
+        -2,
+        0,
+        0.4
+       ]
+      }
+     },
+     {
+      "malla": {
+       "primitiva": "icosphere",
+       "nombre": "Roca 2",
+       "dims": [
+        1.2,
+        1,
+        0.9
+       ],
+       "loc": [
+        0,
+        1,
+        0.45
+       ]
+      }
+     },
+     {
+      "malla": {
+       "primitiva": "icosphere",
+       "nombre": "Roca 3",
+       "dims": [
+        0.8,
+        0.8,
+        0.6
+       ],
+       "loc": [
+        2,
+        0,
+        0.3
+       ]
+      }
+     },
+     {
+      "coleccion": {
+       "nombre": "Rocas",
+       "objetos": [
+        "Roca",
+        "Roca 2",
+        "Roca 3"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-material-compartido",
+   "titulo": "Compartir un material",
+   "que": "Un solo material en muchas piezas: Ctrl + L › Enlazar materiales. Cambias uno y cambian todas.",
+   "teclas": [
+    "Ctrl+L"
+   ],
+   "como": "Elige las piezas y, al final, la que tiene el material; Ctrl + L › Enlazar materiales.",
+   "herramientas": [
+    "material.basic"
+   ],
+   "requiere": [
+    "bl-material-nuevo"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Casa",
+       "loc": [
+        -2,
+        0,
+        1
+       ]
+      },
+      "texto": "Una casa pintada"
+     },
+     {
+      "material": {
+       "objeto": "Casa",
+       "color": [
+        0.85,
+        0.7,
+        0.5
+       ],
+       "nombre": "Pared"
+      },
+      "texto": "Su material: «Pared»"
+     },
+     {
+      "agregar": {
+       "primitiva": "cube",
+       "nombre": "Casa 2",
+       "loc": [
+        2,
+        0,
+        1
+       ]
+      },
+      "texto": "Otra casa sin pintar"
+     },
+     {
+      "material": {
+       "objeto": "Casa 2",
+       "color": [
+        0.85,
+        0.7,
+        0.5
+       ],
+       "nombre": "Pared"
+      },
+      "texto": "Ctrl + L › Enlazar materiales: la misma «Pared»",
+      "teclas": [
+       "Ctrl+L"
+      ]
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "pared",
+     "pide": "Las tres casas con el mismo material «Pared»: Ctrl + L › Enlazar materiales.",
+     "objetivos": [
+      {
+       "id": "pintadas",
+       "title": "Las tres tienen material",
+       "validator": "material.exists",
+       "params": {
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "uno",
+       "title": "Un solo material para todas",
+       "validator": "material.distinct",
+       "params": {
+        "equals": 1
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         -3,
+         0,
+         1
+        ],
+        "name": "Casa"
+       },
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Casa 2"
+       },
+       {
+        "primitive": "cube",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         3,
+         0,
+         1
+        ],
+        "name": "Casa 3"
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "cubo": {
+        "nombre": "Casa",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         -3,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "cubo": {
+        "nombre": "Casa 2",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "cubo": {
+        "nombre": "Casa 3",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         3,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "material": {
+        "objeto": "Casa",
+        "nombre": "Pared"
+       }
+      },
+      {
+       "material": {
+        "objeto": "Casa 2",
+        "nombre": "Pared"
+       }
+      },
+      {
+       "material": {
+        "objeto": "Casa 3",
+        "nombre": "Pared"
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "cerca",
+    "pide": "Sin ayuda: los cuatro postes con un mismo material de madera.",
+    "objetivos": [
+     {
+      "id": "pintados",
+      "title": "Todos tienen material",
+      "validator": "material.exists",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "uno",
+      "title": "Un solo material",
+      "validator": "material.distinct",
+      "params": {
+       "equals": 1
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "location": [
+        -3,
+        0,
+        0.75
+       ],
+       "name": "Poste"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "location": [
+        -1,
+        0,
+        0.75
+       ],
+       "name": "Poste 2"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "location": [
+        1,
+        0,
+        0.75
+       ],
+       "name": "Poste 3"
+      },
+      {
+       "primitive": "cube",
+       "size": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "location": [
+        3,
+        0,
+        0.75
+       ],
+       "name": "Poste 4"
+      }
+     ]
+    },
+    "minutos": 2,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Poste",
+       "dims": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "loc": [
+        -3,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "cubo": {
+       "nombre": "Poste 2",
+       "dims": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "loc": [
+        -1,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "cubo": {
+       "nombre": "Poste 3",
+       "dims": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "loc": [
+        1,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "cubo": {
+       "nombre": "Poste 4",
+       "dims": [
+        0.3,
+        0.3,
+        1.5
+       ],
+       "loc": [
+        3,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Poste",
+       "nombre": "Madera"
+      }
+     },
+     {
+      "material": {
+       "objeto": "Poste 2",
+       "nombre": "Madera"
+      }
+     },
+     {
+      "material": {
+       "objeto": "Poste 3",
+       "nombre": "Madera"
+      }
+     },
+     {
+      "material": {
+       "objeto": "Poste 4",
+       "nombre": "Madera"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-cycles",
+   "titulo": "Render en Cycles",
+   "que": "Cycles calcula la luz como en la vida real: sombras suaves y reflejos. Tarda más que EEVEE.",
+   "teclas": [
+    "F12"
+   ],
+   "como": "Propiedades de render (la cámara de atrás) › Motor › Cycles; luego F12.",
+   "herramientas": [
+    "render.f12"
+   ],
+   "requiere": [
+    "bl-render"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "agregar": {
+       "primitiva": "sphere",
+       "nombre": "Esfera",
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "La escena lista"
+     },
+     {
+      "texto": "Propiedades de render › Motor: Cycles"
+     },
+     {
+      "render": {},
+      "texto": "F12: la imagen aparece de a poco"
+     },
+     {
+      "texto": "Menos muestras: más rápido, más ruido"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "cambia",
+     "pide": "Cambia el motor de render a Cycles y haz un render.",
+     "objetivos": [
+      {
+       "id": "motor",
+       "title": "Motor: Cycles",
+       "validator": "render.engine",
+       "params": {
+        "engine": "CYCLES"
+       }
+      },
+      {
+       "id": "render",
+       "title": "Hiciste el render (F12)",
+       "validator": "render.done"
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Esfera"
+       },
+       {
+        "tipo": "luz",
+        "name": "Luz",
+        "light_type": "AREA",
+        "location": [
+         3,
+         -3,
+         4
+        ],
+        "mira": [
+         0,
+         0,
+         1
+        ]
+       },
+       {
+        "tipo": "camara",
+        "name": "Camara",
+        "location": [
+         6,
+         -6,
+         4
+        ],
+        "mira": [
+         0,
+         0,
+         1
+        ]
+       }
+      ]
+     },
+     "minutos": 2,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Esfera",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Luz",
+        "tipo": "AREA",
+        "loc": [
+         3,
+         -3,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "camara": {
+        "nombre": "Camara",
+        "loc": [
+         6,
+         -6,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "motor": "CYCLES"
+      },
+      {
+       "renders": 1
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "estudio",
+    "pide": "Sin ayuda: render en Cycles con una luz de Área.",
+    "objetivos": [
+     {
+      "id": "motor",
+      "title": "Motor: Cycles",
+      "validator": "render.engine",
+      "params": {
+       "engine": "CYCLES"
+      }
+     },
+     {
+      "id": "luz",
+      "title": "Una luz de Área",
+      "validator": "scene.light_exists",
+      "params": {
+       "min": 1,
+       "light_type": "AREA"
+      }
+     },
+     {
+      "id": "render",
+      "title": "Hiciste el render (F12)",
+      "validator": "render.done"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Modelo"
+      }
+     ]
+    },
+    "minutos": 3,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Modelo",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Area",
+       "tipo": "AREA",
+       "loc": [
+        3,
+        -3,
+        4
+       ]
+      }
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        6,
+        -6,
+        4
+       ],
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "motor": "CYCLES"
+     },
+     {
+      "renders": 1
+     }
+    ]
+   }
+  },
+  {
+   "id": "bl-portafolio",
+   "titulo": "Tu imagen de portafolio",
+   "que": "Un buen render: cámara a la altura de los ojos, el modelo al centro y el archivo guardado con nombre.",
+   "teclas": [
+    "Ctrl+Alt+0",
+    "F12",
+    "Ctrl+S"
+   ],
+   "como": "Encuadra con Ctrl + Alt + 0, F12 y guarda el .blend con un nombre «portafolio».",
+   "herramientas": [
+    "camera.add",
+    "render.f12",
+    "file.save"
+   ],
+   "requiere": [
+    "bl-cycles",
+    "bl-camara"
+   ],
+   "nivel": 3,
+   "demo": {
+    "pasos": [
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        5,
+        -5,
+        2
+       ],
+       "mira": [
+        0,
+        0,
+        1
+       ]
+      },
+      "texto": "Cámara a la altura de los ojos"
+     },
+     {
+      "render": {},
+      "texto": "F12"
+     },
+     {
+      "guardar": {
+       "archivo": "mi_portafolio.blend"
+      },
+      "texto": "Ctrl + S: «mi_portafolio»"
+     }
+    ]
+   },
+   "variaciones": [
+    {
+     "id": "foto",
+     "pide": "Encuadra el modelo, haz el render y guarda el archivo con la palabra «portafolio».",
+     "objetivos": [
+      {
+       "id": "encuadre",
+       "title": "El modelo entra en la cámara",
+       "validator": "camera.frames",
+       "params": {
+        "type": "MESH"
+       }
+      },
+      {
+       "id": "render",
+       "title": "Hiciste el render (F12)",
+       "validator": "render.done"
+      },
+      {
+       "id": "nombre",
+       "title": "El archivo se llama «…portafolio…»",
+       "validator": "file.named",
+       "params": {
+        "contains": "portafolio"
+       }
+      }
+     ],
+     "inicio": {
+      "objetos": [
+       {
+        "primitive": "sphere",
+        "size": [
+         2,
+         2,
+         2
+        ],
+        "location": [
+         0,
+         0,
+         1
+        ],
+        "name": "Modelo"
+       },
+       {
+        "tipo": "luz",
+        "name": "Luz",
+        "light_type": "AREA",
+        "location": [
+         3,
+         -3,
+         4
+        ],
+        "mira": [
+         0,
+         0,
+         1
+        ]
+       }
+      ]
+     },
+     "minutos": 3,
+     "solucion": [
+      {
+       "esfera": {
+        "nombre": "Modelo",
+        "dims": [
+         2,
+         2,
+         2
+        ],
+        "loc": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "luz": {
+        "nombre": "Luz",
+        "tipo": "AREA",
+        "loc": [
+         3,
+         -3,
+         4
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "camara": {
+        "nombre": "Camara",
+        "loc": [
+         6,
+         -6,
+         2
+        ],
+        "mira_a": [
+         0,
+         0,
+         1
+        ]
+       }
+      },
+      {
+       "renders": 1
+      },
+      {
+       "guardado": {
+        "archivo": "/home/alumno/mi_portafolio.blend"
+       }
+      }
+     ]
+    }
+   ],
+   "reto": {
+    "id": "final",
+    "pide": "Sin ayuda: cámara, render en Cycles y archivo guardado como portafolio.",
+    "objetivos": [
+     {
+      "id": "encuadre",
+      "title": "El modelo entra en la cámara",
+      "validator": "camera.frames",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "motor",
+      "title": "Motor: Cycles",
+      "validator": "render.engine",
+      "params": {
+       "engine": "CYCLES"
+      }
+     },
+     {
+      "id": "render",
+      "title": "Hiciste el render (F12)",
+      "validator": "render.done"
+     },
+     {
+      "id": "nombre",
+      "title": "El archivo se llama «…portafolio…»",
+      "validator": "file.named",
+      "params": {
+       "contains": "portafolio"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Modelo"
+      }
+     ]
+    },
+    "minutos": 4,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Modelo",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        6,
+        -6,
+        2
+       ],
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "motor": "CYCLES"
+     },
+     {
+      "renders": 1
+     },
+     {
+      "guardado": {
+       "archivo": "/home/alumno/portafolio_final.blend"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "talleres": [
+  {
+   "id": "blender.bp.m1",
+   "curso": "blender_principiante",
+   "modulo": 1,
+   "titulo": "La interfaz y navegación 3D",
+   "nivel": 1,
+   "leccion": "bp1_blender",
+   "habilidades": [
+    "bl-agregar-primitivas",
+    "bl-mover",
+    "bl-escalar-eje",
+    "bl-rotar",
+    "bl-duplicar",
+    "bl-guardar-archivo"
+   ],
+   "proyecto": "blender.bp.m1.tren",
+   "reto": {
+    "id": "vehiculo",
+    "pide": "Tu vehículo: un carrito, un camión o lo que quieras, con ruedas de pie que toquen el suelo.",
+    "objetivos": [
+     {
+      "id": "vehiculo",
+      "title": "Amatista reconoce tu vehículo",
+      "validator": "figure.recognize",
+      "params": {
+       "level": 1,
+       "title": "un vehículo",
+       "flexible": [
+        "rueda"
+       ],
+       "labels": {
+        "cuerpo": "Cuerpo",
+        "rueda": "Rueda"
+       },
+       "parts": [
+        {
+         "primitive": "cube",
+         "role": "cuerpo",
+         "size": [
+          2.4,
+          1.2,
+          1
+         ],
+         "location": [
+          0,
+          0,
+          0.9
+         ]
+        },
+        {
+         "primitive": "cylinder",
+         "role": "rueda",
+         "size": [
+          0.7,
+          0.7,
+          0.2
+         ],
+         "location": [
+          -0.8,
+          0.7,
+          0.35
+         ],
+         "rotation": [
+          90,
+          0,
+          0
+         ]
+        },
+        {
+         "primitive": "cylinder",
+         "role": "rueda",
+         "size": [
+          0.7,
+          0.7,
+          0.2
+         ],
+         "location": [
+          0.8,
+          0.7,
+          0.35
+         ],
+         "rotation": [
+          90,
+          0,
+          0
+         ]
+        },
+        {
+         "primitive": "cylinder",
+         "role": "rueda",
+         "size": [
+          0.7,
+          0.7,
+          0.2
+         ],
+         "location": [
+          -0.8,
+          -0.7,
+          0.35
+         ],
+         "rotation": [
+          90,
+          0,
+          0
+         ]
+        },
+        {
+         "primitive": "cylinder",
+         "role": "rueda",
+         "size": [
+          0.7,
+          0.7,
+          0.2
+         ],
+         "location": [
+          0.8,
+          -0.7,
+          0.35
+         ],
+         "rotation": [
+          90,
+          0,
+          0
+         ]
+        }
+       ]
+      }
+     }
+    ],
+    "minutos": 8,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Cuerpo",
+       "dims": [
+        2.4,
+        1.2,
+        1
+       ],
+       "loc": [
+        0,
+        0,
+        0.9
+       ]
+      }
+     },
+     {
+      "cilindro": {
+       "dims": [
+        0.7,
+        0.7,
+        0.2
+       ],
+       "rot": [
+        90,
+        0,
+        0
+       ],
+       "nombre": "Rueda 1",
+       "loc": [
+        -0.8,
+        0.7,
+        0.35
+       ]
+      }
+     },
+     {
+      "cilindro": {
+       "dims": [
+        0.7,
+        0.7,
+        0.2
+       ],
+       "rot": [
+        90,
+        0,
+        0
+       ],
+       "nombre": "Rueda 2",
+       "loc": [
+        0.8,
+        0.7,
+        0.35
+       ]
+      }
+     },
+     {
+      "cilindro": {
+       "dims": [
+        0.7,
+        0.7,
+        0.2
+       ],
+       "rot": [
+        90,
+        0,
+        0
+       ],
+       "nombre": "Rueda 3",
+       "loc": [
+        -0.8,
+        -0.7,
+        0.35
+       ]
+      }
+     },
+     {
+      "cilindro": {
+       "dims": [
+        0.7,
+        0.7,
+        0.2
+       ],
+       "rot": [
+        90,
+        0,
+        0
+       ],
+       "nombre": "Rueda 4",
+       "loc": [
+        0.8,
+        -0.7,
+        0.35
+       ]
+      }
+     }
+    ]
+   },
+   "isla": {
+    "pieza": "La estación y el tren",
+    "texto": "Tu tren llega a la estación de la isla.",
+    "lugar": [
+     -7,
+     -4
+    ],
+    "color": "#c0392b"
+   }
+  },
+  {
+   "id": "blender.bp.m2",
+   "curso": "blender_principiante",
+   "modulo": 2,
+   "titulo": "Modelado poligonal básico",
+   "nivel": 2,
+   "leccion": "bp2_blender",
+   "habilidades": [
+    "bl-modo-edicion",
+    "bl-extruir",
+    "bl-corte-bucle",
+    "bl-malla-limpia"
+   ],
+   "proyecto": "blender.bp.m2.espada",
+   "reto": {
+    "id": "herramienta",
+    "pide": "Tu herramienta: un martillo, un hacha o una llave, extruyendo desde un cubo.",
+    "objetivos": [
+     {
+      "id": "extruida",
+      "title": "Salió de extrusiones (14 caras o más)",
+      "validator": "mesh.face_count",
+      "params": {
+       "min": 14,
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "limpia",
+      "title": "Sin puntos encimados",
+      "validator": "mesh.no_duplicates",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "objeto",
+      "title": "Vuelve al Modo Objeto (Tab)",
+      "validator": "scene.mode",
+      "params": {
+       "mode": "OBJECT"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Caja"
+      }
+     ]
+    },
+    "minutos": 8,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Caja",
+       "dims": [
+        1,
+        1,
+        4
+       ],
+       "loc": [
+        0,
+        0,
+        2
+       ],
+       "caras": 18,
+       "vertices": 20
+      }
+     }
+    ]
+   },
+   "repasa": [
+    "bl-mover",
+    "bl-escalar-eje"
+   ],
+   "isla": {
+    "pieza": "La herrería",
+    "texto": "Tu espada cuelga en la herrería de la isla.",
+    "lugar": [
+     6,
+     -6
+    ],
+    "color": "#7f8c8d"
+   }
+  },
+  {
+   "id": "blender.bp.m3",
+   "curso": "blender_principiante",
+   "modulo": 3,
+   "titulo": "Modificadores",
+   "nivel": 2,
+   "leccion": "bp3_blender",
+   "habilidades": [
+    "bl-aplicar-escala",
+    "bl-espejo",
+    "bl-subdivision",
+    "bl-modificadores"
+   ],
+   "proyecto": "blender.bp.m3.nave",
+   "reto": {
+    "id": "robot",
+    "pide": "Un robot simétrico: media cabeza con Espejo, suavizada y con la escala aplicada.",
+    "objetivos": [
+     {
+      "id": "espejo",
+      "title": "Espejo en el eje X",
+      "validator": "modifier.configured",
+      "params": {
+       "modifier": "MIRROR",
+       "axis": "x",
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "suave",
+      "title": "Subdivisión",
+      "validator": "modifier.configured",
+      "params": {
+       "modifier": "SUBSURF",
+       "min_levels": 1,
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "escala",
+      "title": "Escala aplicada",
+      "validator": "transform.scale_applied",
+      "params": {
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        2,
+        2
+       ],
+       "location": [
+        0.5,
+        0,
+        1
+       ],
+       "name": "Cabeza",
+       "escalada": true,
+       "origen": [
+        0,
+        0,
+        1
+       ]
+      }
+     ]
+    },
+    "minutos": 8,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Cabeza",
+       "dims": [
+        1,
+        2,
+        2
+       ],
+       "loc": [
+        0.5,
+        0,
+        1
+       ],
+       "mitad": "x+"
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Cabeza",
+       "tipo": "MIRROR",
+       "ejes": [
+        true,
+        false,
+        false
+       ]
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Cabeza",
+       "tipo": "SUBSURF",
+       "niveles": 2
+      }
+     }
+    ]
+   },
+   "repasa": [
+    "bl-extruir",
+    "bl-modo-edicion"
+   ],
+   "isla": {
+    "pieza": "El hangar",
+    "texto": "Tu nave aterriza en el hangar de la isla.",
+    "lugar": [
+     7,
+     5
+    ],
+    "color": "#2980b9"
+   }
+  },
+  {
+   "id": "blender.bpi.m1",
+   "curso": "blender_principiante_intermedio",
+   "modulo": 1,
+   "titulo": "Materiales y sombreado",
+   "nivel": 2,
+   "leccion": "bpi1_blender",
+   "habilidades": [
+    "bl-material-nuevo",
+    "bl-principled",
+    "bl-varios-materiales"
+   ],
+   "proyecto": "blender.bpi.m1.pinta-nave",
+   "reto": {
+    "id": "juguete",
+    "pide": "Un juguete de tres materiales: uno de metal, uno mate y uno de color.",
+    "objetivos": [
+     {
+      "id": "tres",
+      "title": "Tres materiales distintos",
+      "validator": "material.distinct",
+      "params": {
+       "min": 3
+      }
+     },
+     {
+      "id": "metal",
+      "title": "Uno es metal",
+      "validator": "material.matches",
+      "params": {
+       "metallic_min": 0.8
+      }
+     },
+     {
+      "id": "mate",
+      "title": "Uno es mate",
+      "validator": "material.matches",
+      "params": {
+       "roughness_min": 0.7,
+       "metallic_max": 0.2
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        2,
+        2,
+        1
+       ],
+       "location": [
+        0,
+        0,
+        0.5
+       ],
+       "name": "Base"
+      },
+      {
+       "primitive": "sphere",
+       "size": [
+        1.2,
+        1.2,
+        1.2
+       ],
+       "location": [
+        0,
+        0,
+        1.6
+       ],
+       "name": "Cabeza"
+      }
+     ]
+    },
+    "minutos": 8,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Base",
+       "dims": [
+        2,
+        2,
+        1
+       ],
+       "loc": [
+        0,
+        0,
+        0.5
+       ]
+      }
+     },
+     {
+      "esfera": {
+       "nombre": "Cabeza",
+       "dims": [
+        1.2,
+        1.2,
+        1.2
+       ],
+       "loc": [
+        0,
+        0,
+        1.6
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Base",
+       "nombre": "Goma",
+       "metal": 0.0,
+       "rugosidad": 0.9
+      }
+     },
+     {
+      "material": {
+       "objeto": "Cabeza",
+       "nombre": "Metal",
+       "metal": 1.0,
+       "rugosidad": 0.2
+      }
+     },
+     {
+      "material": {
+       "objeto": "Base",
+       "nombre": "Rojo",
+       "color": [
+        0.9,
+        0.1,
+        0.1
+       ]
+      }
+     }
+    ]
+   },
+   "repasa": [
+    "bl-modo-edicion",
+    "bl-subdivision"
+   ],
+   "isla": {
+    "pieza": "El taller de pintura",
+    "texto": "Tu nave pintada brilla en el taller de pintura.",
+    "lugar": [
+     0,
+     8
+    ],
+    "color": "#e67e22"
+   }
+  },
+  {
+   "id": "blender.bpi.m2",
+   "curso": "blender_principiante_intermedio",
+   "modulo": 2,
+   "titulo": "Iluminación y cámara",
+   "nivel": 2,
+   "leccion": "bpi2_blender",
+   "habilidades": [
+    "bl-luces",
+    "bl-tres-puntos",
+    "bl-camara",
+    "bl-render"
+   ],
+   "proyecto": "blender.bpi.m2.tres-puntos",
+   "reto": {
+    "id": "estudio",
+    "pide": "Tu foto de estudio: tres luces, una cámara que encuadre el modelo y el render.",
+    "objetivos": [
+     {
+      "id": "tres",
+      "title": "Principal, relleno y contraluz",
+      "validator": "light.three_point"
+     },
+     {
+      "id": "encuadre",
+      "title": "El modelo entra en la cámara",
+      "validator": "camera.frames",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "render",
+      "title": "Hiciste el render (F12)",
+      "validator": "render.done"
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "sphere",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Modelo"
+      }
+     ]
+    },
+    "minutos": 8,
+    "solucion": [
+     {
+      "esfera": {
+       "nombre": "Modelo",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        0,
+        -9,
+        3
+       ],
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Principal",
+       "tipo": "AREA",
+       "loc": [
+        4,
+        -4,
+        4
+       ],
+       "energia": 1000,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Relleno",
+       "tipo": "AREA",
+       "loc": [
+        -4,
+        -4,
+        2
+       ],
+       "energia": 300,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Contraluz",
+       "tipo": "AREA",
+       "loc": [
+        0,
+        5,
+        4
+       ],
+       "energia": 700,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "renders": 1
+     }
+    ]
+   },
+   "repasa": [
+    "bl-material-nuevo",
+    "bl-principled"
+   ],
+   "isla": {
+    "pieza": "El faro",
+    "texto": "Tus luces encienden el faro de la isla.",
+    "lugar": [
+     -8,
+     5
+    ],
+    "color": "#f1c40f"
+   }
+  },
+  {
+   "id": "blender.bpi.m3",
+   "curso": "blender_principiante_intermedio",
+   "modulo": 3,
+   "titulo": "Animación básica",
+   "nivel": 2,
+   "leccion": "bpi3_blender",
+   "habilidades": [
+    "bl-fotograma-clave",
+    "bl-rebote",
+    "bl-squash-stretch"
+   ],
+   "proyecto": "blender.bpi.m3.pelota",
+   "reto": {
+    "id": "salto",
+    "pide": "Un salto: que tu personaje baje, toque el suelo y vuelva a subir.",
+    "objetivos": [
+     {
+      "id": "salta",
+      "title": "Baja, toca el suelo y sube",
+      "validator": "animation.varies",
+      "params": {
+       "property": "location",
+       "axis": "z",
+       "bounce": true,
+       "ground": true,
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1,
+        1,
+        1
+       ],
+       "location": [
+        0,
+        0,
+        3
+       ],
+       "name": "Personaje"
+      }
+     ]
+    },
+    "minutos": 8,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Personaje",
+       "dims": [
+        1,
+        1,
+        1
+       ],
+       "loc": [
+        0,
+        0,
+        3
+       ]
+      }
+     },
+     {
+      "animar": {
+       "objeto": "Personaje",
+       "propiedad": "location",
+       "eje": "z",
+       "claves": [
+        [
+         1,
+         3
+        ],
+        [
+         12,
+         0.5
+        ],
+        [
+         24,
+         3
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   "repasa": [
+    "bl-camara",
+    "bl-render"
+   ],
+   "isla": {
+    "pieza": "La plaza",
+    "texto": "Tu pelota rebota en la plaza de la isla.",
+    "lugar": [
+     3,
+     -9
+    ],
+    "color": "#e74c3c"
+   }
+  },
+  {
+   "id": "blender.bi.m1",
+   "curso": "blender_intermedio",
+   "modulo": 1,
+   "titulo": "Modelado con precisión",
+   "nivel": 3,
+   "leccion": "bi1_blender",
+   "habilidades": [
+    "bl-medida-exacta",
+    "bl-array",
+    "bl-bisel",
+    "bl-ensamblar"
+   ],
+   "proyecto": "blender.bi.m1.puente",
+   "reto": {
+    "id": "escalera",
+    "pide": "Una escalera: escalones con Matriz, bordes biselados y apoyada en el suelo.",
+    "objetivos": [
+     {
+      "id": "matriz",
+      "title": "Escalones con Matriz",
+      "validator": "modifier.exists",
+      "params": {
+       "modifier": "ARRAY",
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "bisel",
+      "title": "Bordes con Bisel",
+      "validator": "modifier.exists",
+      "params": {
+       "modifier": "BEVEL",
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "suelo",
+      "title": "Apoyada en el suelo",
+      "validator": "spatial.grounded",
+      "params": {
+       "type": "MESH"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cube",
+       "size": [
+        1.2,
+        0.3,
+        0.2
+       ],
+       "location": [
+        0,
+        0,
+        0.1
+       ],
+       "name": "Escalon"
+      }
+     ]
+    },
+    "minutos": 8,
+    "solucion": [
+     {
+      "cubo": {
+       "nombre": "Escalon",
+       "dims": [
+        1.2,
+        0.3,
+        0.2
+       ],
+       "loc": [
+        0,
+        0,
+        0.1
+       ]
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Escalon",
+       "tipo": "ARRAY"
+      }
+     },
+     {
+      "modificador": {
+       "objeto": "Escalon",
+       "tipo": "BEVEL"
+      }
+     }
+    ]
+   },
+   "repasa": [
+    "bl-aplicar-escala",
+    "bl-duplicar"
+   ],
+   "isla": {
+    "pieza": "El muelle",
+    "texto": "Tu puente de madera llega al muelle de la isla.",
+    "lugar": [
+     -3,
+     -9
+    ],
+    "color": "#a0522d"
+   }
+  },
+  {
+   "id": "blender.bi.m2",
+   "curso": "blender_intermedio",
+   "modulo": 2,
+   "titulo": "Organiza tu escena",
+   "nivel": 3,
+   "leccion": "bi2_blender",
+   "habilidades": [
+    "bl-renombrar",
+    "bl-colecciones",
+    "bl-material-compartido"
+   ],
+   "proyecto": "blender.bi.m2.aldea",
+   "reto": {
+    "id": "huerto",
+    "pide": "Un huerto ordenado: tres plantas con nombre, en la colección «Huerto» y con un material compartido.",
+    "objetivos": [
+     {
+      "id": "huerto",
+      "title": "«Huerto» con tres plantas",
+      "validator": "collection.contains",
+      "params": {
+       "collection": "Huerto",
+       "min": 3
+      }
+     },
+     {
+      "id": "pintadas",
+      "title": "Todas con material",
+      "validator": "material.exists",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "uno",
+      "title": "Un material compartido",
+      "validator": "material.distinct",
+      "params": {
+       "max": 2
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "cone",
+       "size": [
+        0.8,
+        0.8,
+        1.5
+       ],
+       "location": [
+        -2,
+        0,
+        0.75
+       ],
+       "name": "Cone.001"
+      },
+      {
+       "primitive": "cone",
+       "size": [
+        0.8,
+        0.8,
+        1.5
+       ],
+       "location": [
+        0,
+        0,
+        0.75
+       ],
+       "name": "Cone.002"
+      },
+      {
+       "primitive": "cone",
+       "size": [
+        0.8,
+        0.8,
+        1.5
+       ],
+       "location": [
+        2,
+        0,
+        0.75
+       ],
+       "name": "Cone.003"
+      }
+     ]
+    },
+    "minutos": 8,
+    "solucion": [
+     {
+      "cono": {
+       "nombre": "Planta 1",
+       "dims": [
+        0.8,
+        0.8,
+        1.5
+       ],
+       "loc": [
+        -2,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "cono": {
+       "nombre": "Planta 2",
+       "dims": [
+        0.8,
+        0.8,
+        1.5
+       ],
+       "loc": [
+        0,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "cono": {
+       "nombre": "Planta 3",
+       "dims": [
+        0.8,
+        0.8,
+        1.5
+       ],
+       "loc": [
+        2,
+        0,
+        0.75
+       ]
+      }
+     },
+     {
+      "coleccion": {
+       "nombre": "Huerto",
+       "objetos": [
+        "Planta 1",
+        "Planta 2",
+        "Planta 3"
+       ]
+      }
+     },
+     {
+      "material": {
+       "objeto": "Planta 1",
+       "nombre": "Hoja"
+      }
+     },
+     {
+      "material": {
+       "objeto": "Planta 2",
+       "nombre": "Hoja"
+      }
+     },
+     {
+      "material": {
+       "objeto": "Planta 3",
+       "nombre": "Hoja"
+      }
+     }
+    ]
+   },
+   "repasa": [
+    "bl-material-nuevo",
+    "bl-array"
+   ],
+   "isla": {
+    "pieza": "La aldea",
+    "texto": "Tu aldea ordenada crece en el centro de la isla.",
+    "lugar": [
+     -9,
+     -1
+    ],
+    "color": "#27ae60"
+   }
+  },
+  {
+   "id": "blender.bi.m3",
+   "curso": "blender_intermedio",
+   "modulo": 3,
+   "titulo": "Render de portafolio",
+   "nivel": 3,
+   "leccion": "bi3_blender",
+   "habilidades": [
+    "bl-cycles",
+    "bl-portafolio"
+   ],
+   "proyecto": "blender.bi.m3.diorama",
+   "reto": {
+    "id": "vitrina",
+    "pide": "Tu vitrina: modelo con tres luces, cámara que lo encuadra, render en Cycles y archivo «portafolio».",
+    "objetivos": [
+     {
+      "id": "tres",
+      "title": "Principal, relleno y contraluz",
+      "validator": "light.three_point"
+     },
+     {
+      "id": "encuadre",
+      "title": "El modelo entra en la cámara",
+      "validator": "camera.frames",
+      "params": {
+       "type": "MESH"
+      }
+     },
+     {
+      "id": "motor",
+      "title": "Motor: Cycles",
+      "validator": "render.engine",
+      "params": {
+       "engine": "CYCLES"
+      }
+     },
+     {
+      "id": "render",
+      "title": "Hiciste el render (F12)",
+      "validator": "render.done"
+     },
+     {
+      "id": "nombre",
+      "title": "El archivo se llama «…portafolio…»",
+      "validator": "file.named",
+      "params": {
+       "contains": "portafolio"
+      }
+     }
+    ],
+    "inicio": {
+     "objetos": [
+      {
+       "primitive": "sphere",
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "location": [
+        0,
+        0,
+        1
+       ],
+       "name": "Modelo"
+      }
+     ]
+    },
+    "minutos": 10,
+    "solucion": [
+     {
+      "esfera": {
+       "nombre": "Modelo",
+       "dims": [
+        2,
+        2,
+        2
+       ],
+       "loc": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "camara": {
+       "nombre": "Camara",
+       "loc": [
+        0,
+        -9,
+        3
+       ],
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Principal",
+       "tipo": "AREA",
+       "loc": [
+        4,
+        -4,
+        4
+       ],
+       "energia": 1000,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Relleno",
+       "tipo": "AREA",
+       "loc": [
+        -4,
+        -4,
+        2
+       ],
+       "energia": 300,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "luz": {
+       "nombre": "Contraluz",
+       "tipo": "AREA",
+       "loc": [
+        0,
+        5,
+        4
+       ],
+       "energia": 700,
+       "mira_a": [
+        0,
+        0,
+        1
+       ]
+      }
+     },
+     {
+      "motor": "CYCLES"
+     },
+     {
+      "renders": 1
+     },
+     {
+      "guardado": {
+       "archivo": "/home/alumno/portafolio.blend"
+      }
+     }
+    ]
+   },
+   "repasa": [
+    "bl-tres-puntos",
+    "bl-camara"
+   ],
+   "isla": {
+    "pieza": "La galería",
+    "texto": "Tu diorama se expone en la galería de la isla.",
+    "lugar": [
+     9,
+     -1
+    ],
+    "color": "#8e44ad"
+   }
+  }
+ ]
+}

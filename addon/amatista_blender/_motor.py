@@ -30,3 +30,4 @@ MOTOR = engine.create_default_engine()
 VERSION_MOTOR = engine.__version__
 curriculo = import_module(engine.__name__ + ".curriculum")
 repaso = import_module(engine.__name__ + ".pedagogy.spaced")
+taller = import_module(engine.__name__ + ".taller")  # motor 5: Amatista Taller
