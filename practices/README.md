@@ -5,7 +5,7 @@ Las prácticas guiadas de Blender del plan de estudios, en formato [`amatista.pr
 | Carpeta | Qué hay |
 |---|---|
 | `blender/cursos.json` | El mapa de la ruta de Blender (`amatista.curriculum/1`): cursos, requisitos y módulos. Lo usa el add-on para «Mi curso». |
-| `blender/<curso>/m<n>-<nombre>/` | `practica.json` (la práctica, con su modelo de referencia en `reference`), `pruebas.json` (sus casos), `referencia.jpg` y `plano.svg` (cómo se debe ver, generados con `engine/herramientas/referencias.py`) e imágenes de sus píldoras. Van dentro del add-on (sin `pruebas.json`). El servidor las registra y publica solo al arrancar; también con `python herramientas/contenido.py practicas` (desde `backend/`) o Admin › Prácticas de Blender. |
+| `blender/<curso>/m<n>-<nombre>/` | `practica.json` (la práctica, con su modelo de referencia en `reference` y su ejemplo resuelto en `example`), `pruebas.json` (sus casos), `referencia.jpg` y `plano.svg` (cómo se debe ver, generados con `engine/herramientas/referencias.py`; solo las prácticas con `reference`: cinco exploraciones no lo tienen) e imágenes de sus píldoras. Van dentro del add-on (sin `pruebas.json`). El servidor las registra y publica solo al arrancar; también con `python herramientas/contenido.py practicas` (desde `backend/`) o Admin › Prácticas de Blender. |
 | `blender/temas.json` | El mundo de cada módulo: colores, escenario, personaje (consejos, charla, datos y reacciones) y jefe. Lo comparten la plataforma y el add-on. |
 | `blender/referencias.json` | Índice de las imágenes de referencia (lo escribe `referencias.py`). |
 | `archivo/v2/` | Las prácticas anteriores al motor v3 (mesa, podio y el ejemplo `table.json`). No se empaquetan ni se registran; el add-on las muestra solo en modo Desarrollador. |
@@ -42,5 +42,7 @@ python engine/herramientas/practicas.py nueva blender.bp.m4.casa --plantilla mod
 python engine/herramientas/practicas.py revisar
 python engine/herramientas/practicas.py probar
 ```
+
+Toda práctica lleva un bloque `example`: la solución escrita en pasos (`example.steps`, como los casos de `pruebas.json`). El motor agrega con él el objetivo «ejemplo» (validador `example.matches`), el add-on lo arma con «Ver el ejemplo» y la lista «Comparado con el ejemplo» dice qué le falta al alumno. `practicas.py probar` también comprueba que el ejemplo complete su práctica. Cómo escribirlo: [`engine/README.md`](../engine/README.md#escribir-el-ejemplo-de-una-práctica) y [el ejemplo y la revisión](../docs/motor/referencia/14_ejemplo_y_revision.md).
 
 Guía completa: [prácticas v3 y herramientas de autor](../docs/motor/referencia/08_practicas_v3_y_herramientas.md). Cambiar una práctica publicada = subir `version` y volver a registrar: el admin publica la nueva.
