@@ -48,7 +48,7 @@ def test_tema_del_tren_es_el_taller():
     assert t["nombre"] == "El taller de juguetes"
     assert t["mascota"]["nombre"] == "Tuerca"
     assert t["jefe"]["nombre"]
-    assert temas.tema_de_practica("blender.bp.m1.explora")["id"] == "taller"
+    assert temas.tema_de_practica("blender.bp.m1.otra")["id"] == "taller"  # cualquier práctica del módulo 1
 
 
 @pytest.mark.parametrize("prefijo, esperado", sorted(JSON["practicas"].items()))
