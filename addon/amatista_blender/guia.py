@@ -45,6 +45,9 @@ def guia_actual():
 
 
 def reiniciar():
+    from . import mision
+
+    mision.reiniciar()
     ESTADO.update(guia=None, practica=None, companion=None, avisos=[])
     ESTADO["ayudas"] = {"hazlo_conmigo": 0, "mostrarme": 0, "explicar": 0}
 
@@ -129,8 +132,12 @@ def actualizar(context, practica, foto, reporte, motivo="cambio"):
             else:
                 avisar(i.title, "Pulsa «¿Cómo lo hago?» en la pestaña Amatista.", "animo")
             continue
-        if i.kind == "nuevo_paso" and modo == NIVEL_ACOMPANADO and (p is None or p.explicar_pasos) and motivo != "abrir":
-            practicas._invocar("amatista.explicar_paso")
+        if i.kind in ("nuevo_paso", "paso_logrado") and (p is None or p.mostrar_hud):
+            # Motor 4: la tarjeta de la misión ya lo cuenta (entra la misión nueva y la cumplida
+            # se celebra con su sello). Antes salía además un diálogo por cada paso: cansaba.
+            if i.kind == "nuevo_paso" and modo == NIVEL_ACOMPANADO and p is not None and p.dialogo_por_mision \
+                    and motivo != "abrir":
+                practicas._invocar("amatista.explicar_paso")
             continue
         avisar(i.title, i.text, TONO_INTERVENCION.get(i.kind, "animo"))
     return intervenciones

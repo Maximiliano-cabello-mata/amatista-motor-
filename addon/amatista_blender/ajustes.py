@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "3.5.1"
+VERSION_ADDON = "4.0.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -139,9 +139,20 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         description="Resalta los objetos del paso actual y dibuja reglas, planos y fantasmas de ayuda",
         default=True,
     )
-    explicar_pasos: bpy.props.BoolProperty(
-        name="Explicarme cada paso nuevo",
-        description="Abre un diálogo con el porqué y las teclas al empezar cada paso",
+    # Motor 4: nombre nuevo para que el «sí» guardado de antes (un diálogo por paso) no siga activo.
+    dialogo_por_mision: bpy.props.BoolProperty(
+        name="Un diálogo por cada misión",
+        description="Además de la tarjeta, abre un diálogo con el porqué y las teclas al empezar cada misión",
+        default=False,
+    )
+    animaciones: bpy.props.BoolProperty(
+        name="Animaciones",
+        description="La tarjeta de la misión entra deslizándose, celebra lo cumplido y la tecla que toca respira",
+        default=True,
+    )
+    preparar_herramienta: bpy.props.BoolProperty(
+        name="Dejarme lista la herramienta",
+        description="En los niveles 1 y 2, al empezar una misión elige su herramienta en la barra T (Mover, Escalar…)",
         default=True,
     )
     ayuda_tras_intentos: bpy.props.IntProperty(
@@ -195,7 +206,9 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         sub = caja.column()
         sub.active = self.acompanamiento != "silencioso"
         sub.prop(self, "resaltar_3d")
-        sub.prop(self, "explicar_pasos")
+        sub.prop(self, "dialogo_por_mision")
+        sub.prop(self, "animaciones")
+        sub.prop(self, "preparar_herramienta")
         fila = sub.row(align=True)
         fila.prop(self, "ayuda_tras_intentos")
         fila.prop(self, "ayuda_tras_segundos")

@@ -1,32 +1,29 @@
-"""Lo que Amatista dibuja sobre la vista 3D.
+"""Lo que Amatista dibuja sobre la vista 3D: la tarjeta de la misión (Amatista Motor 4).
 
-Etapa 1: una tarjeta pequeña con la práctica, el progreso y el paso actual.
-Etapa 2 (guía): la tarjeta pasa a ser el acompañante. Add-on 3.2: la
-tarjeta toma la temática del módulo (temas.py): color de acento, nombre del
-tema, la mascota en pixel art y su globo con consejos y datos curiosos que
-cambia solo cada ~12 s:
+Una sola tarjeta, abajo a la izquierda, con una sola cosa que hacer:
 
-      ╭──────────────────────────────╮
-      │ [▣] TUERCA · CONSEJO          │   ← globo de la mascota
-      │     G mueve, R gira y S…      │
-      ╰─╲────────────────────────────╯
-    ╭───────────────────────────────────────────╲
-    │ [▣] EL TALLER DE JUGUETES       ▰▰▰▱▱ 40 % │  ← franja del tema
-    │     PASO 2 DE 6 · JEFE: ROBO-TREN REBELDE  │
-    │ Hazla delgada                              │
-    │ «Cube» mide 2 en Z. Lo buscamos entre…     │
-    │ 1 [Clic] Selecciona «Cube»                 │
-    │ 2 [S] › [Z] Escala solo en Z               │
-    │ N › Amatista: «Hazlo conmigo»              │
-    ╰────────────────────────────────────────────╯
+    ╭──────────────────────────────────────────────╲
+    │ [▣] PARTE 2 DE 4 · LAS RUEDAS       MISIÓN 4/11 │  ← franja del tema y mascota
+    │     Tren de juguete                             │
+    │ ● ● ◉ ○ ○ ○   ○ ○   ○ ○ ○                       │  ← la ruta: una bolita por misión
+    │ Ruedas de pie y delgadas                        │  ← la misión
+    │ Aplana el cilindro y luego ponlo de pie.        │  ← qué hacer, en una frase
+    │ ✓ [S] › [Z]   Aplánalo                          │  ← se enciende al usar la tecla
+    │ 2 [R] › [X]   Ponlo de pie                      │  ← la que toca «respira»
+    │ ▌ ¡Casi! Ya está plana, falta girarla.          │  ← el instructor, sin decimales
+    │ [Escalar] [Rotar] [✓ Añadir] (Mover) (Guardar)   │  ← herramientas: ahora · usadas · después
+    │ ¿Atorado? N › Amatista › «Muéstrame cómo»       │
+    ╰─────────────────────────────────────────────────╯
 
-y encima aparecen los avisos breves del acompañante («¡Listo!», «¡Vas
-mejor!») que se desvanecen solos. En la escena (visor3d.py) se resaltan los
-objetos del paso y se dibujan reglas, planos y piezas fantasma.
+Animaciones (mision.py): la tarjeta entra deslizándose al empezar una misión;
+la cumplida se celebra con un sello «¡Eso es!» que suelta chispas, y la
+bolita de esa misión salta. Encima aparecen los avisos breves del
+acompañante («¡Vas mejor!»). En la escena (visor3d.py) se resaltan los
+objetos de la misión y se dibujan reglas, planos y piezas fantasma.
 
-Se dibuja con gpu + blf solo mientras hay una práctica abierta. No evalúa
-nada: lee el último reporte y la última guía. Se apaga en Preferencias del
-add-on › «Tarjeta en la vista 3D». En modo Silencioso no hay globo.
+Se dibuja con gpu + blf solo mientras hay una práctica abierta y no evalúa
+nada: lee la última ruta. Se apaga en Preferencias del add-on › «Tarjeta en
+la vista 3D»; las animaciones, en «Animaciones».
 """
 import math
 import time
@@ -40,7 +37,7 @@ try:
 except ImportError:  # Blender sin GPU (modo background)
     blf = gpu = batch_for_shader = None
 
-from .. import ajustes, aprendizaje, guia, practicas, temas
+from .. import _motor, ajustes, aprendizaje, guia, mision, practicas, temas
 
 _MANEJADORES = []
 
@@ -59,7 +56,6 @@ BLANCO = (0.97, 0.97, 0.98, 1.0)
 OSCURO = (0.05, 0.05, 0.07, 1.0)
 
 COLOR_TONO = {"logrado": VERDE, "cerca": NEON, "animo": TEXTO, "ojo": NARANJA}
-ETIQUETA_MENSAJE = {"hola": "", "consejo": "CONSEJO", "dato": "¿SABÍAS QUE…?"}
 
 _PALETA = {"clave": None, "valor": None}
 
@@ -318,110 +314,183 @@ def _dibujar_avisos(shader, x, y, ancho, escala, pal=None):
         y += alto + 6 * escala
 
 
-def _dibujar_v3(shader, x, y, ancho, escala, practica, reporte, pal=None):
-    """Motor v3: franja de pausa (naranja) y la píldora de teoría con sus teclas grandes.
-
-    Se apilan sobre la tarjeta; devuelve la altura donde siguen los avisos.
-    """
-    tam, tam_t, tam_chico = int(12 * escala), int(14 * escala), int(10 * escala)
-    relleno = 12 * escala
-    acento = pal["acento"] if pal is not None else NEON
-    fondo = pal["fondo"] if pal is not None else FONDO
-    if reporte.paused:
-        vigilante = practica.guard(reporte.paused_by)
-        alto = 46 * escala
-        _tarjeta(shader, x, y, ancho, alto, (0.16, 0.09, 0.03, 0.95), NARANJA, escala, 10 * escala)
-        _texto(x + relleno, y + alto - 18 * escala, "PROGRESO EN PAUSA", tam_chico, NARANJA)
-        titulo = vigilante.title if vigilante is not None else reporte.paused_by
-        _texto(x + relleno, y + 10 * escala, _recortar(titulo, tam, ancho - 2 * relleno), tam, TEXTO)
-        y += alto + 10 * escala
-    pildora = aprendizaje.pildora_principal()
-    if pildora is not None and not reporte.completed:
-        alto = (52 if pildora.keys else 34) * escala
-        _panel(shader, x, y - 2 * escala, ancho, alto, SOMBRA, 8 * escala)
-        _panel(shader, x, y, ancho, alto, fondo, 8 * escala)
-        _panel(shader, x, y, 4 * escala, alto, acento, 2 * escala)
-        _texto(x + relleno, y + alto - 16 * escala, "TEORÍA", tam_chico, acento)
-        _texto(x + relleno + 52 * escala, y + alto - 16 * escala,
-               _recortar(pildora.title, tam_t, ancho - 2 * relleno - 52 * escala), tam_t, TEXTO)
-        if pildora.keys:
-            cx = x + relleno
-            for i, tecla in enumerate(pildora.keys[:5]):
-                if i:
-                    _texto(cx + 3 * escala, y + 12 * escala, "+", tam, TEXTO_SUAVE)
-                    cx += 14 * escala
-                cx += _tecla(shader, cx, y + 12 * escala, str(tecla), tam_t, escala * 1.2) + 2 * escala
-        y += alto + 8 * escala
-    return y
+# --- La tarjeta de la misión (Amatista Motor 4) -------------------------------------------
 
 
-def _dibujar_globo(shader, x, y, ancho, escala, pal, reporte):
-    """El globo de la mascota: saludo, consejos y datos curiosos que rotan solos.
+def _con_alfa(color, alfa):
+    return (color[0], color[1], color[2], color[3] * alfa)
 
-    Devuelve la altura donde sigue lo de arriba.
-    """
-    tema = pal["tema"]
-    mascota = tema["mascota"]
-    tam, tam_chico = int(11 * escala), int(9 * escala)
-    relleno = 10 * escala
-    lado = 30 * escala
-    texto_x = x + relleno + lado + 10 * escala
-    ancho_texto = x + ancho - relleno - texto_x
-    jefe = pal["jefe"]
-    if reporte.completed and jefe:
-        tipo, texto = "jefe", f"¡Venciste a {jefe['nombre']}! El módulo «{tema['nombre']}» es tuyo."
-    elif jefe and temas.indice_actual() % 4 == 0:
-        tipo, texto = "jefe", f"{jefe['nombre']}: «{jefe.get('frase', '')}»"
-    else:
-        tipo, texto = temas.mensaje_mascota(tema, temas.indice_actual())
-    lineas = _partir(texto, tam, ancho_texto, 3)
-    alto = max(lado + 2 * relleno, 2 * relleno + tam_chico + 6 * escala + len(lineas) * (tam + 4))
-    cola = 7 * escala
-    y += cola
-    _tarjeta(shader, x, y, ancho, alto, pal["fondo"], (*pal["acento"][:3], 0.55), escala, radio=10.0)
-    # La colita del globo, hacia la tarjeta de abajo.
-    batch = batch_for_shader(shader, "TRIS", {"pos": [(x + 22 * escala, y + 1), (x + 36 * escala, y + 1),
-                                                       (x + 20 * escala, y - cola)]}, indices=[(0, 1, 2)])
-    shader.uniform_float("color", pal["fondo"])
+
+def _punto(shader, cx, cy, radio, color, pasos=14):
+    puntos = [(cx, cy)] + [(cx + radio * math.cos(2 * math.pi * i / pasos), cy + radio * math.sin(2 * math.pi * i / pasos))
+                           for i in range(pasos + 1)]
+    batch = batch_for_shader(shader, "TRIS", {"pos": puntos}, indices=[(0, i, i + 1) for i in range(1, pasos + 1)])
+    shader.uniform_float("color", color)
     batch.draw(shader)
-    # La mascota en su marquito.
-    mx, my = x + relleno, y + alto - relleno - lado
-    _panel(shader, mx - 2 * escala, my - 2 * escala, lado + 4 * escala, lado + 4 * escala, pal["franja"], 6 * escala)
-    _mascota(shader, mx, my, lado / 10, tema["id"], pal["pixeles"], salto=_salto() * escala)
-    etiqueta = mascota.get("nombre", "").upper()
-    if tipo == "jefe":
-        etiqueta += " · JEFE FINAL"
-    elif ETIQUETA_MENSAJE.get(tipo):
-        etiqueta += " · " + ETIQUETA_MENSAJE[tipo]
-    _texto(texto_x, y + alto - relleno - tam_chico, _recortar(etiqueta, tam_chico, ancho_texto), tam_chico, pal["acento"])
-    for i, linea in enumerate(lineas):
-        _texto(texto_x, y + alto - relleno - tam_chico - (i + 1) * (tam + 4) - 2 * escala, linea, tam, TEXTO)
-    return y + alto + 10 * escala
 
 
-def _dibujar_cabecera(shader, x, y_arriba, ancho, escala, pal, linea2, reporte, corte):
-    """Franja del tema: mascota, nombre del tema, segunda línea y progreso."""
-    alto = 34 * escala
-    r = 10 * escala
-    _panel(shader, x, y_arriba - alto, ancho, alto, pal["franja"], r, corte, abajo=False)
-    _rectangulo(shader, x, y_arriba - alto, ancho, 1 * escala, (*pal["acento"][:3], 0.35))
-    _panel(shader, x + r, y_arriba - 3 * escala, ancho * 0.35, 3 * escala, pal["acento"], 1.5 * escala)
-    relleno = 12 * escala
-    lado = 20 * escala
-    _mascota(shader, x + relleno, y_arriba - alto + 7 * escala, lado / 10, pal["tema"]["id"], pal["pixeles"],
-             salto=_salto() * escala)
-    tam_chico = int(10 * escala)
-    tx = x + relleno + lado + 8 * escala
-    barra_ancho = 64 * escala
-    barra_x = x + ancho - relleno - barra_ancho - 34 * escala
-    libre = barra_x - tx - 8 * escala
-    _texto(tx, y_arriba - 15 * escala, _recortar(pal["tema"]["nombre"].upper(), tam_chico, libre), tam_chico,
-           pal["acento"])
-    _texto(tx, y_arriba - 28 * escala, _recortar(linea2, int(9 * escala), libre), int(9 * escala), TEXTO_SUAVE)
-    color = VERDE if reporte.completed else pal["acento"]
-    _barra(shader, barra_x, y_arriba - 22 * escala, barra_ancho, 7 * escala, reporte.progress / 100.0, color)
-    _texto(barra_x + barra_ancho + 6 * escala, y_arriba - 22 * escala, f"{reporte.progress:.0f} %", tam_chico, TEXTO)
-    return y_arriba - alto
+def _anillo(shader, cx, cy, radio, grosor, color, pasos=18):
+    puntos, indices = [], []
+    for i in range(pasos + 1):
+        ang = 2 * math.pi * i / pasos
+        puntos += [(cx + radio * math.cos(ang), cy + radio * math.sin(ang)),
+                   (cx + (radio - grosor) * math.cos(ang), cy + (radio - grosor) * math.sin(ang))]
+        if i:
+            b = 2 * i
+            indices += [(b - 2, b - 1, b), (b - 1, b + 1, b)]
+    batch = batch_for_shader(shader, "TRIS", {"pos": puntos}, indices=indices)
+    shader.uniform_float("color", color)
+    batch.draw(shader)
+
+
+def _tecla_mision(shader, x, y, texto, tam, escala, estado, pulso, acento, alfa):
+    """Una tecla de la misión: hecha (verde), la que toca (borde del tema que respira) o pendiente."""
+    relleno = 5 * escala
+    ancho = max(_ancho(texto, tam) + 2 * relleno, 18 * escala)
+    alto = tam + 7 * escala
+    r = 3 * escala
+    if estado == "hecha":
+        fondo, borde, color = (0.14, 0.32, 0.22, 1.0), VERDE, BLANCO
+    elif estado == "toca":
+        fondo, borde, color = TECLA_FONDO, (*acento[:3], 0.45 + 0.55 * pulso), BLANCO
+        _panel(shader, x - 3 * escala, y - 8 * escala, ancho + 6 * escala, alto + 6 * escala,
+               _con_alfa((*acento[:3], 0.22 * pulso), alfa), r + 3 * escala)
+    else:
+        fondo, borde, color = TECLA_FONDO, TECLA_BORDE, TEXTO
+    _panel(shader, x, y - 5 * escala, ancho, alto, _con_alfa((0, 0, 0, 0.45), alfa), r)
+    _panel(shader, x, y - 4 * escala, ancho, alto, _con_alfa(borde, alfa), r)
+    _panel(shader, x + 1, y - 4 * escala + 1 + 1 * escala, ancho - 2, alto - 2 - 1 * escala, _con_alfa(fondo, alfa), r)
+    _texto(x + (ancho - _ancho(texto, tam)) / 2, y, texto, tam, _con_alfa(color, alfa))
+    return ancho
+
+
+def _alto_paso(paso, tam, ancho_texto, escala, tam_chico):
+    return _alto_instruccion(paso, tam, ancho_texto, escala, tam_chico)
+
+
+def _nombre_corto(herramienta):
+    return herramienta.name.split(" (")[0]
+
+
+def _cinturon(shader, x, y, ancho, escala, ruta, pal, alfa):
+    """Las herramientas de la práctica: la de ahora encendida, las usadas con ✓ y las que vienen con borde."""
+    registro = _motor.MOTOR.tools
+    if registro is None or not ruta.herramientas:
+        return
+    tam = int(10 * escala)
+    estados = [(h, mision.estado_herramienta(h)) for h in ruta.herramientas]
+    orden = {"ahora": 0, "mision": 1, "usada": 2, "despues": 3, "antes": 4}
+    actuales = [e for e in estados if ruta.mision and e[0] in ruta.mision.herramientas]
+    resto = [e for e in estados if e not in actuales]
+    cx = x
+    for hid, estado in sorted(actuales, key=lambda e: orden[e[1]]) + resto:
+        h = registro.get(hid)
+        if h is None:
+            continue
+        texto = _nombre_corto(h)
+        marca = "✓ " if estado == "usada" else ""
+        ancho_chip = _ancho(marca + texto, tam) + 14 * escala
+        if cx + ancho_chip > x + ancho:
+            break
+        alto = 18 * escala
+        if estado == "ahora":
+            p = mision.pulso()
+            _panel(shader, cx - 2 * escala, y - 2 * escala, ancho_chip + 4 * escala, alto + 4 * escala,
+                   _con_alfa((*pal["acento"][:3], 0.25 + 0.25 * p), alfa), 9 * escala)
+            _panel(shader, cx, y, ancho_chip, alto, _con_alfa(pal["acento"], alfa), 8 * escala)
+            color = OSCURO
+        elif estado == "mision":
+            _panel(shader, cx, y, ancho_chip, alto, _con_alfa((*pal["acento"][:3], 0.32), alfa), 8 * escala)
+            color = BLANCO
+        elif estado == "usada":
+            _panel(shader, cx, y, ancho_chip, alto, _con_alfa((0.14, 0.32, 0.22, 1.0), alfa), 8 * escala)
+            color = VERDE
+        elif estado == "antes":
+            _panel(shader, cx, y, ancho_chip, alto, _con_alfa((1, 1, 1, 0.08), alfa), 8 * escala)
+            color = TEXTO_SUAVE
+        else:  # la usarás después: solo el borde
+            _panel(shader, cx, y, ancho_chip, alto, _con_alfa((*pal["acento"][:3], 0.55), alfa), 8 * escala)
+            _panel(shader, cx + 1 * escala, y + 1 * escala, ancho_chip - 2 * escala, alto - 2 * escala,
+                   _con_alfa(pal["fondo"], alfa), 7 * escala)
+            color = TEXTO_SUAVE
+        _texto(cx + 7 * escala, y + 5 * escala, marca + texto, tam, _con_alfa(color, alfa))
+        cx += ancho_chip + 5 * escala
+
+
+def _puntos_ruta(shader, x, y, ancho, escala, ruta, pal, alfa):
+    """Una bolita por misión, con un hueco entre partes: ● hecha · ◉ la de ahora · ○ las que vienen."""
+    total = max(1, ruta.total)
+    huecos = max(0, len(ruta.partes) - 1)
+    paso = min(14 * escala, (ancho - huecos * 6 * escala) / total)
+    radio = max(2.0, min(4.5 * escala, paso * 0.36))
+    datos, avance = mision.logro()
+    cx = x + radio
+    parte = 0
+    for m in ruta.misiones:
+        if m.parte != parte:
+            parte = m.parte
+            cx += 6 * escala
+        cy = y + radio
+        if m.estado == "actual":
+            p = mision.pulso()
+            _punto(shader, cx, cy, radio * (1.5 + 0.25 * p), _con_alfa((*pal["acento"][:3], 0.25), alfa))
+            _punto(shader, cx, cy, radio * 1.05, _con_alfa(pal["acento"], alfa))
+        elif m.estado in ("hecha", "adelantada"):
+            crece = 1.0
+            if datos is not None and datos.get("numero") == m.numero:
+                crece = 1.0 + 0.8 * (1 - mision.suave(avance * 2.5))  # la recién cumplida «salta»
+            _punto(shader, cx, cy, radio * crece, _con_alfa(VERDE if m.estado == "adelantada" else pal["acento"], alfa))
+        else:
+            _anillo(shader, cx, cy, radio, 1.2 * escala, _con_alfa((1, 1, 1, 0.35), alfa))
+        cx += paso
+
+
+def _chispas(shader, cx, cy, escala, avance, pal):
+    """Chispas que saltan del sello y caen (deterministas: siempre el mismo dibujo)."""
+    colores = (pal["acento"], VERDE, BLANCO, pal["suave"])
+    t = avance * mision.LOGRO
+    for i in range(18):
+        ang = math.radians(20 + i * 140 / 17)
+        rapidez = (120 + 50 * ((i * 7) % 5) / 4) * escala
+        px = cx + math.cos(ang) * rapidez * t
+        py = cy + math.sin(ang) * rapidez * t - 160 * escala * t * t
+        lado = (4 + (i % 3)) * escala
+        color = colores[i % len(colores)]
+        _rectangulo(shader, px, py, lado, lado, (*color[:3], max(0.0, 1.0 - avance) * color[3]))
+
+
+def _sello(shader, x, y, ancho, escala, pal):
+    """«¡Misión cumplida!» sobre la tarjeta: aparece con un rebote, suelta chispas y se desvanece."""
+    datos, avance = mision.logro()
+    if datos is None:
+        return 0.0
+    aparece = mision.suave(min(1.0, avance * 4))
+    se_va = 1.0 - max(0.0, (avance - 0.75) / 0.25)
+    alfa = max(0.0, min(1.0, aparece * se_va))
+    tam = int((15 + 3 * (1 - aparece)) * escala)
+    tam_extra = int(10 * escala)
+    texto = datos["texto"]
+    extra = ""
+    for cola in (" ¡Y sin pistas!",):
+        if texto.endswith(cola):
+            texto, extra = texto[: -len(cola)], cola.strip()
+    texto = "✓  " + texto
+    ancho_sello = min(ancho, max(_ancho(texto, tam), _ancho(extra, tam_extra) if extra else 0) + 40 * escala)
+    alto = (46 if extra else 36) * escala
+    sx = x + (ancho - ancho_sello) / 2
+    sy = y + 8 * escala + (1 - aparece) * 14 * escala
+    _panel(shader, sx, sy - 3 * escala, ancho_sello, alto, (0, 0, 0, 0.35 * alfa), 18 * escala)
+    _panel(shader, sx, sy, ancho_sello, alto, (0.18, 0.62, 0.38, 0.97 * alfa), 18 * escala)
+    _panel(shader, sx + 18 * escala, sy + alto - 9 * escala, ancho_sello - 36 * escala, 4 * escala,
+           (1, 1, 1, 0.18 * alfa), 2 * escala)
+    base = sy + alto - 10 * escala - tam * 0.85
+    _texto(sx + (ancho_sello - _ancho(texto, tam)) / 2, base, _recortar(texto, tam, ancho_sello - 20 * escala), tam,
+           (*BLANCO[:3], alfa))
+    if extra:
+        _texto(sx + (ancho_sello - _ancho(extra, tam_extra)) / 2, sy + 7 * escala, extra, tam_extra,
+               (0.86, 1.0, 0.9, alfa))
+    _chispas(shader, sx + ancho_sello / 2, sy + alto / 2, escala, avance, pal)
+    return alto + 14 * escala
 
 
 def dibujar():
@@ -434,123 +503,166 @@ def dibujar():
         return
     practica = practicas.practica_activa(contexto)
     reporte = practicas.ESTADO["reporte"]
-    if practica is None or reporte is None:
+    ruta = mision.ruta()
+    if practica is None or reporte is None or ruta is None or ruta.practica_id != practica.id:
         return
-    g = guia.guia_actual() if guia.nivel() != guia.NIVEL_SILENCIOSO else None
     pal = paleta(practica)
+    m = ruta.mision
+    silencioso = guia.nivel() == guia.NIVEL_SILENCIOSO
 
     escala = contexto.preferences.system.ui_scale or 1.0
     margen = 16 * escala
-    ancho = (360 if g else 300) * escala
+    ancho = 380 * escala
     relleno = 14 * escala
     ancho_texto = ancho - 2 * relleno
-    tam, tam_titulo, tam_chico = int(12 * escala), int(15 * escala), int(10 * escala)
+    tam, tam_titulo, tam_chico = int(12 * escala), int(16 * escala), int(10 * escala)
     corte = 14 * escala
+    acento = pal["acento"]
 
-    # Alto según el contenido.
-    lineas_feedback = _partir(g.feedback, tam, ancho_texto, 3) if g else []
-    instrucciones = list(g.instructions[:4]) if g and not g.completed else []
-    alto = (70 if g else 98) * escala
-    if g:
-        alto += len(lineas_feedback) * (tam + 5 * escala) + 8 * escala
-        alto += sum(_alto_instruccion(i, tam, ancho_texto, escala, tam_chico) for i in instrucciones)
-        alto += 22 * escala
+    # --- Qué dice la tarjeta ---
+    if ruta.completada:
+        titulo = practica.title
+        objetivo = practica.completion or "Terminaste todas las misiones."
+        mensaje, tono = f"{ruta.total} de {ruta.total} misiones · {_resumen_pistas()}", "logrado"
+        pasos = []
+    elif m is not None:
+        titulo = m.titulo
+        objetivo = m.objetivo
+        mensaje, tono = ("" if silencioso else m.mensaje), (m.tono or "animo")
+        pasos = [] if silencioso else list(m.pasos)
+    else:
+        titulo, objetivo, mensaje, tono, pasos = practica.title, "", "", "animo", []
+    if ruta.pausa:
+        mensaje, tono = ruta.pausa, "ojo"
+    lineas_titulo = _partir(titulo, tam_titulo, ancho_texto, 2)
+    lineas_objetivo = _partir(objetivo, tam, ancho_texto, 2) if objetivo else []
+    lineas_mensaje = _partir(mensaje, tam, ancho_texto - 10 * escala, 2) if mensaje else []
+
+    alto = 34 * escala + 22 * escala  # franja + bolitas
+    alto += len(lineas_titulo) * (tam_titulo + 6 * escala) + 4 * escala
+    alto += len(lineas_objetivo) * (tam + 5 * escala) + (6 * escala if lineas_objetivo else 0)
+    alto += sum(_alto_paso(i, tam, ancho_texto, escala, tam_chico) for i in pasos) + (4 * escala if pasos else 0)
+    alto += (len(lineas_mensaje) * (tam + 5 * escala) + 10 * escala) if lineas_mensaje else 0
+    alto += 30 * escala if ruta.herramientas and not ruta.completada else 0
+    alto += 24 * escala  # pie
+
+    entra = mision.entrada()
+    alfa = entra
     x, y = _origen(contexto, margen, escala)
+    y -= (1 - entra) * 18 * escala
 
     shader = gpu.shader.from_builtin("UNIFORM_COLOR")
     gpu.state.blend_set("ALPHA")
-    _tarjeta(shader, x, y, ancho, alto, pal["fondo"], pal["borde"], escala, corte, radio=10.0)
+    borde = NARANJA if ruta.pausa else (VERDE if ruta.completada else pal["borde"])
+    _tarjeta(shader, x, y, ancho, alto, _con_alfa(pal["fondo"], alfa), _con_alfa(borde, alfa), escala, corte, radio=10.0)
 
-    if g and g.step_total and not g.completed:
-        linea2 = f"PASO {g.step_number} DE {g.step_total}"
-    elif reporte.completed:
-        linea2 = "PRÁCTICA COMPLETADA"
+    # Franja: mascota, parte de la ruta y número de misión.
+    arriba = y + alto
+    franja = 34 * escala
+    _panel(shader, x, arriba - franja, ancho, franja, _con_alfa(pal["franja"], alfa), 10 * escala, corte, abajo=False)
+    _rectangulo(shader, x, arriba - franja, ancho, 1 * escala, _con_alfa((*acento[:3], 0.35), alfa))
+    _mascota(shader, x + relleno, arriba - franja + 7 * escala, 2 * escala, pal["tema"]["id"], pal["pixeles"], alfa,
+             salto=_salto() * escala)
+    tx = x + relleno + 28 * escala
+    if ruta.pausa:
+        linea1, color1, linea2 = "PROGRESO EN PAUSA", NARANJA, "Arregla esto y sigues donde ibas"
+    elif ruta.completada:
+        linea1, color1, linea2 = "PRÁCTICA COMPLETADA", VERDE, practica.title
+    elif ruta.parte_actual is not None:
+        linea1, color1, linea2 = f"PARTE {m.parte + 1} DE {len(ruta.partes)}", acento, ruta.parte_actual.titulo
     else:
-        linea2 = practica.title.upper()
-    if pal["jefe"]:
-        linea2 += " · " + ("¡JEFE VENCIDO!" if reporte.completed else f"JEFE: {pal['jefe']['nombre'].upper()}")
-    abajo_cabecera = _dibujar_cabecera(shader, x, y + alto, ancho, escala, pal, linea2, reporte, corte)
+        linea1, color1, linea2 = practica.title.upper(), acento, ""
+    derecha = f"MISIÓN {m.numero}/{ruta.total}" if m is not None and not ruta.completada else f"{ruta.hechas}/{ruta.total} ✓"
+    ancho_derecha = _ancho(derecha, tam_chico + int(1 * escala))
+    libre = ancho - (tx - x) - relleno - ancho_derecha - 8 * escala
+    _texto(tx, arriba - 14 * escala, _recortar(linea1, int(9 * escala), libre), int(9 * escala), _con_alfa(color1, alfa))
+    _texto(tx, arriba - 28 * escala, _recortar(linea2, tam_chico + int(1 * escala), libre), tam_chico + int(1 * escala),
+           _con_alfa(TEXTO, alfa))
+    _texto(x + ancho - relleno - ancho_derecha, arriba - 21 * escala, derecha, tam_chico + int(1 * escala),
+           _con_alfa(TEXTO, alfa))
 
-    if g is None:
-        # Modo silencioso: la tarjeta de la etapa 1, con la franja del tema.
-        _texto(x + relleno, abajo_cabecera - 22 * escala, _recortar(practica.title, tam_titulo, ancho_texto),
-               tam_titulo, TEXTO)
-        if reporte.completed:
-            linea, color_linea = "✓ Práctica completada", VERDE
-        elif reporte.current_target_id:
-            paso = next((s for s in reporte.steps if s.target_id == reporte.current_target_id), None)
-            linea, color_linea = f"Paso {reporte.step_number} de {len(reporte.steps)}: {paso.title if paso else ''}", TEXTO
-        else:
-            linea, color_linea = "", TEXTO
-        _texto(x + relleno, y + 30 * escala, _recortar(linea, tam, ancho_texto), tam, color_linea)
-        _pie(x + relleno, y + 12 * escala, ancho_texto, tam_chico, None)
-        gpu.state.blend_set("NONE")
-        return
-
-    cursor = abajo_cabecera - 22 * escala
-    _texto(x + relleno, cursor, _recortar(g.title, tam_titulo, ancho_texto), tam_titulo,
-           VERDE if g.completed else TEXTO)
+    cursor = arriba - franja - 16 * escala
+    _puntos_ruta(shader, x + relleno, cursor, ancho_texto, escala, ruta, pal, alfa)
     cursor -= 8 * escala
-    color_tono = COLOR_TONO.get(g.tone, TEXTO)
-    if g.tone == "cerca":
-        color_tono = pal["acento"]
-    for linea in lineas_feedback:
+
+    for linea in lineas_titulo:
+        cursor -= tam_titulo + 6 * escala
+        _texto(x + relleno, cursor, linea, tam_titulo, _con_alfa(VERDE if ruta.completada else BLANCO, alfa))
+    cursor -= 4 * escala
+    for linea in lineas_objetivo:
         cursor -= tam + 5 * escala
-        _texto(x + relleno, cursor, linea, tam, color_tono)
-    cursor -= 6 * escala
-    for numero, paso in enumerate(instrucciones, start=1):
+        _texto(x + relleno, cursor, linea, tam, _con_alfa(TEXTO_SUAVE, alfa))
+    if lineas_objetivo:
+        cursor -= 6 * escala
+
+    toca = mision.paso_siguiente(m) if m is not None else None
+    pulso = mision.pulso()
+    for numero, paso in enumerate(pasos, start=1):
         cursor -= tam + 9 * escala
         cx = x + relleno
-        # Número en una pastilla del color del tema.
+        hecho = mision.paso_hecho(paso)
+        color_num = VERDE if hecho else acento
         _panel(shader, cx - 3 * escala, cursor - 4 * escala, 14 * escala, tam + 6 * escala,
-               (*pal["acento"][:3], 0.18), 4 * escala)
-        _texto(cx + 1 * escala, cursor, f"{numero}", tam, pal["acento"])
+               _con_alfa((*color_num[:3], 0.2), alfa), 4 * escala)
+        _texto(cx + 1 * escala, cursor, "✓" if hecho else f"{numero}", tam, _con_alfa(color_num, alfa))
         cx += 16 * escala
+        estado = "hecha" if hecho else ("toca" if toca == numero - 1 else "")
         for i, tecla in enumerate(paso.keys):
             if i:
-                _texto(cx + 2 * escala, cursor, "›", tam, TEXTO_SUAVE)
+                _texto(cx + 2 * escala, cursor, "›", tam, _con_alfa(TEXTO_SUAVE, alfa))
                 cx += 12 * escala
-            cx += _tecla(shader, cx, cursor, tecla, tam_chico, escala) + 2 * escala
+            cx += _tecla_mision(shader, cx, cursor, tecla, tam_chico, escala, estado, pulso, acento, alfa) + 2 * escala
         cx += 6 * escala
         lineas = _partir(paso.text, tam, x + ancho - relleno - cx, 2)
         for j, linea in enumerate(lineas):
-            _texto(cx, cursor - j * (tam + 5 * escala), linea, tam, TEXTO)
+            _texto(cx, cursor - j * (tam + 5 * escala), linea, tam, _con_alfa(TEXTO_SUAVE if hecho else TEXTO, alfa))
         cursor -= (len(lineas) - 1) * (tam + 5 * escala)
-    _rectangulo(shader, x + relleno, y + 26 * escala, ancho_texto, 1 * escala, (1, 1, 1, 0.06))
-    _pie(x + relleno, y + 10 * escala, ancho_texto, tam_chico, g)
+    if pasos:
+        cursor -= 4 * escala
 
-    siguiente = _dibujar_globo(shader, x, y + alto + 12 * escala, ancho, escala, pal, reporte)
-    siguiente = _dibujar_v3(shader, x, siguiente, ancho, escala, practica, reporte, pal)
-    _dibujar_avisos(shader, x, siguiente, ancho, escala, pal)
+    if lineas_mensaje:
+        color_tono = acento if tono == "cerca" else COLOR_TONO.get(tono, TEXTO)
+        alto_msg = len(lineas_mensaje) * (tam + 5 * escala) + 4 * escala
+        _panel(shader, x + relleno, cursor - alto_msg - 2 * escala, 3 * escala, alto_msg, _con_alfa(color_tono, alfa),
+               1.5 * escala)
+        for linea in lineas_mensaje:
+            cursor -= tam + 5 * escala
+            _texto(x + relleno + 10 * escala, cursor, linea, tam, _con_alfa(color_tono, alfa))
+        cursor -= 10 * escala
+
+    if ruta.herramientas and not ruta.completada:
+        cursor -= 24 * escala
+        _cinturon(shader, x + relleno, cursor, ancho_texto, escala, ruta, pal, alfa)
+
+    _rectangulo(shader, x + relleno, y + 24 * escala, ancho_texto, 1 * escala, _con_alfa((1, 1, 1, 0.06), alfa))
+    _texto(x + relleno, y + 9 * escala, _recortar(_pie(ruta, m), tam_chico, ancho_texto), tam_chico,
+           _con_alfa(TEXTO_SUAVE, alfa))
+
+    siguiente = y + alto + 12 * escala
+    siguiente += _sello(shader, x, siguiente, ancho, escala, pal)
+    if not silencioso:
+        _dibujar_avisos(shader, x, siguiente, ancho, escala, pal)
     gpu.state.blend_set("NONE")
 
 
-def _pie(x, y, ancho, tam, g):
-    estado = practicas.ESTADO["sync"]
+def _resumen_pistas():
+    usadas = sum(practicas.pistas().values())
+    return "sin pistas" if not usadas else f"{usadas} pista{'s' if usadas != 1 else ''}"
+
+
+def _pie(ruta, m):
+    if ruta.completada:
+        return "N › Amatista: siguiente práctica"
+    g = guia.guia_actual()
     if g is not None and g.action is not None and not g.completed:
-        pie = f"N › Amatista › «{g.action.label}»"
-    else:
-        pie = {
-            practicas.SYNC_GUARDADO: "Guardado en tu cuenta",
-            practicas.SYNC_PENDIENTE: "Pendiente de enviar",
-            practicas.SYNC_SIN_CUENTA: "Sin cuenta vinculada",
-            practicas.SYNC_ENVIANDO: "Enviando…",
-        }.get(estado, "N › Amatista para ver los pasos")
-    _texto(x, y, _recortar(pie, tam, ancho), tam, TEXTO_SUAVE)
-
-
-def _rotar_mascota():
-    """Cada pocos segundos: redibuja para que el globo cambie de mensaje y la mascota brinque.
-
-    Solo pide un redibujado (no evalúa nada) y solo si hay una práctica abierta.
-    """
-    try:
-        sc = bpy.context.scene
-        if sc is not None and sc.amatista.practica_json:
-            practicas.redibujar()
-    except (AttributeError, ReferenceError):
-        pass
-    return 3.0
+        return f"¿Atorado? N › Amatista › «Muéstrame cómo»"
+    estado = practicas.ESTADO["sync"]
+    return {
+        practicas.SYNC_GUARDADO: "Tu avance está guardado en tu cuenta",
+        practicas.SYNC_PENDIENTE: "Tu avance se enviará cuando haya conexión",
+        practicas.SYNC_SIN_CUENTA: "Vincula tu cuenta para guardar tu avance",
+        practicas.SYNC_ENVIANDO: "Guardando tu avance…",
+    }.get(estado, "N › Amatista para ver tu ruta")
 
 
 def activar(encendido=True):
@@ -558,10 +670,6 @@ def activar(encendido=True):
 
     if gpu is None or bpy.app.background:
         return
-    if encendido and not bpy.app.timers.is_registered(_rotar_mascota):
-        bpy.app.timers.register(_rotar_mascota, first_interval=3.0, persistent=True)
-    elif not encendido and bpy.app.timers.is_registered(_rotar_mascota):
-        bpy.app.timers.unregister(_rotar_mascota)
     if encendido and not _MANEJADORES:
         _MANEJADORES.append((bpy.types.SpaceView3D.draw_handler_add(dibujar, (), "WINDOW", "POST_PIXEL"), "WINDOW"))
         _MANEJADORES.append((bpy.types.SpaceView3D.draw_handler_add(visor3d.dibujar_escena, (), "WINDOW", "POST_VIEW"), "WINDOW"))

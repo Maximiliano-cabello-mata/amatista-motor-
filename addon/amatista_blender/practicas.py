@@ -16,7 +16,7 @@ from pathlib import Path
 import bpy
 from bpy.app.handlers import persistent
 
-from . import _motor, ajustes, aprendizaje, enfoque, enlace, escenarios, guia, red, temas
+from . import _motor, ajustes, aprendizaje, enfoque, enlace, escenarios, guia, mision, red, temas
 
 # Estado de la sesión de Blender (no se guarda en el .blend).
 ESTADO = {
@@ -403,13 +403,14 @@ def mostrar_en_amatista(context=None):
 
 
 def _abrir_teoria(practica):
-    """Al abrir: primero el repaso de lo anterior (si toca) y luego la píldora de inicio."""
+    """Al abrir: el repaso de lo anterior (si toca) o «Tu misión», con la píldora de inicio dentro."""
     if guia.nivel() == guia.NIVEL_SILENCIOSO:
         return
     if aprendizaje.repasos_pendientes(practica):
         _invocar("amatista.repaso")
-    elif aprendizaje.pildora_principal() is not None:
-        _invocar("amatista.pildora")
+    else:
+        # Motor 4: primero «Tu misión» (qué vas a construir y por qué partes); la teoría va dentro.
+        _invocar("amatista.mision_inicio")
 
 
 def cerrar(context):
@@ -509,6 +510,12 @@ def evaluar(context=None, motivo="manual"):
         guia.actualizar(context, practica, foto, reporte, motivo)
     except Exception as error:  # noqa: BLE001 - la guía nunca impide evaluar
         print(f"[Amatista] Error en la guía: {error}")
+    try:
+        # Motor 4: la ruta (misiones en fila) y sus animaciones.
+        mision.observar()
+        mision.actualizar(context, practica, reporte, guia.guia_actual(), pistas(context), motivo)
+    except Exception as error:  # noqa: BLE001 - la ruta nunca impide evaluar
+        print(f"[Amatista] Error en la ruta: {error}")
     try:
         aprendizaje.actualizar_pildoras(practica, foto, reporte)
         nueva = aprendizaje.pildora_principal()
@@ -863,6 +870,12 @@ def _vigilante():
             ESTADO["sucio"] = True
             ESTADO["ultimo_cambio"] = time.time() - 1
         ESTADO["motor_render"] = motor
+    if sc is not None and sc.amatista.practica_json and not ESTADO["sucio"]:
+        try:
+            if mision.observar():  # motor 4: la tecla usada se enciende aunque la escena no cambie (vistas 1, 3, 7)
+                redibujar()
+        except Exception as error:  # noqa: BLE001
+            print(f"[Amatista] Error al observar las herramientas: {error}")
     if ESTADO["sucio"] and (p is None or p.comprobar_solo) and time.time() - ESTADO["ultimo_cambio"] > 0.4:
         try:
             evaluar(bpy.context, "cambio")

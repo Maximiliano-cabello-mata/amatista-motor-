@@ -6,7 +6,7 @@ herramienta en Blender. Las del paso actual aparecen primero y marcadas.
 """
 import bpy
 
-from .. import _motor, enfoque, enlace, guia, practicas
+from .. import _motor, enfoque, enlace, guia, mision, practicas
 from . import estilo
 
 ICONO_CATEGORIA = {
@@ -160,6 +160,7 @@ class AMATISTA_OT_usar_herramienta(bpy.types.Operator):
         if aviso:
             self.report({"WARNING"}, aviso)
             return {"CANCELLED"}
+        mision.marcar_usada(herramienta.id)  # motor 4: se enciende en la tarjeta de la misión
         if herramienta.keys:
             self.report({"INFO"}, f"{herramienta.name}: la próxima vez pulsa {herramienta.keys[0]}.")
         return {"FINISHED"}

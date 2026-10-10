@@ -4,8 +4,11 @@ Modo Alumno (Student), motor v3: tres secciones como en una plataforma
 educativa, elegidas con las pestañas de arriba:
     Aprender   la teoría de este momento (píldoras), las demás ideas de la
                práctica y el repaso espaciado
-    Practicar  la práctica: curso y módulo, progreso, pausa si un vigilante
-               la detuvo, la tarjeta guía «Ahora», asignar rol y los pasos
+    Practicar  Motor 4: la misión de ahora y nada más (qué hacer, sus teclas,
+               «Muéstrame cómo» y sus herramientas). Debajo, cerrados: «Tu
+               ruta» (las partes y sus misiones), «Tus herramientas»,
+               «Comparado con el ejemplo» y «Más» (el modelo, el ejemplo,
+               la teoría, el tema y la plataforma)
     Mi curso   el mapa de los cursos (Principiante, Principiante-Intermedio…)
                con lo terminado, lo disponible y lo bloqueado
 Modo Desarrollador (Author): Borrador · Tagger · Inspector · Objetivos ·
@@ -17,7 +20,7 @@ import time
 
 import bpy
 
-from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, integridad, practicas, red, temas
+from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, integridad, mision, practicas, red, temas
 from . import aprender, dialogos, estilo, herramientas
 
 CATEGORIA = "Amatista"
@@ -228,7 +231,125 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
             practicas.evaluar_pronto()
             layout.label(text="Revisando tu escena…", icon="TIME")
             return
+        ruta = mision.ruta()
+        if modo_alumno(context) and ruta is not None and ruta.practica_id == practica.id:
+            self._mision(layout, context, practica, reporte, ruta)
+            return
+        self._clasico(layout, context, practica, reporte)
 
+    # --- Motor 4: la misión de ahora ---------------------------------------------------------
+
+    def _mision(self, layout, context, practica, reporte, ruta):
+        curso, modulo = aprendizaje.lugar(practica)
+        if curso is not None:
+            miga = layout.row()
+            miga.active = False
+            miga.label(text=f"Módulo {modulo.number}: {modulo.title} · {practica.title}", icon="OUTLINER_COLLECTION")
+        if reporte.needs_update:
+            estilo.parrafo(layout, context, "Esta práctica necesita una versión más reciente del add-on.",
+                           icon="ERROR", alerta=True)
+        if reporte.paused:
+            self._tarjeta_pausa(layout, context, practica, reporte)
+
+        if ruta.completada:
+            cuerpo = estilo.tarjeta(layout, "¡Práctica completada!", icono_propio="celebrar",
+                                    derecha=f"{ruta.total}/{ruta.total}")
+            estilo.barra(cuerpo, 1.0, f"{ruta.total} de {ruta.total} misiones")
+            estilo.parrafo(cuerpo, context, practica.completion or "Terminaste todas las misiones.", icon="FUND")
+            if practica.place is not None and practica.place.next:
+                estilo.boton_principal(layout, "amatista.abrir_practica", "Siguiente práctica", icon="FORWARD",
+                                       escala=1.6, practica_id=practica.place.next)
+            self._estado_sync(layout, context)
+            return
+
+        m = ruta.mision
+        if m is None:
+            layout.label(text="Revisando tu escena…", icon="TIME")
+            return
+        parte = ruta.partes[m.parte]
+        caja = layout.box()
+        cabecera = caja.row(align=True)
+        cabecera.label(text=f"Misión {m.numero} de {ruta.total}", icon_value=estilo.icono("actual"))
+        derecha = cabecera.row()
+        derecha.alignment = "RIGHT"
+        derecha.active = False
+        derecha.label(text=f"Parte {m.parte + 1}: {parte.titulo}")
+        estilo.barra(caja, ruta.hechas / max(1, ruta.total), f"{ruta.hechas} de {ruta.total} hechas")
+        titulo = caja.row()
+        titulo.scale_y = 1.45
+        titulo.label(text=m.titulo)
+        if m.objetivo:
+            estilo.parrafo(caja, context, m.objetivo)
+        silencioso = guia.nivel() == guia.NIVEL_SILENCIOSO
+        if m.pasos and not silencioso:
+            estilo.separador(caja, 0.3)
+            for numero, paso in enumerate(m.pasos, start=1):
+                hecho = mision.paso_hecho(paso)
+                fila = caja.row(align=True)
+                fila.active = not hecho
+                numero_fila = fila.row()
+                numero_fila.alignment = "LEFT"
+                if hecho:
+                    numero_fila.label(text="", icon="CHECKMARK")
+                else:
+                    numero_fila.label(text=f"{numero}.")
+                estilo.teclas(fila, paso.keys)
+                estilo.parrafo(caja, context, paso.text, margen=6)
+        if m.mensaje and not silencioso:
+            estilo.separador(caja, 0.3)
+            icono_tono, alerta = estilo.TONOS.get(m.tono or "animo", ("LIGHT", False))
+            estilo.parrafo(caja, context, m.mensaje, icon=icono_tono, alerta=alerta)
+        if m.por_que and not silencioso:
+            sub = caja.column()
+            sub.active = False
+            estilo.parrafo(sub, context, m.por_que, icon="QUESTION")
+
+        g = guia.guia_actual()
+        if g is not None and g.action is not None and not g.completed and not silencioso:
+            estilo.boton_principal(layout, "amatista.hazlo_conmigo", f"Muéstrame cómo: {g.action.label}",
+                                   icon="PLAY", escala=1.45)
+        elif not silencioso:
+            estilo.boton_principal(layout, "amatista.explicar_paso", "Muéstrame cómo", icon="PLAY", escala=1.45)
+        fila = layout.row(align=True)
+        fila.scale_y = 1.15
+        reveladas = practicas.pistas(context).get(m.id, 0)
+        if m.pistas:
+            fila.operator("amatista.pista", text=f"Pista ({max(0, m.pistas - reveladas)})",
+                          icon_value=estilo.icono("pista")).objetivo = m.id
+        fila.operator("amatista.mostrarme", text="¿Dónde?", icon="HIDE_OFF")
+        fila.operator("amatista.comprobar", text="Revisar", icon="CHECKMARK")
+
+        if m.herramientas:
+            registro = _motor.MOTOR.tools
+            cuerpo = layout.column(align=True)
+            sub = cuerpo.row()
+            sub.active = False
+            sub.label(text="Herramientas de esta misión", icon="TOOL_SETTINGS")
+            fila = cuerpo.row(align=True)
+            for hid in m.herramientas[:4]:
+                h = registro.get(hid) if registro is not None else None
+                if h is None:
+                    continue
+                usada = mision.estado_herramienta(hid) == "usada"
+                op = fila.operator("amatista.usar_herramienta", text=h.name.split(" (")[0],
+                                   icon="CHECKMARK" if usada else herramientas.icono(h), depress=not usada)
+                op.herramienta = hid
+
+        siguientes = ruta.siguientes(2)
+        if siguientes:
+            sub = layout.row()
+            sub.active = False
+            sub.label(text="Después: " + " · ".join(x.titulo for x in siguientes), icon="FORWARD")
+
+        fila = layout.row(align=True)
+        if practicas.archivo_de_referencia(practica.id, "referencia.jpg"):
+            fila.operator("amatista.ver_referencia", text="Así se ve", icon="IMAGE_DATA").archivo = "referencia.jpg"
+        if practica.example is not None:
+            fila.operator("amatista.ver_ejemplo", text="Ver el ejemplo", icon="SEQUENCE")
+        self._estado_sync(layout, context)
+
+    def _clasico(self, layout, context, practica, reporte):
+        """El panel de antes (mientras la ruta no está lista): todo a la vista."""
         curso, modulo = aprendizaje.lugar(practica)
         if curso is not None:
             miga = layout.row()
@@ -470,7 +591,7 @@ def _dibujar_detalle(layout, context, resultado):
 
 class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
     bl_idname = "AMATISTA_PT_objetivos"
-    bl_label = "Todos los pasos"
+    bl_label = "Tu ruta"
     bl_parent_id = "AMATISTA_PT_principal"
     bl_options = {"DEFAULT_CLOSED"}
 
@@ -489,6 +610,10 @@ class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
         if practica is None or reporte is None:
             return
         depurar = modo_autor(context) and not context.window_manager.amatista.vista_previa
+        ruta = mision.ruta()
+        if not depurar and ruta is not None and ruta.practica_id == practica.id:
+            dibujar_ruta(layout, ruta)
+            return
         pistas = practicas.pistas(context)
         titulos = {t.id: (t.title or t.id) for t in practica.targets}
         for paso in reporte.steps:
@@ -528,6 +653,29 @@ class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
                 _dibujar_detalle(contenedor, context, reporte.result(objetivo.id))
 
 
+ICONO_MISION = {"hecha": "completado", "adelantada": "completado", "actual": "actual", "siguiente": "pendiente"}
+
+
+def dibujar_ruta(layout, ruta):
+    """Motor 4: las partes de la práctica y sus misiones (✓ hechas, ▶ la de ahora, ○ las que vienen)."""
+    for numero, parte in enumerate(ruta.partes, start=1):
+        misiones = [m for m in ruta.misiones if parte.desde <= m.numero <= parte.hasta]
+        hechas = sum(1 for m in misiones if m.estado in ("hecha", "adelantada"))
+        cabecera = layout.row()
+        cabecera.label(text=f"Parte {numero}: {parte.titulo}", icon="CHECKMARK" if hechas == len(misiones) else "DOT")
+        derecha = cabecera.row()
+        derecha.alignment = "RIGHT"
+        derecha.active = False
+        derecha.label(text=f"{hechas}/{len(misiones)}")
+        col = layout.column(align=True)
+        for m in misiones:
+            fila = col.row()
+            fila.active = m.estado != "siguiente"
+            texto = m.titulo + ("  · ¡ya lo tenías!" if m.estado == "adelantada" else "")
+            fila.label(text=texto, icon_value=estilo.icono(ICONO_MISION.get(m.estado, "pendiente")))
+        estilo.separador(layout, 0.3)
+
+
 ICONO_LISTA = {"Bien": "CHECKMARK", "Detalle": "LIGHT"}
 
 
@@ -537,6 +685,7 @@ class AMATISTA_PT_figura(_Base, bpy.types.Panel):
     bl_idname = "AMATISTA_PT_figura"
     bl_label = "Comparado con el ejemplo"
     bl_parent_id = "AMATISTA_PT_principal"
+    bl_options = {"DEFAULT_CLOSED"}  # motor 4: la misión de ahora va primero
 
     @classmethod
     def poll(cls, context):
@@ -581,6 +730,7 @@ class AMATISTA_PT_herramientas(_Base, bpy.types.Panel):
     bl_idname = "AMATISTA_PT_herramientas"
     bl_label = "Tus herramientas"
     bl_parent_id = "AMATISTA_PT_principal"
+    bl_options = {"DEFAULT_CLOSED"}  # motor 4: las de la misión ya están en la tarjeta
 
     @classmethod
     def poll(cls, context):
@@ -605,7 +755,10 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         practica = practicas.practica_activa(context)
-        return seccion(context, "practicar") and practica is not None and bool(practica.roles)
+        if not (seccion(context, "practicar") and practica is not None and bool(practica.roles)):
+            return False
+        # Motor 4: si Amatista reconoce las piezas por su forma, el alumno no ve este panel.
+        return not practica.infers_roles or ajustes.es_desarrollador()
 
     def draw_header(self, context):
         self.layout.label(text="", icon="BOOKMARKS")
@@ -649,6 +802,41 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
             col.active = False
             for rol in practica.roles:
                 col.label(text=f"{rol.label}: {conteo.get(rol.id, 0)}", icon="DOT")
+
+
+class AMATISTA_PT_mas(_Base, bpy.types.Panel):
+    """Motor 4: lo que no es la misión de ahora (modelo, ejemplo, teoría, tema y plataforma), cerrado."""
+
+    bl_idname = "AMATISTA_PT_mas"
+    bl_label = "Más"
+    bl_parent_id = "AMATISTA_PT_principal"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    @classmethod
+    def poll(cls, context):
+        return seccion(context, "practicar") and practicas.practica_activa(context) is not None
+
+    def draw_header(self, context):
+        self.layout.label(text="", icon="COLLAPSEMENU")
+
+    def draw(self, context):
+        layout = self.layout
+        practica = practicas.practica_activa(context)
+        reporte = practicas.ESTADO["reporte"]
+        if practica is None or reporte is None:
+            return
+        tarjeta_tema(layout, context, practica, reporte)
+        AMATISTA_PT_practica._modelo(self, layout, context, practica, reporte)
+        AMATISTA_PT_practica._ejemplo(self, layout, context, practica, reporte)
+        pildora = aprendizaje.pildora_principal()
+        fila = layout.row(align=True)
+        if pildora is not None:
+            fila.operator("amatista.pildora", text=f"Teoría: {pildora.title}", icon=aprender.icono_visual(pildora))
+        fila.operator("amatista.mision_inicio", text="Tu misión", icon="CON_FOLLOWPATH")
+        fila = layout.row(align=True)
+        fila.operator("amatista.abrir_plataforma", text="Plataforma", icon="URL").ruta = "#/panel"
+        fila.operator("amatista.elegir_practica", text="Otra práctica", icon="FILE_REFRESH")
+        fila.operator("amatista.empezar_de_nuevo", text="De nuevo", icon="LOOP_BACK")
 
 
 # --- Aprender y Mi curso (motor v3) -----------------------------------------------------------
@@ -1123,10 +1311,11 @@ CLASES = (
     AMATISTA_PT_aprender,
     AMATISTA_PT_practica,
     AMATISTA_PT_curso,
-    AMATISTA_PT_figura,
-    AMATISTA_PT_herramientas,
-    AMATISTA_PT_roles,
     AMATISTA_PT_objetivos,
+    AMATISTA_PT_herramientas,
+    AMATISTA_PT_figura,
+    AMATISTA_PT_roles,
+    AMATISTA_PT_mas,
     AMATISTA_PT_autor_borrador,
     AMATISTA_PT_autor_tagger,
     AMATISTA_PT_autor_inspector,

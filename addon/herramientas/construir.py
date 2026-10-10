@@ -2,7 +2,7 @@
 
 Uso desde la terminal (en la raíz del repositorio):
 
-    python addon/herramientas/construir.py                      # dist/amatista-3.5.1.zip
+    python addon/herramientas/construir.py                      # dist/amatista-4.0.0.zip
     python addon/herramientas/construir.py --sistema windows \\
         --servidor https://api.ejemplo.cl --plataforma https://ejemplo.cl
 

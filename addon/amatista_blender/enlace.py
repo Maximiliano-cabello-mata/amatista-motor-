@@ -67,11 +67,28 @@ def detalle_vivo(escena_pistas=None):
     objetivo = practica.target(reporte.current_target_id) if practica is not None and reporte.current_target_id else None
     contexto_pistas = SimpleNamespace(scene=escena_pistas) if escena_pistas is not None else None
     reveladas = practicas.pistas(contexto_pistas).get(objetivo.id, 0) if objetivo is not None else 0
+    from . import mision
+
+    ruta = mision.ruta()
+    m = ruta.mision if ruta is not None and practica is not None and ruta.practica_id == practica.id else None
+    if m is not None:
+        # Motor 4: la plataforma muestra la misma misión que la tarjeta de Blender.
+        titulo, mensaje, numero, total = m.titulo, m.mensaje, m.numero, ruta.total
+    else:
+        titulo, mensaje = (g.title if g else ""), (g.feedback if g else "")
+        numero, total = int(getattr(g, "step_number", 0) or 0), int(getattr(g, "step_total", 0) or 0)
+        if ruta is not None and ruta.completada and practica is not None and ruta.practica_id == practica.id:
+            numero = total = ruta.total
     return {
-        "titulo": (g.title if g else "")[:120],
-        "mensaje": (g.feedback if g else "")[:500],
-        "numero": min(99, int(getattr(g, "step_number", 0) or 0)),
-        "total": min(99, int(getattr(g, "step_total", 0) or 0)),
+        "titulo": (titulo or "")[:120],
+        "mensaje": (mensaje or "")[:500],
+        "numero": min(99, int(numero or 0)),
+        "total": min(99, int(total or 0)),
+        "parte": (ruta.partes[m.parte].titulo if m is not None else "")[:60],
+        "hechas": min(99, int(ruta.hechas)) if ruta is not None else 0,
+        "objetivo": (m.objetivo if m is not None else "")[:300],
+        "pasos": [{"texto": p.text[:160], "teclas": [str(k)[:16] for k in p.keys[:6]]} for p in m.pasos[:3]]
+        if m is not None else [],
         "figura": (figura or "")[:120],
         "lista": [{"texto": str(i.get("texto", ""))[:60], "ok": bool(i.get("ok")), "estado": str(i.get("estado", ""))[:20],
                    "consejo": str(i.get("consejo", ""))[:400], "aspecto": str(i.get("aspecto", ""))[:40]}

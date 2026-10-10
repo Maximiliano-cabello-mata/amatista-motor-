@@ -1,5 +1,8 @@
 """Diálogos de Amatista: pista, felicitación, aviso de herramienta, bienvenida
-y, desde la etapa 2, «Así se hace este paso» y «¿Te ayudo?».
+y, desde la etapa 2, «Así se hace este paso» y «¿Te ayudo?». Motor 4: «Tu
+misión» al abrir la práctica (qué vas a construir, sus partes y sus
+herramientas) y la felicitación con lo que aprendiste. Ya no sale un diálogo
+por cada paso: la tarjeta de la vista 3D lo cuenta.
 
 Son ventanas emergentes pequeñas con el mismo estilo que los paneles
 (tarjeta con ícono propio, texto partido y botones grandes). Nunca bloquean
@@ -7,7 +10,7 @@ Blender: se cierran al mover el ratón fuera o con Esc.
 """
 import bpy
 
-from .. import _motor, ajustes, aprendizaje, guia, practicas, temas
+from .. import _motor, ajustes, aprendizaje, guia, mision, practicas, temas
 from . import estilo
 
 ANCHO = 380
@@ -101,6 +104,13 @@ class AMATISTA_OT_felicitar(bpy.types.Operator):
         }.get(autonomia, "")
         if texto:
             cuerpo.label(text=texto, icon="FUND")
+        ruta = mision.ruta()
+        if ruta is not None:
+            cuerpo.label(text=f"{ruta.total} de {ruta.total} misiones en {len(ruta.partes)} partes", icon="CHECKMARK")
+            nombres = _nombres_herramientas(ruta.herramientas)
+            if nombres:
+                estilo.parrafo(cuerpo, context, "Ya sabes usar: " + ", ".join(nombres) + ".", icon="TOOL_SETTINGS",
+                               margen=0)
         if practicas.vinculado():
             cuerpo.label(text="Tu progreso se guarda en tu cuenta de Amatista.", icon_value=estilo.icono("sincronizado"))
         else:
@@ -114,6 +124,85 @@ class AMATISTA_OT_felicitar(bpy.types.Operator):
         fila.operator("amatista.abrir_plataforma", text="Ver en la plataforma", icon="URL").ruta = "#/panel"
         if not practicas.vinculado():
             fila.operator("amatista.vincular", text="Vincular", icon="LINKED")
+
+
+def _nombres_herramientas(ids, cuantas=6):
+    registro = _motor.MOTOR.tools
+    if registro is None:
+        return []
+    return [h.name.split(" (")[0] for h in (registro.get(i) for i in ids[:cuantas]) if h is not None]
+
+
+class AMATISTA_OT_mision_inicio(bpy.types.Operator):
+    """Motor 4: al abrir la práctica, qué vas a construir, por qué partes y con qué herramientas."""
+
+    bl_idname = "amatista.mision_inicio"
+    bl_label = "Tu misión"
+    bl_description = "Qué vas a construir en esta práctica, sus partes y las herramientas que usarás"
+
+    def execute(self, context):
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        if practicas.practica_activa(context) is None:
+            return {"CANCELLED"}
+        if mision.ruta() is None:
+            practicas.evaluar(context)
+        return _popup(self, context, 470)
+
+    def draw(self, context):
+        layout = self.layout
+        practica = practicas.practica_activa(context)
+        ruta = mision.ruta()
+        if practica is None or ruta is None:
+            return
+        tema = temas.tema_de_practica(practica.id)
+        cabecera = layout.row()
+        cabecera.scale_y = 1.6
+        cabecera.label(text=f"Tu misión: {practica.title}", icon_value=estilo.icono("logo"))
+        sub = layout.row()
+        sub.active = False
+        sub.label(text=f"{tema['nombre']} · {ruta.total} misiones · {practica.estimated_minutes or 20} min aprox.")
+        imagen = practicas.archivo_de_referencia(practica.id, "referencia.jpg")
+        if imagen is not None:
+            fila = layout.row()
+            fila.alignment = "CENTER"
+            fila.template_icon(icon_value=estilo.imagen(imagen), scale=7.0)
+        texto = practica.description or practica.intro
+        if texto:
+            estilo.parrafo(layout, context, temas.voz(tema, texto) if tema else texto, margen=0)
+
+        caja = estilo.tarjeta(layout, "Tu ruta", icon="CON_FOLLOWPATH")
+        for numero, parte in enumerate(ruta.partes, start=1):
+            fila = caja.row()
+            fila.label(text=f"{numero}. {parte.titulo}", icon="DOT")
+            derecha = fila.row()
+            derecha.alignment = "RIGHT"
+            derecha.active = False
+            cuantas = parte.hasta - parte.desde + 1
+            derecha.label(text=f"{cuantas} misión" + ("" if cuantas == 1 else "es"))
+
+        nombres = _nombres_herramientas(ruta.herramientas)
+        if nombres:
+            caja = estilo.tarjeta(layout, "Las herramientas que vas a usar", icon="TOOL_SETTINGS")
+            estilo.parrafo(caja, context, " · ".join(nombres), margen=0)
+            if practica.level <= 2:
+                estilo.parrafo(caja, context, "Amatista te deja lista la de cada misión en la barra de la izquierda.",
+                               icon="INFO", margen=0)
+
+        caja = estilo.tarjeta(layout, "Cómo funciona", icon="HEART")
+        for linea in (
+            "Una misión a la vez: la tarjeta de la vista 3D te dice qué hacer y qué teclas usar.",
+            "Amatista revisa solo mientras trabajas. Las medidas no tienen que ser exactas: tiene que verse bien.",
+            "¿Te atoras? «Muéstrame cómo» lo hace contigo, paso a paso.",
+        ):
+            estilo.parrafo(caja, context, linea, margen=0)
+        pildora = aprendizaje.pildora_principal()
+        if pildora is not None:
+            fila = layout.row()
+            fila.scale_y = 1.2
+            fila.operator("amatista.pildora", text=f"Antes de empezar: {pildora.title}", icon="HELP")
+        estilo.boton_principal(layout, "amatista.comprobar", "¡Empezar!", icon="PLAY", escala=1.5)
 
 
 class AMATISTA_OT_aviso_herramienta(bpy.types.Operator):
@@ -271,6 +360,7 @@ class AMATISTA_OT_ofrecer_ayuda(bpy.types.Operator):
 
 
 CLASES = (
+    AMATISTA_OT_mision_inicio,
     AMATISTA_OT_pista,
     AMATISTA_OT_felicitar,
     AMATISTA_OT_aviso_herramienta,

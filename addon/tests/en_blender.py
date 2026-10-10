@@ -433,6 +433,53 @@ def probar_motor_34(contexto):
     _ = (_motor, guia)
 
 
+def probar_motor_4(contexto):
+    """Motor 4: la ruta de misiones, una tarjeta, teclas que se encienden y herramientas iluminadas."""
+    from amatista_blender import ajustes, enlace, mision, practicas
+    from amatista_blender.interfaz import dialogos, paneles
+
+    catalogo = practicas.catalogo()
+    p = ajustes.prefs()
+    revisar(p.animaciones and p.preparar_herramienta and not p.dialogo_por_mision,
+            "preferencias del motor 4: animaciones y herramienta lista, sin diálogo por paso")
+    _limpiar()
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    ruta = mision.ruta()
+    revisar(ruta is not None and ruta.practica_id == "blender.bp.m1.tren", "al abrir la práctica hay ruta")
+    revisar(ruta.mision.id == "vagones" and ruta.mision.numero == 1, f"misión 1: dos vagones ({ruta.mision.id})")
+    revisar([x.titulo for x in ruta.partes] == ["La locomotora y el vagón", "Las ruedas", "Arma el tren",
+                                                 "Revisa y guarda"], f"las partes del tren ({[x.titulo for x in ruta.partes]})")
+    revisar("object.add" in ruta.mision.herramientas, "la misión 1 ilumina «Añadir objeto»")
+    paso = next((x for x in ruta.mision.pasos if x.keys), None)
+    revisar(paso is not None and not mision.paso_hecho(paso), "la tecla de la misión empieza apagada")
+    revisar(bpy.ops.amatista.usar_herramienta(herramienta="object.add") == {"FINISHED"}, "«Usar» Añadir objeto")
+    revisar(mision.paso_hecho(paso) and mision.estado_herramienta("object.add") == "usada",
+            "usar la herramienta enciende su tecla en la tarjeta")
+    revisar(mision.estado_herramienta("transform.rotate") == "despues", "Rotar se marca para después")
+    dibujar_todo(contexto)  # tarjeta de la misión, «Tu ruta», «Más» y «Tu misión» con la ruta lista
+    menu = type("Dialogo", (), {"layout": Diseno()})()
+    dialogos.AMATISTA_OT_mision_inicio.draw(menu, contexto)
+    paneles.dibujar_ruta(Diseno(), ruta)
+
+    for nombre, x in (("Locomotora", 1.2), ("Vagon", -1.2)):
+        cubo(nombre, (x, 0, 0.6), (1.1, 0.6, 0.5))
+    reporte = practicas.evaluar(contexto)
+    ruta = mision.ruta()
+    revisar(reporte.result("vagones").passed and ruta.mision.id != "vagones", f"avanza a la misión 2 ({ruta.mision.id})")
+    revisar(ruta.misiones[0].estado == "hecha" and ruta.hechas >= 1, "la misión 1 queda hecha")
+    revisar(mision.ESTADO["logro"] is not None and mision.ESTADO["logro"]["numero"] == 1,
+            f"la misión cumplida se celebra ({mision.ESTADO['logro']})")
+    revisar(not mision.ESTADO["usadas"], "la misión nueva empieza con sus teclas apagadas")
+    dibujar_vista_3d(contexto)  # con el sello «¡Misión cumplida!» y las chispas
+    escalar = next((m for m in ruta.misiones if "transform.scale" in m.herramientas), None)
+    revisar(escalar is not None and mision.herramienta_de_barra(escalar, "OBJECT").id == "transform.scale",
+            "una misión de escalar deja lista la herramienta Escalar en la barra T")
+    detalle = enlace.detalle_vivo()
+    revisar(detalle["numero"] == ruta.mision.numero and detalle["total"] == ruta.total
+            and detalle["titulo"] == ruta.mision.titulo, f"la plataforma ve la misma misión ({detalle['titulo']})")
+    practicas.cerrar(contexto)
+
+
 def probar_escena_por_practica(contexto):
     """Add-on 3.5: abrir otra práctica no arrastra lo de la anterior (cada una tiene su escena)."""
     from amatista_blender import practicas
@@ -801,7 +848,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "3.5.1", "el intento lleva la versión 3.5 del add-on")
+    revisar(datos["version_addon"] == "4.0.0", "el intento lleva la versión 4.0 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -842,6 +889,7 @@ def main():
     probar_motor_35(contexto)
     probar_ejemplo(contexto)
     probar_auditoria(contexto)
+    probar_motor_4(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

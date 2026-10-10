@@ -20,13 +20,18 @@ de la anterior), la lista del instructor «Tu figura» (la silueta de la malla
 comparada parte por parte con el modelo) y la plataforma maneja la práctica
 (comprobar, pista, «Hazlo conmigo», guardar, empezar de nuevo).
 
+Motor 4: la práctica es una ruta de misiones en fila (mision.py): una sola
+tarjeta en la vista 3D con la misión de ahora, sus teclas que se encienden al
+usarlas, sus herramientas iluminadas (y elegidas en la barra T en los niveles
+1 y 2), animaciones al empezar y al cumplir cada misión, y medidas amables.
+
 Nada pesado al importar: la red y la evaluación arrancan con temporizadores.
 Documentación: docs/motor/ en el repositorio.
 """
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (3, 5, 1),
+    "version": (4, 0, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Prácticas guiadas de Amatista dentro de Blender",
@@ -35,7 +40,7 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, operadores, practicas, red
+from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, mision, operadores, practicas, red
 from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
 
 CLASES = (
@@ -83,6 +88,7 @@ def unregister():
     practicas.unregister()
     cuenta.unregister()  # deja de preguntar por el código de vinculación
     guia.unregister()
+    mision.unregister()
     red.unregister()
     for clase in reversed(CLASES):
         bpy.utils.unregister_class(clase)
