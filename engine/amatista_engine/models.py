@@ -218,6 +218,7 @@ class TargetDefinition:
     optional: bool = False
     guide: Optional[TargetGuide] = None
     fix: Optional[FixDefinition] = None  # solo vigilantes (guards)
+    stage: str = ""  # motor 4: la parte de la ruta («Arma las piezas»); vacío = la deduce el motor
 
 
 @dataclass(frozen=True)

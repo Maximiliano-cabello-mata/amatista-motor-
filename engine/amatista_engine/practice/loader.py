@@ -224,6 +224,7 @@ def _objetivo(raw: Any, index: int, e: _Errores, ids: set, lista: str = "targets
         optional=optional,
         guide=_guia(raw.get("guide"), f"{donde}guide", e),
         fix=_arreglo(raw.get("fix"), f"{donde}fix", e),
+        stage=str(raw.get("stage", "") or "").strip()[:40],
     )
 
 
@@ -933,6 +934,8 @@ def _dump_objetivo(t: TargetDefinition, referencia: Optional[ReferenceModel] = N
         objetivo["messages"] = dict(t.messages)
     if t.optional:
         objetivo["optional"] = True
+    if t.stage:
+        objetivo["stage"] = t.stage
     if t.guide is not None and (t.guide.why or t.guide.steps):
         guia: Dict[str, Any] = {}
         if t.guide.why:

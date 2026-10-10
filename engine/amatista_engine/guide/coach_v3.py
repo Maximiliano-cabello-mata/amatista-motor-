@@ -79,7 +79,10 @@ def coach_object_count(ctx: Contexto) -> Parcial:
         Paso("Con el ratón sobre la vista 3D, abre el menú Agregar", ("Shift", "A")),
         Paso(f"Elige Malla › {nombre}"),
     ]
-    if rol:
+    if rol and ctx.practice.infers_roles:
+        # Motor 4: Amatista reconoce la pieza por su forma; el alumno no asigna roles.
+        pasos.append(Paso(f"Dale la forma de «{ctx.etiqueta(rol)}» con S: Amatista la reconoce sola", ("S",)))
+    elif rol:
         pasos.append(Paso(f"Dile a Amatista que es «{ctx.etiqueta(rol)}» (pestaña Amatista › Asignar rol)", ("N",)))
     existentes = d.get("objects") or []
     if existentes:

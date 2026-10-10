@@ -26,6 +26,11 @@ class AmatistaEngine:
         self.tools = tools
 
     def _validar(self, target, scene: SceneState, practice: Optional[PracticeDefinition] = None) -> ValidationResult:
+        if practice is not None:
+            # Motor 4: medidas amables; la forma tiene que tener sentido, los decimales no estorban.
+            from .ruta.medidas import ajustar
+
+            target = ajustar(target, practice.level)
         resultado = self._validar_crudo(target, scene)
         if practice is None or not practice.roles:
             return resultado
@@ -128,6 +133,13 @@ class AmatistaEngine:
         from .guide import build_guidance
 
         return build_guidance(practice, scene, report or self.evaluate(practice, scene))
+
+    def route(self, practice: PracticeDefinition, report: EvaluationReport, guidance=None, hints=None,
+              previous: Optional[str] = None):
+        """Motor 4: la ruta del alumno (misiones en fila, la actual explicada y sus herramientas)."""
+        from .ruta import construir_ruta
+
+        return construir_ruta(practice, report, guidance, self.tools, hints, previous)
 
     def pills(self, practice: PracticeDefinition, scene: SceneState, report: EvaluationReport, seen=()):
         """Píldoras de teoría que tocan ahora (motor v3)."""

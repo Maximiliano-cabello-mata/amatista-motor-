@@ -116,7 +116,7 @@ def _revisar_parametros(target, spec, roles_declarados, errores, avisos, registr
         if param.required and param.name not in target.params:
             errores.append(f"{donde}: {target.validator} necesita el parámetro «{param.name}» ({param.label}).")
     conocidos = {p.name for p in spec.params} | ({*SELECTORES, "reference", "inside"} if spec.selects else set())
-    conocidos |= {"tolerance", "reference", "reference_role", "inside"}
+    conocidos |= {"tolerance", "reference", "reference_role", "inside", "exact"}  # exact: motor 4 (ruta/medidas.py)
     if spec.id == "logic.any":
         _revisar_opciones(target, errores, avisos, registry)
     if spec.id == "spatial.below" and not (target.params.get("reference_role") or target.params.get("reference")):

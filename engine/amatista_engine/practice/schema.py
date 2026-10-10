@@ -26,6 +26,7 @@ PATRON_VERSION = re.compile(r"^\d+\.\d+(\.\d+)?$")
 
 CAMPOS_OBJETIVO = {
     "id", "title", "validator", "params", "weight", "requires", "tip", "hints", "messages", "optional", "watch", "guide",
+    "stage",  # motor 4: parte de la ruta del alumno
 }
 CAMPOS_PRACTICA = {
     "schema", "id", "version", "title", "level", "description", "intro", "completion", "estimatedMinutes",
