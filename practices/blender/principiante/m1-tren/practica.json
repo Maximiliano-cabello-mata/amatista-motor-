@@ -80,6 +80,7 @@
     {
       "id": "vagones",
       "title": "Dos vagones",
+      "stage": "La locomotora y el vagón",
       "validator": "role.count",
       "params": {"role": "vagon", "min": 2},
       "weight": 15,
@@ -93,6 +94,7 @@
     {
       "id": "vagones-largos",
       "title": "Vagones alargados",
+      "stage": "La locomotora y el vagón",
       "validator": "logic.any",
       "params": {
         "options": [
@@ -108,6 +110,7 @@
     {
       "id": "ruedas",
       "title": "Ocho ruedas",
+      "stage": "Las ruedas",
       "validator": "object.count",
       "params": {"role": "rueda", "primitive": "cylinder", "min": 8},
       "weight": 15,
@@ -122,6 +125,7 @@
     {
       "id": "ruedas-de-pie",
       "title": "Ruedas de pie y delgadas",
+      "stage": "Las ruedas",
       "validator": "shape.thinnest_axis",
       "params": {"role": "rueda", "axis": "horizontal", "max_ratio": 0.5},
       "weight": 15,
@@ -143,6 +147,7 @@
     {
       "id": "ruedas-al-suelo",
       "title": "Ruedas en el suelo",
+      "stage": "Las ruedas",
       "validator": "spatial.grounded",
       "params": {"role": "rueda", "height": 0, "tolerance": 0.15},
       "weight": 15,
@@ -156,6 +161,7 @@
     {
       "id": "ruedas-unidas",
       "title": "Ruedas pegadas a los vagones",
+      "stage": "Las ruedas",
       "validator": "spatial.touching",
       "params": {"role": "rueda", "reference_role": "vagon", "tolerance": 0.15},
       "weight": 15,
@@ -169,6 +175,7 @@
     {
       "id": "tren-unido",
       "title": "Vagones enganchados",
+      "stage": "Arma el tren",
       "validator": "spatial.touching",
       "params": {"role": "vagon", "reference_role": "vagon", "tolerance": 0.4},
       "weight": 10,
@@ -179,6 +186,7 @@
     {
       "id": "chimenea",
       "title": "Chimenea en la locomotora",
+      "stage": "Arma el tren",
       "validator": "object.count",
       "params": {"role": "chimenea", "primitive": "cylinder", "min": 1},
       "weight": 5,
@@ -192,6 +200,7 @@
     {
       "id": "figura",
       "title": "Amatista reconoce tu tren",
+      "stage": "Revisa y guarda",
       "validator": "figure.recognize",
       "params": {},
       "weight": 15,
@@ -208,6 +217,7 @@
     {
       "id": "guardar",
       "title": "Guarda tu tren",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "tren"},
       "weight": 5,
@@ -218,6 +228,7 @@
     {
       "id": "guardado",
       "title": "Sin cambios pendientes",
+      "stage": "Revisa y guarda",
       "validator": "file.saved",
       "weight": 0,
       "requires": ["guardar"],

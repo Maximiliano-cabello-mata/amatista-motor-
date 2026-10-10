@@ -37,6 +37,7 @@
     {
       "id": "diorama",
       "title": "Marca tu pieza",
+      "stage": "La escena",
       "validator": "role.count",
       "params": {"role": "diorama", "min": 1},
       "weight": 10,
@@ -44,37 +45,9 @@
       "hints": ["Abre mi_aldea.blend o modela algo nuevo.", "En la pestaña Amatista elige el rol «Diorama»."]
     },
     {
-      "id": "camara",
-      "title": "Cámara activa",
-      "validator": "camera.active",
-      "weight": 10,
-      "requires": ["diorama"],
-      "tip": "Shift+A › Cámara.",
-      "hints": ["Ctrl+Numpad 0 la vuelve activa."]
-    },
-    {
-      "id": "encuadre",
-      "title": "Encuadre de portafolio",
-      "validator": "camera.frames",
-      "params": {"role": "diorama"},
-      "weight": 20,
-      "requires": ["camara"],
-      "tip": "Mira tu diorama como en la foto final y pulsa Ctrl+Alt+0.",
-      "hints": ["Numpad 0 para ver por la cámara."]
-    },
-    {
-      "id": "luces",
-      "title": "Tres puntos",
-      "validator": "light.three_point",
-      "params": {"role": "diorama"},
-      "weight": 25,
-      "requires": ["diorama"],
-      "tip": "Principal y relleno delante a cada lado, contraluz detrás.",
-      "hints": ["Mira desde arriba (7).", "Duplica la principal con Shift+D y baja su potencia: es el relleno."]
-    },
-    {
       "id": "motor",
       "title": "EEVEE o Cycles",
+      "stage": "La escena",
       "validator": "logic.any",
       "params": {
         "options": [
@@ -87,8 +60,41 @@
       "hints": ["Workbench no sirve para la galería."]
     },
     {
+      "id": "camara",
+      "title": "Cámara activa",
+      "stage": "Cámara y luces",
+      "validator": "camera.active",
+      "weight": 10,
+      "requires": ["diorama"],
+      "tip": "Shift+A › Cámara.",
+      "hints": ["Ctrl+Numpad 0 la vuelve activa."]
+    },
+    {
+      "id": "encuadre",
+      "title": "Encuadre de portafolio",
+      "stage": "Cámara y luces",
+      "validator": "camera.frames",
+      "params": {"role": "diorama"},
+      "weight": 20,
+      "requires": ["camara"],
+      "tip": "Mira tu diorama como en la foto final y pulsa Ctrl+Alt+0.",
+      "hints": ["Numpad 0 para ver por la cámara."]
+    },
+    {
+      "id": "luces",
+      "title": "Tres puntos",
+      "stage": "Cámara y luces",
+      "validator": "light.three_point",
+      "params": {"role": "diorama"},
+      "weight": 25,
+      "requires": ["diorama"],
+      "tip": "Principal y relleno delante a cada lado, contraluz detrás.",
+      "hints": ["Mira desde arriba (7).", "Duplica la principal con Shift+D y baja su potencia: es el relleno."]
+    },
+    {
       "id": "render",
       "title": "La foto final",
+      "stage": "Revisa y guarda",
       "validator": "render.done",
       "params": {"min": 1},
       "weight": 20,
@@ -99,6 +105,7 @@
     {
       "id": "guardar",
       "title": "Guarda el diorama",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "diorama"},
       "weight": 10,

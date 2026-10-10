@@ -54,6 +54,7 @@
     {
       "id": "tablero",
       "title": "El tablero",
+      "stage": "El tablero",
       "validator": "role.count",
       "params": {"role": "tablero", "min": 1},
       "weight": 10,
@@ -66,6 +67,7 @@
     {
       "id": "tablones",
       "title": "Tablones con Array",
+      "stage": "El tablero",
       "validator": "modifier.exists",
       "params": {"role": "tablero", "modifier": "ARRAY"},
       "weight": 20,
@@ -76,6 +78,7 @@
     {
       "id": "escala",
       "title": "Escala aplicada en el tablero",
+      "stage": "El tablero",
       "validator": "transform.scale_applied",
       "params": {"role": "tablero"},
       "weight": 10,
@@ -86,6 +89,7 @@
     {
       "id": "pilares",
       "title": "Dos pilares o más",
+      "stage": "Los pilares",
       "validator": "object.count",
       "params": {"role": "pilar", "primitive": "cylinder", "min": 2},
       "weight": 15,
@@ -96,6 +100,7 @@
     {
       "id": "en-el-suelo",
       "title": "Pilares en el suelo",
+      "stage": "Los pilares",
       "validator": "spatial.grounded",
       "params": {"role": "pilar", "height": 0, "tolerance": 0.15},
       "weight": 10,
@@ -104,18 +109,9 @@
       "hints": ["Vista de frente (1).", "G Z hasta la línea del suelo."]
     },
     {
-      "id": "sobre-pilares",
-      "title": "Tablero sobre los pilares",
-      "validator": "spatial.below",
-      "params": {"role": "pilar", "reference_role": "tablero", "tolerance": 0.15},
-      "weight": 15,
-      "requires": ["en-el-suelo", "tablones"],
-      "tip": "Los pilares van debajo del tablero, tocándolo.",
-      "hints": ["Sube el tablero con G Z.", "Revisa de lado (3) que no quede espacio."]
-    },
-    {
       "id": "biselados",
       "title": "Pilares biselados",
+      "stage": "Los pilares",
       "validator": "modifier.exists",
       "params": {"role": "pilar", "modifier": "BEVEL"},
       "weight": 10,
@@ -124,8 +120,20 @@
       "hints": ["Agrega Bisel a un pilar y copia a los demás con Ctrl+L › Copiar modificadores."]
     },
     {
+      "id": "sobre-pilares",
+      "title": "Tablero sobre los pilares",
+      "stage": "Arma el puente",
+      "validator": "spatial.below",
+      "params": {"role": "pilar", "reference_role": "tablero", "tolerance": 0.15},
+      "weight": 15,
+      "requires": ["en-el-suelo", "tablones"],
+      "tip": "Los pilares van debajo del tablero, tocándolo.",
+      "hints": ["Sube el tablero con G Z.", "Revisa de lado (3) que no quede espacio."]
+    },
+    {
       "id": "figura",
       "title": "Amatista reconoce tu puente",
+      "stage": "Revisa y guarda",
       "validator": "figure.recognize",
       "params": {},
       "weight": 15,
@@ -142,6 +150,7 @@
     {
       "id": "guardar",
       "title": "Guarda tu puente",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "puente"},
       "weight": 10,

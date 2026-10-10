@@ -75,6 +75,7 @@
     {
       "id": "nave",
       "title": "Tu nave",
+      "stage": "Prepara la nave",
       "validator": "role.count",
       "params": {"role": "nave", "equals": 1},
       "weight": 10,
@@ -84,6 +85,7 @@
     {
       "id": "escala",
       "title": "Escala aplicada",
+      "stage": "Prepara la nave",
       "validator": "transform.scale_applied",
       "params": {"role": "nave"},
       "weight": 10,
@@ -94,6 +96,7 @@
     {
       "id": "espejo",
       "title": "Modificador Espejo en X",
+      "stage": "El espejo trabaja por ti",
       "validator": "modifier.configured",
       "params": {"role": "nave", "modifier": "MIRROR", "axis": "x"},
       "weight": 20,
@@ -104,6 +107,7 @@
     {
       "id": "una-mitad",
       "title": "Modela solo una mitad",
+      "stage": "El espejo trabaja por ti",
       "validator": "mesh.one_side",
       "params": {"role": "nave", "axis": "x", "tolerance": 2},
       "weight": 15,
@@ -114,6 +118,7 @@
     {
       "id": "forma",
       "title": "Alas y cabina",
+      "stage": "Dale forma",
       "validator": "mesh.face_count",
       "params": {"role": "nave", "min": 20},
       "weight": 20,
@@ -124,6 +129,7 @@
     {
       "id": "suave",
       "title": "Subdivisión entre 1 y 3",
+      "stage": "Dale forma",
       "validator": "modifier.configured",
       "params": {"role": "nave", "modifier": "SUBSURF", "min_levels": 1, "max_levels": 3},
       "weight": 15,
@@ -134,6 +140,7 @@
     {
       "id": "guardar",
       "title": "Guarda tu nave",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "nave"},
       "weight": 10,

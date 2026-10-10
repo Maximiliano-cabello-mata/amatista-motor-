@@ -103,6 +103,7 @@
     {
       "id": "malla",
       "title": "Empieza con un cubo",
+      "stage": "Del cubo a la hoja",
       "validator": "object.count",
       "params": {"type": "MESH", "min": 1},
       "weight": 5,
@@ -112,6 +113,7 @@
     {
       "id": "alargar",
       "title": "Alarga el cubo con E",
+      "stage": "Del cubo a la hoja",
       "validator": "logic.any",
       "params": {
         "options": [
@@ -142,6 +144,7 @@
     {
       "id": "silueta",
       "title": "Forja la silueta: guarda, hoja y punta",
+      "stage": "Forja la espada",
       "validator": "figure.silhouette",
       "params": {"type": "MESH"},
       "weight": 45,
@@ -155,6 +158,7 @@
     {
       "id": "low-poly",
       "title": "Que siga siendo low-poly",
+      "stage": "Forja la espada",
       "validator": "mesh.vertex_count",
       "params": {"type": "MESH", "max": 250},
       "weight": 10,
@@ -165,6 +169,7 @@
     {
       "id": "guardar",
       "title": "Guarda tu espada",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "espada"},
       "weight": 20,

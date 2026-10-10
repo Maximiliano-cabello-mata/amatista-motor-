@@ -63,6 +63,7 @@
     {
       "id": "pelota",
       "title": "Una pelota",
+      "stage": "La pelota",
       "validator": "object.count",
       "params": {"primitive": "sphere", "min": 1},
       "weight": 5,
@@ -72,6 +73,7 @@
     {
       "id": "claves",
       "title": "Tres claves de altura",
+      "stage": "La pelota",
       "validator": "animation.keyframes",
       "params": {"primitive": "sphere", "property": "location", "axis": "z", "min": 3},
       "weight": 25,
@@ -82,6 +84,7 @@
     {
       "id": "rebote",
       "title": "Cae, toca el suelo y sube",
+      "stage": "El rebote",
       "validator": "animation.varies",
       "params": {"primitive": "sphere", "property": "location", "axis": "z", "min_delta": 1.5, "ground": true, "bounce": true},
       "weight": 30,
@@ -92,6 +95,7 @@
     {
       "id": "aplastar",
       "title": "Se aplasta al chocar",
+      "stage": "El rebote",
       "validator": "animation.varies",
       "params": {"primitive": "sphere", "property": "scale", "axis": "z", "low_max": 0.9},
       "weight": 20,
@@ -102,6 +106,7 @@
     {
       "id": "guardar",
       "title": "Guarda tu animación",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "pelota"},
       "weight": 20,

@@ -75,6 +75,7 @@
     {
       "id": "modelo",
       "title": "Elige qué fotografiar",
+      "stage": "La cámara",
       "validator": "role.count",
       "params": {"role": "modelo", "equals": 1},
       "weight": 5,
@@ -84,6 +85,7 @@
     {
       "id": "camara",
       "title": "Una cámara activa",
+      "stage": "La cámara",
       "validator": "camera.active",
       "weight": 10,
       "requires": ["modelo"],
@@ -93,6 +95,7 @@
     {
       "id": "encuadre",
       "title": "Encuadra el modelo",
+      "stage": "La cámara",
       "validator": "camera.frames",
       "params": {"role": "modelo"},
       "weight": 15,
@@ -103,6 +106,7 @@
     {
       "id": "motor",
       "title": "Motor EEVEE",
+      "stage": "La cámara",
       "validator": "render.engine",
       "params": {"engine": "EEVEE"},
       "weight": 10,
@@ -113,6 +117,7 @@
     {
       "id": "luz-area",
       "title": "Al menos una luz de Área",
+      "stage": "Las tres luces",
       "validator": "scene.light_exists",
       "params": {"light_type": "AREA", "min": 1},
       "weight": 10,
@@ -123,6 +128,7 @@
     {
       "id": "tres-puntos",
       "title": "Iluminación de tres puntos",
+      "stage": "Las tres luces",
       "validator": "light.three_point",
       "params": {"role": "modelo"},
       "weight": 25,
@@ -136,6 +142,7 @@
     {
       "id": "render",
       "title": "Tu primer render",
+      "stage": "Tu foto",
       "validator": "render.done",
       "weight": 15,
       "requires": ["tres-puntos", "motor"],
@@ -145,6 +152,7 @@
     {
       "id": "guardar",
       "title": "Guarda tu estudio",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "estudio"},
       "weight": 10,

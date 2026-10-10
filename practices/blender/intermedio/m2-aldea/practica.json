@@ -45,6 +45,7 @@
     {
       "id": "casas",
       "title": "Tres casas",
+      "stage": "Las casas",
       "validator": "role.count",
       "params": {"role": "casa", "min": 3},
       "weight": 15,
@@ -54,6 +55,7 @@
     {
       "id": "techos",
       "title": "Un techo por casa",
+      "stage": "Las casas",
       "validator": "object.count",
       "params": {"role": "techo", "primitive": "cone", "min": 3},
       "weight": 15,
@@ -64,6 +66,7 @@
     {
       "id": "techos-encima",
       "title": "Techos sobre las casas",
+      "stage": "Las casas",
       "validator": "spatial.on_top",
       "params": {"role": "techo", "reference_role": "casa", "tolerance": 0.25},
       "weight": 15,
@@ -72,8 +75,20 @@
       "hints": ["G Z para subir el techo.", "Vista de frente (1)."]
     },
     {
+      "id": "colores",
+      "title": "Tres materiales distintos",
+      "stage": "Las casas",
+      "validator": "material.distinct",
+      "params": {"role": "casa", "min": 3},
+      "weight": 10,
+      "requires": ["casas"],
+      "tip": "Cada casa con su material.",
+      "hints": ["Pestaña Material › Nuevo y cambia el Color base."]
+    },
+    {
       "id": "en-coleccion",
       "title": "Casas en «Casas»",
+      "stage": "Ordena la aldea",
       "validator": "collection.contains",
       "params": {"collection": "Casas", "role": "casa", "min": 3},
       "weight": 20,
@@ -84,6 +99,7 @@
     {
       "id": "techos-coleccion",
       "title": "Techos en «Techos»",
+      "stage": "Ordena la aldea",
       "validator": "collection.contains",
       "params": {"collection": "Techos", "role": "techo", "min": 3},
       "weight": 15,
@@ -92,18 +108,9 @@
       "hints": ["M › + Nueva colección › Techos."]
     },
     {
-      "id": "colores",
-      "title": "Tres materiales distintos",
-      "validator": "material.distinct",
-      "params": {"role": "casa", "min": 3},
-      "weight": 10,
-      "requires": ["casas"],
-      "tip": "Cada casa con su material.",
-      "hints": ["Pestaña Material › Nuevo y cambia el Color base."]
-    },
-    {
       "id": "guardar",
       "title": "Guarda tu aldea",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "aldea"},
       "weight": 10,

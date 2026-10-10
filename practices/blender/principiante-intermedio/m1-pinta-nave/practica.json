@@ -74,6 +74,7 @@
     {
       "id": "nave",
       "title": "Tu nave",
+      "stage": "Tus pinturas",
       "validator": "role.count",
       "params": {"role": "nave", "equals": 1},
       "weight": 10,
@@ -83,6 +84,7 @@
     {
       "id": "materiales",
       "title": "Tres materiales distintos",
+      "stage": "Tus pinturas",
       "validator": "material.distinct",
       "params": {"role": "nave", "min": 3},
       "weight": 20,
@@ -96,6 +98,7 @@
     {
       "id": "cristal",
       "title": "Cabina de cristal",
+      "stage": "Pinta cada parte",
       "validator": "logic.any",
       "params": {
         "options": [
@@ -112,6 +115,7 @@
     {
       "id": "metal-brillante",
       "title": "Metal brillante",
+      "stage": "Pinta cada parte",
       "validator": "material.matches",
       "params": {"role": "nave", "metallic_min": 0.7, "roughness_max": 0.35, "label": "un metal brillante"},
       "weight": 15,
@@ -122,6 +126,7 @@
     {
       "id": "metal-quemado",
       "title": "Metal quemado",
+      "stage": "Pinta cada parte",
       "validator": "material.matches",
       "params": {"role": "nave", "metallic_min": 0.5, "roughness_min": 0.6, "label": "un metal quemado"},
       "weight": 15,
@@ -132,6 +137,7 @@
     {
       "id": "guardar",
       "title": "Guarda tu nave pintada",
+      "stage": "Revisa y guarda",
       "validator": "file.named",
       "params": {"contains": "nave"},
       "weight": 20,
