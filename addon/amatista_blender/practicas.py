@@ -36,6 +36,9 @@ ESTADO = {
     # como modificado: «guardado» se decide por los cambios del alumno.
     "cambios_desde_guardar": True,
     "motor_render": "",
+    "enviando": False,  # un intento en camino: otro igual no sale hasta que este responda
+    "otro_envio": False,  # llegó otro pedido mientras tanto: se manda al terminar
+    "ultimo_avance": {},  # {práctica: (progreso, paso)}: el latido lo usa mientras se mira el ejemplo
 }
 
 SYNC_SIN_CUENTA = "sin_cuenta"
@@ -208,6 +211,11 @@ def _practica_de_escena(sc):
     return sc.amatista.practica_id or sc.get(USADA, "")
 
 
+def _es_ejemplo(sc):
+    """La escena del ejemplo resuelto (ejemplo.py): no tiene práctica y el motor no la revisa."""
+    return bool(sc is not None and sc.get("amatista_ejemplo"))
+
+
 def _escena_para(context, practica, origen):
     """Cada práctica tiene su propia escena de Blender (add-on 3.5).
 
@@ -241,6 +249,10 @@ def _escena_para(context, practica, origen):
     _a_modo_objeto()  # la malla en edición se guarda antes de dejar su escena
     ventanas[0].scene = destino
     titulo = _titulo_de(anterior)
+    if anterior.endswith("#ejemplo"):  # se abrió desde la escena del ejemplo resuelto
+        if creada:
+            return destino, f"Empiezas en una escena nueva. El ejemplo de «{titulo}» sigue en su escena."
+        return destino, f"Volviste a tu escena de esta práctica. El ejemplo de «{titulo}» sigue en la suya."
     if creada:
         return destino, f"Empiezas en una escena nueva. Lo de «{titulo}» quedó guardado en su escena."
     return destino, f"Volviste a tu escena de esta práctica. Lo de «{titulo}» sigue en la suya."
@@ -256,6 +268,8 @@ def _a_modo_objeto():
 
 
 def _titulo_de(practica_id):
+    """El título para el alumno («#ejemplo» y «#anterior» son marcas internas de la escena)."""
+    practica_id = practica_id.split("#")[0]
     meta = catalogo().get(practica_id) or {}
     return meta.get("title") or practica_id
 
@@ -421,17 +435,21 @@ def abrir_por_id(context, practica_id, al_terminar=None):
     """Abre una práctica del catálogo; si solo está en el servidor, la descarga."""
     meta = catalogo().get(practica_id)
     if meta and meta.get("definicion"):
-        activar(context, meta["definicion"], meta["origen"])
+        error = None
+        try:
+            activar(context, meta["definicion"], meta["origen"])
+        except Exception as fallo:  # noqa: BLE001 - práctica inválida o sin ventana: se informa, no se rompe
+            error = str(fallo) or fallo.__class__.__name__
         if al_terminar:
-            al_terminar(None)
+            al_terminar(error)
         return
 
     def listo(respuesta, error, estado):
         if error is None:
             try:
                 activar(bpy.context, respuesta["definicion"], "servidor")
-            except ValueError as fallo:
-                error = str(fallo)
+            except Exception as fallo:  # noqa: BLE001
+                error = str(fallo) or fallo.__class__.__name__
         if al_terminar:
             al_terminar(error)
 
@@ -473,7 +491,9 @@ def capturar(sc):
 def evaluar(context=None, motivo="manual"):
     practica = practica_activa(context)
     if practica is None:
-        ESTADO["reporte"] = None
+        if not _es_ejemplo(escena(context)):
+            # Mirando el ejemplo se conserva lo último de la práctica: el latido y la tarjeta lo siguen mostrando.
+            ESTADO["reporte"] = None
         return None
     sc = escena(context)
     foto = capturar(sc)
@@ -482,6 +502,7 @@ def evaluar(context=None, motivo="manual"):
     anterior = ESTADO["reporte"]
     ESTADO["reporte"] = reporte
     ESTADO["sucio"] = False
+    ESTADO["ultimo_avance"][practica.id] = (reporte.progress, reporte.current_target_id)
     if reporte.progress > sc.amatista.mejor_progreso:
         sc.amatista.mejor_progreso = reporte.progress
     try:
@@ -570,6 +591,14 @@ def _avisar_herramientas(sc, reporte):
     _invocar("amatista.aviso_herramienta", herramienta=nuevos[0].tool_id)
 
 
+_PENDIENTES = []  # temporizadores de un solo uso (diálogos): se quitan al desactivar el add-on
+
+
+def _temporizador(funcion, segundos):
+    _PENDIENTES[:] = [f for f in _PENDIENTES if bpy.app.timers.is_registered(f)] + [funcion]
+    bpy.app.timers.register(funcion, first_interval=segundos)
+
+
 def _invocar(operador, **propiedades):
     """Abre un diálogo desde un temporizador (los manejadores no tienen ventana)."""
     if bpy.app.background:
@@ -587,7 +616,7 @@ def _invocar(operador, **propiedades):
                 print(f"[Amatista] No se pudo abrir el diálogo {operador}: {error}")
         return None
 
-    bpy.app.timers.register(abrir, first_interval=0.05)
+    _temporizador(abrir, 0.05)
 
 
 def pedir_pista(context, target_id=None):
@@ -665,6 +694,12 @@ def sincronizar(context=None, forzar=False, al_terminar=None):
     sc = escena(context)
     if practica is None or reporte is None:
         return
+    if bpy.app.timers.is_registered(_sincronizar_programado):
+        bpy.app.timers.unregister(_sincronizar_programado)  # este envío ya lleva lo último
+    if ESTADO["enviando"]:
+        # Dos intentos a la vez chocan en el servidor (el primero crea la fila del progreso): este espera.
+        ESTADO["otro_envio"] = True
+        return
     if sc.amatista.origen == "borrador":
         return  # un borrador del modo desarrollador no es progreso de alumno
     if not vinculado():
@@ -678,11 +713,13 @@ def sincronizar(context=None, forzar=False, al_terminar=None):
         return
     datos = datos_intento(context)
     ESTADO["sync"] = SYNC_ENVIANDO
+    ESTADO["enviando"] = True
     redibujar()
     enviado_progreso = reporte.progress
     enviado_completo = reporte.completed
 
     def listo(respuesta, error, estado):
+        ESTADO["enviando"] = False
         escena_actual = bpy.context.scene
         if error is None:
             ESTADO["sync"] = SYNC_GUARDADO
@@ -693,23 +730,32 @@ def sincronizar(context=None, forzar=False, al_terminar=None):
                 escena_actual.amatista.completada_enviada |= enviado_completo
             red.vaciar_cola()
         elif estado == 401:
+            red.encolar("/api/addon/v1/intentos", datos)  # se envía al volver a vincular la misma cuenta
             ESTADO["sync"] = SYNC_SIN_CUENTA
             ESTADO["sync_detalle"] = "Tu vínculo con Amatista venció: vuelve a vincular."
             p = ajustes.prefs()
             if p:
                 p.token = ""
-        elif estado and 400 <= estado < 500:
+        elif not red.es_reintentable(estado):
             ESTADO["sync"] = SYNC_ERROR
             ESTADO["sync_detalle"] = error
-        else:
+        else:  # sin red, el servidor falló o pidió esperar (408, 409, 429): queda en la cola
             red.encolar("/api/addon/v1/intentos", datos)
             ESTADO["sync"] = SYNC_PENDIENTE
             ESTADO["sync_detalle"] = error
         redibujar()
+        if ESTADO["otro_envio"]:
+            ESTADO["otro_envio"] = False
+            if not bpy.app.timers.is_registered(_sincronizar_programado):
+                bpy.app.timers.register(_sincronizar_programado, first_interval=0.5)
         if al_terminar:
             al_terminar(respuesta, error)
 
-    red.pedir("POST", "/api/addon/v1/intentos", listo, datos)
+    try:
+        red.pedir("POST", "/api/addon/v1/intentos", listo, datos)
+    except Exception:  # noqa: BLE001 - la marca nunca queda puesta
+        ESTADO["enviando"] = False
+        raise
 
 
 # --- Observador de la escena (sección 16: eventos, no evaluación continua) ----------------
@@ -759,11 +805,22 @@ def _al_cambiar(scene, depsgraph=None):
     ESTADO["ultimo_cambio"] = time.time()
 
 
+def _evaluar_al_guardar():
+    evaluar(bpy.context, "guardar")
+    return None
+
+
+def _evaluar_al_abrir():
+    evaluar(bpy.context, "abrir")
+    return None
+
+
 @persistent
 def _al_guardar(*_args):
     ESTADO["cambios_desde_guardar"] = False
     if bpy.context.scene and bpy.context.scene.amatista.practica_json:
-        bpy.app.timers.register(lambda: (evaluar(bpy.context, "guardar"), None)[1], first_interval=0.1)
+        if not bpy.app.timers.is_registered(_evaluar_al_guardar):
+            bpy.app.timers.register(_evaluar_al_guardar, first_interval=0.1)
 
 
 @persistent
@@ -773,8 +830,9 @@ def _al_abrir(*_args):
     guia.reiniciar()
     aprendizaje.reiniciar_sesion()
     if bpy.context.scene and bpy.context.scene.amatista.practica_json:
-        bpy.app.timers.register(lambda: (evaluar(bpy.context, "abrir"), None)[1], first_interval=0.3)
-        bpy.app.timers.register(_ambiente_al_abrir, first_interval=0.35)
+        for temporizador, segundos in ((_evaluar_al_abrir, 0.3), (_ambiente_al_abrir, 0.35)):
+            if not bpy.app.timers.is_registered(temporizador):
+                bpy.app.timers.register(temporizador, first_interval=segundos)
     else:
         enfoque.desactivar()
     enfoque.al_abrir_archivo()
@@ -832,6 +890,8 @@ def unregister():
     ):
         if funcion in lista:
             lista.remove(funcion)
-    for temporizador in (_vigilante, _sincronizar_programado, _ambiente_al_abrir):
+    for temporizador in (_vigilante, _sincronizar_programado, _ambiente_al_abrir, _evaluar_ahora, _evaluar_al_guardar,
+                         _evaluar_al_abrir, *_PENDIENTES):
         if bpy.app.timers.is_registered(temporizador):
             bpy.app.timers.unregister(temporizador)
+    _PENDIENTES.clear()

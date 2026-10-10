@@ -90,7 +90,7 @@ def consultar_vinculo(vinculo_id, secreto, al_terminar=None):
             VINCULO.update(activo=False, codigo="", mensaje=error)
         _redibujar()
         if al_terminar:
-            al_terminar(respuesta, error)
+            al_terminar(respuesta, error, estado)
 
     red.pedir(
         "POST", f"/api/addon/v1/vinculos/{vinculo_id}/estado", listo, {"secreto": secreto, "dispositivo": _dispositivo()},
@@ -110,9 +110,13 @@ def canjear_vinculo_del_paquete():
     if not vinculo.get("id") or p is None or p.token or p.vinculo_usado == vinculo["id"]:
         return
 
-    def listo(respuesta, error):
+    def listo(respuesta, error, estado):
+        # Solo una respuesta definitiva gasta el vínculo: sin red o con el servidor caído
+        # se vuelve a intentar en el próximo arranque.
+        definitiva = (error is None and (respuesta or {}).get("estado") in ("listo", "canjeado", "vencido")) or \
+            estado in (403, 404)
         p2 = ajustes.prefs()
-        if p2 is not None:
+        if p2 is not None and definitiva:
             p2.vinculo_usado = vinculo["id"]
             ajustes.guardar_preferencias()
 
@@ -166,6 +170,12 @@ def _redibujar():
     from . import practicas
 
     practicas.redibujar()
+
+
+def unregister():
+    VINCULO.update(activo=False)
+    if bpy.app.timers.is_registered(_consultar):
+        bpy.app.timers.unregister(_consultar)
 
 
 def al_iniciar():

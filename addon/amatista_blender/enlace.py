@@ -14,7 +14,8 @@ enfocado) y en la respuesta recibe:
   que un latido perdido no pierde la orden;
 - los ajustes que el alumno eligió en «Mi Blender» de la plataforma
   (enfoque, acompañamiento, avisos y tarjeta 3D), que mandan sobre los de
-  Blender.
+  Blender. El servidor manda solo los que el alumno eligió: lo demás queda
+  como esté en las preferencias de Blender.
 
 Sin cuenta vinculada, sin internet o con un servidor sin la tabla del
 enlace (Oracle 010 sin ejecutar) no pasa nada: Blender sigue funcionando y
@@ -48,8 +49,13 @@ AJUSTES = {
 }
 
 
-def detalle_vivo():
-    """Lo que el instructor muestra ahora (motor 3.5): la lección lo enseña en vivo."""
+def detalle_vivo(escena_pistas=None):
+    """Lo que el instructor muestra ahora (motor 3.5): la lección lo enseña en vivo.
+
+    escena_pistas: de qué escena leer las pistas usadas (la del alumno mientras mira el ejemplo).
+    """
+    from types import SimpleNamespace
+
     from . import guia, practicas
 
     g = guia.guia_actual()
@@ -59,7 +65,8 @@ def detalle_vivo():
     figura, lista = practicas.lista_instructor(reporte)
     practica = practicas.ESTADO["practica"]
     objetivo = practica.target(reporte.current_target_id) if practica is not None and reporte.current_target_id else None
-    reveladas = practicas.pistas().get(objetivo.id, 0) if objetivo is not None else 0
+    contexto_pistas = SimpleNamespace(scene=escena_pistas) if escena_pistas is not None else None
+    reveladas = practicas.pistas(contexto_pistas).get(objetivo.id, 0) if objetivo is not None else 0
     return {
         "titulo": (g.title if g else "")[:120],
         "mensaje": (g.feedback if g else "")[:500],
@@ -87,12 +94,21 @@ def _datos():
     sc = getattr(bpy.context, "scene", None)
     practica = practicas.practica_activa() if sc is not None else None
     if practica is None and sc is not None and sc.get("amatista_ejemplo"):  # mirando el ejemplo resuelto
-        datos["practica_id"] = str(sc["amatista_ejemplo"]).split("@")[0][:80]
+        practica_id = str(sc["amatista_ejemplo"]).split("@")[0][:80]
+        datos["practica_id"] = practica_id
+        # Lo último que se midió en su escena: mirar el ejemplo no borra el avance en la plataforma.
+        avance = practicas.ESTADO["ultimo_avance"].get(practica_id)
+        if avance is not None:
+            datos["progreso"] = max(0, min(100, int(round(avance[0]))))
+            if avance[1]:
+                datos["paso"] = str(avance[1])[:80]
         detalle = None
-        try:
-            detalle = detalle_vivo()
-        except Exception as error:  # noqa: BLE001
-            print(f"[Amatista] Detalle del enlace: {error}")
+        actual = practicas.ESTADO["practica"]
+        if actual is not None and actual.id == practica_id:
+            try:
+                detalle = detalle_vivo(bpy.data.scenes.get(str(sc.get("amatista_volver", ""))))
+            except Exception as error:  # noqa: BLE001
+                print(f"[Amatista] Detalle del enlace: {error}")
         if detalle:
             datos["detalle"] = {**detalle, "modo": "EJEMPLO"}
     elif practica is not None and sc.amatista.origen != "borrador":
@@ -121,6 +137,7 @@ def latir(forzar=False):
         return
     if not forzar and time.time() - ESTADO["ultimo"] < ESTADO["intervalo"] - 0.5:
         return
+    datos = _datos()  # antes de marcar «en vuelo»: si fallara, el siguiente latido sale igual
     ESTADO["en_vuelo"] = True
     ESTADO["ultimo"] = time.time()
     enviado = ESTADO["hecha"]
@@ -141,7 +158,11 @@ def latir(forzar=False):
         if isinstance(orden, dict) and orden.get("id"):
             cumplir(orden)
 
-    red.pedir("POST", "/api/addon/v1/enlace", listo, _datos(), segundos=8)
+    try:
+        red.pedir("POST", "/api/addon/v1/enlace", listo, datos, segundos=8)
+    except Exception:  # noqa: BLE001
+        ESTADO["en_vuelo"] = False
+        raise
 
 
 def latir_pronto():
@@ -154,7 +175,11 @@ def latir_pronto():
 def _latir_ya():
     if ESTADO["en_vuelo"]:
         return 0.5  # el que va en camino no lleva lo último: se espera y se manda
-    latir(forzar=True)
+    try:
+        latir(forzar=True)
+    except Exception as error:  # noqa: BLE001 - el enlace nunca rompe Blender ni se queda callado
+        ESTADO["en_vuelo"] = False
+        print(f"[Amatista] Enlace: {error}")
     return None
 
 
@@ -210,6 +235,13 @@ def cumplir(orden):
     if tipo in ("ver_ejemplo", "volver_practica"):  # motor 3.5: el ejemplo resuelto en su escena
         from . import ejemplo
 
+        if tipo == "ver_ejemplo" and datos.get("practica_id"):
+            sc = getattr(context, "scene", None)
+            abierta = getattr(practicas.practica_activa(context), "id", "") or \
+                (str(sc.get(ejemplo.EJEMPLO, "")).split("@")[0] if ejemplo.es_ejemplo(sc) else "")
+            if abierta != datos["practica_id"]:
+                _terminada(orden_id)  # el ejemplo era de otra práctica: no se abre el de la que está abierta
+                return False
         try:
             texto = ejemplo.ver_ejemplo(context) if tipo == "ver_ejemplo" else ejemplo.volver(context)
         except Exception as error:  # noqa: BLE001 - una orden fallida nunca rompe Blender
@@ -273,7 +305,9 @@ def _pista(context):
     from . import practicas
 
     revelada = practicas.pedir_pista(context)
-    return f"Pista: {revelada.text}" if revelada is not None else "No quedan pistas en este paso."
+    if revelada is None or revelada.hint is None:
+        return "No quedan pistas en este paso."
+    return f"Pista {revelada.level} de {revelada.total}: {revelada.hint.text}"
 
 
 def _hazlo_conmigo(context):

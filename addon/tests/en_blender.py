@@ -574,7 +574,7 @@ def probar_ejemplo(contexto):
         revisar(practicas.practica_activa(bpy.context) is None, f"{practica_id}: el motor no revisa la escena del ejemplo")
         objetivo = practica.targets[-1]
         r = coincide(dataclasses.replace(objetivo, params={**objetivo.params, "aspects": aspectos}),
-                     _motor.adapter.capture_scene(sc))
+                     ejemplo.capturar(sc))
         revisar(r.passed, f"{practica_id}: el ejemplo armado en Blender coincide en {aspectos} ({r.message})")
         enviada = _motor.foto.scene_from_dict(practicas._foto_para_enviar(sc, practica))
         revisada = coincide(dataclasses.replace(objetivo, params={**objetivo.params, "aspects": aspectos}), enviada)
@@ -596,6 +596,111 @@ def probar_ejemplo(contexto):
             and bpy.context.scene.amatista.practica_id == "blender.bp.m1.tren", "y vuelve a la práctica")
     dibujar_todo(contexto)
     practicas.cerrar(contexto)
+
+
+def _aldea_del_alumno(contexto):
+    """Tres casas en la colección «Casas» y tres techos en «Techos», hechas por el alumno en su escena."""
+    from amatista_blender import _motor
+
+    sc = contexto.scene
+    colecciones = {}
+    for nombre, rol, primitiva in (("Casas", "casa", "Cube"), ("Techos", "techo", "Cone")):
+        col = bpy.data.collections.new(nombre)
+        sc.collection.children.link(col)
+        colecciones[nombre] = col
+        for i in range(3):
+            obj = bpy.data.objects.new(f"{rol.capitalize()}{i}", bpy.data.meshes.new(primitiva))
+            col.objects.link(obj)
+            _motor.tagger.assign_role(obj, rol)
+    return colecciones
+
+
+def probar_auditoria(contexto):
+    """Arreglos de la auditoría del add-on 3.5 (ejemplo, escenas por práctica, órdenes y latido)."""
+    import dataclasses
+
+    from amatista_blender import _motor, ejemplo, enlace, escenarios, guia, practicas
+
+    coincide = importlib.import_module(_motor.engine.__name__ + ".validators.example").matches
+    catalogo = practicas.catalogo()
+    aldea = catalogo["blender.bi.m2.aldea"]["definicion"]
+
+    # 1. El ejemplo primero y luego el alumno: sus colecciones conservan el nombre que pide el paso.
+    _escena_nueva(contexto, "Aldea A")
+    practicas.activar(contexto, aldea, "paquete")
+    mia = bpy.context.scene
+    ejemplo.ver_ejemplo(contexto)
+    del_ejemplo = bpy.context.scene
+    nombres = {c.name for c in del_ejemplo.collection.children}
+    revisar(nombres and all(n.startswith(ejemplo.PREFIJO) for n in nombres)
+            and all(o.name.startswith(ejemplo.PREFIJO) for o in del_ejemplo.objects),
+            f"las colecciones y objetos del ejemplo llevan su prefijo ({sorted(nombres)})")
+    revisar("Ya estás viendo" in ejemplo.ver_ejemplo(contexto), "«Ver el ejemplo» desde el ejemplo dice que ya lo ves")
+    objetivo = practicas.ESTADO["practica"].targets[-1]
+    r = coincide(dataclasses.replace(objetivo, params={**objetivo.params, "aspects": ["colecciones"]}),
+                 ejemplo.capturar(del_ejemplo))
+    revisar(r.passed, f"el ejemplo de la aldea sigue coincidiendo en colecciones ({r.message})")
+    malla = next(o for o in del_ejemplo.objects if o.type == "MESH")
+    contexto.view_layer.objects.active = malla
+    bpy.ops.object.mode_set(mode="EDIT")
+    revisar(ejemplo.volver(contexto) and bpy.context.scene == mia, "volver desde Modo Edición")
+    revisar(malla.mode == "OBJECT", "la malla del ejemplo no se queda en Modo Edición al volver")
+    cols = _aldea_del_alumno(bpy.context)
+    reporte = practicas.evaluar(bpy.context)
+    revisar(cols["Casas"].name == "Casas" and reporte.result("en-coleccion").passed
+            and reporte.result("techos-coleccion").passed,
+            f"ejemplo antes: «Casas» y «Techos» del alumno pasan ({reporte.result('en-coleccion').message})")
+    practicas.cerrar(bpy.context)
+    for col in cols.values():
+        for obj in list(col.objects):
+            bpy.data.objects.remove(obj)
+        bpy.data.collections.remove(col)
+
+    # 2. El alumno primero y luego el ejemplo (en otro archivo de la misma sesión: el ejemplo se arma de nuevo).
+    for sc in [s for s in bpy.data.scenes if ejemplo.es_ejemplo(s)]:
+        bpy.data.scenes.remove(sc)
+    _escena_nueva(contexto, "Aldea B")
+    practicas.activar(contexto, aldea, "paquete")
+    mia = bpy.context.scene
+    cols = _aldea_del_alumno(bpy.context)
+    ejemplo.ver_ejemplo(contexto)
+    r = coincide(dataclasses.replace(objetivo, params={**objetivo.params, "aspects": ["figura", "colecciones"]}),
+                 ejemplo.capturar(bpy.context.scene))
+    revisar(r.passed, f"alumno antes: el ejemplo se arma y coincide ({r.message})")
+    # Mirando el ejemplo el latido sigue llevando el avance de la práctica.
+    datos = enlace._datos()
+    revisar(datos.get("progreso") is not None and datos.get("practica_id") == "blender.bi.m2.aldea",
+            f"el latido lleva el progreso mientras se mira el ejemplo ({datos.get('progreso')})")
+    practicas.evaluar(bpy.context, "cambio")  # el vigilante no borra el reporte de la práctica
+    revisar(practicas.ESTADO["reporte"] is not None, "evaluar en la escena del ejemplo no borra el reporte")
+    ejemplo.volver(contexto)
+    reporte = practicas.evaluar(bpy.context)
+    revisar(cols["Casas"].name == "Casas" and reporte.result("en-coleccion").passed,
+            "alumno antes: sus colecciones siguen limpias")
+    # Una orden «ver_ejemplo» de otra práctica no abre el de la abierta.
+    revisar(not enlace.cumplir({"id": "aud1", "tipo": "ver_ejemplo", "datos": {"practica_id": "blender.bp.m1.tren"}})
+            and bpy.context.scene == mia, "una orden «ver_ejemplo» de otra práctica no se aplica")
+    # Abrir otra práctica desde el ejemplo: los avisos se ven y no muestran ids internos.
+    ejemplo.ver_ejemplo(contexto)
+    practicas.activar(bpy.context, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    textos = " ".join(a["titulo"] + " " + a["texto"] for a in guia.ESTADO["avisos"])
+    revisar("Práctica nueva, escena nueva" in textos and "#" not in textos and "blender.bi" not in textos,
+            f"los avisos al abrir se ven y no muestran ids internos ({textos})")
+    practicas.cerrar(bpy.context)
+
+    # 3. El estudio de foto usa la Nave de SU escena, no la de otra práctica.
+    for sc in [s for s in bpy.data.scenes if practicas._practica_de_escena(s).startswith("blender.bpi.m2.tres-puntos")]:
+        bpy.data.scenes.remove(sc)  # que tres puntos arme su estudio desde cero
+    _escena_nueva(contexto, "Nave mia")
+    nave = escenarios.nave_basica(bpy.context.scene)
+    _motor.tagger.assign_role(nave, "nave")
+    practicas.activar(contexto, catalogo["blender.bp.m1.tren"]["definicion"], "paquete")
+    practicas.activar(bpy.context, catalogo["blender.bpi.m2.tres-puntos"]["definicion"], "paquete")
+    estudio = bpy.context.scene
+    revisar(any(o.type == "MESH" and _motor.tagger.get_role(o) == "modelo" for o in estudio.objects),
+            f"tres puntos arma su propia nave ({[o.name for o in estudio.objects]})")
+    revisar(_motor.tagger.get_role(nave) == "nave", "la nave de la otra escena no cambia de rol")
+    practicas.cerrar(bpy.context)
 
 
 def main():
@@ -736,6 +841,7 @@ def main():
     probar_motor_34(contexto)
     probar_motor_35(contexto)
     probar_ejemplo(contexto)
+    probar_auditoria(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

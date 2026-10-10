@@ -100,7 +100,7 @@ class AMATISTA_OT_ver_referencia(bpy.types.Operator):
 class AMATISTA_OT_abrir_practica(bpy.types.Operator):
     bl_idname = "amatista.abrir_practica"
     bl_label = "Empezar práctica"
-    bl_description = "Abre la práctica en esta escena"
+    bl_description = ("Abre la práctica en su propia escena (lo de otra práctica queda guardado en la suya)")
 
     practica_id: bpy.props.StringProperty()
 
@@ -281,7 +281,9 @@ class AMATISTA_OT_hazlo_conmigo(bpy.types.Operator):
         except RuntimeError as error:
             self.report({"WARNING"}, f"No se pudo arrancar la herramienta: {error}")
             return {"CANCELLED"}
-        guia.registrar_ayuda(context, objetivo, "hazlo_conmigo", _motor.pedagogia.hints.NIVEL_GUIA)
+        if g.action.kind != "show_example":
+            # Mostrar el ejemplo no es ayuda paso a paso (y la escena ya es la del ejemplo: ahí no se anota nada).
+            guia.registrar_ayuda(context, objetivo, "hazlo_conmigo", _motor.pedagogia.hints.NIVEL_GUIA)
         if texto:
             guia.avisar(g.action.label, texto, "animo")
         return {"FINISHED"}

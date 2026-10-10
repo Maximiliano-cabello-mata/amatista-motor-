@@ -8,8 +8,18 @@ la escena del ejemplo (no tiene práctica) y abrir otra práctica desde ahí
 no la usa.
 
 Se arma con bmesh y bpy.data (sin operadores): funciona igual con o sin
-ventana y no toca la selección ni el modo de la escena del alumno.
+ventana y no toca la selección de la escena del alumno. Al entrar y al
+volver se pasa a Modo Objeto (una malla en edición se guarda antes de
+cambiar de escena).
+
+Los objetos, colecciones y materiales del ejemplo llevan el prefijo
+«Ejemplo · »: así nunca le quitan el nombre a los del alumno (en Blender
+los nombres son de todo el archivo: si el ejemplo tuviera la colección
+«Casas», la del alumno sería «Casas.001» y el paso que pide «Casas» no
+pasaría). capturar() quita el prefijo para comparar el ejemplo con lo
+esperado.
 """
+import dataclasses
 import math
 import time
 from importlib import import_module
@@ -33,6 +43,33 @@ _cargador = import_module(_motor.engine.__name__ + ".practice.loader")
 
 def es_ejemplo(sc):
     return bool(sc is not None and sc.get(EJEMPLO))
+
+
+def _nombre(nombre):
+    """El nombre de un dato del ejemplo: con prefijo, para no quitarle el suyo al alumno."""
+    return (PREFIJO + nombre).encode("utf-8")[:63].decode("utf-8", "ignore")
+
+
+def _sin_prefijo(nombre):
+    return nombre[len(PREFIJO):] if isinstance(nombre, str) and nombre.startswith(PREFIJO) else nombre
+
+
+def capturar(sc):
+    """Foto de la escena del ejemplo con los nombres sin el prefijo «Ejemplo · » (como los esperaría el motor)."""
+    foto = _motor.adapter.capture_scene(sc)
+    objetos = tuple(
+        dataclasses.replace(
+            o, name=_sin_prefijo(o.name), parent=_sin_prefijo(o.parent),
+            collections=tuple(_sin_prefijo(c) for c in o.collections),
+            materials=tuple(_sin_prefijo(m) for m in o.materials),
+            materials_used=tuple(_sin_prefijo(m) for m in o.materials_used) if o.materials_used is not None else None,
+            material_details=tuple(dataclasses.replace(m, name=_sin_prefijo(m.name)) for m in o.material_details),
+        )
+        for o in foto.objects
+    )
+    return dataclasses.replace(foto, objects=objetos, active_object=_sin_prefijo(foto.active_object),
+                               active_camera=_sin_prefijo(foto.active_camera),
+                               selected=tuple(_sin_prefijo(n) for n in foto.selected))
 
 
 def _partes(practica):
@@ -115,7 +152,7 @@ def _malla(nombre, piezas, mitad="", vertices=0):
     datos = bpy.data.meshes.new(DATOS.get(primera, "Cube"))
     bm.to_mesh(datos)
     bm.free()
-    obj = bpy.data.objects.new(nombre, datos)
+    obj = bpy.data.objects.new(_nombre(nombre), datos)
     PIEZAS[obj.name] = caras
     return obj
 
@@ -219,7 +256,7 @@ def _desde_modelo(practica, ajustes):
         color = _color_hex(original.color)
         if color is not None:
             extra = original.material or {}
-            obj.data.materials.append(_material(f"{PREFIJO}{nombre}", color, extra.get("metallic", 0.0),
+            obj.data.materials.append(_material(_nombre(nombre), color, extra.get("metallic", 0.0),
                                                 extra.get("roughness", 0.5), extra.get("transmission", 0.0),
                                                 extra.get("alpha", 1.0)))
         objetos[nombre] = obj
@@ -275,15 +312,15 @@ def _armar(sc, practica):
                 obj.location = o.location
                 obj.rotation_euler = o.rotation
             elif o.object_type == "LIGHT":
-                luz = bpy.data.lights.new(o.name, (o.light_type or "POINT").upper())
+                luz = bpy.data.lights.new(_nombre(o.name), (o.light_type or "POINT").upper())
                 luz.energy = float(o.light_energy or 1000.0)
                 if luz.type == "AREA":
                     luz.size = 2.0
-                obj = bpy.data.objects.new(o.name, luz)
+                obj = bpy.data.objects.new(_nombre(o.name), luz)
                 obj.location = o.location
                 _mirar(obj, o.forward)
             elif o.object_type == "CAMERA":
-                obj = bpy.data.objects.new(o.name, bpy.data.cameras.new(o.name))
+                obj = bpy.data.objects.new(_nombre(o.name), bpy.data.cameras.new(_nombre(o.name)))
                 obj.location = o.location
                 _mirar(obj, o.forward)
             else:
@@ -293,14 +330,14 @@ def _armar(sc, practica):
             if nombre_col.lower() in ("collection", "scene collection", ""):
                 continue
             if nombre_col not in colecciones:
-                colecciones[nombre_col] = bpy.data.collections.new(nombre_col)
+                colecciones[nombre_col] = bpy.data.collections.new(_nombre(nombre_col))
                 sc.collection.children.link(colecciones[nombre_col])
             if obj.name not in colecciones[nombre_col].objects:
                 colecciones[nombre_col].objects.link(obj)
         if o.material_details and obj.type == "MESH":
             obj.data.materials.clear()
             for m in o.material_details:
-                obj.data.materials.append(_material(f"{PREFIJO}{m.name}", m.base_color, m.metallic, m.roughness,
+                obj.data.materials.append(_material(_nombre(m.name), m.base_color, m.metallic, m.roughness,
                                                     m.transmission, m.alpha))
             _pintar_piezas(obj, pintadas.get(o.name, {}))
         if o.role:  # el rol que el motor esperaría (en la pestaña Amatista se ve qué es cada pieza)
@@ -361,6 +398,8 @@ def _ventana(context):
 def ver_ejemplo(context):
     """Abre (o arma) la escena del ejemplo. Devuelve el mensaje para el alumno."""
     sc = practicas.escena(context)
+    if es_ejemplo(sc):
+        return "Ya estás viendo el ejemplo resuelto. «Volver a mi práctica» te regresa a tu escena."
     practica = practicas.practica_activa(context)
     if practica is None or practica.example is None:
         return "Esta práctica no tiene ejemplo resuelto."
@@ -399,7 +438,8 @@ def volver(context):
         suyas = [s for s in bpy.data.scenes if s.amatista.practica_id == practica_id]
         destino = max(suyas, key=lambda s: float(s.get(practicas.USADA_EN, 0.0)), default=None)
     if ventana is None or destino is None:
-        return "No encontré tu escena: elígela en el selector de escenas (arriba a la derecha)."
+        return "No encontramos tu escena: elígela en el selector de escenas (arriba a la derecha)."
+    practicas._a_modo_objeto()  # lo editado en el ejemplo no se queda en Modo Edición en su escena
     ventana.scene = destino
     practicas.redibujar()
     practicas.evaluar_pronto()

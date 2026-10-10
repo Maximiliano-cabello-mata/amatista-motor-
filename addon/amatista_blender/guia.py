@@ -57,7 +57,8 @@ def _companion(practica_id):
             help_after_seconds=float(p.ayuda_tras_segundos if p else 120),
         )
         ESTADO["practica"] = practica_id
-        ESTADO["avisos"] = []
+        # Los avisos no se borran aquí: los de «Práctica nueva, escena nueva» y «Escena lista»
+        # llegan justo antes de esta primera evaluación (guia.reiniciar ya limpió los de antes).
     return ESTADO["companion"]
 
 
@@ -79,6 +80,11 @@ def _animar():
     if bpy.app.background or bpy.app.timers.is_registered(_paso_animacion):
         return
     bpy.app.timers.register(_paso_animacion, first_interval=0.1)
+
+
+def unregister():
+    if bpy.app.timers.is_registered(_paso_animacion):
+        bpy.app.timers.unregister(_paso_animacion)
 
 
 def _paso_animacion():
@@ -145,18 +151,30 @@ def _ventana_3d(context):
 
 
 def seleccionar(context, nombres):
-    objetos = [bpy.data.objects[n] for n in nombres if n in bpy.data.objects]
+    # Solo lo que está en la capa de vista: un objeto en una colección excluida (o de otra
+    # escena) no se puede seleccionar y Blender lanza RuntimeError.
+    visibles = context.view_layer.objects
+    objetos = [visibles[n] for n in nombres if n in visibles]
     if not objetos:
         return []
     if context.mode != "OBJECT":
         bpy.ops.object.mode_set(mode="OBJECT")
-    for obj in context.view_layer.objects:
-        obj.select_set(False)
+    for obj in visibles:
+        try:
+            obj.select_set(False)
+        except RuntimeError:
+            pass
+    elegidos = []
     for obj in objetos:
-        obj.hide_set(False)
-        obj.select_set(True)
-    context.view_layer.objects.active = objetos[0]
-    return objetos
+        try:
+            obj.hide_set(False)
+            obj.select_set(True)
+            elegidos.append(obj)
+        except RuntimeError:
+            continue
+    if elegidos:
+        context.view_layer.objects.active = elegidos[0]
+    return elegidos
 
 
 def encuadrar(context):

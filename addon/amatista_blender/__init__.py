@@ -35,7 +35,7 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, operadores, practicas
+from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, operadores, practicas, red
 from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
 
 CLASES = (
@@ -81,6 +81,9 @@ def unregister():
     enlace.unregister()
     hud.unregister()
     practicas.unregister()
+    cuenta.unregister()  # deja de preguntar por el código de vinculación
+    guia.unregister()
+    red.unregister()
     for clase in reversed(CLASES):
         bpy.utils.unregister_class(clase)
     estilo.liberar_iconos()

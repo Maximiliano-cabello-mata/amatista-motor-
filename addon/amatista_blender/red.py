@@ -8,7 +8,9 @@ Las extensiones deben respetar bpy.app.online_access: si el usuario
 desactivó el acceso a internet en Blender, Amatista no se conecta y lo dice.
 
 Los resultados que no se pudieron enviar quedan en una cola en disco
-(pendientes.json) y se reenvían cuando vuelve la conexión.
+(pendientes.json) y se reenvían cuando vuelve la conexión. Cada uno lleva
+la cuenta que lo hizo: en un PC compartido, lo de un alumno nunca se envía
+con la cuenta de otro.
 """
 import json
 import platform
@@ -25,6 +27,11 @@ from . import ajustes, integridad
 _resultados = queue.Queue()
 _activos = 0
 _candado = threading.Lock()
+_vaciando = False  # un solo reenvío de la cola a la vez (si no, el mismo intento se manda dos veces)
+
+# Respuestas que se arreglan solas (sesión vencida, tiempo agotado, choque, demasiadas
+# peticiones): el intento sigue en la cola. Otro 4xx (inválido, sin permiso, no existe) no.
+REINTENTABLES = (401, 408, 409, 425, 429)
 
 SIN_INTERNET = "El acceso a internet está desactivado en Blender (Preferencias › Sistema › Red)."
 
@@ -84,7 +91,7 @@ def pedir(metodo, ruta, al_terminar=None, datos=None, con_token=True, segundos=1
     if not url.lower().startswith(("https://", "http://")):
         # Solo HTTP(S): una dirección file:// o rara en las preferencias no debe leerse.
         if al_terminar:
-            al_terminar(None, "La dirección del servidor debe empezar con https://", 0)
+            al_terminar(None, "La dirección del servidor debe empezar con https:// (o http://)", 0)
         return
     cabeceras = _cabeceras(con_token)
     cuerpo = json.dumps(datos).encode("utf-8") if datos is not None else None
@@ -140,6 +147,11 @@ def esperar(segundos=10.0):
     return False
 
 
+def unregister():
+    if bpy.app.timers.is_registered(_entregar):
+        bpy.app.timers.unregister(_entregar)
+
+
 # --- Cola de resultados sin conexión -------------------------------------------
 
 
@@ -161,39 +173,63 @@ def _guardar_cola(elementos):
         print(f"[Amatista] No se pudo guardar la cola: {error}")
 
 
+def _cuenta_actual():
+    p = ajustes.prefs()
+    return (getattr(p, "cuenta_id", "") or "") if p else ""
+
+
 def encolar(ruta, datos):
     elementos = leer_cola()
-    elementos.append({"id": str(uuid.uuid4()), "ruta": ruta, "datos": datos})
+    elementos.append({"id": str(uuid.uuid4()), "ruta": ruta, "datos": datos, "cuenta": _cuenta_actual()})
     _guardar_cola(elementos)
 
 
+def es_reintentable(estado):
+    """Sin red (0), error del servidor (5xx) o un 4xx que se arregla solo."""
+    return not estado or estado >= 500 or estado in REINTENTABLES
+
+
 def vaciar_cola(al_terminar=None):
-    """Reenvía lo pendiente. Un error de red deja el elemento en la cola."""
-    elementos = leer_cola()
-    if not elementos:
+    """Reenvía lo pendiente de la cuenta vinculada. Un error que se arregla solo deja el elemento en la cola.
+
+    Lo de otra cuenta se queda esperando a que esa cuenta vuelva a vincularse
+    (un elemento de una versión anterior, sin cuenta, se envía con la actual).
+    """
+    global _vaciando
+    cuenta = _cuenta_actual()
+    elementos = [e for e in leer_cola() if not e.get("cuenta") or e.get("cuenta") == cuenta]
+    if not elementos or _vaciando:
         if al_terminar:
             al_terminar(0)
         return
+    _vaciando = True
     restantes = list(elementos)
     enviados = []
 
+    def terminar():
+        global _vaciando
+        _vaciando = False
+        _guardar_cola([e for e in leer_cola() if e["id"] not in enviados])
+        if al_terminar:
+            al_terminar(len(enviados))
+
     def siguiente():
         if not restantes:
-            _guardar_cola([e for e in leer_cola() if e["id"] not in enviados])
-            if al_terminar:
-                al_terminar(len(enviados))
+            terminar()
             return
         elemento = restantes.pop(0)
 
         def listo(respuesta, error, estado):
-            if error is None or 400 <= estado < 500:  # un 4xx no se arregla reintentando
+            if error is None or not es_reintentable(estado):  # 400, 403, 404, 422: reintentar no lo arregla
                 enviados.append(elemento["id"])
                 siguiente()
             else:
-                _guardar_cola([e for e in leer_cola() if e["id"] not in enviados])
-                if al_terminar:
-                    al_terminar(len(enviados))
+                terminar()
 
         pedir("POST", elemento["ruta"], listo, elemento["datos"])
 
-    siguiente()
+    try:
+        siguiente()
+    except Exception:  # noqa: BLE001 - la marca nunca queda puesta
+        _vaciando = False
+        raise

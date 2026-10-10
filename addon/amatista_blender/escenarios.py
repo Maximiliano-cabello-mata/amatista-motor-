@@ -129,7 +129,8 @@ def nave_basica(escena):
 def estudio_foto(escena):
     """Modelo sobre un piso, sin luces ni cámara y con Workbench (para cambiar a EEVEE)."""
     _piso(escena)
-    modelo = nave_basica(escena) if "Nave" not in bpy.data.objects else bpy.data.objects["Nave"]
+    # La Nave de ESTA escena (cada práctica tiene la suya): una de otra escena no se toca.
+    modelo = escena.objects.get("Nave") or nave_basica(escena)
     _motor.tagger.assign_role(modelo, "modelo")
     escena.render.engine = "BLENDER_WORKBENCH"
     return modelo
