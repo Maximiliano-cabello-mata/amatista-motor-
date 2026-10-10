@@ -325,10 +325,12 @@ def plan(completadas: Sequence[str]) -> int:
         print(f"  {curso.title} [{curso.difficulty}, {curso.status}]")
         for m in curso.modules:
             print(f"    Módulo {m.number}: {m.title}")
+            if m.taller:
+                print(f"      ▸ taller: {m.taller}")
             for pid in m.sequence:
                 marca = {"completado": "✓", "disponible": "▶", "bloqueado": "🔒", "proximamente": "…"}.get(
                     estado.get(pid, ""), "·")
-                tipo = "exploración" if pid == m.explore else "cierre"
+                tipo = "exploración" if pid == m.explore else "proyecto"
                 print(f"      {marca} {tipo}: {pid}")
     problemas = revisar_plan(curriculo)
     for problema in problemas:
@@ -344,8 +346,23 @@ def revisar_plan(curriculo) -> List[str]:
         if isinstance(datos, dict) and "id" in datos:
             practicas[datos["id"]] = datos
     problemas = []
+    catalogo = None
+    if any(m.taller for c in curriculo.courses for m in c.modules):
+        from .taller import leer_catalogo
+
+        try:
+            catalogo = leer_catalogo(PRACTICAS / "habilidades.json")
+        except InvalidPracticeError as error:
+            problemas.append(f"habilidades.json: {error}")
     for curso in curriculo.courses:
         for m in curso.modules:
+            if m.taller and catalogo is not None:
+                t = catalogo.taller(m.taller)
+                if t is None:
+                    problemas.append(f"{curso.id} módulo {m.number}: no existe el taller {m.taller}")
+                elif (t.curso, t.modulo, t.proyecto) != (curso.id, m.number, m.practice):
+                    problemas.append(f"{m.taller}: dice {t.curso} módulo {t.modulo} con el proyecto {t.proyecto}, "
+                                     f"pero cursos.json lo pone en {curso.id} módulo {m.number} con {m.practice}")
             for pid in m.sequence:
                 datos = practicas.get(pid)
                 if datos is None:

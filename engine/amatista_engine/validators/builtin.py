@@ -11,7 +11,7 @@ from __future__ import annotations
 from ..registry import ParamSpec as P
 from ..registry import ValidatorRegistry
 from . import (animation, example, figure, lighting, logic, materials, mesh, objects, recognize, scene, shape, silhouette,
-               spatial, transforms)
+               spatial, taller, transforms)
 
 # Parámetros comunes del selector de objetos (validators/base.py).
 SELECTOR = (
@@ -361,6 +361,22 @@ def _registrar_v3(registry: ValidatorRegistry) -> None:
             P("tolerance", "float", "Holgura (0.35 = ±35 %)", default=0.35),
         ),
         watch=TRANSFORMACION + ("OBJECT_DATA",), selects=True,
+    )
+    # --- Motor 5: Amatista Taller (taller/molde.py) ---
+    r(
+        "taller.molde", taller.molde, label="Las piezas llenan el molde", category="forma",
+        description=("Revisa pieza por pieza contra un molde: llena, casi (girada, de otro tamaño o en otro lugar), "
+                     "equivocada (otra forma) o vacía, con el motivo dicho sobre el modelo y sin números. «molde»: "
+                     "importan el lugar y el tamaño (con la holgura del nivel); «libre»: la figura se acomoda sola "
+                     "al modelo y solo importan la forma y cómo se acomodan las piezas. Lo usan las prácticas que "
+                     "genera el taller."),
+        params=(
+            P("parts", "parts", "Piezas del molde (como reference.parts)", required=True),
+            P("mode", "text", "Modo (molde o libre)", default="molde"),
+            P("level", "int", "Nivel (1 a 5)", default=1),
+            P("labels", "parts", "Nombres de las piezas por rol"),
+        ),
+        watch=TRANSFORMACION + ("OBJECT_DATA",),
     )
     # --- Lógica ---
     r(

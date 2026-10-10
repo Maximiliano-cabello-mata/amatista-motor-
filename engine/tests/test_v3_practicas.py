@@ -1,4 +1,9 @@
-"""Plan de estudios v3: las 18 prácticas (9 de exploración y 9 de cierre) compilan, sus casos de prueba pasan y cursos.json cuadra."""
+"""Plan de estudios: los 9 proyectos (uno por módulo) compilan, sus casos de prueba pasan y cursos.json cuadra.
+
+Motor 5: las 9 exploraciones se archivaron (practices/archivo/blender/); cada
+módulo enseña sus habilidades en su taller (test_taller_catalogo.py) y cierra
+con su proyecto.
+"""
 import json
 from pathlib import Path
 
@@ -16,9 +21,9 @@ def _leer(ruta: Path):
     return json.loads(ruta.read_text(encoding="utf-8"))
 
 
-def test_hay_dieciocho_practicas_del_plan():
-    # Cada módulo intercala teoría y Blender: una exploración corta y la práctica de cierre.
-    assert len(CARPETAS) == 18
+def test_hay_nueve_proyectos_del_plan():
+    # Cada módulo intercala teoría y Blender: su taller (habilidades.json) y el proyecto que lo cierra.
+    assert len(CARPETAS) == 9
     ids = {_leer(c / "practica.json")["id"] for c in CARPETAS}
     assert ids == set(load_curriculum(_leer(CURSOS)).practices())
 
@@ -63,10 +68,10 @@ def test_repasos_apuntan_a_pildoras_con_pregunta_de_practicas_anteriores():
             assert practicas[origen].pill(pildora) is not None, ref
 
 
-def test_cada_modulo_intercala_exploracion_y_cierre():
+def test_cada_modulo_tiene_taller_y_proyecto():
     plan = load_curriculum(_leer(CURSOS))
     for curso in plan.courses:
         for modulo in curso.modules:
-            assert modulo.explore and modulo.practice, f"{curso.id} módulo {modulo.number}"
-            assert modulo.sequence == (modulo.explore, modulo.practice)
-            assert plan.locate(modulo.explore) == (curso, modulo)
+            assert modulo.taller and modulo.practice and not modulo.explore, f"{curso.id} módulo {modulo.number}"
+            assert modulo.sequence == (modulo.practice,)
+            assert plan.locate(modulo.practice) == (curso, modulo)
