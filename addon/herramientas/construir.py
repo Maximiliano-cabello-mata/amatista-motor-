@@ -2,7 +2,7 @@
 
 Uso desde la terminal (en la raíz del repositorio):
 
-    python addon/herramientas/construir.py                      # dist/amatista-3.4.0.zip
+    python addon/herramientas/construir.py                      # dist/amatista-3.5.1.zip
     python addon/herramientas/construir.py --sistema windows \\
         --servidor https://api.ejemplo.cl --plataforma https://ejemplo.cl
 
@@ -10,11 +10,13 @@ El backend importa este módulo para armar las descargas al vuelo
 (GET /api/addon/v1/descargas/...), así que no hay binarios en el repositorio.
 
 Qué hace:
-1. Copia addon/amatista_blender/ (sin pruebas ni cachés).
+1. Copia addon/amatista_blender/ (sin pruebas ni cachés; incluye LICENSE, el
+   texto de la GPL-3.0 que declara el manifiesto).
 2. Mete Amatista Engine dentro (amatista_blender/amatista_engine/) para que la
    extensión no dependa de nada instalado aparte.
-3. Copia las prácticas de practices/blender/ (cursos.json, practica.json e imágenes) a
-   practicas/ (funcionan sin red).
+3. Copia las prácticas de practices/blender/ (cursos.json, temas.json, cada
+   practica.json con su ejemplo resuelto e imágenes de referencia; no los
+   pruebas.json) a practicas/ (funcionan sin red).
 4. Escribe config.json con las direcciones del servidor y de la plataforma y,
    si se pide, un vínculo de un solo uso para conectar la cuenta sin pasos.
 5. Comprime con fechas fijas: el mismo código produce el mismo .zip (y el
@@ -71,7 +73,7 @@ def leer_manifiesto() -> dict:
 
 
 VERSION = leer_manifiesto()["version"]
-# Nombre del producto que ve el alumno: «Amatista Motor 3.3» (mayor.menor).
+# Nombre del producto que ve el alumno: «Amatista Motor 3.5» (mayor.menor).
 NOMBRE = leer_manifiesto()["name"]
 VERSION_CORTA = ".".join(VERSION.split(".")[:2])
 NOMBRE_COMPLETO = f"{NOMBRE} {VERSION_CORTA}"
@@ -217,7 +219,7 @@ def construir_paquete(sistema: str, **opciones) -> bytes:
 
 
 def nombre_descarga(sistema: str) -> str:
-    """Nombre del archivo que baja la plataforma: Amatista-Motor-3.2-windows.zip."""
+    """Nombre del archivo que baja la plataforma: Amatista-Motor-3.5-windows.zip."""
     return f"{NOMBRE_COMPLETO.replace(' ', '-')}-{sistema}.zip"
 
 

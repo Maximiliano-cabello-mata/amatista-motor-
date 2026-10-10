@@ -1,5 +1,6 @@
 """Demostración del motor sin Blender: python engine/demo.py"""
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 ENGINE = Path(__file__).resolve().parent
@@ -7,27 +8,17 @@ REPO = ENGINE.parent
 sys.path.insert(0, str(ENGINE))
 
 from amatista_engine import create_default_engine  # noqa: E402
-from amatista_engine.models import SceneObject, SceneState  # noqa: E402
+from amatista_engine.ejemplo import escena_esperada  # noqa: E402
 from amatista_engine.practice import load_practice  # noqa: E402
+from amatista_engine.practice.loader import pieza_como_dict  # noqa: E402
 
-practice = load_practice(REPO / "practices" / "archivo" / "v2" / "mesa.json")
+# Práctica vigente: el tren de juguete (Principiante, módulo 1).
+practice = load_practice(REPO / "practices" / "blender" / "principiante" / "m1-tren" / "practica.json")
 
-
-def pata(nombre, x, y):
-    return SceneObject(nombre, "MESH", roles=("pata",), location=(x, y, 0.375), dimensions=(0.1, 0.1, 0.75))
-
-
-scene = SceneState(
-    blender_version="5.1-demo",
-    file_path="mesa.blend",
-    file_saved=True,
-    objects=(
-        SceneObject("Cubierta", "MESH", roles=("cubierta",), location=(0, 0, 0.8), dimensions=(2.0, 1.0, 0.1)),
-        pata("Pata01", -0.9, -0.4),
-        pata("Pata02", 0.9, -0.4),
-        pata("Pata03", -0.9, 0.4),
-    ),
-)
+# La escena que deja su ejemplo resuelto, sin el último objeto: un alumno a mitad de camino.
+partes = [pieza_como_dict(p) for p in practice.reference.compared] if practice.reference else []
+completa = escena_esperada(practice.example.steps, partes)
+scene = replace(completa, objects=completa.objects[:-1])
 
 engine = create_default_engine()
 report = engine.evaluate(practice, scene)

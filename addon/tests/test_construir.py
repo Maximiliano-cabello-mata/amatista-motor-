@@ -32,6 +32,13 @@ def test_extension_trae_manifiesto_motor_y_practicas():
     assert nombres.count("config.json") == 1
 
 
+def test_extension_trae_el_texto_de_la_licencia():
+    # El manifiesto declara SPDX:GPL-3.0-or-later: la GPL pide entregar su texto con la extensión.
+    assert "SPDX:GPL-3.0-or-later" in construir.leer_manifiesto()["license"]
+    texto = _zip(construir.construir_extension()).read("LICENSE").decode("utf-8")
+    assert "GNU GENERAL PUBLIC LICENSE" in texto and "Version 3, 29 June 2007" in texto
+
+
 def test_mismo_codigo_mismo_zip():
     assert construir.construir_extension() == construir.construir_extension()
 
