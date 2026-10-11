@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "5.0.0"
+VERSION_ADDON = "5.1.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -103,6 +103,8 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
     rol: bpy.props.StringProperty(default="")
     vinculo_usado: bpy.props.StringProperty(description="Vínculo del paquete ya canjeado")
     bienvenida_vista: bpy.props.BoolProperty(default=False)
+    # Add-on 5.1: los primeros pasos (recorrido.py) ya se hicieron o se omitieron.
+    recorrido_hecho: bpy.props.BoolProperty(default=False)
     modo_desarrollador: bpy.props.BoolProperty(
         name="Modo desarrollador",
         description="Muestra Amatista Author: Tagger, Inspector, constructor de objetivos y publicación",

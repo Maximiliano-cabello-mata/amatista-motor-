@@ -198,6 +198,12 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
             estilo.boton_principal(cuerpo, "amatista.volver_practica", "Volver a mi práctica", icon="LOOP_BACK",
                                    escala=1.4)
 
+        if modo_alumno(context) and not modo_autor(context):
+            # Add-on 5.1: los primeros pasos van arriba de todo (o la invitación a hacerlos).
+            from .. import recorrido
+
+            recorrido.dibujar_panel(layout, context)
+
         if secciones_v4(context):
             # Las tres secciones de la versión 4, solo para prácticas sueltas (no son de un taller).
             fila = layout.row(align=True)

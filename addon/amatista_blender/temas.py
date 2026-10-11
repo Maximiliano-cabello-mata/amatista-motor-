@@ -151,6 +151,18 @@ PIXELES = {
         ".ssssssss.",
         "..s....s..",
     ),
+    "estacion": (  # Bip: paloma mensajera de hojalata
+        ".a........",
+        "..a.......",
+        "...aaaa...",
+        "..asssaa..",
+        ".aswosaaa.",
+        "waasssaaa.",
+        "..aaaaaas.",
+        "...aassss.",
+        "....a.a...",
+        "...oo.oo..",
+    ),
     "cristal": (  # Ami: cristal de amatista
         "....ss....",
         "...saas...",

@@ -11,7 +11,8 @@
     "mod_bi_001": "aldea",
     "mod_bi_002": "archivo",
     "mod_bi_003": "galeria",
-    "mod_aframe_001": "portal"
+    "mod_aframe_001": "portal",
+    "mod_pp_001": "estacion"
   },
   "practicas": {
     "blender.bp.m1": "taller",
@@ -507,6 +508,49 @@
         "ojos": "#00E5FF",
         "adorno": "corona",
         "forma": "robusto"
+      }
+    },
+    "estacion": {
+      "nombre": "La estación del enlace",
+      "lema": "Aquí conectas la plataforma con tu Blender y aprendes a moverte en los dos.",
+      "colores": {"acento": "#2DD4BF", "suave": "#99F6E4", "cielo": "#0B2A2E", "suelo": "#06191B"},
+      "escena": "antenas",
+      "mascota": {
+        "nombre": "Bip",
+        "especie": "paloma mensajera de hojalata",
+        "hola": "¡Hola! Soy Bip. Llevo mensajes entre la plataforma y tu Blender: hoy te enseño el camino.",
+        "consejos": [
+          "El botón ▶ Continuar siempre te lleva a lo que sigue. Si te pierdes, búscalo.",
+          "En Blender, la tecla N abre la barra lateral: la pestaña Amatista vive ahí.",
+          "Si el botón «Completar lección» está gris, te falta una actividad: búscala por su hexágono."
+        ],
+        "datos": [
+          "Tu Blender le avisa a la plataforma cada 5 segundos qué estás haciendo: por eso la lección se mueve sola.",
+          "El código para vincular dura 10 minutos. Si se vence, pide otro: no pasa nada.",
+          "Sin Internet la teoría sigue funcionando; tu avance viaja cuando vuelve la conexión."
+        ],
+        "charla": [
+          "Pío-bip. Mensaje entregado.",
+          "Mis alas son de hojalata, pero mis mensajes nunca se pierden: si uno falla, lo vuelvo a mandar.",
+          "Dos ventanas, un solo Amatista. Esa es mi ruta favorita.",
+          "¿Ves el puntito que late? Soy yo, yendo y viniendo."
+        ],
+        "reacciones": {
+          "acierto": "¡Pío! Mensaje recibido y correcto.",
+          "fallo": "Ese mensaje se perdió. Léelo otra vez y vuelve a mandarlo.",
+          "mitad": "Vas a la mitad de la estación. La señal está fuerte.",
+          "final": "¡Conexión completa! Ya sabes moverte en la plataforma y en Blender.",
+          "inactivo": "¿Sigues ahí? La estación te espera; sin prisa."
+        }
+      },
+      "jefe": {
+        "nombre": "El Nudo de Cables",
+        "frase": "¡Nadie conecta nada mientras yo esté enredado!",
+        "piel": "#2DD4BF",
+        "sombra": "#0F766E",
+        "ojos": "#FFD166",
+        "adorno": "antena",
+        "forma": "flotante"
       }
     }
   }

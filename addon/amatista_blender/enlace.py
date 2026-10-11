@@ -14,7 +14,10 @@ enfocado) y en la respuesta recibe:
   que un latido perdido no pierde la orden. Desde el add-on 5 también
   llegan las del taller (taller_abrir, taller_continuar, taller_pista…,
   taller.sesion.ORDENES) y el latido lleva la actividad del taller en
-  detalle.taller, con la que la lección se ve igual que la tarjeta 3D;
+  detalle.taller, con la que la lección se ve igual que la tarjeta 3D. Desde
+  el add-on 5.1 el latido lleva siempre detalle.recorrido (los primeros
+  pasos: en qué parada va o si ya se hicieron) y llega la orden «recorrido»
+  (empezar, siguiente, anterior, salir);
 - los ajustes que el alumno eligió en «Mi Blender» de la plataforma
   (enfoque, acompañamiento, avisos y tarjeta 3D), que mandan sobre los de
   Blender. El servidor manda solo los que el alumno eligió: lo demás queda
@@ -153,6 +156,12 @@ def _datos():
         detalle = datos.get("detalle") or {"titulo": info["actividad"]["titulo"][:120],
                                            "mensaje": info["mensaje"][:500]}
         datos["detalle"] = {**detalle, "taller": info}
+    try:
+        from . import recorrido
+
+        datos["detalle"] = {**(datos.get("detalle") or {}), "recorrido": recorrido.info_latido()}
+    except Exception as error:  # noqa: BLE001 - el detalle es un extra: el latido sale igual
+        print(f"[Amatista] Detalle de los primeros pasos: {error}")
     if ESTADO["hecha"]:
         datos["orden_hecha"] = ESTADO["hecha"]
     return datos
@@ -278,6 +287,19 @@ def cumplir(orden):
         if texto:
             sesion.avisar(texto)
         practicas.mostrar_en_amatista(context)
+        _terminada(orden_id)
+        return True
+    if tipo == "recorrido":  # add-on 5.1: la lección de primeros pasos maneja el recorrido
+        from . import recorrido
+
+        ESTADO["cumplidas"] = (ESTADO["cumplidas"] + [orden_id])[-20:]
+        try:
+            texto = _en_vista_3d(context, lambda: recorrido.orden(bpy.context, str(datos.get("accion") or "empezar")))
+        except Exception as error:  # noqa: BLE001 - una orden fallida nunca rompe Blender
+            texto = None
+            print(f"[Amatista] La plataforma pidió «recorrido»: {error}")
+        if texto:
+            guia.avisar("Desde la plataforma", texto, "animo")
         _terminada(orden_id)
         return True
     if tipo == "abrir_practica" and datos.get("practica_id"):

@@ -954,6 +954,46 @@ def probar_talleres_nuevos(contexto):
             or sesion.actividad().inicio, "talleres: la siguiente actividad empieza en una escena limpia")
 
 
+def probar_recorrido(contexto):
+    """Add-on 5.1: los primeros pasos (recorrido.py) en Blender real, sin ventana."""
+    from types import SimpleNamespace
+
+    from amatista_blender import ajustes, enlace, recorrido, recorrido_pasos
+
+    p = ajustes.prefs()
+    p.recorrido_hecho = False
+    latido = recorrido.info_latido()
+    revisar(latido["total"] == 10 and not latido["activo"] and not latido["hecho"],
+            "recorrido: el latido avisa que este add-on lo tiene, sin empezar")
+    revisar(bpy.ops.amatista.recorrido(accion="empezar") == {"FINISHED"}, "recorrido: el operador lo empieza")
+    sc = next((s for s in bpy.data.scenes if s.get(recorrido.MARCA)), None)
+    revisar(sc is not None and recorrido._cubo(sc) is not None, "recorrido: su escena trae el cubo de práctica")
+    revisar(recorrido.activo() and recorrido.paso_actual()["id"] == "hola", "recorrido: empieza en «hola»")
+    revisar(enlace._datos()["detalle"]["recorrido"]["activo"], "recorrido: el latido lo cuenta como activo")
+
+    # Sin ventana la escena no cambia: las comprobaciones miran la del recorrido.
+    ctx = SimpleNamespace(scene=sc, view_layer=sc.view_layers[0])
+    indice = {q["id"]: i for i, q in enumerate(recorrido_pasos.PASOS)}
+    recorrido.ESTADO["indice"] = indice["elegir"]
+    recorrido._al_llegar(ctx)
+    revisar(not recorrido.comprobar(ctx), "recorrido: sin elegir el cubo no se marca")
+    revisar(recorrido.ir(ctx, 1) is not None, "recorrido: no deja seguir sin hacer la parada")
+    cubo_practica = recorrido._cubo(sc)
+    cubo_practica.select_set(True, view_layer=sc.view_layers[0])
+    sc.view_layers[0].objects.active = cubo_practica
+    revisar(recorrido.comprobar(ctx) and recorrido.paso_hecho(), "recorrido: elegir el cubo se comprueba solo")
+    recorrido.ir(ctx, 1)
+    revisar(recorrido.paso_actual()["id"] == "mover", "recorrido: pasa a «mover»")
+    cubo_practica.location.x += 1.0
+    revisar(recorrido.comprobar(ctx), "recorrido: mover el cubo se comprueba solo")
+
+    recorrido.ESTADO["indice"] = recorrido_pasos.ULTIMO
+    recorrido.orden(ctx, "siguiente")
+    revisar(not recorrido.activo() and recorrido.hecho(), "recorrido: «siguiente» en la última parada lo termina")
+    revisar(enlace._datos()["detalle"]["recorrido"]["hecho"], "recorrido: el latido avisa a la plataforma que terminó")
+    p.recorrido_hecho = False
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -1055,7 +1095,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "5.0.0", "el intento lleva la versión 5.0 del add-on")
+    revisar(datos["version_addon"] == "5.1.0", "el intento lleva la versión 5.1 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1098,6 +1138,7 @@ def main():
     probar_auditoria(contexto)
     probar_motor_4(contexto)
     probar_taller(contexto)
+    probar_recorrido(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")
