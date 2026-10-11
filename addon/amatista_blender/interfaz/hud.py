@@ -493,6 +493,109 @@ def _sello(shader, x, y, ancho, escala, pal):
     return alto + 14 * escala
 
 
+def _paleta_recorrido():
+    """Los colores de «La estación del enlace» (el tema del curso de primeros pasos)."""
+    tema = temas.tema("estacion")
+    acento = temas.color_rgba(tema["colores"]["acento"])
+    suave = temas.color_rgba(tema["colores"]["suave"])
+    cielo = temas.color_rgba(tema["colores"]["cielo"])
+    return {
+        "tema": tema,
+        "acento": acento,
+        "fondo": (*temas.mezclar(FONDO, cielo, 0.45)[:3], FONDO[3]),
+        "franja": (*temas.mezclar(FONDO, acento, 0.16)[:3], 0.96),
+        "borde": (*acento[:3], 0.9),
+        "pixeles": {"a": acento, "s": suave, "w": BLANCO, "o": OSCURO},
+    }
+
+
+def _dibujar_recorrido(contexto):
+    """La tarjeta de los primeros pasos (add-on 5.1): la parada, qué hacer, sus teclas y si ya se logró."""
+    from .. import recorrido, recorrido_pasos
+
+    pal = _paleta_recorrido()
+    acento = pal["acento"]
+    paso = recorrido.paso_actual()
+    indice, total = recorrido.ESTADO["indice"], recorrido_pasos.TOTAL
+    logrado = recorrido.paso_hecho()
+    escala = contexto.preferences.system.ui_scale or 1.0
+    ancho = 380 * escala
+    relleno = 14 * escala
+    ancho_texto = ancho - 2 * relleno
+    tam, tam_titulo, tam_chico = int(12 * escala), int(16 * escala), int(10 * escala)
+    lineas_titulo = _partir(paso["titulo"], tam_titulo, ancho_texto, 2)
+    lineas_texto = _partir(paso["texto"], tam, ancho_texto, 3)
+    lineas_hacer = _partir(paso["hacer"], tam, ancho_texto - 10 * escala, 2)
+    franja = 34 * escala
+    alto = franja + 22 * escala
+    alto += len(lineas_titulo) * (tam_titulo + 6 * escala) + 4 * escala
+    alto += len(lineas_texto) * (tam + 5 * escala) + 8 * escala
+    alto += len(lineas_hacer) * (tam + 5 * escala) + 12 * escala
+    alto += (tam + 14 * escala) if paso["teclas"] else 0
+    alto += 24 * escala  # pie
+    x, y = _origen(contexto, 16 * escala, escala)
+
+    shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+    gpu.state.blend_set("ALPHA")
+    _tarjeta(shader, x, y, ancho, alto, pal["fondo"], VERDE if logrado else pal["borde"], escala, 14 * escala, radio=10.0)
+    arriba = y + alto
+    _panel(shader, x, arriba - franja, ancho, franja, pal["franja"], 10 * escala, 14 * escala, abajo=False)
+    _mascota(shader, x + relleno, arriba - franja + 7 * escala, 2 * escala, "estacion", pal["pixeles"], 1.0,
+             salto=_salto() * escala)
+    tx = x + relleno + 28 * escala
+    _texto(tx, arriba - 14 * escala, "PRIMEROS PASOS", int(9 * escala), acento)
+    _texto(tx, arriba - 28 * escala, "Bip te acompaña", tam_chico + int(1 * escala), TEXTO)
+    derecha = f"{indice + 1}/{total}"
+    _texto(x + ancho - relleno - _ancho(derecha, tam_chico + 1), arriba - 21 * escala, derecha, tam_chico + 1, TEXTO)
+
+    # Una bolita por parada: hechas en verde, la de ahora en el color del tema.
+    cursor = arriba - franja - 16 * escala
+    paso_x = min(18 * escala, ancho_texto / max(1, total))
+    for i, p in enumerate(recorrido_pasos.PASOS):
+        cx = x + relleno + 5 * escala + i * paso_x
+        ok = p["id"] in recorrido.ESTADO["hechas"] or (i < indice and p["comprobar"] == "ninguna")
+        if i == indice:
+            _anillo(shader, cx, cursor, 6 * escala, 1.5 * escala, (*acento[:3], 0.7))
+        _punto(shader, cx, cursor, 3.5 * escala, VERDE if ok else (acento if i == indice else BARRA_FONDO))
+    cursor -= 8 * escala
+
+    for linea in lineas_titulo:
+        cursor -= tam_titulo + 6 * escala
+        _texto(x + relleno, cursor, linea, tam_titulo, VERDE if logrado else BLANCO)
+    cursor -= 4 * escala
+    for linea in lineas_texto:
+        cursor -= tam + 5 * escala
+        _texto(x + relleno, cursor, linea, tam, TEXTO_SUAVE)
+    cursor -= 8 * escala
+    alto_hacer = len(lineas_hacer) * (tam + 5 * escala) + 4 * escala
+    _panel(shader, x + relleno, cursor - alto_hacer - 2 * escala, 3 * escala, alto_hacer, VERDE if logrado else acento,
+           1.5 * escala)
+    for linea in lineas_hacer:
+        cursor -= tam + 5 * escala
+        _texto(x + relleno + 10 * escala, cursor, linea, tam, VERDE if logrado else TEXTO)
+    cursor -= 12 * escala
+    if paso["teclas"]:
+        cursor -= tam
+        cx = x + relleno
+        for i, tecla in enumerate(paso["teclas"]):
+            if i:
+                _texto(cx + 2 * escala, cursor, "›", tam, TEXTO_SUAVE)
+                cx += 12 * escala
+            cx += _tecla(shader, cx, cursor, tecla, tam_chico, escala) + 4 * escala
+        cursor -= 14 * escala
+
+    if logrado:
+        pie = "¡Eso es! Seguimos…"
+    elif paso["comprobar"] != "ninguna":
+        pie = "Amatista lo nota sola cuando lo hagas"
+    else:
+        pie = "N › Amatista › «Siguiente»"
+    _rectangulo(shader, x + relleno, y + 24 * escala, ancho_texto, 1 * escala, (1, 1, 1, 0.06))
+    _texto(x + relleno, y + 9 * escala, _recortar(pie, tam_chico, ancho_texto), tam_chico, VERDE if logrado else TEXTO_SUAVE)
+    _dibujar_avisos(shader, x, y + alto + 12 * escala, ancho, escala, pal)
+    gpu.state.blend_set("NONE")
+
+
 def del_taller(escena):
     """Add-on 5: en la actividad o el proyecto del taller manda la tarjeta del taller (taller/vista)."""
     from ..taller import sesion
@@ -506,6 +609,11 @@ def dibujar():
         return
     contexto = bpy.context
     escena = contexto.scene
+    from .. import recorrido
+
+    if recorrido.activo():  # add-on 5.1: mientras dura, los primeros pasos tienen la tarjeta
+        _dibujar_recorrido(contexto)
+        return
     if escena is None or not escena.amatista.practica_json or del_taller(escena):
         return
     practica = practicas.practica_activa(contexto)

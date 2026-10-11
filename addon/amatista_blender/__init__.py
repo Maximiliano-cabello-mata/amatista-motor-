@@ -1,4 +1,9 @@
-"""Amatista para Blender (add-on 5.0: Amatista Taller).
+"""Amatista para Blender (add-on 5.1: Amatista Taller con primeros pasos).
+
+Add-on 5.1: los primeros pasos (recorrido.py) enseñan, dentro de Blender, la
+pestaña Amatista, la cuenta, la vista 3D, la tarjeta y la conexión con la
+plataforma. La lección «Tus primeros pasos en Blender» los empieza y los ve
+en vivo por el enlace.
 
 Add-on 5.0, motor 5 (taller/): la habilidad es la unidad. El alumno aprende
 cada habilidad con el ciclo Mira → Hazlo conmigo → Hazlo tú → Úsalo →
@@ -42,7 +47,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (5, 0, 0),
+    "version": (5, 1, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Aprende Blender habilidad por habilidad con Amatista Taller",
@@ -51,7 +56,7 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, mision, operadores, practicas, red
+from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, mision, operadores, practicas, recorrido, red
 from . import taller
 from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
 
@@ -63,6 +68,7 @@ CLASES = (
     + aprender.CLASES
     + herramientas.CLASES
     + paneles.CLASES
+    + recorrido.CLASES
 )
 
 
@@ -97,6 +103,7 @@ def unregister():
         print(f"[Amatista] No se pudo restaurar el mundo: {error}")
     enfoque.unregister()  # Blender completo otra vez, como estaba
     enlace.unregister()
+    recorrido.unregister()
     hud.unregister()
     practicas.unregister()
     cuenta.unregister()  # deja de preguntar por el código de vinculación

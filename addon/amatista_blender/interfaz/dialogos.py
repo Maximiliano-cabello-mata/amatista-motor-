@@ -258,12 +258,14 @@ class AMATISTA_OT_bienvenida(bpy.types.Operator):
         cabecera.label(text="Amatista ya está en tu Blender", icon_value=estilo.icono("logo"))
         cuerpo = estilo.tarjeta(layout, "Así funciona", icon="INFO")
         for paso in (
-            "1. Abre la barra lateral con N y elige la pestaña Amatista.",
-            "2. Empieza la práctica de tu lección.",
-            "3. Trabaja: Amatista revisa tu escena y te dice qué falta.",
-            "4. Tu avance aparece en la plataforma.",
+            "1. La plataforma te explica la idea; aquí, en Blender, la haces.",
+            "2. La pestaña Amatista (tecla N) tiene tu cuenta, tu taller y Mi isla.",
+            "3. La tarjeta de la vista 3D te dice qué hacer y te avisa cuando lo logras.",
+            "4. Tu avance aparece en la plataforma, en vivo.",
         ):
             estilo.parrafo(cuerpo, context, paso, margen=0)
+        estilo.boton_principal(layout, "amatista.recorrido", "Empezar los primeros pasos (5 min)", icon="PLAY",
+                               escala=1.5, accion="empezar")
         p = ajustes.prefs()
         if not (p and p.token):
             layout.operator("amatista.vincular", text="Vincular con mi cuenta", icon="LINKED")
