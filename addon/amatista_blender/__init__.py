@@ -1,9 +1,11 @@
-"""Amatista para Blender (add-on 5.1: Amatista Taller con primeros pasos).
+"""Amatista para Blender (add-on 5.2: Amatista Taller y «Conoce Amatista Motor»).
 
-Add-on 5.1: los primeros pasos (recorrido.py) enseñan, dentro de Blender, la
-pestaña Amatista, la cuenta, la vista 3D, la tarjeta y la conexión con la
-plataforma. La lección «Tus primeros pasos en Blender» los empieza y los ve
-en vivo por el enlace.
+Add-on 5.2: tres prácticas cortas (recorrido.py y recorrido_pasos.py) explican
+todas las herramientas del add-on: la pestaña Amatista (cuenta, plataforma,
+lección actual, ajustes, guardar), la vista 3D con «Tus herramientas», «¿Cómo
+se usa?» y el modo enfocado, y cómo enseña el taller (tarjeta, «Mira», molde,
+pistas, pausa, Mi isla, repasos). La página Blender de la plataforma las
+empieza y las ve en vivo por el enlace. Reemplazan los primeros pasos del 5.1.
 
 Add-on 5.0, motor 5 (taller/): la habilidad es la unidad. El alumno aprende
 cada habilidad con el ciclo Mira → Hazlo conmigo → Hazlo tú → Úsalo →
@@ -47,7 +49,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (5, 1, 0),
+    "version": (5, 2, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Aprende Blender habilidad por habilidad con Amatista Taller",

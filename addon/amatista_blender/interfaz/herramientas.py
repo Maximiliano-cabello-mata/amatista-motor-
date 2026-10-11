@@ -6,7 +6,7 @@ herramienta en Blender. Las del paso actual aparecen primero y marcadas.
 """
 import bpy
 
-from .. import _motor, enfoque, enlace, guia, mision, practicas
+from .. import _motor, enfoque, enlace, guia, mision, practicas, recorrido
 from . import estilo
 
 ICONO_CATEGORIA = {
@@ -161,6 +161,7 @@ class AMATISTA_OT_usar_herramienta(bpy.types.Operator):
             self.report({"WARNING"}, aviso)
             return {"CANCELLED"}
         mision.marcar_usada(herramienta.id)  # motor 4: se enciende en la tarjeta de la misión
+        recorrido.anotar("herramienta")  # «Conoce Amatista Motor» › «Tus herramientas»
         if herramienta.keys:
             self.report({"INFO"}, f"{herramienta.name}: la próxima vez pulsa {herramienta.keys[0]}.")
         return {"FINISHED"}
@@ -180,6 +181,7 @@ class AMATISTA_OT_herramienta_ayuda(bpy.types.Operator):
         if _motor.MOTOR.tools.get(self.herramienta) is None:
             return {"CANCELLED"}
         guia.ESTADO["ayudas"]["explicar"] += 1
+        recorrido.anotar("ayuda")
         if bpy.app.background:
             return self.execute(context)
         return context.window_manager.invoke_popup(self, width=420)
@@ -216,6 +218,7 @@ class AMATISTA_OT_ver_todo(bpy.types.Operator):
     def execute(self, context):
         practica = practicas.practica_activa(context)
         enfoque.ver_todo(practica.id if practica else "")
+        recorrido.anotar("enfoque")
         enlace.latir_pronto()
         practicas.redibujar()
         self.report({"INFO"}, "Blender completo. Vuelve con «Enfocar» en N › Amatista.")
@@ -230,6 +233,7 @@ class AMATISTA_OT_enfocar(bpy.types.Operator):
     def execute(self, context):
         enfoque.ESTADO["rechazado"] = ""
         enfoque.activar(practicas.practica_activa(context))
+        recorrido.anotar("enfoque")
         enlace.latir_pronto()
         practicas.redibujar()
         return {"FINISHED"}

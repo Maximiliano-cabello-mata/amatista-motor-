@@ -1,4 +1,4 @@
-"""Los primeros pasos en Blender (amatista_blender/recorrido_pasos.py), sin Blender.
+"""«Conoce Amatista Motor» (amatista_blender/recorrido_pasos.py), sin Blender.
 
 recorrido_pasos.py no importa bpy: se carga directo del archivo para no ejecutar
 el __init__ del add-on. Lo que manda al latido debe caber en
@@ -19,45 +19,70 @@ def _cargar_modulo():
 
 
 pasos = _cargar_modulo()
-COMPROBACIONES = {"ninguna", "barra", "cuenta", "orbitar", "elegir", "mover"}
+COMPROBACIONES = {"ninguna", "barra", "cuenta", "orbitar", "acercar", "elegir", "mover", "girar", "escalar"}
+USOS = {"plataforma", "guardar", "herramienta", "ayuda", "enfoque"}  # recorrido.anotar() en los operadores
 
 
-def test_diez_paradas_con_id_unico():
-    ids = [p["id"] for p in pasos.PASOS]
-    assert pasos.TOTAL == len(ids) == 10
-    assert len(set(ids)) == len(ids)
-    assert ids[0] == "hola" and ids[-1] == "listo"
+def test_tres_practicas_en_orden_con_paradas_de_id_unico():
+    assert pasos.ORDEN == ("pestana", "vista", "taller")
+    for rid in pasos.ORDEN:
+        ids = [p["id"] for p in pasos.pasos_de(rid)]
+        assert 6 <= len(ids) <= 12, rid  # el servidor acepta hasta 12 paradas
+        assert len(set(ids)) == len(ids), rid
+        assert ids[-1] == "listo", rid
 
 
 def test_cada_parada_dice_que_hacer_y_cabe_en_el_servidor():
-    for p in pasos.PASOS:
-        assert p["comprobar"] in COMPROBACIONES, p["id"]
-        assert p["titulo"] and len(p["titulo"]) <= 60
-        assert p["texto"] and len(p["texto"]) <= 300
-        assert p["hacer"] and len(p["hacer"]) <= 160
-        assert len(p["teclas"]) <= 6
+    for rid in pasos.ORDEN:
+        assert len(pasos.RECORRIDOS[rid]["nombre"]) <= 60
+        for p in pasos.pasos_de(rid):
+            comprobar = p["comprobar"]
+            assert comprobar in COMPROBACIONES or (comprobar.startswith("uso:") and comprobar[4:] in USOS), p["id"]
+            assert p["titulo"] and len(p["titulo"]) <= 60
+            assert p["texto"] and len(p["texto"]) <= 300
+            assert p["hacer"] and len(p["hacer"]) <= 160
+            assert len(p["teclas"]) <= 6
+
+
+def test_entre_las_tres_explican_todas_las_herramientas_del_addon():
+    temas = {p["id"] for rid in pasos.ORDEN for p in pasos.pasos_de(rid)}
+    for tema in ("barra", "cuenta", "plataforma", "leccion", "ajustes", "guardar", "orbitar", "acercar", "elegir",
+                 "mover", "girar", "escalar", "herramientas", "ayuda", "enfoque", "ciclo", "tarjeta", "mira", "molde",
+                 "comprobar", "pistas", "pausa", "isla", "enlace"):
+        assert tema in temas, tema
 
 
 def test_mover_no_se_sale():
-    assert pasos.mover(0, -1) == 0
-    assert pasos.mover(pasos.ULTIMO, 1) == pasos.ULTIMO
-    assert pasos.mover(3, 1) == 4
+    assert pasos.mover("vista", 0, -1) == 0
+    assert pasos.mover("vista", pasos.ultimo("vista"), 1) == pasos.ultimo("vista")
+    assert pasos.mover("vista", 3, 1) == 4
+    assert pasos.valido("otra") == "pestana" and pasos.siguiente_de("pestana") == "vista"
+    assert pasos.siguiente_de("taller") is None
 
 
 def test_las_paradas_que_se_comprueban_esperan_a_estar_hechas():
-    indice = {p["id"]: i for i, p in enumerate(pasos.PASOS)}
-    assert pasos.puede_seguir(indice["hola"], set())
-    assert not pasos.puede_seguir(indice["mover"], set())
-    assert pasos.puede_seguir(indice["mover"], {"mover"})
+    indice = {p["id"]: i for i, p in enumerate(pasos.pasos_de("vista"))}
+    assert not pasos.puede_seguir("vista", indice["mover"], set())
+    assert pasos.puede_seguir("vista", indice["mover"], {"mover"})
+    assert not pasos.puede_seguir("vista", indice["herramientas"], set())
+    indice = {p["id"]: i for i, p in enumerate(pasos.pasos_de("pestana"))}
+    assert pasos.puede_seguir("pestana", indice["hola"], set())
     # La cuenta es opcional: se puede vincular después.
-    assert pasos.puede_seguir(indice["cuenta"], set())
+    assert pasos.puede_seguir("pestana", indice["cuenta"], set())
+
+
+def test_hechos_se_guardan_en_orden():
+    assert pasos.leer_hechos("taller, pestana,nada") == ["pestana", "taller"]
+    assert pasos.escribir_hechos({"vista", "pestana"}) == "pestana,vista"
+    assert pasos.leer_hechos("") == []
 
 
 def test_estado_publico_para_el_latido():
-    estado = pasos.estado_publico(4, {"barra", "orbitar"}, activo=True, hecho=False)
-    assert estado["activo"] and not estado["hecho"]
-    assert (estado["paso"], estado["total"]) == (4, 10)
-    assert estado["titulo"] == pasos.PASOS[4]["titulo"]
+    estado = pasos.estado_publico("pestana", 4, {"barra", "plataforma"}, activo=True, hechos=[])
+    assert estado["id"] == "pestana" and estado["nombre"] == "Tu pestaña Amatista"
+    assert estado["activo"] and not estado["hecho"] and estado["hechos"] == []
+    assert (estado["paso"], estado["total"]) == (4, 8)
+    assert estado["titulo"] == pasos.pasos_de("pestana")[4]["titulo"]
     ok = [p["ok"] for p in estado["pasos"]]
     assert ok[0] is True  # «hola» ya pasó y solo explicaba
     assert ok[1] is True and ok[3] is True  # comprobadas
@@ -66,7 +91,8 @@ def test_estado_publico_para_el_latido():
     assert len(estado["pasos"]) <= 12
 
 
-def test_terminado_marca_todo():
-    estado = pasos.estado_publico(99, set(), activo=False, hecho=True)
-    assert estado["paso"] == pasos.ULTIMO
+def test_terminada_marca_todo():
+    estado = pasos.estado_publico("vista", 99, set(), activo=False, hechos=["pestana", "vista"])
+    assert estado["hecho"] and estado["hechos"] == ["pestana", "vista"]
+    assert estado["paso"] == pasos.ultimo("vista")
     assert all(p["ok"] for p in estado["pasos"])

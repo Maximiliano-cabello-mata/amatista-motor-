@@ -264,7 +264,7 @@ class AMATISTA_OT_bienvenida(bpy.types.Operator):
             "4. Tu avance aparece en la plataforma, en vivo.",
         ):
             estilo.parrafo(cuerpo, context, paso, margen=0)
-        estilo.boton_principal(layout, "amatista.recorrido", "Empezar los primeros pasos (5 min)", icon="PLAY",
+        estilo.boton_principal(layout, "amatista.recorrido", "Conoce Amatista Motor: 3 prácticas cortas", icon="PLAY",
                                escala=1.5, accion="empezar")
         p = ajustes.prefs()
         if not (p and p.token):

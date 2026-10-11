@@ -1,7 +1,7 @@
 """Operadores del modo Alumno y de la cuenta (botones de los paneles)."""
 import bpy
 
-from . import _motor, ajustes, cuenta, guia, practicas, red
+from . import _motor, ajustes, cuenta, guia, practicas, recorrido, red
 
 
 def _avisar(operador, error, ok=None):
@@ -75,6 +75,7 @@ class AMATISTA_OT_abrir_plataforma(bpy.types.Operator):
     ruta: bpy.props.StringProperty(default="#/panel")
 
     def execute(self, context):
+        recorrido.anotar("plataforma")
         if not cuenta.abrir_plataforma(self.ruta):
             self.report({"WARNING"}, "Este paquete no sabe la dirección de la plataforma (Preferencias del add-on).")
         return {"FINISHED"}
@@ -215,6 +216,7 @@ class AMATISTA_OT_sincronizar(bpy.types.Operator):
     bl_description = "Guarda ahora tu progreso en la plataforma"
 
     def execute(self, context):
+        recorrido.anotar("guardar")
         if practicas.ESTADO["reporte"] is None:
             practicas.evaluar(context)
         practicas.sincronizar(context, forzar=True)

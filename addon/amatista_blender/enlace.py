@@ -15,9 +15,10 @@ enfocado) y en la respuesta recibe:
   llegan las del taller (taller_abrir, taller_continuar, taller_pista…,
   taller.sesion.ORDENES) y el latido lleva la actividad del taller en
   detalle.taller, con la que la lección se ve igual que la tarjeta 3D. Desde
-  el add-on 5.1 el latido lleva siempre detalle.recorrido (los primeros
-  pasos: en qué parada va o si ya se hicieron) y llega la orden «recorrido»
-  (empezar, siguiente, anterior, salir);
+  el add-on 5.1 el latido lleva siempre detalle.recorrido y llega la orden
+  «recorrido» (empezar, siguiente, anterior, salir); desde el 5.2 son las tres
+  prácticas de «Conoce Amatista Motor»: el detalle dice cuál va y cuáles se
+  terminaron, y la orden trae el id de la práctica en `recorrido`;
 - los ajustes que el alumno eligió en «Mi Blender» de la plataforma
   (enfoque, acompañamiento, avisos y tarjeta 3D), que mandan sobre los de
   Blender. El servidor manda solo los que el alumno eligió: lo demás queda
@@ -161,7 +162,7 @@ def _datos():
 
         datos["detalle"] = {**(datos.get("detalle") or {}), "recorrido": recorrido.info_latido()}
     except Exception as error:  # noqa: BLE001 - el detalle es un extra: el latido sale igual
-        print(f"[Amatista] Detalle de los primeros pasos: {error}")
+        print(f"[Amatista] Detalle de «Conoce Amatista Motor»: {error}")
     if ESTADO["hecha"]:
         datos["orden_hecha"] = ESTADO["hecha"]
     return datos
@@ -289,12 +290,13 @@ def cumplir(orden):
         practicas.mostrar_en_amatista(context)
         _terminada(orden_id)
         return True
-    if tipo == "recorrido":  # add-on 5.1: la lección de primeros pasos maneja el recorrido
+    if tipo == "recorrido":  # add-on 5.2: la plataforma maneja las prácticas de «Conoce Amatista Motor»
         from . import recorrido
 
         ESTADO["cumplidas"] = (ESTADO["cumplidas"] + [orden_id])[-20:]
         try:
-            texto = _en_vista_3d(context, lambda: recorrido.orden(bpy.context, str(datos.get("accion") or "empezar")))
+            texto = _en_vista_3d(context, lambda: recorrido.orden(bpy.context, str(datos.get("accion") or "empezar"),
+                                                                    str(datos.get("recorrido") or "") or None))
         except Exception as error:  # noqa: BLE001 - una orden fallida nunca rompe Blender
             texto = None
             print(f"[Amatista] La plataforma pidió «recorrido»: {error}")
