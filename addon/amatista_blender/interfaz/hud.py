@@ -494,7 +494,7 @@ def _sello(shader, x, y, ancho, escala, pal):
 
 
 def _paleta_recorrido():
-    """Los colores de «La estación del enlace» (el tema del curso de primeros pasos)."""
+    """Los colores de «La estación del enlace»: el tema de Bip, la guía de «Conoce Amatista Motor»."""
     tema = temas.tema("estacion")
     acento = temas.color_rgba(tema["colores"]["acento"])
     suave = temas.color_rgba(tema["colores"]["suave"])
@@ -510,13 +510,15 @@ def _paleta_recorrido():
 
 
 def _dibujar_recorrido(contexto):
-    """La tarjeta de los primeros pasos (add-on 5.1): la parada, qué hacer, sus teclas y si ya se logró."""
+    """La tarjeta de «Conoce Amatista Motor» (add-on 5.2): la parada, qué hacer, sus teclas y si ya se logró."""
     from .. import recorrido, recorrido_pasos
 
     pal = _paleta_recorrido()
     acento = pal["acento"]
     paso = recorrido.paso_actual()
-    indice, total = recorrido.ESTADO["indice"], recorrido_pasos.TOTAL
+    rid, indice = recorrido.ESTADO["rid"], recorrido.ESTADO["indice"]
+    total = recorrido_pasos.total(rid)
+    numero = recorrido_pasos.ORDEN.index(rid) + 1
     logrado = recorrido.paso_hecho()
     escala = contexto.preferences.system.ui_scale or 1.0
     ancho = 380 * escala
@@ -543,15 +545,16 @@ def _dibujar_recorrido(contexto):
     _mascota(shader, x + relleno, arriba - franja + 7 * escala, 2 * escala, "estacion", pal["pixeles"], 1.0,
              salto=_salto() * escala)
     tx = x + relleno + 28 * escala
-    _texto(tx, arriba - 14 * escala, "PRIMEROS PASOS", int(9 * escala), acento)
-    _texto(tx, arriba - 28 * escala, "Bip te acompaña", tam_chico + int(1 * escala), TEXTO)
+    _texto(tx, arriba - 14 * escala, f"CONOCE AMATISTA · PRÁCTICA {numero} DE 3", int(9 * escala), acento)
+    _texto(tx, arriba - 28 * escala, _recortar(recorrido_pasos.RECORRIDOS[rid]["nombre"], tam_chico + int(1 * escala),
+                                               ancho - 90 * escala), tam_chico + int(1 * escala), TEXTO)
     derecha = f"{indice + 1}/{total}"
     _texto(x + ancho - relleno - _ancho(derecha, tam_chico + 1), arriba - 21 * escala, derecha, tam_chico + 1, TEXTO)
 
     # Una bolita por parada: hechas en verde, la de ahora en el color del tema.
     cursor = arriba - franja - 16 * escala
     paso_x = min(18 * escala, ancho_texto / max(1, total))
-    for i, p in enumerate(recorrido_pasos.PASOS):
+    for i, p in enumerate(recorrido.pasos()):
         cx = x + relleno + 5 * escala + i * paso_x
         ok = p["id"] in recorrido.ESTADO["hechas"] or (i < indice and p["comprobar"] == "ninguna")
         if i == indice:
@@ -586,6 +589,8 @@ def _dibujar_recorrido(contexto):
 
     if logrado:
         pie = "¡Eso es! Seguimos…"
+    elif paso["comprobar"].startswith("uso:"):
+        pie = "Usa el botón en N › Amatista: se marca solo"
     elif paso["comprobar"] != "ninguna":
         pie = "Amatista lo nota sola cuando lo hagas"
     else:
@@ -611,7 +616,7 @@ def dibujar():
     escena = contexto.scene
     from .. import recorrido
 
-    if recorrido.activo():  # add-on 5.1: mientras dura, los primeros pasos tienen la tarjeta
+    if recorrido.activo():  # add-on 5.2: mientras dura, la práctica de «Conoce Amatista Motor» tiene la tarjeta
         _dibujar_recorrido(contexto)
         return
     if escena is None or not escena.amatista.practica_json or del_taller(escena):

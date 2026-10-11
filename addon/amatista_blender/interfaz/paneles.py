@@ -199,7 +199,7 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
                                    escala=1.4)
 
         if modo_alumno(context) and not modo_autor(context):
-            # Add-on 5.1: los primeros pasos van arriba de todo (o la invitación a hacerlos).
+            # Add-on 5.2: la práctica de «Conoce Amatista Motor» va arriba de todo (o la invitación a hacerlas).
             from .. import recorrido
 
             recorrido.dibujar_panel(layout, context)

@@ -147,6 +147,9 @@ class AMATISTA_OT_taller_sincronizar(bpy.types.Operator):
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
+        from .. import recorrido
+
+        recorrido.anotar("guardar")
         if not datos.sincronizar():
             self.report({"INFO"}, "Tu avance se guarda en esta computadora y se envía al vincular tu cuenta.")
         return {"FINISHED"}
