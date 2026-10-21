@@ -12,7 +12,11 @@
     "mod_bi_002": "archivo",
     "mod_bi_003": "galeria",
     "mod_aframe_001": "portal",
-    "mod_pp_001": "estacion"
+    "mod_pp_001": "estacion",
+    "mod_aframe_002": "maqueta",
+    "mod_aframe_003": "museo",
+    "mod_aframe_004": "feria",
+    "mod_aframe_005": "orbita"
   },
   "practicas": {
     "blender.bp.m1": "taller",
@@ -461,6 +465,182 @@
         "frase": "Solo pasa quien domina las etiquetas.",
         "piel": "#00B8CC",
         "sombra": "#005F6B",
+        "ojos": "#F5792A",
+        "adorno": "visor",
+        "forma": "flotante"
+      }
+    },
+    "maqueta": {
+      "nombre": "La maqueta flotante",
+      "lema": "Cada pieza en su lugar: metros, padres e hijos.",
+      "colores": {"acento": "#4ADE80", "suave": "#BBF7D0", "cielo": "#0B2216", "suelo": "#06140D"},
+      "escena": "aldea",
+      "mascota": {
+        "nombre": "Taco",
+        "especie": "bloque de madera con patas",
+        "hola": "¡Toc, toc! Soy Taco. En esta maqueta todo se mide en metros.",
+        "consejos": [
+          "Para poner algo delante de la cámara, usa una Z negativa.",
+          "Agrupa las partes de un mueble en un a-entity padre: lo mueves de una vez.",
+          "Una luz ambient suave evita las zonas totalmente negras."
+        ],
+        "datos": [
+          "La cámara de A-Frame empieza a 1.6 m del suelo, la altura de los ojos.",
+          "Las primitivas como a-box son atajos de una entidad con componentes.",
+          "En A-Frame y en glTF el eje Y apunta hacia arriba."
+        ],
+        "charla": [
+          "Una entidad sola no hace nada: los componentes le dan vida.",
+          "Si el plano sale de pie, gíralo -90 en X.",
+          "Mover al padre mueve a todos sus hijos.",
+          "Las caras planas (flatShading) son puro estilo low poly.",
+          "Toc. Toc. ¿Ya pusiste tu luz principal?"
+        ],
+        "reacciones": {
+          "acierto": "¡Encaja perfecto!",
+          "fallo": "Esa pieza va en otro lado. Probemos otra vez.",
+          "mitad": "Media maqueta armada. ¡Va tomando forma!",
+          "final": "¡Maqueta completa! Eres escenógrafo web.",
+          "inactivo": "¿Seguimos construyendo?"
+        }
+      },
+      "jefe": {
+        "nombre": "Arquitecto Desordenado",
+        "frase": "¿Y si pongo el suelo en el techo?",
+        "piel": "#22C55E",
+        "sombra": "#14532D",
+        "ojos": "#F5792A",
+        "adorno": "casco",
+        "forma": "robusto"
+      }
+    },
+    "museo": {
+      "nombre": "El museo de modelos",
+      "lema": "Lo que modelas en un programa, se expone en la web.",
+      "colores": {"acento": "#F472B6", "suave": "#FBCFE8", "cielo": "#2A0B1E", "suelo": "#170611"},
+      "escena": "galeria",
+      "mascota": {
+        "nombre": "Glib",
+        "especie": "caracol de cristal",
+        "hola": "Hola, soy Glib. Llevo mi casa a cuestas, como un .glb lleva todo dentro.",
+        "consejos": [
+          "Declara tus modelos una vez en a-assets y úsalos las veces que quieras.",
+          "Aplica la escala en tu programa 3D antes de exportar: 1 unidad, 1 metro.",
+          "Deja el origen del modelo en su base: así queda parado en el suelo."
+        ],
+        "datos": [
+          "A glTF le dicen «el JPEG del 3D».",
+          "3ds Max exporta glTF de serie desde la versión 2023.",
+          "Un .glb junta malla, materiales y texturas en un solo archivo."
+        ],
+        "charla": [
+          "Despacio y con buena luz: así se ve un modelo.",
+          "Si tu modelo llega gigante, revisa los centímetros.",
+          "Reutilizar un modelo es gratis para el navegador.",
+          "Menos polígonos, más fluidez en el visor.",
+          "Cada sala del museo empieza en a-assets."
+        ],
+        "reacciones": {
+          "acierto": "¡A la vitrina!",
+          "fallo": "Mmm, ese modelo no cargó. Revisemos.",
+          "mitad": "La mitad de la colección ya está expuesta.",
+          "final": "¡Museo inaugurado! Eres curador de modelos.",
+          "inactivo": "Las salas siguen abiertas…"
+        }
+      },
+      "jefe": {
+        "nombre": "Coleccionista de Polígonos",
+        "frase": "¡Un millón de caras más, por si acaso!",
+        "piel": "#EC4899",
+        "sombra": "#831843",
+        "ojos": "#00E5FF",
+        "adorno": "corona",
+        "forma": "alto"
+      }
+    },
+    "feria": {
+      "nombre": "La feria mecánica",
+      "lema": "Todo se mueve cuando algo pasa.",
+      "colores": {"acento": "#FACC15", "suave": "#FEF08A", "cielo": "#2A2006", "suelo": "#171103"},
+      "escena": "carpa",
+      "mascota": {
+        "nombre": "Muelle",
+        "especie": "rana de resorte",
+        "hola": "¡Boing! Soy Muelle. Aquí cada atracción espera un clic.",
+        "consejos": [
+          "dur va en milisegundos: 1000 es un segundo.",
+          "Con startEvents la animación espera a que pase algo.",
+          "Para girar una puerta desde su borde, usa un padre como bisagra."
+        ],
+        "datos": [
+          "Los eventos de A-Frame suben por la jerarquía: el padre también los escucha.",
+          "Cada animación con nombre lanza animationcomplete__nombre al terminar.",
+          "easeInOutQuad arranca y frena suave, como un columpio."
+        ],
+        "charla": [
+          "¡Boing, boing! dir: alternate es ir y volver.",
+          "Sin cursor no hay clic.",
+          "Ponle nombre a tus animaciones y podrás encadenarlas.",
+          "raycaster con .clicable: menos sustos, más velocidad.",
+          "¿Ya probaste animar el color con material.color?"
+        ],
+        "reacciones": {
+          "acierto": "¡Boing! ¡Le diste!",
+          "fallo": "Uy, el resorte se trabó. Otra vez.",
+          "mitad": "Media feria funcionando. ¡Qué ruido tan bonito!",
+          "final": "¡Feria abierta! Eres titiritero digital.",
+          "inactivo": "Boing… ¿hay alguien?"
+        }
+      },
+      "jefe": {
+        "nombre": "Titiritero de Hilos",
+        "frase": "Nada se mueve sin que yo lo diga.",
+        "piel": "#EAB308",
+        "sombra": "#713F12",
+        "ojos": "#9B59B6",
+        "adorno": "sombrero",
+        "forma": "redondo"
+      }
+    },
+    "orbita": {
+      "nombre": "La estación orbital",
+      "lema": "Ponte el visor: tu mundo ya tiene horizonte.",
+      "colores": {"acento": "#60A5FA", "suave": "#BFDBFE", "cielo": "#07122A", "suelo": "#030817"},
+      "escena": "estrellas",
+      "mascota": {
+        "nombre": "Nébula",
+        "especie": "medusa espacial",
+        "hola": "Blub… soy Nébula. Floto entre tu monitor y tu visor.",
+        "consejos": [
+          "WebXR necesita HTTPS: sin él no aparece el botón VR.",
+          "Agrupa cámara y manos en un rig y mueve a la persona entera.",
+          "Mide con stats: en el visor, 72 cuadros por segundo o más."
+        ],
+        "datos": [
+          "Un visor dibuja la escena dos veces: una por ojo.",
+          "Teletransportarse marea mucho menos que deslizarse.",
+          "laser-controls funciona con los controles de casi todos los visores."
+        ],
+        "charla": [
+          "Blub. El texto se lee mejor a dos metros.",
+          "No muevas la cámara sin permiso: marea.",
+          "Menos luces, más horizonte.",
+          "Un enlace basta para entrar a tu mundo.",
+          "¿Ya probaste tu escena en un visor de verdad?"
+        ],
+        "reacciones": {
+          "acierto": "¡Blub! Señal recibida.",
+          "fallo": "Interferencia orbital. Reintentando…",
+          "mitad": "Medio camino al horizonte.",
+          "final": "¡Mundo en órbita! Eres explorador XR.",
+          "inactivo": "Floto, floto… ¿seguimos?"
+        }
+      },
+      "jefe": {
+        "nombre": "Guardián del Horizonte",
+        "frase": "Solo cruza quien cuida a los que entran.",
+        "piel": "#3B82F6",
+        "sombra": "#1E3A8A",
         "ojos": "#F5792A",
         "adorno": "visor",
         "forma": "flotante"
