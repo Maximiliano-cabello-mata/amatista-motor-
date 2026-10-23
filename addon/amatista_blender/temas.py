@@ -211,6 +211,18 @@ PIXELES = {
         "..s.aa.s..",
         "..........",
     ),
+    "semillero": (  # Pepita: semilla brotada
+        "....ss....",
+        "...s..s...",
+        "....ss....",
+        "...saas...",
+        "..saaaas..",
+        "..awaawa..",
+        "..aaooaa..",
+        "..saaaas..",
+        "...saas...",
+        "....ss....",
+    ),
     "cristal": (  # Ami: cristal de amatista
         "....ss....",
         "...saas...",

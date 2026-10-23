@@ -162,6 +162,7 @@ def dibujar():
     if p is not None and not p.mostrar_hud:
         return
     contexto = bpy.context
+    hud.actualizar_idioma(contexto)
     region = contexto.region
     clave = region.as_pointer() if region is not None else 0
     BOTONES[clave] = []
@@ -300,7 +301,7 @@ def dibujar():
     # Mira: las teclas grandes encima de la tarjeta (screencast).
     if demo.activa() and paso_demo is not None and paso_demo.teclas:
         tam_tecla = int(20 * escala)
-        anchos = [max(hud._ancho(t, tam_tecla) + 10 * escala, 18 * escala) for t in paso_demo.teclas]
+        anchos = [max(hud._ancho(_motor.terminos.tecla(t), tam_tecla) + 10 * escala, 18 * escala) for t in paso_demo.teclas]
         total = sum(anchos) + 22 * escala * (len(anchos) - 1)
         tx = (region.width - total) / 2
         ty = y + alto + 26 * escala

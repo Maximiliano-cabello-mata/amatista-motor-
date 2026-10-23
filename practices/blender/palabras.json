@@ -1,0 +1,23 @@
+{
+  "schema": "amatista.palabras/1",
+  "descripcion": "Palabras de Blender en lenguaje simple, para quien nunca lo abrió. Las muestran la plataforma (página Blender) y el add-on (pestaña Aprender). «ingles» es como aparece en Blender con la interfaz en inglés, que es como viene al instalarlo.",
+  "palabras": [
+    {"id": "vista3d", "termino": "Vista 3D", "ingles": "3D Viewport", "que_es": "La ventana grande del centro: ahí ves y mueves tus objetos.", "donde": "El centro de la pantalla.", "tecla": "Rueda del ratón: girar y acercar"},
+    {"id": "objeto", "termino": "Objeto", "ingles": "Object", "que_es": "Cualquier cosa de la escena: un cubo, una luz, la cámara.", "donde": "Aparecen en la lista del Outliner.", "tecla": "Clic: elegirlo"},
+    {"id": "malla", "termino": "Malla", "ingles": "Mesh", "que_es": "La forma de un objeto, hecha de puntos, líneas y caras. Es la «arcilla» que modelas.", "donde": "Agregar › Malla", "tecla": "Shift+A"},
+    {"id": "vertice", "termino": "Vértice, arista y cara", "ingles": "Vertex, Edge, Face", "que_es": "Las piezas de una malla: un punto, la línea entre dos puntos y la superficie que cierran.", "donde": "Se ven en Modo Edición.", "tecla": "1, 2 y 3 en Modo Edición"},
+    {"id": "modos", "termino": "Modo Objeto y Modo Edición", "ingles": "Object Mode, Edit Mode", "que_es": "En Modo Objeto mueves objetos enteros; en Modo Edición cambias su forma por dentro.", "donde": "Arriba a la izquierda de la Vista 3D.", "tecla": "Tab"},
+    {"id": "mover", "termino": "Mover, rotar y escalar", "ingles": "Move, Rotate, Scale", "que_es": "Las tres acciones básicas: cambiar de lugar, girar y cambiar de tamaño.", "donde": "Con el objeto elegido, en la Vista 3D.", "tecla": "G, R y S (después X, Y o Z para un eje)"},
+    {"id": "outliner", "termino": "Outliner", "ingles": "Outliner", "que_es": "La lista de todo lo que hay en tu escena, como el índice de un libro.", "donde": "Arriba a la derecha.", "tecla": ""},
+    {"id": "propiedades", "termino": "Propiedades", "ingles": "Properties", "que_es": "El panel con los detalles del objeto elegido: tamaño, material, modificadores.", "donde": "Abajo a la derecha, con pestañas de íconos.", "tecla": ""},
+    {"id": "origen", "termino": "Origen", "ingles": "Origin", "que_es": "El puntito naranja del objeto: desde ahí gira y se escala.", "donde": "En el centro del objeto elegido.", "tecla": ""},
+    {"id": "cursor", "termino": "Cursor 3D", "ingles": "3D Cursor", "que_es": "El aro rojo y blanco: marca dónde aparece lo próximo que agregues.", "donde": "En la Vista 3D.", "tecla": "Shift+C: volver al centro"},
+    {"id": "extruir", "termino": "Extruir", "ingles": "Extrude", "que_es": "Sacar una cara hacia afuera para que crezca la forma, como estirar plastilina.", "donde": "Modo Edición, con una cara elegida.", "tecla": "E"},
+    {"id": "modificador", "termino": "Modificador", "ingles": "Modifier", "que_es": "Un efecto que cambia la forma sin tocarla: espejo, bisel, copias. Se puede quitar cuando quieras.", "donde": "Modificadores › Agregar modificador", "tecla": ""},
+    {"id": "material", "termino": "Material", "ingles": "Material", "que_es": "Cómo se ve la superficie: color, brillo, metal, vidrio.", "donde": "Propiedades, pestaña de la esfera roja.", "tecla": ""},
+    {"id": "coleccion", "termino": "Colección", "ingles": "Collection", "que_es": "Una carpeta para ordenar objetos dentro del Outliner.", "donde": "Outliner › Nueva colección", "tecla": "M: mover a una colección"},
+    {"id": "render", "termino": "Render", "ingles": "Render", "que_es": "La foto final de tu escena, con luces y materiales calculados.", "donde": "Render › Renderizar imagen", "tecla": "F12"},
+    {"id": "clave", "termino": "Fotograma clave", "ingles": "Keyframe", "que_es": "Una pose guardada en un momento; Blender rellena el movimiento entre dos claves.", "donde": "Línea de tiempo, abajo.", "tecla": "I"},
+    {"id": "deshacer", "termino": "Deshacer", "ingles": "Undo", "que_es": "Volver un paso atrás. En Blender no puedes romper nada: siempre puedes deshacer.", "donde": "Editar › Deshacer", "tecla": "Ctrl+Z"}
+  ]
+}

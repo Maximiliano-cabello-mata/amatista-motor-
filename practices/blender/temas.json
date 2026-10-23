@@ -16,7 +16,10 @@
     "mod_aframe_002": "maqueta",
     "mod_aframe_003": "museo",
     "mod_aframe_004": "feria",
-    "mod_aframe_005": "orbita"
+    "mod_aframe_005": "orbita",
+    "mod_afi_001": "feria",
+    "mod_afi_002": "semillero",
+    "mod_afi_003": "orbita"
   },
   "practicas": {
     "blender.bp.m1": "taller",
@@ -33,7 +36,12 @@
     "taller": {
       "nombre": "El taller de juguetes",
       "lema": "Arma, mueve y gira piezas como en tu cuarto de juegos.",
-      "colores": {"acento": "#F5A524", "suave": "#FFD58A", "cielo": "#3A2410", "suelo": "#1A120A"},
+      "colores": {
+        "acento": "#F5A524",
+        "suave": "#FFD58A",
+        "cielo": "#3A2410",
+        "suelo": "#1A120A"
+      },
       "escena": "engranes",
       "mascota": {
         "nombre": "Tuerca",
@@ -77,7 +85,12 @@
     "herreria": {
       "nombre": "La herrería",
       "lema": "Golpe a golpe, vértice a vértice: forja tu primera pieza.",
-      "colores": {"acento": "#FF5A36", "suave": "#FFB199", "cielo": "#3A120C", "suelo": "#1A0B08"},
+      "colores": {
+        "acento": "#FF5A36",
+        "suave": "#FFB199",
+        "cielo": "#3A120C",
+        "suelo": "#1A0B08"
+      },
       "escena": "chispas",
       "mascota": {
         "nombre": "Chispa",
@@ -121,7 +134,12 @@
     "hangar": {
       "nombre": "El hangar espacial",
       "lema": "Modela la mitad y deja que el espejo haga el resto.",
-      "colores": {"acento": "#5CC8FF", "suave": "#B5E6FF", "cielo": "#0B1A33", "suelo": "#070D1A"},
+      "colores": {
+        "acento": "#5CC8FF",
+        "suave": "#B5E6FF",
+        "cielo": "#0B1A33",
+        "suelo": "#070D1A"
+      },
       "escena": "estrellas",
       "mascota": {
         "nombre": "Orbi",
@@ -165,7 +183,12 @@
     "pintura": {
       "nombre": "El estudio de pintura",
       "lema": "Metal, cristal y óxido: dale color a tus naves.",
-      "colores": {"acento": "#FF7EDB", "suave": "#FFC2EF", "cielo": "#2E0F2A", "suelo": "#170816"},
+      "colores": {
+        "acento": "#FF7EDB",
+        "suave": "#FFC2EF",
+        "cielo": "#2E0F2A",
+        "suelo": "#170816"
+      },
       "escena": "gotas",
       "mascota": {
         "nombre": "Gotita",
@@ -209,7 +232,12 @@
     "cine": {
       "nombre": "El set de cine",
       "lema": "Luces, cámara… ¡render!",
-      "colores": {"acento": "#FFE066", "suave": "#FFF1B3", "cielo": "#1E1A10", "suelo": "#0F0D08"},
+      "colores": {
+        "acento": "#FFE066",
+        "suave": "#FFF1B3",
+        "cielo": "#1E1A10",
+        "suelo": "#0F0D08"
+      },
       "escena": "reflectores",
       "mascota": {
         "nombre": "Foco",
@@ -253,7 +281,12 @@
     "circo": {
       "nombre": "El circo animado",
       "lema": "Haz que todo rebote, se aplaste y vuelva a saltar.",
-      "colores": {"acento": "#C4FF4D", "suave": "#E6FFB0", "cielo": "#14280C", "suelo": "#0A1406"},
+      "colores": {
+        "acento": "#C4FF4D",
+        "suave": "#E6FFB0",
+        "cielo": "#14280C",
+        "suelo": "#0A1406"
+      },
       "escena": "carpa",
       "mascota": {
         "nombre": "Boing",
@@ -297,7 +330,12 @@
     "aldea": {
       "nombre": "La aldea de precisión",
       "lema": "Medidas exactas, repeticiones y biseles: construye como arquitecto.",
-      "colores": {"acento": "#5FD3A8", "suave": "#B6F0DA", "cielo": "#0D2620", "suelo": "#071410"},
+      "colores": {
+        "acento": "#5FD3A8",
+        "suave": "#B6F0DA",
+        "cielo": "#0D2620",
+        "suelo": "#071410"
+      },
       "escena": "aldea",
       "mascota": {
         "nombre": "Cota",
@@ -341,7 +379,12 @@
     "archivo": {
       "nombre": "El archivo del cartógrafo",
       "lema": "Nombres, colecciones y orden: una escena que cualquiera entiende.",
-      "colores": {"acento": "#8C90F0", "suave": "#C9CBFF", "cielo": "#131433", "suelo": "#0A0A1A"},
+      "colores": {
+        "acento": "#8C90F0",
+        "suave": "#C9CBFF",
+        "cielo": "#131433",
+        "suelo": "#0A0A1A"
+      },
       "escena": "mapa",
       "mascota": {
         "nombre": "Índigo",
@@ -385,7 +428,12 @@
     "galeria": {
       "nombre": "La galería",
       "lema": "Tu diorama, iluminado y listo para el portafolio.",
-      "colores": {"acento": "#C990EE", "suave": "#E8CCFA", "cielo": "#22102E", "suelo": "#110817"},
+      "colores": {
+        "acento": "#C990EE",
+        "suave": "#E8CCFA",
+        "cielo": "#22102E",
+        "suelo": "#110817"
+      },
       "escena": "galeria",
       "mascota": {
         "nombre": "Marco",
@@ -429,7 +477,12 @@
     "portal": {
       "nombre": "El portal WebXR",
       "lema": "Cruza de Blender a la web y entra en realidad virtual.",
-      "colores": {"acento": "#00E5FF", "suave": "#A8F6FF", "cielo": "#06222A", "suelo": "#031115"},
+      "colores": {
+        "acento": "#00E5FF",
+        "suave": "#A8F6FF",
+        "cielo": "#06222A",
+        "suelo": "#031115"
+      },
       "escena": "portal",
       "mascota": {
         "nombre": "Píxel",
@@ -473,7 +526,12 @@
     "maqueta": {
       "nombre": "La maqueta flotante",
       "lema": "Cada pieza en su lugar: metros, padres e hijos.",
-      "colores": {"acento": "#4ADE80", "suave": "#BBF7D0", "cielo": "#0B2216", "suelo": "#06140D"},
+      "colores": {
+        "acento": "#4ADE80",
+        "suave": "#BBF7D0",
+        "cielo": "#0B2216",
+        "suelo": "#06140D"
+      },
       "escena": "aldea",
       "mascota": {
         "nombre": "Taco",
@@ -517,7 +575,12 @@
     "museo": {
       "nombre": "El museo de modelos",
       "lema": "Lo que modelas en un programa, se expone en la web.",
-      "colores": {"acento": "#F472B6", "suave": "#FBCFE8", "cielo": "#2A0B1E", "suelo": "#170611"},
+      "colores": {
+        "acento": "#F472B6",
+        "suave": "#FBCFE8",
+        "cielo": "#2A0B1E",
+        "suelo": "#170611"
+      },
       "escena": "galeria",
       "mascota": {
         "nombre": "Glib",
@@ -561,7 +624,12 @@
     "feria": {
       "nombre": "La feria mecánica",
       "lema": "Todo se mueve cuando algo pasa.",
-      "colores": {"acento": "#FACC15", "suave": "#FEF08A", "cielo": "#2A2006", "suelo": "#171103"},
+      "colores": {
+        "acento": "#FACC15",
+        "suave": "#FEF08A",
+        "cielo": "#2A2006",
+        "suelo": "#171103"
+      },
       "escena": "carpa",
       "mascota": {
         "nombre": "Muelle",
@@ -605,7 +673,12 @@
     "orbita": {
       "nombre": "La estación orbital",
       "lema": "Ponte el visor: tu mundo ya tiene horizonte.",
-      "colores": {"acento": "#60A5FA", "suave": "#BFDBFE", "cielo": "#07122A", "suelo": "#030817"},
+      "colores": {
+        "acento": "#60A5FA",
+        "suave": "#BFDBFE",
+        "cielo": "#07122A",
+        "suelo": "#030817"
+      },
       "escena": "estrellas",
       "mascota": {
         "nombre": "Nébula",
@@ -649,7 +722,12 @@
     "cristal": {
       "nombre": "La cueva del cristal",
       "lema": "Cada módulo te acerca a dominar el cristal de Amatista.",
-      "colores": {"acento": "#B57EDC", "suave": "#E2C6F5", "cielo": "#1E0F29", "suelo": "#0F0815"},
+      "colores": {
+        "acento": "#B57EDC",
+        "suave": "#E2C6F5",
+        "cielo": "#1E0F29",
+        "suelo": "#0F0815"
+      },
       "escena": "cristales",
       "mascota": {
         "nombre": "Ami",
@@ -693,7 +771,12 @@
     "estacion": {
       "nombre": "La estación del enlace",
       "lema": "Aquí conectas la plataforma con tu Blender y aprendes a moverte en los dos.",
-      "colores": {"acento": "#2DD4BF", "suave": "#99F6E4", "cielo": "#0B2A2E", "suelo": "#06191B"},
+      "colores": {
+        "acento": "#2DD4BF",
+        "suave": "#99F6E4",
+        "cielo": "#0B2A2E",
+        "suelo": "#06191B"
+      },
       "escena": "antenas",
       "mascota": {
         "nombre": "Bip",
@@ -731,6 +814,55 @@
         "ojos": "#FFD166",
         "adorno": "antena",
         "forma": "flotante"
+      }
+    },
+    "semillero": {
+      "nombre": "El semillero de mundos",
+      "lema": "Una semilla, un mundo: siémbralo y juega en él.",
+      "colores": {
+        "acento": "#34D399",
+        "suave": "#A7F3D0",
+        "cielo": "#06201A",
+        "suelo": "#03120E"
+      },
+      "escena": "aldea",
+      "mascota": {
+        "nombre": "Pepita",
+        "especie": "semilla brotada",
+        "hola": "¡Hola! Soy Pepita. De una semilla como yo sale un mundo entero.",
+        "consejos": [
+          "La misma semilla da siempre el mismo mundo: cámbiala para ver otro.",
+          "am-arrastrable necesita base: la mitad del alto del objeto.",
+          "Muchas copias iguales: usa am-generar, se dibujan de una vez."
+        ],
+        "datos": [
+          "Minecraft genera sus mundos a partir de una semilla, igual que am-entorno.",
+          "Cien copias instanciadas cuestan casi lo mismo que una.",
+          "Blender hace generación procedural con Geometry Nodes."
+        ],
+        "charla": [
+          "¿Isla, bosque o ciudad? Tú eliges el mundo.",
+          "Un reto que se cumple siempre celebra.",
+          "Prueba tu mundo con el ratón y con el dedo.",
+          "Brotar es lo mío. Generar es lo tuyo.",
+          "¿Ya caminaste por tu mundo con W A S D?"
+        ],
+        "reacciones": {
+          "acierto": "¡Brotó!",
+          "fallo": "Esa semilla no prendió. Otra vez.",
+          "mitad": "Medio jardín sembrado.",
+          "final": "¡Mundo sembrado! Eres creador de mundos.",
+          "inactivo": "Echando raíces… ¿seguimos?"
+        }
+      },
+      "jefe": {
+        "nombre": "Arquitecto de Mundos",
+        "frase": "Muéstrame un mundo que se juegue solo.",
+        "piel": "#10B981",
+        "sombra": "#065F46",
+        "ojos": "#F5792A",
+        "adorno": "corona",
+        "forma": "bloque"
       }
     }
   }

@@ -31,3 +31,4 @@ VERSION_MOTOR = engine.__version__
 curriculo = import_module(engine.__name__ + ".curriculum")
 repaso = import_module(engine.__name__ + ".pedagogy.spaced")
 taller = import_module(engine.__name__ + ".taller")  # motor 5: Amatista Taller
+terminos = import_module(engine.__name__ + ".terminos")  # menús en el idioma del Blender del alumno

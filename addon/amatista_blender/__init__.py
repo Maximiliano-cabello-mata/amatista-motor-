@@ -1,4 +1,4 @@
-"""Amatista para Blender (add-on 5.2: Amatista Taller y «Conoce Amatista Motor»).
+"""Amatista para Blender (add-on 5.3: menús en el idioma de tu Blender y «Palabras de Blender»).
 
 Add-on 5.2: tres prácticas cortas (recorrido.py y recorrido_pasos.py) explican
 todas las herramientas del add-on: la pestaña Amatista (cuenta, plataforma,
@@ -49,7 +49,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (5, 2, 0),
+    "version": (5, 3, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Aprende Blender habilidad por habilidad con Amatista Taller",
