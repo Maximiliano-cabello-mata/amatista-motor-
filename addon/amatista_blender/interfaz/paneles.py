@@ -18,7 +18,7 @@ import time
 
 import bpy
 
-from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, integridad, mision, practicas, red, temas
+from .. import _motor, ajustes, aprendizaje, autor, cuenta, guia, integridad, mision, palabras, practicas, red, temas
 from . import aprender, dialogos, estilo, herramientas
 
 CATEGORIA = "Amatista"
@@ -935,6 +935,28 @@ def dibujar_mapa(layout, context, solo_siguiente=False):
     return True
 
 
+def _palabras_de_blender(layout, context):
+    """Motor 5.3: las palabras de Blender en lenguaje simple (practices/blender/palabras.json).
+
+    Abierta mientras el alumno no haya terminado una práctica: es cuando más la necesita.
+    """
+    lista = palabras.cargar()
+    if not lista:
+        return
+    cerrada = bool(aprendizaje.dominadas())
+    cuerpo = estilo.seccion(layout, context, "amatista_palabras", f"Palabras de Blender ({len(lista)})", icon="BOOKMARKS",
+                            cerrada=cerrada)
+    if cuerpo is None:
+        return
+    if _motor.terminos.idioma() == "en":
+        estilo.parrafo(cuerpo, context, "Tu Blender está en inglés: junto a cada palabra va el nombre que ves en sus menús.",
+                       icon="INFO")
+    for palabra in lista:
+        caja = cuerpo.box()
+        caja.label(text=palabras.titulo(palabra), icon="DOT")
+        estilo.parrafo(caja, context, palabras.detalle(palabra), margen=6)
+
+
 class AMATISTA_PT_aprender(_Base, bpy.types.Panel):
     bl_idname = "AMATISTA_PT_aprender"
     bl_label = "Aprender"
@@ -946,6 +968,11 @@ class AMATISTA_PT_aprender(_Base, bpy.types.Panel):
         return seccion(context, "aprender")
 
     def draw(self, context):
+        layout = self.layout
+        self.dibujar_teoria(context)
+        _palabras_de_blender(layout, context)
+
+    def dibujar_teoria(self, context):
         layout = self.layout
         practica = practicas.practica_activa(context)
         if practica is None:

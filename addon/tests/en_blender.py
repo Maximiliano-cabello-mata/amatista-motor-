@@ -1029,6 +1029,27 @@ def probar_recorrido(contexto):
     p.recorrido_hecho, p.recorridos_hechos = False, ""
 
 
+def probar_idioma(contexto):
+    """Motor 5.3: los menús salen como en el Blender del alumno y las «Palabras de Blender» cargan."""
+    print("Idioma de los menús y palabras de Blender")
+    from amatista_blender import _motor, palabras
+    from amatista_blender.interfaz import hud
+
+    vista = contexto.preferences.view
+    antes = vista.use_translate_interface
+    try:
+        vista.use_translate_interface = False
+        revisar(hud.actualizar_idioma(contexto) == "en", "Blender sin traducir: menús en inglés")
+        lineas = hud._partir("Agrega un cubo (Shift + A › Malla › Cubo).", 14, 2000, 3)
+        revisar(" ".join(lineas) == "Agrega un cubo (Shift + A › Mesh (Malla) › Cube (Cubo)).", f"la tarjeta traduce la ruta ({lineas})")
+        revisar(_motor.terminos.tecla("Malla") == "Mesh", "las teclas de la tarjeta también")
+    finally:
+        vista.use_translate_interface = antes
+        _motor.terminos.fijar_idioma("es")
+    lista = palabras.cargar(recargar=True)
+    revisar(len(lista) >= 10 and lista[0]["termino"], f"palabras de Blender: {len(lista)}")
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -1130,7 +1151,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "5.2.0", "el intento lleva la versión 5.2 del add-on")
+    revisar(datos["version_addon"] == "5.3.0", "el intento lleva la versión 5.3 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1174,6 +1195,7 @@ def main():
     probar_motor_4(contexto)
     probar_taller(contexto)
     probar_recorrido(contexto)
+    probar_idioma(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

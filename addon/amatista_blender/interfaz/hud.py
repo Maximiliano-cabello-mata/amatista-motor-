@@ -186,7 +186,29 @@ def _salto():
     return 1.0 if int(time.time() // 3) % 2 else 0.0
 
 
+def idioma_interfaz(contexto=None):
+    """'es' o 'en': el idioma en que el alumno ve los menús de su Blender (motor 5.3).
+
+    Blender se instala en inglés; con «Traducir interfaz» apagado los menús siguen en inglés
+    aunque el idioma diga español. «DEFAULT» sigue al sistema operativo.
+    """
+    vista = getattr(getattr(contexto or bpy.context, "preferences", None), "view", None)
+    if vista is None:
+        return "es"
+    if not getattr(vista, "use_translate_interface", True):
+        return "en"
+    codigo = getattr(vista, "language", "") or ""
+    if codigo == "DEFAULT":
+        codigo = getattr(bpy.app.translations, "locale", "") or ""
+    return "es" if codigo.lower().startswith("es") else "en"
+
+
+def actualizar_idioma(contexto=None):
+    return _motor.terminos.fijar_idioma(idioma_interfaz(contexto))
+
+
 def _texto(x, y, texto, tam, color):
+    texto = _motor.terminos.menus(texto)
     fuente = 0
     blf.size(fuente, tam)
     blf.color(fuente, *color)
@@ -195,11 +217,13 @@ def _texto(x, y, texto, tam, color):
 
 
 def _ancho(texto, tam):
+    texto = _motor.terminos.menus(texto)
     blf.size(0, tam)
     return blf.dimensions(0, texto)[0]
 
 
 def _recortar(texto, tam, ancho_max):
+    texto = _motor.terminos.menus(texto)
     if _ancho(texto, tam) <= ancho_max:
         return texto
     while texto and _ancho(texto + "…", tam) > ancho_max:
@@ -210,7 +234,7 @@ def _recortar(texto, tam, ancho_max):
 def _partir(texto, tam, ancho_max, max_lineas=3):
     """Texto en líneas que caben en `ancho_max` píxeles."""
     lineas, actual = [], ""
-    for palabra in str(texto or "").split():
+    for palabra in str(_motor.terminos.menus(texto) or "").split():
         prueba = f"{actual} {palabra}".strip()
         if _ancho(prueba, tam) <= ancho_max or not actual:
             actual = prueba
@@ -227,6 +251,7 @@ def _partir(texto, tam, ancho_max, max_lineas=3):
 
 def _tecla(shader, x, y, texto, tam, escala):
     """Dibuja una tecla (cajita con borde y canto inferior) y devuelve su ancho."""
+    texto = _motor.terminos.tecla(texto)
     relleno = 5 * escala
     ancho = max(_ancho(texto, tam) + 2 * relleno, 18 * escala)
     alto = tam + 7 * escala
@@ -252,7 +277,7 @@ def _ancho_teclas(teclas, tam_chico, escala):
     for i, tecla in enumerate(teclas):
         if i:
             ancho += 12 * escala
-        ancho += max(_ancho(tecla, tam_chico) + 10 * escala, 18 * escala) + 2 * escala
+        ancho += max(_ancho(_motor.terminos.tecla(tecla), tam_chico) + 10 * escala, 18 * escala) + 2 * escala
     return ancho + 6 * escala
 
 
@@ -614,6 +639,7 @@ def dibujar():
         return
     contexto = bpy.context
     escena = contexto.scene
+    actualizar_idioma(contexto)
     from .. import recorrido
 
     if recorrido.activo():  # add-on 5.2: mientras dura, la práctica de «Conoce Amatista Motor» tiene la tarjeta
@@ -802,6 +828,7 @@ def activar(encendido=True):
 
 
 def register():
+    actualizar_idioma()
     p = ajustes.prefs()
     activar(p.mostrar_hud if p else True)
 

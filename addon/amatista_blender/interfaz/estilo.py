@@ -84,8 +84,10 @@ def parrafo(layout, context, texto, icon="NONE", margen=4, alerta=False):
     col = layout.column(align=True)
     col.scale_y = 0.85
     col.alert = alerta
+    from .. import _motor
+
     lineas = []
-    for bloque in str(texto).split("\n"):
+    for bloque in str(_motor.terminos.menus(texto)).split("\n"):
         lineas.extend(textwrap.wrap(bloque, ancho_caracteres(context, margen)) or [""])
     for i, linea in enumerate(lineas):
         if i == 0 and icon != "NONE":
