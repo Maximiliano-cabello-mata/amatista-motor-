@@ -13,7 +13,7 @@ resueltos, ToolClips, Pause-and-Play).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 # Teclas y duración por acción (s). La demostración puede cambiar las teclas y el texto de cada paso.
 ACCIONES: Dict[str, Tuple[Tuple[str, ...], float, str]] = {
@@ -109,7 +109,7 @@ def linea_de_tiempo(pasos: Sequence[Dict[str, Any]], titulo: str = "") -> LineaD
         datos = paso[accion] if isinstance(paso[accion], dict) else {"texto": str(paso[accion])}
         _, duracion, texto = ACCIONES[accion]
         duracion = float(paso.get("segundos") or duracion)
-        teclas = tuple(paso.get("teclas") or _teclas(accion, datos))
+        teclas = tuple(paso["teclas"]) if isinstance(paso.get("teclas"), (list, tuple)) else _teclas(accion, datos)
         texto = str(paso.get("texto") or datos.get("texto") or texto)
         salida.append(PasoDemo(accion, dict(datos), t, duracion, teclas, texto))
         for k in teclas:
@@ -124,4 +124,143 @@ def linea_de_tiempo(pasos: Sequence[Dict[str, Any]], titulo: str = "") -> LineaD
     return LineaDeTiempo(tuple(salida), total, titulo, tuple(vistas))
 
 
-__all__ = ["ACCIONES", "LineaDeTiempo", "MAXIMO", "PasoDemo", "linea_de_tiempo"]
+# --- Motor 6: la demostración de ESTA actividad ------------------------------------------------
+#
+# Hasta el motor 5, «Mira» y «Mírame» reproducían la demostración genérica de
+# la habilidad: el alumno que tenía que agregar un cono veía aparecer una «Caja»
+# y una «Lata», y en el proyecto del tren salían piezas que no eran del tren.
+# Ahora la demostración se arma con las piezas de la actividad (su molde, o la
+# pieza que toca en el proyecto) y el gesto de la habilidad: si la habilidad es
+# mover, la pieza aparece en el centro y se lleva a su lugar; si es escalar,
+# aparece con su tamaño de base y se estira; si es girar, aparece derecha y gira.
+
+GEOMETRIA = ("agregar", "mover", "escalar", "rotar", "duplicar", "borrar", "vista", "texto")
+MAX_PIEZAS = 4  # una demostración enseña el gesto, no hace el ejercicio entero
+MAX_PASOS = 12
+BASE = (2.0, 2.0, 2.0)  # lo que mide una primitiva recién agregada
+
+
+def _distinto(a: Sequence[float], b: Sequence[float], tol: float) -> List[int]:
+    return [i for i in range(3) if abs(float(a[i]) - float(b[i])) > tol]
+
+
+def _eje_unico(ejes: List[int]) -> Dict[str, str]:
+    return {"eje": "xyz"[ejes[0]]} if len(ejes) == 1 else {}
+
+
+def _vec(valor: Any, defecto: Sequence[float]) -> List[float]:
+    try:
+        v = [float(x) for x in valor]
+        return v if len(v) == 3 else list(defecto)
+    except (TypeError, ValueError):
+        return list(defecto)
+
+
+def pasos_de_actividad(demo_habilidad: Sequence[Dict[str, Any]], piezas: Sequence[Dict[str, Any]],
+                       inicio: Sequence[Dict[str, Any]] = ()) -> Tuple[Dict[str, Any], ...]:
+    """Los pasos de la demostración para estas piezas, con el gesto de la habilidad.
+
+    Sin piezas (habilidades de material, luz, render…) queda la demostración de
+    la habilidad, pero nunca con objetos inventados que la actividad no tiene.
+    """
+    from .habilidades import accion_de_paso
+    from .molde import MALLA
+
+    pasos_h = [dict(p) for p in demo_habilidad or () if isinstance(p, dict)]
+    gestos = {a for p in pasos_h for a in accion_de_paso(p)}
+    objetivo = [p for p in piezas or () if isinstance(p, dict) and p.get("primitive")][:MAX_PIEZAS]
+    if not objetivo:
+        return tuple(pasos_h)
+    previas = [p for p in inicio or () if isinstance(p, dict) and p.get("primitive")]
+    usadas: List[int] = []
+
+    def _previa(nombre: str, lugar: List[float]) -> Optional[Dict[str, Any]]:
+        """La pieza de inicio que hay que arreglar: la del mismo nombre o la que ocupa su lugar."""
+        for k, p in enumerate(previas):
+            if k not in usadas and str(p.get("name") or "") == nombre:
+                usadas.append(k)
+                return p
+        cerca = [(sum((a - b) ** 2 for a, b in zip(_vec(p.get("location"), lugar), lugar)), k)
+                 for k, p in enumerate(previas) if k not in usadas]
+        cerca = [c for c in cerca if c[0] <= 0.5 ** 2]
+        if not cerca:
+            return None
+        usadas.append(min(cerca)[1])
+        return previas[min(cerca)[1]]
+
+    salida: List[Dict[str, Any]] = []
+    creadas: List[Tuple[str, str, List[float]]] = []
+    for i, pieza in enumerate(objetivo):
+        nombre = str(pieza.get("name") or f"Pieza {i + 1}")
+        prim = str(pieza["primitive"])
+        medidas = _vec(pieza.get("size"), BASE)
+        lugar = _vec(pieza.get("location"), (0.0, 0.0, 0.0))
+        giro = _vec(pieza.get("rotation"), (0.0, 0.0, 0.0))
+        malla = MALLA.get(prim, prim)
+        previa = _previa(nombre, lugar)
+        if previa is not None and previa.get("primitive") == prim:
+            # «Arregla esta escena»: la pieza aparece como está y se lleva a como debe quedar.
+            base = {"loc": _vec(previa.get("location"), lugar), "medidas": _vec(previa.get("size"), medidas),
+                    "giro": _vec(previa.get("rotation"), (0.0, 0.0, 0.0))}
+            salida.append({"agregar": {"primitiva": prim, "nombre": nombre, **base}, "segundos": 1.0,
+                           "teclas": [], "texto": f"Así está «{nombre}»"})
+        else:
+            if previa is not None:
+                otra = str(previa.get("name") or "") or f"{nombre} (antes)"
+                otra = otra if otra != nombre else f"{nombre} (antes)"
+                salida.append({"agregar": {"primitiva": previa.get("primitive") or "cube", "nombre": otra,
+                                           "loc": _vec(previa.get("location"), lugar),
+                                           "medidas": _vec(previa.get("size"), BASE)},
+                               "segundos": 1.0, "teclas": [], "texto": f"«{otra}» no es la forma que va aquí"})
+                salida.append({"borrar": {"objeto": otra}, "texto": "X borra la forma equivocada"})
+            gemela = next((n for n, p, m in creadas if p == prim and not _distinto(m, medidas, 0.05)), "")
+            if gemela and "duplicar" in gestos:
+                salida.append({"duplicar": {"objeto": gemela, "nombre": nombre, "a": lugar},
+                               "texto": f"Shift + D: otra «{gemela}» y llévala a su lugar"})
+                base = {"loc": lugar, "medidas": medidas, "giro": (0.0, 0.0, 0.0)}
+            else:
+                base = {
+                    "loc": [0.0, 0.0, 0.0] if "mover" in gestos else lugar,
+                    "medidas": list(BASE) if "escalar" in gestos else medidas,
+                    "giro": [0.0, 0.0, 0.0] if "rotar" in gestos else giro,
+                }
+                salida.append({"agregar": {"primitiva": prim, "nombre": nombre, **base},
+                               "texto": f"Shift + A › Malla › {malla}: «{nombre}»"})
+        ejes = _distinto(base["medidas"], medidas, 0.02)
+        if ejes:
+            salida.append({"escalar": {"objeto": nombre, "medidas": medidas, **_eje_unico(ejes)},
+                           "texto": f"S{' y ' + 'XYZ'[ejes[0]] if len(ejes) == 1 else ''}: el tamaño de «{nombre}»"})
+        ejes = _distinto(base["giro"], giro, 0.5)
+        if ejes:
+            datos: Dict[str, Any] = {"objeto": nombre, "giro": giro, **_eje_unico(ejes)}
+            if len(ejes) == 1:
+                datos["grados"] = giro[ejes[0]] - base["giro"][ejes[0]]
+            salida.append({"rotar": datos, "texto": f"R: gira «{nombre}»"})
+        ejes = _distinto(base["loc"], lugar, 0.02)
+        if ejes:
+            salida.append({"mover": {"objeto": nombre, "a": lugar, **_eje_unico(ejes)},
+                           "texto": f"G{' y ' + 'XYZ'[ejes[0]] if len(ejes) == 1 else ''}: «{nombre}» a su lugar"})
+        creadas.append((nombre, prim, medidas))
+    # Lo que no es forma (modificador, material, clave…) se hace sobre una pieza de ESTA actividad.
+    nombres = {n for n, _p, _m in creadas}
+    for paso in pasos_h:
+        acciones = accion_de_paso(paso)
+        if not acciones or acciones[0] in GEOMETRIA:
+            continue
+        accion = acciones[0]
+        datos = dict(paso[accion]) if isinstance(paso[accion], dict) else {}
+        if datos.get("objeto") and datos["objeto"] not in nombres:
+            datos["objeto"] = creadas[0][0]
+        salida.append({**paso, accion: datos})
+    return tuple(salida[:MAX_PASOS])
+
+
+def pieza_de_revision(pieza: Any) -> Dict[str, Any]:
+    """Una PiezaRevisada (la que toca en el proyecto) como pieza del molde, para su demostración."""
+    return {"primitive": getattr(pieza, "primitiva", "") or "cube", "name": getattr(pieza, "nombre", "") or "Pieza",
+            "size": list(getattr(pieza, "medidas", BASE)), "location": list(getattr(pieza, "centro", (0.0, 0.0, 0.0))),
+            "rotation": list(getattr(pieza, "giro", (0.0, 0.0, 0.0)))}
+
+
+__all__ = ["ACCIONES", "LineaDeTiempo", "MAXIMO", "PasoDemo", "linea_de_tiempo", "pasos_de_actividad",
+           "pieza_de_revision"]
