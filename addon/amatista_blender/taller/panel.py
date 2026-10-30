@@ -76,8 +76,13 @@ class AMATISTA_PT_taller(_Base, bpy.types.Panel):
                 estilo.parrafo(cuerpo, context, pieza.mensaje, margen=4)
         principal = cuerpo.row()
         principal.scale_y = 1.6
-        if a is None:
+        if a is None and sesion.manda_la_plataforma():
+            # Motor 6: la ruta la marca la plataforma; Blender abre lo que mande la lección.
+            principal.operator("amatista.taller_accion", text="Seguir en la plataforma", icon="URL").accion = "volver_plataforma"
+        elif a is None:
             principal.operator("amatista.taller_abrir", text="Empezar el taller", icon="PLAY").taller = tid
+        elif sesion.SESION["volver"]:
+            principal.operator("amatista.taller_accion", text="Volver a la plataforma", icon="URL").accion = "volver_plataforma"
         elif not sesion.cubre(context.scene):
             principal.operator("amatista.taller_accion", text="Volver a la actividad", icon="LOOP_BACK").accion = "continuar"
         elif sesion.estado() == sesion.PAUSA:
@@ -130,7 +135,8 @@ class AMATISTA_PT_taller_habilidades(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return _alumno(context) and datos.catalogo() is not None
+        # Motor 6: con la cuenta conectada, «Demuéstralo» vive en la lección de la plataforma.
+        return _alumno(context) and datos.catalogo() is not None and not sesion.manda_la_plataforma()
 
     def draw(self, context):
         layout = self.layout
@@ -156,7 +162,8 @@ class AMATISTA_PT_taller_modulos(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return _alumno(context) and datos.catalogo() is not None
+        # Motor 6: los módulos se eligen en la plataforma, no en Blender (sin cuenta, Blender sigue solo).
+        return _alumno(context) and datos.catalogo() is not None and not sesion.manda_la_plataforma()
 
     def draw(self, context):
         layout = self.layout

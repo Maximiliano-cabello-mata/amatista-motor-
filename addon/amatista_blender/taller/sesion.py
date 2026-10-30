@@ -18,6 +18,19 @@ mientras el alumno trabaja y se registra el intento al terminar:
   todas las habilidades del taller al terminarla.
 - Las pistas suben un escalón a la vez (Qué falta → Con qué → Cómo →
   Mírame) y las teclas tienen freno: se intentan antes de verse.
+
+Motor 6:
+
+- **La plataforma marca la ruta** (RUTA, amatista_engine.taller.etapas): la
+  lección manda su etapa (exploración o práctica) y Blender no sale de ella.
+  Al cumplirla no sigue solo: la tarjeta dice «Vuelve a la plataforma» y la
+  lección se da por hecha. Con la cuenta conectada, en modo alumno, Blender
+  no deja elegir módulos ni empezar talleres por su cuenta.
+- **«Mira» y «Mírame» muestran ESTA actividad** (pasos_de_actividad): las
+  piezas de su molde, o la pieza que toca en el proyecto, con el gesto de la
+  habilidad. Nunca objetos de la demostración genérica.
+- **La herramienta brilla** (vista/brillo.py) al pedir «¿Con qué?» o al
+  quedarse atascado: dónde está, nunca cómo se usa.
 """
 import dataclasses
 import time
@@ -30,6 +43,7 @@ from . import datos, demo, escena
 
 taller = _motor.taller
 ayudas = _motor.taller.ayudas
+etapas = _motor.taller.etapas
 
 MIRANDO, TRABAJANDO, LOGRADA, PAUSA = "mirando", "trabajando", "lograda", "pausa"
 CALMA = 0.35  # s sin cambios antes de revisar
@@ -70,10 +84,14 @@ def _vacia():
         "molde_proyecto": (),
         "repaso_ofrecido": False,
         "plan": None,
+        "volver": False,  # motor 6: la etapa de la plataforma se cumplió; lo que sigue es allá
     }
 
 
 SESION.update(_vacia())
+
+# Motor 6: la etapa que mandó la plataforma (sobrevive a cada actividad; la cambia la próxima orden).
+RUTA = {"etapa": None, "leccion": "", "cumplida": False}
 
 
 # --- Consultas ------------------------------------------------------------------------------
@@ -97,6 +115,44 @@ def modo_alumno():
     if sesion is None:
         return True
     return sesion.modo == "alumno" or not ajustes.es_desarrollador()
+
+
+def manda_la_plataforma():
+    """En modo alumno con la cuenta conectada, la ruta la marca la plataforma (Blender no elige módulos)."""
+    p = ajustes.prefs()
+    return modo_alumno() and bool(p and p.token)
+
+
+def etapa():
+    return RUTA["etapa"]
+
+
+def fijar_etapa(taller_id, nombre="", habilidades=(), leccion=""):
+    """La orden de la plataforma dice qué etapa del taller toca (vacío: la práctica completa)."""
+    c = datos.catalogo()
+    t = c.taller(taller_id or "") if c is not None else None
+    RUTA.update(etapa=etapas.etapa_de(t, nombre, habilidades) if t is not None else None,
+                leccion=str(leccion or "")[:120], cumplida=False)
+    return RUTA["etapa"]
+
+
+def ruta_de_vuelta():
+    """La dirección de la lección en la plataforma (para «Volver a la plataforma»)."""
+    c = datos.catalogo()
+    e = RUTA["etapa"]
+    t = c.taller(e.taller) if c is not None and e is not None else None
+    leccion = RUTA["leccion"] or (t.leccion if t is not None else "")
+    if t is None or not leccion:
+        return "#/"
+    return f"#/curso/{t.curso}/leccion/{leccion}"
+
+
+def volver_a_la_plataforma():
+    from .. import cuenta
+
+    if not cuenta.abrir_plataforma(ruta_de_vuelta()):
+        return "Abre la plataforma en tu navegador para seguir."
+    return "Sigue en la plataforma: tu avance ya está allá."
 
 
 def cubre(sc):
@@ -200,11 +256,23 @@ def abrir(context=None, taller_id="", actividad_id="", elegida="", repasar=True)
         return "No hay talleres en este paquete."
     ahora = time.time()
     estado_alumno = datos.estado_alumno()
+    a = None
+    e = RUTA["etapa"]
+    if e is not None and e.taller != taller_id:
+        RUTA.update(etapa=None, cumplida=False)  # otro taller: la etapa era de otra lección
+        e = None
     if actividad_id:
         a = taller.actividad_por_id(c, taller_id, actividad_id, estado_alumno, ahora)
         if a is None:
             return "Esa actividad ya no existe en el taller."
-    else:
+        if not etapas.permitida(e, a):
+            actividad_id, a = "", None  # una orden vieja no saca al alumno de la etapa de su lección
+    if a is None and e is not None and not elegida:
+        a, p, cumplida = etapas.siguiente(c, e, estado_alumno, ahora, datos.completadas())
+        if a is None:
+            RUTA["cumplida"] = cumplida
+            return _etapa_cumplida(taller_id, p)
+    elif not actividad_id:
         # «Recuérdalo»: un minuto con lo que toca repasar, una vez por sesión. Se puede saltar.
         pendientes = datos.repasos_pendientes() if repasar and not SESION["repaso_ofrecido"] else []
         if pendientes:
@@ -223,6 +291,50 @@ def abrir(context=None, taller_id="", actividad_id="", elegida="", repasar=True)
     return empezar(context, a)
 
 
+def _etapa_cumplida(taller_id, plan=None):
+    """La etapa de la plataforma ya está: Blender no sigue solo, la tarjeta manda a la plataforma."""
+    a = SESION["actividad"]
+    SESION.update(estado=LOGRADA, volver=True, taller=taller_id, plan=plan or datos.plan(taller_id),
+                  logro_en=SESION["logro_en"] or time.time())
+    _al_cambiar_estado()
+    if a is None:
+        return "Listo por ahora en Blender: sigue en la plataforma."
+    return None
+
+
+def _revisar_etapa(a):
+    """Después de un logro: ¿se cumplió la etapa que mandó la plataforma?"""
+    e = RUTA["etapa"]
+    if e is None or a is None or a.taller != e.taller:
+        return False
+    if etapas.cumplida(e, SESION["plan"] or datos.plan(a.taller)):
+        RUTA["cumplida"] = True
+        SESION["volver"] = True
+        return True
+    return False
+
+
+def _pasos_demo(h, a=None):
+    """Los pasos de «Mira» o «Mírame» para ESTA actividad (motor 6), no la demostración genérica."""
+    try:
+        if a is not None and SESION["proyecto"]:
+            pieza = pieza_actual()
+            if pieza is not None:
+                return taller.pasos_de_actividad(h.demo, [taller.pieza_de_revision(pieza)])
+        if a is not None and a.tipo != taller.MIRA and (a.molde or a.piezas):
+            piezas = a.molde or a.piezas
+            pieza = pieza_actual()
+            if pieza is not None and pieza.estado != "llena" and 0 <= pieza.indice < len(piezas):
+                piezas = [piezas[pieza.indice]]  # la que le cuesta, no el ejercicio entero
+            return taller.pasos_de_actividad(h.demo, piezas, a.inicio)
+        v = h.variaciones[0] if h.variaciones else None
+        if v is not None and v.molde:
+            return taller.pasos_de_actividad(h.demo, v.molde, tuple((v.inicio or {}).get("objetos") or ()))
+    except Exception as error:  # noqa: BLE001 - sin pasos propios queda la demostración de la habilidad
+        print(f"[Amatista] Demostración de la actividad: {error}")
+    return h.demo
+
+
 def _practica_generada(a):
     datos_practica = taller.practica_de_actividad(datos.catalogo(), a)
     if datos_practica is None:
@@ -237,6 +349,7 @@ def empezar(context, a):
     """Empieza una actividad (Actividad del motor)."""
     context = context or bpy.context
     demo.detener(llamar=False)
+    _apagar_brillo()
     repaso = SESION["repaso_ofrecido"]
     SESION.update(_vacia(), repaso_ofrecido=repaso)
     ahora = time.time()
@@ -261,7 +374,7 @@ def empezar(context, a):
     if a.tipo == taller.MIRA:
         SESION["estado"] = MIRANDO
         h = datos.catalogo().habilidad(a.habilidad)
-        if h is None or not demo.empezar(h, _demo_termino, sc):
+        if h is None or not demo.empezar(h, _demo_termino, sc, pasos=_pasos_demo(h, a)):
             _demo_termino(False)
     else:
         SESION["estado"] = TRABAJANDO
@@ -321,10 +434,21 @@ def al_abrir_practica(practica, origen="paquete"):
 # --- Revisar mientras trabaja -----------------------------------------------------------------
 
 
+def _apagar_brillo():
+    try:
+        from .vista import brillo
+
+        brillo.apagar()
+    except Exception:  # noqa: BLE001 - sin vista (CI) no hay brillo
+        pass
+
+
+
 def _avanzo(llenas, cumplidos):
     if llenas > SESION["llenas"] or cumplidos > SESION["cumplidos"]:
         SESION["escalera"] = ayudas.avance(SESION["escalera"], time.time())
         SESION["ofrecida"] = -1
+        _apagar_brillo()
     SESION["llenas"], SESION["cumplidos"] = llenas, cumplidos
 
 
@@ -408,6 +532,7 @@ def lograr(foto=None, practica=None):
         except Exception as error:  # noqa: BLE001 - la isla es un extra: el logro queda igual
             print(f"[Amatista] No se pudo guardar la pieza de la isla: {error}")
     SESION["plan"] = datos.plan(a.taller)
+    _revisar_etapa(a)
     _al_cambiar_estado()
 
 
@@ -417,6 +542,11 @@ def frase_logro():
     if a is None:
         return ""
     c = datos.catalogo()
+    if SESION["volver"]:
+        e = RUTA["etapa"]
+        if e is not None and e.nombre == etapas.EXPLORACION:
+            return "Exploración lista. Vuelve a la plataforma: ahora viene el porqué."
+        return "Listo por ahora en Blender. Vuelve a la plataforma para seguir tu lección."
     if a.tipo == taller.MIRA:
         return "Ahora hazlo tú: el molde te dice dónde va cada pieza."
     if a.tipo == taller.PROYECTO:
@@ -443,6 +573,8 @@ def frase_logro():
 
 
 def siguiente(context=None):
+    if SESION["volver"]:
+        return volver_a_la_plataforma()
     a = SESION["actividad"]
     tid = a.taller if a is not None else SESION["taller"]
     return abrir(context, tid)
@@ -479,7 +611,8 @@ def _otra_habilidad(a):
     p = datos.plan(a.taller)
     if p is None:
         return ""
-    return next((h.id for h in p.habilidades if not h.lista and h.id != a.habilidad), "")
+    dentro = etapas.habilidades_de_etapa(RUTA["etapa"], [h.id for h in p.habilidades])
+    return next((h.id for h in p.habilidades if not h.lista and h.id != a.habilidad and h.id in dentro), "")
 
 
 def saltar(context=None):
@@ -534,6 +667,12 @@ def _poner_herramienta(context, h):
         return
     from ..interfaz.herramientas import _vista_3d
 
+    try:
+        from .vista import brillo
+
+        brillo.encender(h.herramientas)  # motor 6: dónde está, nunca cómo se usa
+    except Exception as error:  # noqa: BLE001
+        print(f"[Amatista] Brillo: {error}")
     registro = _motor.MOTOR.tools
     for hid in h.herramientas:
         herramienta = registro.get(hid) if registro is not None else None
@@ -584,7 +723,7 @@ def mirame(context=None):
         return otra_vez(context)
     SESION["ayuda"] = max(SESION["ayuda"], ayudas.MIRAME)
     SESION["mirame"] = True
-    if not demo.empezar(h, _mirame_termino, bpy.context.scene):
+    if not demo.empezar(h, _mirame_termino, bpy.context.scene, pasos=_pasos_demo(h, SESION["actividad"])):
         SESION["mirame"] = False
     _al_cambiar_estado()
     return None
@@ -601,7 +740,8 @@ def _demo_termino(completa):
     if a is None or a.tipo != taller.MIRA:
         return
     cambios = datos.registrar(a, True, 0, False, segundos_trabajados())
-    SESION.update(estado=LOGRADA, logro_en=time.time(), cambios=cambios)
+    SESION.update(estado=LOGRADA, logro_en=time.time(), cambios=cambios, plan=datos.plan(a.taller))
+    _revisar_etapa(a)
     _al_cambiar_estado()
 
 
@@ -649,10 +789,18 @@ def orden(context, tipo, datos_orden):
     """Una orden del enlace en vivo. Devuelve el texto que se avisa en Blender (o None)."""
     datos_orden = datos_orden or {}
     if tipo == "taller_abrir":
-        return abrir(context, str(datos_orden.get("taller") or ""), str(datos_orden.get("actividad") or ""))
+        taller_id = str(datos_orden.get("taller") or "")
+        if "etapa" in datos_orden or datos_orden.get("leccion"):
+            habilidades = datos_orden.get("habilidades") or ()
+            fijar_etapa(taller_id, str(datos_orden.get("etapa") or ""),
+                        [str(h) for h in habilidades] if isinstance(habilidades, (list, tuple)) else (),
+                        str(datos_orden.get("leccion") or ""))
+        return abrir(context, taller_id, str(datos_orden.get("actividad") or ""))
     if tipo == "taller_continuar":
         if SESION["estado"] == PAUSA:
             return seguir(context)
+        if SESION["volver"]:
+            return frase_logro()  # la plataforma ya sabe: no se abre nada fuera de la etapa
         if SESION["estado"] == LOGRADA or SESION["actividad"] is None:
             return siguiente(context) if SESION["actividad"] is not None else abrir(context, SESION["taller"])
         return None
@@ -706,6 +854,9 @@ def detalle():
                         for h in (plan.habilidades if plan is not None else ())][:12],
         "proyecto_abierto": bool(plan.proyecto_abierto) if plan is not None else False,
         "repasos": [h[:60] for h in (plan.repasos if plan is not None else ())][:12],
+        # Motor 6: la etapa que mandó la plataforma y si ya se cumplió (la lección se da por hecha).
+        "etapa": RUTA["etapa"].nombre if RUTA["etapa"] is not None else "",
+        "etapa_cumplida": bool(RUTA["cumplida"]),
     }
 
 
@@ -774,12 +925,18 @@ def _al_deshacer(*_args):
 def _al_abrir(*_args):
     demo.detener(llamar=False)
     SESION.update(_vacia())
+    RUTA.update(etapa=None, leccion="", cumplida=False)
 
 
 def _vigilante():
     try:
         if SESION["sucio"] and time.time() - SESION["ultimo_cambio"] > CALMA:
             evaluar(bpy.context)
+        if SESION["actividad"] is not None:
+            from .vista import tarjeta
+
+            if tarjeta.cambio_compacta():
+                _redibujar()  # motor 6: la tarjeta se achica sola al quedarse quieta
         e = SESION["escalera"]
         if e is not None and SESION["estado"] == TRABAJANDO and not demo.activa():
             ahora = time.time()
@@ -788,6 +945,11 @@ def _vigilante():
                 nombre, _puede = siguiente_pista()
                 if nombre:
                     avisar(f"¿Te ayudo? Toca «{nombre}» en la tarjeta.", 10.0)
+                h = habilidad_actual()
+                if h is not None and e.techo >= ayudas.CON_QUE:  # en retos y repasos no hay «Con qué»
+                    from .vista import brillo
+
+                    brillo.encender(h.herramientas)  # atascado: que brille dónde está, sin decir cómo
     except Exception as error:  # noqa: BLE001 - nunca romper el temporizador
         SESION["sucio"] = False
         print(f"[Amatista] Taller: {error}")
@@ -814,3 +976,4 @@ def unregister():
     if bpy.app.timers.is_registered(_vigilante):
         bpy.app.timers.unregister(_vigilante)
     SESION.update(_vacia())
+    RUTA.update(etapa=None, leccion="", cumplida=False)

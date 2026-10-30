@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "5.4.0"
+VERSION_ADDON = "6.0.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -109,6 +109,24 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         description="Al abrir una práctica, Blender pasa a la pestaña Amatista (junto a Layout) con tu taller a la vista",
         default=True,
     )
+    # Motor 6: la tarjeta como referencia (compacta mientras trabajas), las herramientas que brillan y
+    # Blender Amatista (plantilla de aplicación, blender_amatista.py).
+    tarjeta_compacta: bpy.props.BoolProperty(
+        name="Tarjeta compacta mientras trabajo",
+        description="Mientras trabajas, la tarjeta se achica a una línea; se abre al pasar el ratón o cuando hay algo nuevo",
+        default=True,
+    )
+    brillo_herramientas: bpy.props.BoolProperty(
+        name="Hacer brillar la herramienta que necesito",
+        description="Si te atascas, la herramienta de la actividad brilla en la barra T (no te dice cómo usarla)",
+        default=True,
+    )
+    blender_amatista: bpy.props.BoolProperty(
+        name="Blender Amatista",
+        description="Instala la plantilla «Blender Amatista» (colores, pantalla de inicio y barra de arriba de Amatista) y un acceso directo",
+        default=True,
+    )
+    plantilla_version: bpy.props.StringProperty(default="", options={"HIDDEN"})
     protocolo_version: bpy.props.IntProperty(default=0, options={"HIDDEN"})
     protocolo_blender: bpy.props.StringProperty(default="", options={"HIDDEN"})
     # Add-on 5.1: los primeros pasos (recorrido.py) ya se hicieron o se omitieron. Desde el 5.2 cuenta como
@@ -215,8 +233,10 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         caja = layout.box()
         caja.label(text="Amatista dentro de Blender", icon="WORKSPACE")
         caja.prop(self, "espacio_amatista")
-        fila = caja.row()
+        caja.prop(self, "blender_amatista")
+        fila = caja.row(align=True)
         fila.operator("amatista.reparar_enlace", icon="URL")
+        fila.operator("amatista.blender_amatista", icon="BLENDER")
         nota = caja.row()
         nota.active = False
         nota.label(text="Hace que «Abrir en Blender» de la plataforma abra este Blender aunque esté cerrado.")
@@ -224,6 +244,8 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         caja = layout.box()
         caja.label(text="En la vista 3D", icon="HEART")
         caja.prop(self, "mostrar_hud")
+        caja.prop(self, "tarjeta_compacta")
+        caja.prop(self, "brillo_herramientas")
         caja.prop(self, "animaciones")
         caja.prop(self, "sincronizar_solo")
 
@@ -249,6 +271,17 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
             fila.prop(self, "ayuda_tras_segundos")
             caja.prop(self, "comprobar_solo")
             caja.prop(self, "avisar_herramientas")
+
+        from . import saneamiento
+
+        copias = saneamiento.resumen()
+        if copias["apagadas"] or copias["encendidas"]:
+            caja = layout.box()
+            caja.label(text="Otras copias de Amatista", icon="ERROR" if copias["encendidas"] else "CHECKMARK")
+            for nombre in copias["apagadas"]:
+                caja.label(text=f"Apagada para que no se cruce: {nombre}")
+            for nombre in copias["encendidas"]:
+                caja.label(text=f"Sigue encendida (es más nueva): {nombre}")
 
         caja = layout.box()
         caja.label(text="Avanzado", icon="TOOL_SETTINGS")

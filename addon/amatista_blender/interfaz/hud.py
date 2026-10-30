@@ -640,12 +640,13 @@ def dibujar():
     contexto = bpy.context
     escena = contexto.scene
     actualizar_idioma(contexto)
-    from .. import recorrido
+    from . import turno
 
-    if recorrido.activo():  # add-on 5.2: mientras dura, la práctica de «Conoce Amatista Motor» tiene la tarjeta
+    quien = turno.de_quien(contexto)  # motor 6: una sola tarjeta (recorrido > taller > misión)
+    if quien == turno.RECORRIDO:  # add-on 5.2: mientras dura, la práctica de «Conoce Amatista Motor» tiene la tarjeta
         _dibujar_recorrido(contexto)
         return
-    if escena is None or not escena.amatista.practica_json or del_taller(escena):
+    if quien != turno.MISION or escena is None:
         return
     practica = practicas.practica_activa(contexto)
     reporte = practicas.ESTADO["reporte"]
@@ -816,14 +817,18 @@ def activar(encendido=True):
 
     if gpu is None or bpy.app.background:
         return
+    from .. import saneamiento
+
+    vista = bpy.types.SpaceView3D
     if encendido and not _MANEJADORES:
-        _MANEJADORES.append((bpy.types.SpaceView3D.draw_handler_add(dibujar, (), "WINDOW", "POST_PIXEL"), "WINDOW"))
-        _MANEJADORES.append((bpy.types.SpaceView3D.draw_handler_add(visor3d.dibujar_escena, (), "WINDOW", "POST_VIEW"), "WINDOW"))
-        _MANEJADORES.append((bpy.types.SpaceView3D.draw_handler_add(visor3d.dibujar_etiquetas, (), "WINDOW", "POST_PIXEL"), "WINDOW"))
+        # Motor 6: anotados en saneamiento, así una carga posterior los quita aunque esta falle.
+        _MANEJADORES.append((saneamiento.agregar_dibujo(vista, dibujar, (), "WINDOW", "POST_PIXEL"), "WINDOW"))
+        _MANEJADORES.append((saneamiento.agregar_dibujo(vista, visor3d.dibujar_escena, (), "WINDOW", "POST_VIEW"), "WINDOW"))
+        _MANEJADORES.append((saneamiento.agregar_dibujo(vista, visor3d.dibujar_etiquetas, (), "WINDOW", "POST_PIXEL"), "WINDOW"))
     elif not encendido:
         while _MANEJADORES:
             manejador, region = _MANEJADORES.pop()
-            bpy.types.SpaceView3D.draw_handler_remove(manejador, region)
+            saneamiento.quitar_dibujo(vista, manejador, region)
     practicas.redibujar()
 
 

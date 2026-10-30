@@ -1079,6 +1079,149 @@ def probar_integracion(contexto):
     revisar(integracion.entrar_al_espacio(contexto) is False, "sin ventana no cambia de espacio")
 
 
+def probar_motor6(contexto):
+    """Motor 6: autosanación, una sola tarjeta, la etapa de la plataforma, demostración propia, brillo y Blender Amatista."""
+    print("Motor 6")
+    from amatista_blender import ajustes, blender_amatista, cuenta, recorrido, saneamiento
+    from amatista_blender.interfaz import turno
+    from amatista_blender.taller import datos, demo, operadores, panel, sesion
+    from amatista_blender.taller.vista import brillo, tarjeta
+
+    taller = sesion.taller
+    # Autosanación.
+    revisar(saneamiento.soy_duena() and bpy.app.driver_namespace.get(saneamiento.CLAVE_DUENA) == "amatista_blender",
+            "autosanación: esta copia es la dueña del dibujo")
+    revisar(saneamiento.otras_copias() == [], f"autosanación: no hay otras copias ({saneamiento.otras_copias()})")
+
+    def huerfana(*_args):
+        pass
+
+    huerfana.__module__ = "bl_ext.user_default.amatista.taller.sesion"
+    bpy.app.handlers.load_post.append(huerfana)
+    revisar(saneamiento.quitar_huerfanas() == 1 and huerfana not in bpy.app.handlers.load_post,
+            "autosanación: quita las funciones de una copia que ya no está")
+
+    # La etapa: la exploración de la lección solo pide las primeras habilidades y no sigue sola.
+    sesion.terminar()
+    for archivo in ajustes.carpeta_usuario().glob("avance_taller_*.json"):
+        archivo.unlink()
+    datos.reiniciar_cache()
+    sesion.orden(contexto, "taller_abrir", {"taller": "blender.bp.m1", "etapa": "exploracion",
+                                            "habilidades": ["bl-agregar-primitivas"], "leccion": "bp1_blender"})
+    a = sesion.actividad()
+    revisar(a is not None and a.habilidad == "bl-agregar-primitivas" and sesion.etapa().nombre == "exploracion",
+            f"etapa: la exploración abre su habilidad ({a and a.id})")
+    revisar(turno.de_quien(contexto) == turno.TALLER, "una tarjeta: la del taller")
+    recorrido.ESTADO["activo"] = True
+    revisar(turno.de_quien(contexto) == turno.RECORRIDO, "una tarjeta: el recorrido le gana al taller")
+    recorrido.ESTADO["activo"] = False
+
+    # «Mira» muestra la variación que viene (un cubo en el centro), no la «Caja» y la «Lata» genéricas.
+    linea = demo.ESTADO["linea"]
+    nombres = {p.datos.get("nombre") for p in (linea.pasos if linea else ()) if p.accion == "agregar"}
+    revisar(nombres and "Caja" not in nombres and "Lata" not in nombres, f"Mira: la demostración es de esta actividad ({nombres})")
+    operadores.ejecutar(contexto, "ahora_tu")
+    a = sesion.actividad()
+    revisar(a is not None and a.tipo == taller.CONMIGO, f"etapa: después de Mira, Hazlo conmigo ({a and a.id})")
+    sesion.mirame(contexto)
+    linea = demo.ESTADO["linea"]
+    piezas = {str(p.get("name")) for p in a.molde or a.piezas}
+    nombres = {p.datos.get("nombre") for p in (linea.pasos if linea else ()) if p.accion == "agregar"}
+    revisar(nombres and nombres <= piezas | {f"{n} (antes)" for n in piezas} | {"Esfera"},
+            f"Mírame: solo piezas de la actividad ({nombres} de {piezas})")
+    demo.detener(completa=True)
+
+    # Una actividad de otra habilidad no saca al alumno de la etapa.
+    sesion.orden(contexto, "taller_abrir", {"taller": "blender.bp.m1", "actividad": "conmigo:bl-rotar:rueda"})
+    revisar(sesion.actividad() is not None and sesion.actividad().habilidad == "bl-agregar-primitivas",
+            f"etapa: una orden de otra habilidad no la saca ({sesion.actividad() and sesion.actividad().id})")
+
+    # Armar la pieza cumple la exploración: «Volver a la plataforma», sin abrir lo que sigue.
+    _armar(contexto, sesion.actividad().piezas)
+    sesion.evaluar(contexto)
+    revisar(sesion.estado() == sesion.LOGRADA and sesion.SESION["volver"] and sesion.RUTA["cumplida"],
+            "etapa: Mira y un Hazlo conmigo cumplen la exploración")
+    revisar([b[1] for b in tarjeta.botones()][0] == "volver_plataforma", f"etapa: la tarjeta manda a la plataforma ({tarjeta.botones()})")
+    revisar(sesion.detalle()["etapa_cumplida"] and sesion.detalle()["etapa"] == "exploracion",
+            "etapa: el latido le dice a la lección que se cumplió")
+    abiertas = []
+    original = cuenta.abrir_plataforma
+    cuenta.abrir_plataforma = lambda ruta="": abiertas.append(ruta) or True
+    try:
+        operadores.ejecutar(contexto, "siguiente")
+        revisar(abiertas == ["#/curso/blender_principiante/leccion/bp1_blender"] and sesion.estado() == sesion.LOGRADA,
+                f"etapa: «Siguiente» vuelve a la lección, no abre otra actividad ({abiertas})")
+        # Con la cuenta conectada, Blender no deja elegir módulos ni empezar talleres solo.
+        p = ajustes.prefs()
+        p.token = "prueba"
+        sesion.terminar()
+        revisar(sesion.manda_la_plataforma(), "ruta: con la cuenta conectada manda la plataforma")
+        revisar(not panel.AMATISTA_PT_taller_modulos.poll(contexto) and not panel.AMATISTA_PT_taller_habilidades.poll(contexto),
+                "ruta: «Otros módulos» y «Demuéstralo» quedan en la plataforma")
+        revisar(bpy.ops.amatista.taller_abrir(taller="blender.bp.m2") == {"FINISHED"} and not sesion.activa(),
+                "ruta: «Empezar el taller» lleva a la plataforma en vez de abrir otro módulo")
+        p.token = ""
+    finally:
+        cuenta.abrir_plataforma = original
+    sesion.RUTA.update(etapa=None, leccion="", cumplida=False)
+
+    # La tarjeta se achica mientras trabajas y se abre al acercar el ratón.
+    sesion.abrir(contexto, "blender.bp.m1", "conmigo:bl-mover:baja")
+    revisar(sesion.estado() == sesion.TRABAJANDO, "tarjeta: hay una actividad en curso")
+    tarjeta.RECTAS[1] = (100.0, 20.0, 600.0, 140.0)
+    tarjeta.compacta(1)
+    tarjeta.NOVEDAD["t"] -= 60
+    revisar(tarjeta.compacta(1), "tarjeta: sin novedades se vuelve una línea")
+    tarjeta.raton(1, 300.0, 80.0)
+    revisar(not tarjeta.compacta(1), "tarjeta: con el ratón encima se abre")
+    tarjeta.RATON.update(region=0, t=0.0)
+
+    # La herramienta brilla: dónde está, sin decir cómo.
+    revisar(brillo.donde("transform.move")[0] == "TOOLS" and brillo.donde("object.add")[0] == "HEADER",
+            "brillo: sabe si la herramienta está en la barra T o en un menú")
+    revisar(brillo.encender(["transform.move"]) and brillo.activo() and "barra de herramientas" in brillo.ESTADO["texto"],
+            f"brillo: «{brillo.ESTADO['texto']}»")
+    sesion.evaluar(contexto)
+    brillo.apagar()
+    revisar(not brillo.activo(), "brillo: se apaga")
+    sesion.terminar()
+
+    # El molde con cordura: un montón de piezas sueltas no llena el molde.
+    revision = taller.revisar_molde(
+        [{"primitive": "cube", "size": [2, 2, 2], "location": [0, 0, 1], "name": "Caja"}],
+        _motor_foto(contexto, 8), "molde", 1)
+    revisar(revision.revuelto and not revision.completa, "molde: con piezas de más no cuenta")
+
+    # Blender Amatista: la plantilla se instala con su pantalla de inicio y sus colores se devuelven.
+    ok, texto = blender_amatista.instalar_plantilla(forzar=True)
+    revisar(ok and blender_amatista.instalada(), f"Blender Amatista: plantilla instalada ({texto})")
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("bl_app_template_amatista", blender_amatista.destino() / "__init__.py")
+    plantilla = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(plantilla)
+    tema = bpy.context.preferences.themes[0].view_3d
+    antes = tuple(tema.object_active)
+    plantilla.register()
+    revisar(tuple(round(c, 2) for c in tema.object_active) == plantilla.TEMA["view_3d.object_active"],
+            "Blender Amatista: los colores de Amatista se ponen")
+    plantilla.unregister()
+    revisar(tuple(round(c, 3) for c in tema.object_active) == tuple(round(c, 3) for c in antes),
+            "Blender Amatista: al salir vuelven los colores de antes")
+    revisar(not blender_amatista.devolver_tema(), "Blender Amatista: no queda nada por devolver")
+
+
+def _motor_foto(contexto, extras):
+    from amatista_blender import practicas
+
+    for obj in list(contexto.scene.objects):
+        bpy.data.objects.remove(obj)
+    cubo("Caja", (0, 0, 1), (2, 2, 2))
+    for i in range(extras):
+        cubo(f"Suelta {i}", (5 + i, 5, 0.25), (0.5, 0.5, 0.5))
+    return practicas.capturar(contexto.scene)
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -1180,7 +1323,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "5.4.0", "el intento lleva la versión 5.4 del add-on")
+    revisar(datos["version_addon"] == "6.0.0", "el intento lleva la versión 6.0 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1226,6 +1369,7 @@ def main():
     probar_recorrido(contexto)
     probar_idioma(contexto)
     probar_integracion(contexto)
+    probar_motor6(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

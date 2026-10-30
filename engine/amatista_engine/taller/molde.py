@@ -46,8 +46,14 @@ ESTADOS = (LLENA, CASI, EQUIVOCADA, VACIA)
 FALTA, FORMA, GIRO, TAMANO, LUGAR, FLOTA = "falta", "forma", "giro", "tamano", "lugar", "flota"
 
 # Holgura por nivel: tamaño (veces), lugar (en «unidades» de la pieza) y altura sobre el suelo.
-TAMANO_POR_NIVEL = {1: 1.8, 2: 1.6, 3: 1.4, 4: 1.2, 5: 1.1}
-LUGAR_POR_NIVEL = {1: 1.0, 2: 0.8, 3: 0.6, 4: 0.45, 5: 0.3}
+# Motor 6: más estrictas en los niveles 1 a 3 (con 1.8 veces, un cubo de 2 m pasaba por uno de 3,6 m).
+TAMANO_POR_NIVEL = {1: 1.5, 2: 1.4, 3: 1.3, 4: 1.2, 5: 1.1}
+LUGAR_POR_NIVEL = {1: 0.8, 2: 0.7, 3: 0.55, 4: 0.45, 5: 0.3}
+# Cordura (motor 6): con demasiadas piezas sueltas, llenar el molde puede ser casualidad.
+SOBRAN_MAXIMO = 3
+# Vértices y caras de cada primitiva recién agregada: reconoce la forma aunque la malla se renombre.
+FIRMAS = {(8, 6): "cube", (4, 1): "plane", (32, 0): "circle", (64, 34): "cylinder", (33, 33): "cone",
+          (482, 480): "sphere", (42, 80): "sphere", (576, 576): "torus", (507, 500): "suzanne"}
 SUELO = 0.03  # una pieza del modelo cuya base está a menos de esto va apoyada en el suelo
 
 # La habilidad que arregla cada motivo (las del módulo 1 de Blender); un taller puede usar otras.
@@ -97,6 +103,7 @@ class RevisionMolde:
     giro_z: int = 0  # libre: grados que se giró la figura del alumno para acomodarla
     escala: float = 1.0  # libre: veces que se agrandó (>1) o achicó la figura para acomodarla
     detalles: Dict[str, Any] = field(default_factory=dict)
+    revuelto: bool = False  # motor 6: tantas piezas de más que llenar el molde no prueba nada
 
     @property
     def total(self) -> int:
@@ -108,7 +115,7 @@ class RevisionMolde:
 
     @property
     def completa(self) -> bool:
-        return bool(self.piezas) and self.llenas == self.total
+        return bool(self.piezas) and self.llenas == self.total and not self.revuelto
 
     @property
     def pieza_actual(self) -> Optional[PiezaRevisada]:
@@ -116,6 +123,8 @@ class RevisionMolde:
 
     @property
     def mensaje(self) -> str:
+        if self.revuelto:
+            return "Hay muchas piezas de más: borra las que sobran (X) y deja solo las del molde."
         p = self.pieza_actual
         if p is None:
             return "Listo: cada pieza está en su lugar." if self.completa else ""
@@ -131,6 +140,7 @@ class RevisionMolde:
             "actual": self.actual,
             "mensaje": self.mensaje,
             "adornos": self.adornos,
+            "revuelto": self.revuelto,
             "piezas": [
                 {"indice": p.indice, "nombre": p.nombre, "primitiva": p.primitiva, "estado": p.estado, "motivo": p.motivo,
                  "mensaje": p.mensaje, "objeto": p.objeto, "teclas": list(p.teclas), "habilidad": p.habilidad,
@@ -171,10 +181,17 @@ def _caja_modelo(pieza: Dict[str, Any]) -> _Caja:
                  _familia(pieza.get("primitive", "")))
 
 
+def _familia_de_objeto(obj: SceneObject) -> str:
+    familia = _familia(obj.primitive)
+    if familia in UN or obj.vertices is None:
+        return familia
+    return FIRMAS.get((int(obj.vertices), int(obj.faces or 0)), familia)
+
+
 def _caja_alumno(obj: SceneObject) -> _Caja:
     minimo, maximo = obj.caja()
     return _Caja(tuple((a + b) / 2 for a, b in zip(minimo, maximo)), tuple(max(0.0, b - a) for a, b in zip(minimo, maximo)),
-                 _familia(obj.primitive), obj.name)
+                 _familia_de_objeto(obj), obj.name)
 
 
 def _union(cajas: Sequence[_Caja]) -> Tuple[Tuple[float, ...], Tuple[float, ...]]:
@@ -224,9 +241,13 @@ def _error_tamano_sin_giro(a: Sequence[float], b: Sequence[float], largo: float)
     return max(abs(math.log((x + eps) / (y + eps))) for x, y in zip(sorted(a), sorted(b)))
 
 
-def _misma_forma(a: _Caja, m: _Caja) -> bool:
-    """La misma primitiva; una malla sin primitiva conocida (unida o renombrada) puede ser cualquiera."""
-    return a.familia == m.familia or a.familia not in UN
+def _misma_forma(a: _Caja, m: _Caja, estricta: bool = False) -> bool:
+    """La misma primitiva; una malla sin primitiva conocida (unida o editada) puede ser cualquiera.
+
+    Motor 6: en los niveles 1 y 2 (estricta) el alumno solo agrega primitivas, así que una malla
+    que no se reconoce ni por nombre ni por sus vértices no llena ninguna pieza.
+    """
+    return a.familia == m.familia or (a.familia not in UN and not estricta)
 
 
 def _unidad(m: _Caja) -> float:
@@ -240,7 +261,8 @@ def _error_lugar(a: _Caja, m: _Caja) -> float:
 # --- Emparejar -------------------------------------------------------------------------------
 
 
-def _emparejar(alumno: Sequence[_Caja], modelo: Sequence[_Caja], tol_lugar: float, tol_tamano: float):
+def _emparejar(alumno: Sequence[_Caja], modelo: Sequence[_Caja], tol_lugar: float, tol_tamano: float,
+               estricta: bool = False):
     """{índice de pieza: índice de caja del alumno} con el menor costo total (codicioso, determinista)."""
     pares = []
     for j, m in enumerate(modelo):
@@ -248,7 +270,7 @@ def _emparejar(alumno: Sequence[_Caja], modelo: Sequence[_Caja], tol_lugar: floa
             lugar = _error_lugar(a, m)
             if lugar > 3.0 * tol_lugar + 1.0:
                 continue
-            mismo = _misma_forma(a, m)
+            mismo = _misma_forma(a, m, estricta)
             tam = min(_error_tamano_sin_giro(a.medidas, m.medidas, m.largo), 2.0)
             costo = lugar / max(tol_lugar, 0.01) + 0.8 * tam / max(tol_tamano, 0.01) + (0.0 if mismo else 6.0)
             pares.append((costo, j, i))
@@ -340,7 +362,7 @@ def _revisar_pieza(indice: int, pieza: Dict[str, Any], m: _Caja, a: Optional[_Ca
             teclas=("Shift+A", "Malla", MALLA.get(prim, "")) if prim in MALLA else ("Shift+A",),
             habilidad=HABILIDAD_DE_MOTIVO[FALTA],
         )
-    if not _misma_forma(a, m):
+    if not _misma_forma(a, m, nivel <= 2):
         return PiezaRevisada(
             **base, estado=EQUIVOCADA, motivo=FORMA, objeto=a.nombre,
             mensaje=f"«{nombre}» es {UN.get(m.familia, 'otra forma')}; aquí hay {UN.get(a.familia, 'otra forma')}.",
@@ -404,14 +426,14 @@ def revisar_molde(piezas: Sequence[Dict[str, Any]], scene: SceneState, modo: str
         mejor = None
         for giros in range(4):
             acomodadas, s = _acomodar(alumno, modelo, giros, escala_libre=nivel <= 3)
-            asignadas, costo = _emparejar(acomodadas, modelo, tol_lugar, tol_tamano)
+            asignadas, costo = _emparejar(acomodadas, modelo, tol_lugar, tol_tamano, nivel <= 2)
             costo += 8.0 * (len(modelo) - len(asignadas))
             if mejor is None or costo < mejor[0] - 1e-9:
                 mejor = (costo, giros, acomodadas, s, asignadas)
         _, giros, alumno, escala, asignadas = mejor
         giro_z = 90 * giros
     else:
-        asignadas, _ = _emparejar(alumno, modelo, tol_lugar, tol_tamano)
+        asignadas, _ = _emparejar(alumno, modelo, tol_lugar, tol_tamano, nivel <= 2)
     piso = min((c.base for c in modelo), default=0.0)
     revisadas = []
     for j, (pieza, m) in enumerate(zip(lista, modelo)):
@@ -420,8 +442,9 @@ def revisar_molde(piezas: Sequence[Dict[str, Any]], scene: SceneState, modo: str
         revisadas.append(_revisar_pieza(j, pieza, m, a, nivel, _nombre(pieza, j, etiquetas), modo, apoyada))
     trabajando = next((p.indice for p in revisadas if p.estado in (CASI, EQUIVOCADA)), None)
     actual = trabajando if trabajando is not None else next((p.indice for p in revisadas if p.estado == VACIA), None)
-    adornos = len(alumno) - len(asignadas)
-    return RevisionMolde(tuple(revisadas), modo, nivel, actual, max(0, adornos), giro_z, escala)
+    adornos = max(0, len(alumno) - len(asignadas))
+    revuelto = modo == "molde" and adornos > max(SOBRAN_MAXIMO, 2 * len(modelo))
+    return RevisionMolde(tuple(revisadas), modo, nivel, actual, adornos, giro_z, escala, revuelto=revuelto)
 
 
 __all__ = [

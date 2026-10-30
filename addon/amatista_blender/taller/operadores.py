@@ -18,7 +18,12 @@ def ejecutar(context, accion):
             return sesion.seguir(context)
         if sesion.activa() and sesion.estado() != sesion.LOGRADA:
             return sesion.volver(context)
-        return sesion.siguiente(context) if sesion.activa() else sesion.abrir(context)
+        if sesion.activa():
+            return sesion.siguiente(context)
+        # Motor 6: con la cuenta conectada, lo que sigue lo marca la lección de la plataforma.
+        return sesion.volver_a_la_plataforma() if sesion.manda_la_plataforma() else sesion.abrir(context)
+    if accion == "volver_plataforma":
+        return sesion.volver_a_la_plataforma()
     if accion == "siguiente":
         return sesion.siguiente(context)
     if accion == "otra_vez":
@@ -121,6 +126,11 @@ class AMATISTA_OT_taller_abrir(bpy.types.Operator):
     repasar: bpy.props.BoolProperty(description="«Recuérdalo»: un minuto con esta habilidad")
 
     def execute(self, context):
+        if sesion.manda_la_plataforma() and not sesion.activa():
+            # Motor 6: el alumno no elige módulos en Blender; la plataforma abre lo que toca.
+            texto = sesion.volver_a_la_plataforma()
+            self.report({"INFO"}, texto)
+            return {"FINISHED"}
         try:
             if self.probar and self.habilidad:
                 texto = sesion.probar(context, self.taller, self.habilidad)

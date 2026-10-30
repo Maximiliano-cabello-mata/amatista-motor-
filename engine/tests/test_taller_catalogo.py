@@ -123,7 +123,8 @@ def test_cada_leccion_de_la_plataforma_tiene_su_taller():
             for bloque in leccion.get("contentBlocks", []):
                 if bloque.get("type") == "blender_taller":
                     assert bloque["taller"] in talleres, f"{archivo.name}: {bloque['taller']}"
-                    if bloque.get("vista") != "proyecto":
+                    # Motor 6: el taller empieza en la lección de su exploración (la práctica lo termina después).
+                    if bloque.get("vista") != "proyecto" and bloque.get("etapa", "exploracion") == "exploracion":
                         assert talleres[bloque["taller"]].leccion == leccion["id"], archivo.name
                     vistos.add(bloque["taller"])
     assert vistos == set(talleres), f"talleres sin lección: {set(talleres) - vistos}"

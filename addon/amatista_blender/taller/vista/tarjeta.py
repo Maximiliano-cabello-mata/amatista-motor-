@@ -15,6 +15,13 @@ tarjeta, al estilo screencast.
 
 Se respeta «Animaciones» de las preferencias (sin animaciones: la tarjeta no
 entra deslizándose ni respira).
+
+Motor 6: la tarjeta es una **referencia, no un estorbo**. Mientras el alumno
+trabaja y no pasa nada nuevo (REPOSO segundos), se achica a una línea (lo que
+dice el molde o lo que pide) y se vuelve más transparente; se abre sola al
+acercar el ratón, con cada novedad (una pieza llena, una pista, un aviso) y
+en «Mira», en la pausa y en el logro. Solo se dibuja si le toca
+(interfaz/turno.py): nunca encima de otra tarjeta de Amatista.
 """
 import time
 
@@ -56,6 +63,62 @@ ANCHO = 540
 BOTONES = {}  # {región: [(x0, y0, x1, y1, acción, activo)]} en coordenadas de la región
 HOVER = {"region": 0, "indice": -1}
 MAX_BOTONES = 3
+# Motor 6: la tarjeta compacta.
+REPOSO = 5.0  # segundos sin novedades antes de achicarse
+CERCA = 48  # px alrededor de la tarjeta que cuentan como «el ratón está encima»
+RATON = {"region": 0, "x": -1.0, "y": -1.0, "t": 0.0}
+RECTAS = {}  # {región: (x0, y0, x1, y1)} de la última tarjeta dibujada
+NOVEDAD = {"clave": None, "t": 0.0}
+
+
+ULTIMA_FORMA = {}  # {región: ¿se dibujó compacta?}
+
+
+def raton(region, x, y):
+    """Lo llama el gizmo de los botones en cada movimiento del ratón. Devuelve si hay que redibujar."""
+    RATON.update(region=region, x=float(x), y=float(y), t=time.time())
+    return cambio_compacta()
+
+
+def cambio_compacta():
+    """¿Alguna tarjeta tiene que pasar de compacta a abierta (o al revés)? (el vigilante lo pregunta)."""
+    cambio = False
+    for clave in list(RECTAS):
+        forma = compacta(clave)
+        if ULTIMA_FORMA.get(clave) != forma:
+            ULTIMA_FORMA[clave] = forma
+            cambio = True
+    return cambio
+
+
+def _segundos_sin_novedad():
+    a = sesion.actividad()
+    r = sesion.SESION["revision"]
+    pieza = r.pieza_actual if r is not None else None
+    pista = sesion.SESION["pista"]
+    clave = (a.id if a is not None else "", sesion.estado(), r.llenas if r is not None else 0,
+             pieza.estado if pieza is not None else "", pieza.motivo if pieza is not None else "",
+             pista.nivel if pista is not None else 0, sesion.mensaje(), demo.activa(), sesion.SESION["mirame"])
+    if clave != NOVEDAD["clave"]:
+        NOVEDAD.update(clave=clave, t=time.time())
+    return time.time() - NOVEDAD["t"]
+
+
+def compacta(clave_region):
+    """¿La tarjeta va en una línea? Solo mientras trabaja, sin novedades y con el ratón lejos."""
+    p = ajustes.prefs()
+    if p is not None and not getattr(p, "tarjeta_compacta", True):
+        return False
+    if sesion.estado() != sesion.TRABAJANDO or sesion.SESION["mirame"] or demo.activa():
+        return False
+    if _segundos_sin_novedad() < REPOSO:
+        return False
+    recta = RECTAS.get(clave_region)
+    if recta is not None and RATON["region"] == clave_region and time.time() - RATON["t"] < 2.0:
+        x0, y0, x1, y1 = recta
+        if x0 - CERCA <= RATON["x"] <= x1 + CERCA and y0 - CERCA <= RATON["y"] <= y1 + CERCA:
+            return False
+    return True
 
 
 def animaciones():
@@ -84,6 +147,9 @@ def botones():
         return [("Ya entendí", "cerrar_demo", True)]
     if st == sesion.PAUSA:
         return [("Seguir", "seguir", True)]
+    if st == sesion.LOGRADA and sesion.SESION["volver"]:
+        # Motor 6: la etapa que mandó la plataforma se cumplió; lo que sigue es allá, no aquí.
+        return [("Volver a la plataforma", "volver_plataforma", True), ("Otra vez", "otra_vez", True)]
     if st == sesion.LOGRADA:
         if a.tipo == taller.PROYECTO:
             return [("Siguiente", "siguiente", True), ("Ver mi isla", "isla", True)]
@@ -166,7 +232,9 @@ def dibujar():
     region = contexto.region
     clave = region.as_pointer() if region is not None else 0
     BOTONES[clave] = []
-    if region is None or not sesion.cubre(contexto.scene):
+    from ...interfaz import turno
+
+    if region is None or not turno.me_toca(turno.TALLER, contexto):
         return
     a = sesion.actividad()
     st = sesion.estado()
@@ -209,6 +277,11 @@ def dibujar():
     lineas_texto = hud._partir(texto, tam_grande, ancho_texto, 2)
     lineas_linea = hud._partir(linea, tam, ancho_texto - 12 * escala, 2) if linea else []
     lista = botones()
+    chica = compacta(clave)
+    if chica:
+        # Referencia, no estorbo: una línea (lo que dice el molde o lo que pide) y los botones.
+        lineas_texto = hud._partir(linea or texto, tam_grande, ancho_texto, 1)
+        lineas_linea, teclas = [], []
 
     alto = relleno + tam_chico + 10 * escala  # cabecera
     alto += len(lineas_texto) * (tam_grande + 6 * escala)
@@ -219,7 +292,8 @@ def dibujar():
     entra = _suave((time.time() - sesion.SESION["entrada"]) / ENTRADA) if animaciones() else 1.0
     x = (region.width - ancho) / 2
     y = _region_base(contexto, escala) - (1 - entra) * 16 * escala
-    alfa = max(0.15, entra)
+    alfa = max(0.15, entra) * (0.8 if chica else 1.0)
+    RECTAS[clave] = (x, y, x + ancho, y + alto)
 
     shader = gpu.shader.from_builtin("UNIFORM_COLOR")
     gpu.state.blend_set("ALPHA")
@@ -341,4 +415,5 @@ def pulsar(region, x, y):
     return accion_de(region, indice) if indice >= 0 else (None, False)
 
 
-__all__ = ["BOTONES", "HOVER", "MAX_BOTONES", "accion_de", "boton_en", "botones", "dibujar", "pulsar"]
+__all__ = ["BOTONES", "HOVER", "MAX_BOTONES", "accion_de", "boton_en", "botones", "compacta", "dibujar", "pulsar",
+           "raton"]

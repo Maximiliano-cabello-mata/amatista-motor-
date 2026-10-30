@@ -51,6 +51,8 @@ def actividad_corta():
     estado = sesion.estado()
     if estado == sesion.PAUSA:
         return a.titulo, "En pausa"
+    if sesion.SESION.get("volver"):
+        return a.titulo, "Listo: sigue en la plataforma"
     if estado == sesion.LOGRADA:
         return a.titulo, "¡Lograda! Sigue con la próxima"
     return a.titulo, f"{a.nombre_tipo}{numero}"
@@ -215,8 +217,14 @@ class AMATISTA_MT_principal(bpy.types.Menu):
         layout.operator_context = "INVOKE_DEFAULT"
         sesion = _sesion()
         a = sesion.actividad()
-        if a is None:
+        if a is None and sesion.manda_la_plataforma():
+            # Motor 6: la lección de la plataforma marca qué sigue; desde aquí se vuelve a ella.
+            layout.operator("amatista.taller_accion", text="Seguir mi lección en la plataforma",
+                            icon="URL").accion = "volver_plataforma"
+        elif a is None:
             layout.operator("amatista.taller_abrir", text="Empezar o seguir mi taller", icon="PLAY")
+        elif sesion.SESION["volver"]:
+            layout.operator("amatista.taller_accion", text="Volver a la plataforma", icon="URL").accion = "volver_plataforma"
         elif sesion.estado() == sesion.PAUSA:
             layout.operator("amatista.taller_accion", text="Seguir la actividad", icon="PLAY").accion = "seguir"
         elif sesion.estado() == sesion.LOGRADA:

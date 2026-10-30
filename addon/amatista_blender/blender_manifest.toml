@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 # Amatista para Blender: prácticas guiadas, comprobaciones locales y progreso
 # conectado con la plataforma. Documentación: docs/motor/ del repositorio.
 id = "amatista"
-version = "5.4.0"
+version = "6.0.0"
 name = "Amatista Motor"
 tagline = "Aprende Blender habilidad por habilidad"
 maintainer = "Maximiliano Cabello Mata"
@@ -20,7 +20,7 @@ license = ["SPDX:GPL-3.0-or-later"]
 
 [permissions]
 network = "Descargar practicas y registrar tu progreso en Amatista"
-files = "Guardar en tu equipo las practicas descargadas y el progreso pendiente de enviar"
+files = "Guardar las practicas descargadas, el progreso pendiente de enviar y la plantilla Blender Amatista"
 
 [build]
 paths_exclude_pattern = ["__pycache__/", "/tests/", "*.pyc"]

@@ -1,4 +1,13 @@
-"""Amatista para Blender (add-on 5.4: Amatista dentro de Blender).
+"""Amatista para Blender (Amatista Motor 6: Blender y Amatista como una sola cosa).
+
+Motor 6 (add-on 6.0): autosanación (saneamiento.py: una sola copia de
+Amatista encendida, sin manejadores huérfanos), una sola tarjeta a la vez
+(interfaz/turno.py) que se achica mientras trabajas, la plataforma marca la
+ruta (la lección manda su etapa y Blender no sale de ella), «Mira» y
+«Mírame» muestran ESTA actividad, la herramienta que necesitas brilla
+(taller/vista/brillo.py), el molde es más estricto y Blender Amatista
+(blender_amatista.py): la plantilla de aplicación con pantalla de inicio,
+colores y barra de Amatista, y su acceso directo.
 
 Add-on 5.4 (integracion.py, protocolo.py): menú Amatista en la barra de arriba,
 botón Amatista en la cabecera de la vista 3D (despliega el taller sin la tecla
@@ -56,7 +65,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (5, 4, 0),
+    "version": (6, 0, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Aprende Blender habilidad por habilidad con Amatista Taller",
@@ -65,7 +74,8 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, integracion, mision, operadores, practicas, recorrido, red
+from . import (ajustes, blender_amatista, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, integracion, mision,
+               operadores, practicas, recorrido, red, saneamiento)
 from . import taller
 from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
 
@@ -92,6 +102,7 @@ def _primer_arranque():
 
 
 def register():
+    saneamiento.antes_de_registrar()  # motor 6: sin restos de cargas anteriores ni de otras copias
     estado.register()
     estilo.cargar_iconos()
     for clase in CLASES:
@@ -101,7 +112,9 @@ def register():
     enlace.register()
     hud.register()
     integracion.register()  # menú, cabecera, barra de estado y la orden que trajo amatista://
+    blender_amatista.register()  # motor 6: la plantilla «Blender Amatista» y su acceso directo
     bpy.app.timers.register(_primer_arranque, first_interval=1.5)
+    saneamiento.despues_de_registrar()  # apaga las otras copias de Amatista (en un temporizador)
 
 
 def unregister():
@@ -111,6 +124,8 @@ def unregister():
         escenarios.restaurar_todo()  # el cielo del tema vuelve a como estaba
     except Exception as error:  # noqa: BLE001 - desregistrar nunca debe fallar
         print(f"[Amatista] No se pudo restaurar el mundo: {error}")
+    saneamiento.al_desregistrar()
+    blender_amatista.unregister()
     integracion.unregister()
     enfoque.unregister()  # Blender completo otra vez, como estaba
     enlace.unregister()
