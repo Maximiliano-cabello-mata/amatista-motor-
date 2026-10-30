@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "6.0.0"
+VERSION_ADDON = "6.1.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -120,6 +120,22 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         name="Hacer brillar la herramienta que necesito",
         description="Si te atascas, la herramienta de la actividad brilla en la barra T (no te dice cómo usarla)",
         default=True,
+    )
+    # Motor 6.1: la ayuda que enseña (fichas.py).
+    presentar_herramientas: bpy.props.BoolProperty(
+        name="Presentarme cada herramienta nueva",
+        description="Antes de una actividad con una herramienta que nunca usaste, su ficha: para qué sirve, dónde está (brilla) y cómo se usa",
+        default=True,
+    )
+    modo_curioso: bpy.props.EnumProperty(
+        name="Modo curioso",
+        description="Cuando tocas una herramienta que todavía no conoces, Amatista te dice qué es",
+        items=(
+            ("auto", "Mientras aprendo", "Solo en tus primeros pasos (se apaga cuando ya te salen solas 10 habilidades)"),
+            ("siempre", "Siempre", "Explica cada herramienta nueva que toques, las primeras dos veces"),
+            ("nunca", "Nunca", "Sin explicaciones al tocar herramientas"),
+        ),
+        default="auto",
     )
     blender_amatista: bpy.props.BoolProperty(
         name="Blender Amatista",
@@ -246,6 +262,8 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         caja.prop(self, "mostrar_hud")
         caja.prop(self, "tarjeta_compacta")
         caja.prop(self, "brillo_herramientas")
+        caja.prop(self, "presentar_herramientas")
+        caja.row().prop(self, "modo_curioso", expand=True)
         caja.prop(self, "animaciones")
         caja.prop(self, "sincronizar_solo")
 

@@ -278,6 +278,15 @@ def cumplir(orden):
     context = bpy.context
     from .taller import sesion
 
+    if tipo == "leccion":  # motor 6.1: en qué lección va el alumno en la plataforma (sin avisos: llega seguido)
+        from . import integracion, plataforma
+
+        ESTADO["cumplidas"] = (ESTADO["cumplidas"] + [orden_id])[-20:]
+        if plataforma.recibir(datos):
+            integracion.redibujar_barras()
+            practicas.redibujar()
+        _terminada(orden_id)
+        return True
     if tipo in sesion.ORDENES:  # add-on 5: la lección maneja el taller
         ESTADO["cumplidas"] = (ESTADO["cumplidas"] + [orden_id])[-20:]
         try:

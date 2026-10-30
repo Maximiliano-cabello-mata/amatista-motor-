@@ -14,6 +14,11 @@ segundos, al usarla o al avanzar.
 
 Se respeta «Animaciones» (sin animaciones: el borde no late) y se puede
 apagar en Preferencias › Amatista › «Hacer brillar la herramienta…».
+
+Motor 6.1: la ficha de una herramienta nueva (taller/fichas del motor) la
+ilumina en **su zona** de la ventana, también fuera de la vista 3D: la barra
+lateral (N), Propiedades (modificadores, material), la lista de la escena o la
+línea de tiempo. La zona y su región salen de practices/blender/fichas.json.
 """
 import math
 import time
@@ -29,8 +34,23 @@ from ... import _motor, ajustes
 
 DURA = 9.0
 COLOR = (0.75, 0.52, 1.0, 1.0)  # amatista
-ESTADO = {"hasta": 0.0, "region": "", "texto": "", "herramienta": ""}
+ESTADO = {"hasta": 0.0, "region": "", "espacio": "VIEW_3D", "texto": "", "herramienta": ""}
 _MANEJADORES = []
+# Zona de fichas.json → (editor, región que late, cómo se dice dónde está).
+ZONAS = {
+    "herramientas": ("VIEW_3D", "TOOLS", "en la barra de herramientas (izquierda)"),
+    "cabecera": ("VIEW_3D", "HEADER", "en la cabecera, arriba de la vista 3D"),
+    "lateral": ("VIEW_3D", "UI", "en la barra lateral (tecla N, a la derecha)"),
+    "vista3d": ("VIEW_3D", "WINDOW", "sobre la vista 3D, con el ratón encima"),
+    "propiedades": ("PROPERTIES", "NAVIGATION_BAR", "en Propiedades (abajo a la derecha)"),
+    "outliner": ("OUTLINER", "WINDOW", "en la lista de la escena (arriba a la derecha)"),
+    "linea_tiempo": ("DOPESHEET_EDITOR", "WINDOW", "en la línea de tiempo (abajo)"),
+    "barra_superior": ("", "", "en los menús de la barra de arriba"),
+}
+ESPACIOS = {"VIEW_3D": "SpaceView3D", "PROPERTIES": "SpaceProperties", "OUTLINER": "SpaceOutliner",
+            "DOPESHEET_EDITOR": "SpaceDopeSheetEditor"}
+REGIONES = (("VIEW_3D", "TOOLS"), ("VIEW_3D", "HEADER"), ("VIEW_3D", "UI"), ("PROPERTIES", "NAVIGATION_BAR"),
+            ("PROPERTIES", "WINDOW"), ("OUTLINER", "WINDOW"), ("DOPESHEET_EDITOR", "WINDOW"))
 
 
 def _prefs_ok():
@@ -64,7 +84,7 @@ def encender(herramientas, segundos=DURA):
             continue
         region, nombre, tecla = lugar
         donde_texto = "en la barra de herramientas (izquierda)" if region == "TOOLS" else "en el menú de arriba"
-        ESTADO.update(hasta=time.time() + segundos, region=region, herramienta=hid,
+        ESTADO.update(hasta=time.time() + segundos, region=region, espacio="VIEW_3D", herramienta=hid,
                       texto=f"{nombre}{f' ({tecla})' if tecla else ''} está {donde_texto}")
         _redibujar()
         if not bpy.app.timers.is_registered(_latir):
@@ -73,9 +93,22 @@ def encender(herramientas, segundos=DURA):
     return False
 
 
+def encender_zona(zona_id, nombre, tecla="", herramienta="", segundos=DURA):
+    """Motor 6.1: ilumina la zona de la ventana donde vive una herramienta (la de su ficha)."""
+    if not _prefs_ok() or zona_id not in ZONAS:
+        return False
+    espacio, region, donde_texto = ZONAS[zona_id]
+    ESTADO.update(hasta=time.time() + segundos, region=region, espacio=espacio or "VIEW_3D", herramienta=herramienta,
+                  texto=f"{nombre}{f' ({tecla})' if tecla else ''} está {donde_texto}")
+    _redibujar()
+    if not bpy.app.timers.is_registered(_latir):
+        bpy.app.timers.register(_latir, first_interval=0.05)
+    return True
+
+
 def apagar():
     if ESTADO["hasta"]:
-        ESTADO.update(hasta=0.0, region="", texto="", herramienta="")
+        ESTADO.update(hasta=0.0, region="", espacio="VIEW_3D", texto="", herramienta="")
         _redibujar()
 
 
@@ -88,7 +121,7 @@ def _redibujar():
         return
     for ventana in getattr(bpy.context.window_manager, "windows", ()) or ():
         for area in ventana.screen.areas:
-            if area.type == "VIEW_3D":
+            if area.type in ESPACIOS:
                 area.tag_redraw()
 
 
@@ -121,14 +154,18 @@ def _borde(region, grosor):
     gpu.state.blend_set("NONE")
 
 
-def dibujar_region(nombre_region):
-    """POST_PIXEL de la barra T o de la cabecera: el borde que late."""
-    if gpu is None or not activo() or ESTADO["region"] != nombre_region:
-        return
+def _me_toca(contexto):
     from ...interfaz import turno
 
+    return turno.de_quien(contexto) in (turno.TALLER, turno.FICHA)
+
+
+def dibujar_region(espacio, nombre_region):
+    """POST_PIXEL de la región iluminada (barra T, cabecera, barra N, Propiedades…): el borde que late."""
+    if gpu is None or not activo() or (ESTADO["espacio"], ESTADO["region"]) != (espacio, nombre_region):
+        return
     contexto = bpy.context
-    if not turno.me_toca(turno.TALLER, contexto) or contexto.region is None:
+    if contexto.region is None or not _me_toca(contexto):
         return
     escala = contexto.preferences.system.ui_scale or 1.0
     _borde(contexto.region, 3 * escala)
@@ -138,15 +175,17 @@ def dibujar_etiqueta():
     """POST_PIXEL de la vista 3D: la etiqueta junto al borde (qué es y dónde está, nunca cómo se usa)."""
     if gpu is None or not activo() or not ESTADO["texto"]:
         return
-    from ...interfaz import hud, turno
+    from ...interfaz import hud
 
     contexto = bpy.context
     region = contexto.region
-    if region is None or not turno.me_toca(turno.TALLER, contexto):
+    if region is None or not _me_toca(contexto):
         return
     escala = contexto.preferences.system.ui_scale or 1.0
     tam = int(12 * escala)
-    texto = ("◀ " if ESTADO["region"] == "TOOLS" else "▲ ") + ESTADO["texto"]
+    flecha = {"TOOLS": "◀ ", "HEADER": "▲ ", "UI": "▶ "}.get(ESTADO["region"], "◆ ") if ESTADO["espacio"] == "VIEW_3D" \
+        else "▶ "
+    texto = flecha + ESTADO["texto"]
     ancho = hud._ancho(texto, tam) + 20 * escala
     alto = tam + 14 * escala
     x = 12 * escala
@@ -167,16 +206,25 @@ def activar(encendido=True):
         return
     vista = bpy.types.SpaceView3D
     if encendido and not _MANEJADORES:
-        for region in ("TOOLS", "HEADER"):
-            _MANEJADORES.append((saneamiento.agregar_dibujo(vista, dibujar_region, (region,), region, "POST_PIXEL"), region))
-        _MANEJADORES.append((saneamiento.agregar_dibujo(vista, dibujar_etiqueta, (), "WINDOW", "POST_PIXEL"), "WINDOW"))
+        for espacio, region in REGIONES:
+            tipo = getattr(bpy.types, ESPACIOS[espacio], None)
+            if tipo is None:
+                continue
+            try:
+                manejador = saneamiento.agregar_dibujo(tipo, dibujar_region, (espacio, region), region, "POST_PIXEL")
+            except (TypeError, ValueError) as error:  # una región que ese editor no tiene en esta versión
+                print(f"[Amatista] Brillo en {espacio}/{region}: {error}")
+                continue
+            _MANEJADORES.append((tipo, manejador, region))
+        _MANEJADORES.append((vista, saneamiento.agregar_dibujo(vista, dibujar_etiqueta, (), "WINDOW", "POST_PIXEL"),
+                             "WINDOW"))
     elif not encendido:
         while _MANEJADORES:
-            manejador, region = _MANEJADORES.pop()
-            saneamiento.quitar_dibujo(vista, manejador, region)
+            tipo, manejador, region = _MANEJADORES.pop()
+            saneamiento.quitar_dibujo(tipo, manejador, region)
         apagar()
         if bpy.app.timers.is_registered(_latir):
             bpy.app.timers.unregister(_latir)
 
 
-__all__ = ["activar", "activo", "apagar", "donde", "encender"]
+__all__ = ["ZONAS", "activar", "activo", "apagar", "donde", "encender", "encender_zona"]

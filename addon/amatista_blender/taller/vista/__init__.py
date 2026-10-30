@@ -87,7 +87,7 @@ class AMATISTA_GGT_tarjeta_taller(bpy.types.GizmoGroup):
     def poll(cls, context):
         from ...interfaz import turno
 
-        return turno.me_toca(turno.TALLER, context)
+        return turno.de_quien(context) in (turno.TALLER, turno.FICHA)  # motor 6.1: la ficha usa los mismos botones
 
     def setup(self, context):
         for i in range(tarjeta.MAX_BOTONES):

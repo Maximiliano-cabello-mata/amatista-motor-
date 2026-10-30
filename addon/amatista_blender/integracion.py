@@ -288,11 +288,28 @@ def _boton_cabecera(self, context):
 
 
 def _barra_estado(self, context):
+    from . import plataforma
+
     corta = actividad_corta()
-    if corta is None:
+    en_plataforma = plataforma.texto_corto()
+    if corta is None and not en_plataforma:
         return
     fila = self.layout.row(align=True)
-    fila.label(text=f"Amatista: {corta[0]} · {corta[1]}", icon_value=estilo.icono("logo"))
+    if corta is not None:
+        fila.label(text=f"Amatista: {corta[0]} · {corta[1]}", icon_value=estilo.icono("logo"))
+    elif en_plataforma:
+        # Motor 6.1: Blender sabe en qué lección va el alumno en la plataforma.
+        fila.label(text=f"En la plataforma: {en_plataforma}", icon_value=estilo.icono("logo"))
+
+
+def redibujar_barras():
+    """La barra de estado, la de arriba y la vista 3D (la lección de la plataforma cambió)."""
+    if bpy.app.background:
+        return
+    for ventana in getattr(bpy.context.window_manager, "windows", ()) or ():
+        for area in ventana.screen.areas:
+            if area.type in ("STATUSBAR", "TOPBAR", "VIEW_3D"):
+                area.tag_redraw()
 
 
 CLASES = (AMATISTA_MT_principal, AMATISTA_PT_rapido, AMATISTA_OT_espacio, AMATISTA_OT_mostrar_panel,

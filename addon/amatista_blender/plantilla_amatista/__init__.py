@@ -21,6 +21,8 @@ que existen solo si el add-on está encendido.
 import json
 import os
 
+import sys
+
 import bpy
 from bpy.app.handlers import persistent
 
@@ -101,8 +103,16 @@ def _barra_superior(self, context):
     fila = self.layout.row(align=True)
     fila.label(text="◆ Blender Amatista")
     if hasattr(bpy.types, "AMATISTA_OT_taller_accion"):
-        boton = fila.operator("amatista.taller_accion", text="Mi lección", icon="URL")
-        boton.accion = "volver_plataforma"
+        texto = "Mi lección"
+        # Motor 6.1: el título de la lección en la que va el alumno en la plataforma. La plantilla no es parte
+        # del paquete de Amatista (que es «amatista_blender» o «bl_ext.….amatista»): se busca su módulo.
+        plataforma = next((m for n, m in list(sys.modules.items())
+                           if n.endswith(".plataforma") and "amatista" in n and hasattr(m, "actual")), None)
+        leccion = plataforma.actual() if plataforma is not None else None
+        if leccion and leccion.get("titulo"):
+            texto = f"Mi lección: {leccion['titulo'][:40]}"
+        boton = fila.operator("amatista.taller_accion", text=texto, icon="URL")
+        boton.accion = "abrir_plataforma"
     fila.separator()
 
 

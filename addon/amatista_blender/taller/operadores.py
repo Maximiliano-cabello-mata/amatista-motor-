@@ -24,6 +24,8 @@ def ejecutar(context, accion):
         return sesion.volver_a_la_plataforma() if sesion.manda_la_plataforma() else sesion.abrir(context)
     if accion == "volver_plataforma":
         return sesion.volver_a_la_plataforma()
+    if accion == "abrir_plataforma":
+        return sesion.volver_a_la_plataforma(forzar=True)
     if accion == "siguiente":
         return sesion.siguiente(context)
     if accion == "otra_vez":
@@ -51,6 +53,17 @@ def ejecutar(context, accion):
         return isla.abrir(context)
     if accion == "terminar":
         return sesion.terminar()
+    if accion == "empezar_actividad":
+        return sesion.despues_de_presentar(context)
+    # Motor 6.1: los botones de la ficha de una herramienta.
+    if accion in ("ficha_entendido", "ficha_como", "ficha_conozco"):
+        from .. import fichas
+
+        if accion == "ficha_como":
+            return fichas.como()
+        if accion == "ficha_conozco":
+            return fichas.ya_la_conozco(context)
+        return fichas.entendido(context)
     return None
 
 

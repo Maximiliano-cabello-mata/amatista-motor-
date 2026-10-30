@@ -85,7 +85,9 @@ def _ruta_avance(cuenta):
 
 
 def _vacio():
-    return {"estado": {}, "completadas": [], "cola": [], "isla": {}, "ultimo_taller": "", "actualizado": 0.0}
+    # Motor 6.1: «fichas» = veces que vio la ficha de cada herramienta; «conocidas» = las que marcó «Ya la conozco».
+    return {"estado": {}, "completadas": [], "cola": [], "isla": {}, "ultimo_taller": "", "actualizado": 0.0,
+            "fichas": {}, "conocidas": []}
 
 
 def _leer(ruta):

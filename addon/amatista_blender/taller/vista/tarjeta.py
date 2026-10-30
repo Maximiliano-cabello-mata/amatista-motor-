@@ -137,10 +137,16 @@ def _con_alfa(color, alfa):
 
 def botones():
     """[(texto, acción, activo)] según el estado de la sesión (máximo tres)."""
+    from ... import fichas
+
+    if fichas.visible() is not None:
+        return fichas.botones()  # motor 6.1: la ficha de una herramienta ocupa el lugar de la tarjeta
     a = sesion.actividad()
     st = sesion.estado()
     if a is None:
         return []
+    if st == sesion.PRESENTANDO:
+        return [("Empezar", "empezar_actividad", True)]  # la ficha se cerró sin «Entendido»
     if st == sesion.MIRANDO:
         return [("Repetir", "repetir_demo", True), ("Ahora tú", "ahora_tu", True)]
     if sesion.SESION["mirame"]:
@@ -149,7 +155,11 @@ def botones():
         return [("Seguir", "seguir", True)]
     if st == sesion.LOGRADA and sesion.SESION["volver"]:
         # Motor 6: la etapa que mandó la plataforma se cumplió; lo que sigue es allá, no aquí.
-        return [("Volver a la plataforma", "volver_plataforma", True), ("Otra vez", "otra_vez", True)]
+        from ... import plataforma
+
+        if plataforma.viva():  # motor 6.1: la lección ya avanzó sola en el navegador
+            return [("Otra vez", "otra_vez", True)]
+        return [("Ir a la plataforma", "volver_plataforma", True), ("Otra vez", "otra_vez", True)]
     if st == sesion.LOGRADA:
         if a.tipo == taller.PROYECTO:
             return [("Siguiente", "siguiente", True), ("Ver mi isla", "isla", True)]
@@ -186,6 +196,12 @@ def _linea_pieza():
         pendiente = next((r for r in reporte.results if not r.passed and r.message), None)
         if pendiente is not None:
             return pendiente.message, COLOR_ESTADO["vacia"]
+    # Motor 6.1: las primeras veces, una línea que recuerda para qué sirve la herramienta (se retira sola).
+    from ... import fichas
+
+    recuerda = fichas.recordatorio(sesion.actividad())
+    if recuerda:
+        return recuerda, (0.80, 0.74, 0.95, 1.0)
     return None, None
 
 
@@ -232,9 +248,20 @@ def dibujar():
     region = contexto.region
     clave = region.as_pointer() if region is not None else 0
     BOTONES[clave] = []
+    from ... import fichas
     from ...interfaz import turno
 
-    if region is None or not turno.me_toca(turno.TALLER, contexto):
+    quien = turno.de_quien(contexto) if region is not None else ""
+    if quien not in (turno.TALLER, turno.FICHA):
+        return
+    if fichas.visible() is not None:
+        from . import ficha
+
+        escala = contexto.preferences.system.ui_scale or 1.0
+        if ficha.dibujar(contexto, region, clave, _region_base(contexto, escala), _boton, BOTONES, HOVER):
+            RECTAS.pop(clave, None)
+        return
+    if quien != turno.TALLER:
         return
     a = sesion.actividad()
     st = sesion.estado()

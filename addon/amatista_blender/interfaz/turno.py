@@ -5,14 +5,16 @@ Hasta el 5.4 cada tarjeta decidía sola si se dibujaba: la del recorrido
 suelta. Con un recorrido abierto encima de un taller salían dos tarjetas, una
 sobre la otra. Ahora hay un turno con prioridad fija:
 
-    recorrido  >  taller (actividad o proyecto)  >  misión de la práctica
+    recorrido  >  taller (actividad o proyecto)  >  ficha  >  misión de la práctica
 
-y una copia de Amatista que no es la dueña del dibujo (saneamiento.py) no
+(motor 6.1: la **ficha** de una herramienta que el alumno tocó fuera de un
+taller, en el modo curioso; dentro del taller la ficha va en la tarjeta del
+taller) y una copia de Amatista que no es la dueña del dibujo (saneamiento.py) no
 dibuja nada. Cada tarjeta pregunta ``me_toca(...)`` antes de dibujar.
 """
 import bpy
 
-RECORRIDO, TALLER, MISION = "recorrido", "taller", "mision"
+RECORRIDO, TALLER, FICHA, MISION = "recorrido", "taller", "ficha", "mision"
 
 
 def de_quien(contexto=None):
@@ -32,6 +34,13 @@ def de_quien(contexto=None):
             return TALLER
     except Exception:  # noqa: BLE001 - sin catálogo no hay taller
         pass
+    try:
+        from .. import fichas
+
+        if fichas.visible() is not None:
+            return FICHA
+    except Exception:  # noqa: BLE001 - sin fichas no hay ficha
+        pass
     if escena is not None and getattr(getattr(escena, "amatista", None), "practica_json", ""):
         return MISION
     return ""
@@ -41,4 +50,4 @@ def me_toca(quien, contexto=None):
     return de_quien(contexto) == quien
 
 
-__all__ = ["MISION", "RECORRIDO", "TALLER", "de_quien", "me_toca"]
+__all__ = ["FICHA", "MISION", "RECORRIDO", "TALLER", "de_quien", "me_toca"]
