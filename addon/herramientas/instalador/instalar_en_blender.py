@@ -11,10 +11,14 @@ Lo lanza «Instalar Amatista» (.bat, .command o .sh) así:
    guardar el progreso en la plataforma (se puede apagar en Preferencias ›
    Sistema › Red; el add-on sigue funcionando sin conexión y avisa).
 4. Guarda las preferencias: al abrir Blender, Amatista ya está ahí.
+5. Add-on 5.4: registra el enlace amatista:// para este Blender (protocolo.py),
+   así «Abrir en Blender» de la plataforma abre Blender aunque esté cerrado.
+   Si no se puede, sigue: el add-on lo vuelve a intentar al arrancar.
 
 Códigos de salida: 0 instalado, 3 Blender no compatible, 4 no se pudo
 instalar. La última línea siempre es «AMATISTA_RESULTADO=...».
 """
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -38,6 +42,20 @@ def buscar_zip():
         return Path(argumentos[0]).expanduser().resolve()
     candidatos = sorted(Path(__file__).resolve().parent.glob("amatista-*.zip"))
     return candidatos[-1] if candidatos else None
+
+
+def registrar_enlace():
+    """El enlace amatista:// con el protocolo.py de la extensión recién instalada (nunca detiene el instalador)."""
+    try:
+        carpeta = Path(bpy.utils.user_resource("EXTENSIONS", path="user_default")) / "amatista"
+        spec = importlib.util.spec_from_file_location("amatista_protocolo", carpeta / "protocolo.py")
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+        ok, texto = modulo.registrar(bpy.app.binary_path)
+    except Exception as error:  # noqa: BLE001
+        ok, texto = False, f"no se pudo registrar el enlace amatista:// ({error})"
+    print(("Enlace con la plataforma: " if ok else "Aviso: ") + texto)
+    return ok
 
 
 def main():
@@ -65,12 +83,16 @@ def main():
     if "FINISHED" not in resultado:
         terminar(ERROR, "error", "Blender no pudo instalar la extensión (revisa los mensajes de arriba).")
 
+    enlace = registrar_enlace()
+
     preferencias = bpy.context.preferences
     if hasattr(preferencias.system, "use_online_access"):
         preferencias.system.use_online_access = True
     preferencias.use_preferences_save = True
     bpy.ops.wm.save_userpref()
-    terminar(OK, "ok", f"Amatista quedó instalado en Blender {texto_version}. Abre Blender: la pestaña Amatista está en la barra lateral (tecla N).")
+    siguiente = ("Ya puedes pulsar «Abrir en Blender» en la plataforma." if enlace
+                 else "Abre Blender: busca el menú Amatista arriba, junto a Ayuda.")
+    terminar(OK, "ok", f"Amatista quedó instalado en Blender {texto_version}. {siguiente}")
 
 
 if __name__ == "__main__":

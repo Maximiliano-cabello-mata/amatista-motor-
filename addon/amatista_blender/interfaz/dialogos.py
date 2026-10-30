@@ -259,9 +259,10 @@ class AMATISTA_OT_bienvenida(bpy.types.Operator):
         cuerpo = estilo.tarjeta(layout, "Así funciona", icon="INFO")
         for paso in (
             "1. La plataforma te explica la idea; aquí, en Blender, la haces.",
-            "2. La pestaña Amatista (tecla N) tiene tu cuenta, tu taller y Mi isla.",
-            "3. La tarjeta de la vista 3D te dice qué hacer y te avisa cuando lo logras.",
-            "4. Tu avance aparece en la plataforma, en vivo.",
+            "2. El botón Amatista (arriba de la vista 3D) despliega tu taller: qué toca, pistas y Mi isla.",
+            "3. El menú Amatista (junto a Ayuda) y la pestaña de trabajo Amatista te traen de vuelta.",
+            "4. La tarjeta de la vista 3D te dice qué hacer y te avisa cuando lo logras.",
+            "5. Tu avance aparece en la plataforma, en vivo.",
         ):
             estilo.parrafo(cuerpo, context, paso, margen=0)
         estilo.boton_principal(layout, "amatista.recorrido", "Conoce Amatista Motor: 3 prácticas cortas", icon="PLAY",

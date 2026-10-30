@@ -398,8 +398,14 @@ def guardar_practica(context):
 
 
 def mostrar_en_amatista(context=None):
-    """Lleva la barra lateral a Amatista › Practicar (al abrir desde la plataforma)."""
+    """Lleva la barra lateral a Amatista › Practicar (al abrir desde la plataforma).
+
+    Add-on 5.4: antes pasa la ventana al espacio de trabajo «Amatista» (integracion.py).
+    """
     context = context or bpy.context
+    from . import integracion
+
+    integracion.entrar_al_espacio(context)
     wm = getattr(context, "window_manager", None)
     if wm is not None and hasattr(wm, "amatista"):
         wm.amatista.pestana = "practicar"

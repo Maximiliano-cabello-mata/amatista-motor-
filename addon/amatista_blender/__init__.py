@@ -1,4 +1,11 @@
-"""Amatista para Blender (add-on 5.3: menús en el idioma de tu Blender y «Palabras de Blender»).
+"""Amatista para Blender (add-on 5.4: Amatista dentro de Blender).
+
+Add-on 5.4 (integracion.py, protocolo.py): menú Amatista en la barra de arriba,
+botón Amatista en la cabecera de la vista 3D (despliega el taller sin la tecla
+N), la actividad en la barra de estado, el espacio de trabajo «Amatista» y el
+enlace amatista:// que abre Blender desde la plataforma aunque esté cerrado.
+
+Add-on 5.3: menús en el idioma de tu Blender y «Palabras de Blender».
 
 Add-on 5.2: tres prácticas cortas (recorrido.py y recorrido_pasos.py) explican
 todas las herramientas del add-on: la pestaña Amatista (cuenta, plataforma,
@@ -49,7 +56,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (5, 3, 0),
+    "version": (5, 4, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Aprende Blender habilidad por habilidad con Amatista Taller",
@@ -58,7 +65,7 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, mision, operadores, practicas, recorrido, red
+from . import ajustes, cuenta, desarrollo, enfoque, enlace, escenarios, estado, guia, integracion, mision, operadores, practicas, recorrido, red
 from . import taller
 from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
 
@@ -93,6 +100,7 @@ def register():
     practicas.register()
     enlace.register()
     hud.register()
+    integracion.register()  # menú, cabecera, barra de estado y la orden que trajo amatista://
     bpy.app.timers.register(_primer_arranque, first_interval=1.5)
 
 
@@ -103,6 +111,7 @@ def unregister():
         escenarios.restaurar_todo()  # el cielo del tema vuelve a como estaba
     except Exception as error:  # noqa: BLE001 - desregistrar nunca debe fallar
         print(f"[Amatista] No se pudo restaurar el mundo: {error}")
+    integracion.unregister()
     enfoque.unregister()  # Blender completo otra vez, como estaba
     enlace.unregister()
     recorrido.unregister()

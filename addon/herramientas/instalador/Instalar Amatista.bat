@@ -53,7 +53,7 @@ echo.
 set "CODIGO=!ERRORLEVEL!"
 echo.
 if "!CODIGO!"=="0" (
-  echo   ** Listo. Abre Blender: la pestana Amatista esta en la barra lateral ^(tecla N^). **
+  echo   ** Listo. En la plataforma pulsa "Abrir en Blender" ^(o abre Blender: menu Amatista, arriba^). **
 ) else if "!CODIGO!"=="3" (
   echo   Tu Blender no es compatible: Amatista necesita Blender 4.2 o mas nuevo.
 ) else (

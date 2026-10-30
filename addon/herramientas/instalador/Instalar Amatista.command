@@ -38,7 +38,7 @@ echo
 codigo=$?
 echo
 case $codigo in
-  0) echo "  ** Listo. Abre Blender: la pestaña Amatista está en la barra lateral (tecla N). **" ;;
+  0) echo "  ** Listo. En la plataforma pulsa «Abrir en Blender» (o abre Blender: menú Amatista, arriba). **" ;;
   3) echo "  Tu Blender no es compatible: Amatista necesita Blender 4.2 o más nuevo." ;;
   *) echo "  No se pudo instalar (código $codigo). Revisa LEEME.txt para instalarlo a mano." ;;
 esac

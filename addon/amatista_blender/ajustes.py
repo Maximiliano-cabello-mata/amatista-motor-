@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "5.3.0"
+VERSION_ADDON = "5.4.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -103,6 +103,14 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
     rol: bpy.props.StringProperty(default="")
     vinculo_usado: bpy.props.StringProperty(description="Vínculo del paquete ya canjeado")
     bienvenida_vista: bpy.props.BoolProperty(default=False)
+    # Add-on 5.4 (integracion.py): el espacio de trabajo «Amatista» y el enlace amatista:// registrado.
+    espacio_amatista: bpy.props.BoolProperty(
+        name="Espacio de trabajo Amatista",
+        description="Al abrir una práctica, Blender pasa a la pestaña Amatista (junto a Layout) con tu taller a la vista",
+        default=True,
+    )
+    protocolo_version: bpy.props.IntProperty(default=0, options={"HIDDEN"})
+    protocolo_blender: bpy.props.StringProperty(default="", options={"HIDDEN"})
     # Add-on 5.1: los primeros pasos (recorrido.py) ya se hicieron o se omitieron. Desde el 5.2 cuenta como
     # la primera práctica de «Conoce Amatista Motor»; recorridos_hechos guarda las tres («pestana,vista,taller»).
     recorrido_hecho: bpy.props.BoolProperty(default=False)
@@ -203,6 +211,15 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         else:
             caja.label(text="Sin vincular: tu progreso se queda solo en esta computadora.")
             caja.operator("amatista.vincular", icon="LINKED")
+
+        caja = layout.box()
+        caja.label(text="Amatista dentro de Blender", icon="WORKSPACE")
+        caja.prop(self, "espacio_amatista")
+        fila = caja.row()
+        fila.operator("amatista.reparar_enlace", icon="URL")
+        nota = caja.row()
+        nota.active = False
+        nota.label(text="Hace que «Abrir en Blender» de la plataforma abra este Blender aunque esté cerrado.")
 
         caja = layout.box()
         caja.label(text="En la vista 3D", icon="HEART")

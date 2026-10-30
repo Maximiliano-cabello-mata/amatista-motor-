@@ -10,8 +10,13 @@ Instalar (1 minuto)
    - macOS: si dice que no se puede abrir, haz clic derecho › Abrir › Abrir.
    - Linux: en una terminal, bash {{LANZADOR}}
 3. El instalador busca tu Blender, comprueba que sea 4.2 o más nuevo e
-   instala Amatista. Cuando diga «Listo», abre Blender.
-4. En Blender pulsa N y elige la pestaña «Amatista».
+   instala Amatista. Cuando diga «Listo», vuelve a la plataforma.
+4. En la lección pulsa «Abrir en Blender»: Blender se abre solo en la
+   actividad. La primera vez el navegador pregunta si puede abrir
+   «Amatista para Blender»: marca «Permitir siempre».
+5. Dentro de Blender, Amatista está en el menú «Amatista» (arriba, junto a
+   Ayuda), en el botón Amatista de la vista 3D y en la pestaña de trabajo
+   «Amatista».
 
 Si descargaste el paquete desde tu cuenta, Amatista ya queda conectado con
 la plataforma. Si no, pulsa «Vincular con mi cuenta» en la pestaña y escribe
@@ -20,6 +25,10 @@ el código en la página que se abre.
 Qué cambia en tu Blender
 ------------------------
 - Se instala la extensión «Amatista» (Preferencias › Extensiones).
+- Se registra el enlace amatista:// (solo para tu usuario), que la plataforma
+  usa para abrir Blender: en Windows una clave en HKCU\Software\Classes,
+  en macOS la pequeña app «Amatista para Blender» en tu carpeta Aplicaciones
+  y en Linux el archivo ~/.local/share/applications/amatista-blender.desktop.
 - Se activa «Permitir acceso en línea» (Preferencias › Sistema › Red), que
   Amatista usa para guardar tu progreso. Si lo apagas, Amatista sigue
   funcionando y envía tu avance cuando lo vuelvas a activar.
@@ -30,6 +39,11 @@ Instalar a mano (si el instalador no encuentra Blender)
 2. Arrastra el archivo amatista-{{VERSION}}.zip sobre la ventana de Blender
    y confirma, o ve a Editar › Preferencias › Extensiones › ⌄ › Instalar
    desde el disco… y elige ese archivo.
+
+Si «Abrir en Blender» no abre Blender
+-------------------------------------
+Abre Blender una vez y elige Amatista › Reparar «Abrir en Blender» (menú de
+arriba). Si usas otro Blender u otra versión, hazlo desde ese Blender.
 
 Desinstalar
 -----------

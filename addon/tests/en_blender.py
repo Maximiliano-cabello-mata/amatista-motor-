@@ -1050,6 +1050,35 @@ def probar_idioma(contexto):
     revisar(len(lista) >= 10 and lista[0]["termino"], f"palabras de Blender: {len(lista)}")
 
 
+def probar_integracion(contexto):
+    """Add-on 5.4: menú Amatista arriba, botón de la vista 3D, barra de estado, espacio y amatista://."""
+    print("Amatista dentro de Blender")
+    from amatista_blender import integracion
+
+    for nombre in ("AMATISTA_MT_principal", "AMATISTA_PT_rapido"):
+        revisar(hasattr(bpy.types, nombre), f"{nombre} registrado")
+    for nombre, funcion in integracion.AGREGADOS:
+        tipo = getattr(bpy.types, nombre)
+        revisar(funcion in getattr(tipo.draw, "_draw_funcs", [funcion]), f"agregado a {nombre}")
+    revisar(hasattr(bpy.ops.amatista, "espacio") and hasattr(bpy.ops.amatista, "reparar_enlace"), "operadores del espacio y del enlace")
+    falso = type("Falso", (), {"layout": Diseno()})()
+    try:
+        for clase in integracion.CLASES:
+            if hasattr(clase, "draw"):
+                clase.draw(_Envoltura(clase, None), contexto)
+        for _nombre, funcion in integracion.AGREGADOS:
+            funcion(falso, contexto)
+        revisar(True, "menú, panel rápido, cabecera y barra de estado se dibujan")
+    except Exception as error:  # noqa: BLE001
+        traceback.print_exc()
+        revisar(False, f"dibujar la integración: {error}")
+    orden = integracion.orden_de_inicio(["blender", "--", "--amatista", "amatista://taller/blender.bp.m1"])
+    revisar(orden["tipo"] == "taller_abrir" and orden["id"].startswith("inicio-taller_abrir-"), f"orden de amatista:// ({orden})")
+    revisar(integracion.orden_de_inicio(["blender"]) is None, "Blender abierto a mano no trae orden")
+    revisar(integracion.registrar_protocolo() is None, "sin ventana no se registra el enlace")
+    revisar(integracion.entrar_al_espacio(contexto) is False, "sin ventana no cambia de espacio")
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -1151,7 +1180,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "5.3.0", "el intento lleva la versión 5.3 del add-on")
+    revisar(datos["version_addon"] == "5.4.0", "el intento lleva la versión 5.4 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1196,10 +1225,12 @@ def main():
     probar_taller(contexto)
     probar_recorrido(contexto)
     probar_idioma(contexto)
+    probar_integracion(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")
     revisar(not getattr(bpy.types.VIEW3D_MT_editor_menus.draw, "_amatista", False), "desregistrar devuelve los menús de Blender")
+    revisar(not hasattr(bpy.types, "AMATISTA_MT_principal"), "desregistrar quita el menú Amatista de arriba")
 
 
 if __name__ == "__main__":
