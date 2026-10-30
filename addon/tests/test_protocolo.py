@@ -63,13 +63,13 @@ def test_linux_registra_el_esquema_con_la_ruta_de_blender(tmp_path, monkeypatch)
     archivo = tmp_path / "applications" / protocolo.DESKTOP_LINUX
     assert str(archivo) in texto
     contenido = archivo.read_text(encoding="utf-8")
-    assert "Exec='/opt/blender 4.2/blender' -- --amatista %u" in contenido
+    assert "Exec='/opt/blender 4.2/blender' --app-template amatista -- --amatista %u" in contenido
     assert "MimeType=x-scheme-handler/amatista;" in contenido
 
 
 def test_flatpak_y_snap_se_abren_desde_fuera_de_su_caja():
     assert protocolo.comando_linux("/app/blender/blender", {"FLATPAK_ID": "org.blender.Blender"}) == \
-        "flatpak run org.blender.Blender -- --amatista %u"
+        "flatpak run org.blender.Blender --app-template amatista -- --amatista %u"
     assert protocolo.comando_linux("/snap/blender/5/blender", {"SNAP": "/snap/blender/5"}).startswith("/snap/bin/blender ")
 
 

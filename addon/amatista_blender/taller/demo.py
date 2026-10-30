@@ -256,10 +256,13 @@ def _devolver_vista(vista):
                 area.tag_redraw()
 
 
-def empezar(habilidad, al_terminar=None, sc=None):
-    """Empieza la demostración de una habilidad (Habilidad del catálogo)."""
+def empezar(habilidad, al_terminar=None, sc=None, pasos=None):
+    """Empieza la demostración de una habilidad (Habilidad del catálogo).
+
+    pasos (motor 6): los de ESTA actividad (sesion._pasos_demo); sin ellos, los de la habilidad.
+    """
     detener(llamar=False)
-    linea = _motor.taller.linea_de_tiempo(habilidad.demo, habilidad.titulo)
+    linea = _motor.taller.linea_de_tiempo(habilidad.demo if pasos is None else pasos, habilidad.titulo)
     if not linea.pasos:
         if al_terminar:
             al_terminar(False)

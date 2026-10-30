@@ -14,6 +14,10 @@ Lo lanza «Instalar Amatista» (.bat, .command o .sh) así:
 5. Add-on 5.4: registra el enlace amatista:// para este Blender (protocolo.py),
    así «Abrir en Blender» de la plataforma abre Blender aunque esté cerrado.
    Si no se puede, sigue: el add-on lo vuelve a intentar al arrancar.
+6. Motor 6: apaga las copias viejas de Amatista (el add-on clásico
+   amatista_blender de antes del 4.2) para que no se crucen con esta, y deja
+   el acceso directo «Blender Amatista» en el menú del sistema (la plantilla
+   la copia el add-on al encenderse).
 
 Códigos de salida: 0 instalado, 3 Blender no compatible, 4 no se pudo
 instalar. La última línea siempre es «AMATISTA_RESULTADO=...».
@@ -44,18 +48,49 @@ def buscar_zip():
     return candidatos[-1] if candidatos else None
 
 
+def _protocolo():
+    carpeta = Path(bpy.utils.user_resource("EXTENSIONS", path="user_default")) / "amatista"
+    spec = importlib.util.spec_from_file_location("amatista_protocolo", carpeta / "protocolo.py")
+    modulo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modulo)
+    return modulo, carpeta
+
+
 def registrar_enlace():
     """El enlace amatista:// con el protocolo.py de la extensión recién instalada (nunca detiene el instalador)."""
     try:
-        carpeta = Path(bpy.utils.user_resource("EXTENSIONS", path="user_default")) / "amatista"
-        spec = importlib.util.spec_from_file_location("amatista_protocolo", carpeta / "protocolo.py")
-        modulo = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(modulo)
+        modulo, _carpeta = _protocolo()
         ok, texto = modulo.registrar(bpy.app.binary_path)
     except Exception as error:  # noqa: BLE001
         ok, texto = False, f"no se pudo registrar el enlace amatista:// ({error})"
     print(("Enlace con la plataforma: " if ok else "Aviso: ") + texto)
     return ok
+
+
+def crear_lanzador():
+    """El acceso directo «Blender Amatista» (motor 6). Nunca detiene el instalador."""
+    try:
+        modulo, carpeta = _protocolo()
+        icono = carpeta / "iconos" / "logo.png"
+        ok, texto = modulo.crear_lanzador(bpy.app.binary_path, str(icono) if icono.is_file() else "")
+    except Exception as error:  # noqa: BLE001
+        ok, texto = False, f"no se pudo crear el acceso directo ({error})"
+    print(("Acceso directo: " if ok else "Aviso: ") + texto)
+    return ok
+
+
+def apagar_copias_viejas():
+    """El add-on clásico «amatista_blender» (antes del 4.2 o instalado a mano) se cruza con la extensión."""
+    import addon_utils
+
+    for mod in addon_utils.modules(refresh=True):
+        nombre = getattr(mod, "__name__", "")
+        if nombre == "amatista_blender" or nombre.startswith("amatista_blender_"):
+            try:
+                addon_utils.disable(nombre, default_set=True)
+                print(f"Apagué una copia vieja de Amatista: {nombre}")
+            except Exception as error:  # noqa: BLE001
+                print(f"Aviso: no se pudo apagar {nombre} ({error})")
 
 
 def main():
@@ -73,6 +108,7 @@ def main():
     if archivo is None or not archivo.is_file():
         terminar(ERROR, "error", "No encontré el archivo amatista-*.zip junto al instalador.")
 
+    apagar_copias_viejas()
     print(f"Instalando {archivo.name}…")
     try:
         resultado = bpy.ops.extensions.package_install_files(
@@ -84,14 +120,15 @@ def main():
         terminar(ERROR, "error", "Blender no pudo instalar la extensión (revisa los mensajes de arriba).")
 
     enlace = registrar_enlace()
+    crear_lanzador()
 
     preferencias = bpy.context.preferences
     if hasattr(preferencias.system, "use_online_access"):
         preferencias.system.use_online_access = True
     preferencias.use_preferences_save = True
     bpy.ops.wm.save_userpref()
-    siguiente = ("Ya puedes pulsar «Abrir en Blender» en la plataforma." if enlace
-                 else "Abre Blender: busca el menú Amatista arriba, junto a Ayuda.")
+    siguiente = ("Ya puedes pulsar «Abrir en Blender» en la plataforma, o abrir «Blender Amatista» desde tu menú."
+                 if enlace else "Abre «Blender Amatista» (o Blender) y busca el menú Amatista arriba, junto a Ayuda.")
     terminar(OK, "ok", f"Amatista quedó instalado en Blender {texto_version}. {siguiente}")
 
 

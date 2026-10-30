@@ -31,8 +31,10 @@ def redibujar():
 
 
 def dibujar_molde():
+    from ...interfaz import turno
+
     contexto = bpy.context
-    if not sesion.cubre(contexto.scene):
+    if not turno.me_toca(turno.TALLER, contexto):
         return
     visible = sesion.molde_visible()
     if visible is None:
@@ -61,6 +63,8 @@ class AMATISTA_GT_boton_taller(bpy.types.Gizmo):
     def test_select(self, context, location):
         indice = tarjeta.boton_en(context.region, location[0], location[1])
         clave = context.region.as_pointer() if context.region is not None else 0
+        if tarjeta.raton(clave, location[0], location[1]) and context.area is not None:
+            context.area.tag_redraw()  # motor 6: la tarjeta compacta se abre al acercar el ratón
         dentro = indice == self.indice
         antes = (tarjeta.HOVER["region"], tarjeta.HOVER["indice"])
         if dentro:
@@ -81,7 +85,9 @@ class AMATISTA_GGT_tarjeta_taller(bpy.types.GizmoGroup):
 
     @classmethod
     def poll(cls, context):
-        return sesion.cubre(context.scene)
+        from ...interfaz import turno
+
+        return turno.me_toca(turno.TALLER, context)
 
     def setup(self, context):
         for i in range(tarjeta.MAX_BOTONES):
@@ -104,12 +110,18 @@ CLASES = (AMATISTA_GT_boton_taller, AMATISTA_GGT_tarjeta_taller)
 def activar(encendido=True):
     if gpu is None or bpy.app.background:
         return
+    from ... import saneamiento
+    from . import brillo
+
+    vista = bpy.types.SpaceView3D
     if encendido and not _MANEJADORES:
-        _MANEJADORES.append(bpy.types.SpaceView3D.draw_handler_add(dibujar_molde, (), "WINDOW", "POST_VIEW"))
-        _MANEJADORES.append(bpy.types.SpaceView3D.draw_handler_add(tarjeta.dibujar, (), "WINDOW", "POST_PIXEL"))
+        _MANEJADORES.append(saneamiento.agregar_dibujo(vista, dibujar_molde, (), "WINDOW", "POST_VIEW"))
+        _MANEJADORES.append(saneamiento.agregar_dibujo(vista, tarjeta.dibujar, (), "WINDOW", "POST_PIXEL"))
+        brillo.activar(True)
     elif not encendido:
         while _MANEJADORES:
-            bpy.types.SpaceView3D.draw_handler_remove(_MANEJADORES.pop(), "WINDOW")
+            saneamiento.quitar_dibujo(vista, _MANEJADORES.pop(), "WINDOW")
+        brillo.activar(False)
     redibujar()
 
 

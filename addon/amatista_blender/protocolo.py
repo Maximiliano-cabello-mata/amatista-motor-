@@ -15,12 +15,17 @@ Direcciones (las arma frontend/src/services/lanzador.js):
     amatista://abrir                          solo abre Blender
     amatista://practica/<id>                  abrir_practica
     amatista://taller/<id>?actividad=<id>     taller_abrir
+        &etapa=exploracion&habilidades=a,b&leccion=<id>   (motor 6: la etapa de la lección)
     amatista://isla                           isla
     amatista://recorrido/<pestana|vista|taller>   «Conoce Amatista Motor»
 
 Cualquier página web puede pedir un amatista://, así que la dirección solo
 elige qué actividad abrir: nunca una ruta de archivo ni código. Un id que no
 cumple ID_VALIDO se descarta.
+
+Motor 6: el enlace arranca **Blender Amatista** (``--app-template amatista``,
+la plantilla que instala el add-on) y ``crear_lanzador`` deja un acceso
+directo «Blender Amatista» en el menú del sistema.
 
 Este archivo no importa bpy (se prueba sin Blender): recibe la ruta de
 Blender y escribe el registro de Windows, el .desktop de Linux o la pequeña
@@ -36,12 +41,17 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 ESQUEMA = "amatista"
 ARGUMENTO = "--amatista"
-VERSION = 1  # súbela si cambia cómo se registra: el add-on lo vuelve a registrar al arrancar
+VERSION = 2  # súbela si cambia cómo se registra: el add-on lo vuelve a registrar al arrancar
 ID_VALIDO = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,119}$")
 RECORRIDOS = ("pestana", "vista", "taller")
 NOMBRE_APP_MAC = "Amatista para Blender.app"
 ID_APP_MAC = "tech.amatista-3d.lanzador"
 DESKTOP_LINUX = "amatista-blender.desktop"
+PLANTILLA = "amatista"  # la plantilla de aplicación «Blender Amatista» (plantilla_amatista/)
+ARGS_PLANTILLA = ("--app-template", PLANTILLA)
+NOMBRE_LANZADOR = "Blender Amatista"
+DESKTOP_LANZADOR = "blender-amatista.desktop"
+ETAPAS = ("exploracion", "practica")
 
 
 def _id(texto):
@@ -71,6 +81,14 @@ def orden_de_url(url):
         actividad = _id((consulta.get("actividad") or [""])[0])
         if actividad:
             datos["actividad"] = actividad
+        etapa = (consulta.get("etapa") or [""])[0]
+        if etapa in ETAPAS:
+            datos["etapa"] = etapa
+            habilidades = [_id(h) for h in ",".join(consulta.get("habilidades") or []).split(",")]
+            datos["habilidades"] = [h for h in habilidades if h][:4]
+        leccion = _id((consulta.get("leccion") or [""])[0])
+        if leccion:
+            datos["leccion"] = leccion
         return {"tipo": "taller_abrir", "datos": datos}
     if que == "isla":
         return {"tipo": "isla", "datos": {}}
@@ -120,7 +138,7 @@ def comando_linux(binario, entorno=None):
         inicio = "/snap/bin/blender"
     else:
         inicio = shlex.quote(str(binario))
-    return f"{inicio} -- {ARGUMENTO} %u"
+    return f"{inicio} {' '.join(ARGS_PLANTILLA)} -- {ARGUMENTO} %u"
 
 
 def texto_desktop(binario, entorno=None):
@@ -142,11 +160,11 @@ def guion_mac(binario):
     ruta = str(binario).replace("\\", "\\\\").replace('"', '\\"')
     return (
         "on open location direccion\n"
-        f'\tdo shell script quoted form of "{ruta}" & " -- {ARGUMENTO} " & quoted form of direccion'
+        f'\tdo shell script quoted form of "{ruta}" & " {" ".join(ARGS_PLANTILLA)} -- {ARGUMENTO} " & quoted form of direccion'
         ' & " > /dev/null 2>&1 &"\n'
         "end open location\n"
         "on run\n"
-        f'\tdo shell script quoted form of "{ruta}" & " > /dev/null 2>&1 &"\n'
+        f'\tdo shell script quoted form of "{ruta}" & " {" ".join(ARGS_PLANTILLA)} > /dev/null 2>&1 &"\n'
         "end run\n"
     )
 
@@ -154,7 +172,7 @@ def guion_mac(binario):
 def _registrar_windows(binario):
     import winreg  # solo existe en Windows
 
-    comando = f'"{lanzador_de(binario)}" -- {ARGUMENTO} "%1"'
+    comando = f'"{lanzador_de(binario)}" {" ".join(ARGS_PLANTILLA)} -- {ARGUMENTO} "%1"'
     base = rf"Software\Classes\{ESQUEMA}"
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, base) as clave:
         winreg.SetValueEx(clave, "", 0, winreg.REG_SZ, "URL:Amatista para Blender")
@@ -204,6 +222,80 @@ def _registrar_mac(binario, casa=None):
                   "LaunchServices.framework/Support/lsregister")
     subprocess.run([lsregister, "-f", str(app)], check=False, timeout=30, capture_output=True)
     return f"macOS: {app}"
+
+
+# --- El acceso directo «Blender Amatista» (motor 6) -----------------------------------------------
+
+
+def texto_desktop_lanzador(binario, icono="", entorno=None):
+    entorno = os.environ if entorno is None else entorno
+    if entorno.get("FLATPAK_ID"):
+        inicio = f"flatpak run {entorno['FLATPAK_ID']}"
+    elif entorno.get("SNAP"):
+        inicio = "/snap/bin/blender"
+    else:
+        inicio = shlex.quote(str(binario))
+    return "\n".join([
+        "[Desktop Entry]",
+        "Type=Application",
+        f"Name={NOMBRE_LANZADOR}",
+        "GenericName=Aprende 3D con Amatista",
+        "Comment=Blender con Amatista: tu taller y la plataforma de la mano",
+        f"Exec={inicio} {' '.join(ARGS_PLANTILLA)} %f",
+        f"Icon={icono or 'blender'}",
+        "Categories=Graphics;3DGraphics;Education;",
+        "Terminal=false",
+        "",
+    ])
+
+
+def guion_lanzador_mac(binario):
+    ruta = str(binario).replace("\\", "\\\\").replace('"', '\\"')
+    return f'do shell script quoted form of "{ruta}" & " {" ".join(ARGS_PLANTILLA)} > /dev/null 2>&1 &"\n'
+
+
+def guion_lanzador_windows(binario, destino):
+    """PowerShell que crea el acceso directo .lnk (WScript.Shell): sin dependencias."""
+    objetivo = str(lanzador_de(binario)).replace("'", "''")
+    destino = str(destino).replace("'", "''")
+    return (
+        "$s = (New-Object -ComObject WScript.Shell).CreateShortcut('" + destino + "'); "
+        "$s.TargetPath = '" + objetivo + "'; "
+        "$s.Arguments = '" + " ".join(ARGS_PLANTILLA) + "'; "
+        "$s.Description = 'Blender con Amatista'; "
+        "$s.IconLocation = '" + str(binario).replace("'", "''") + ",0'; "
+        "$s.Save()"
+    )
+
+
+def crear_lanzador(binario, icono="", casa=None):
+    """Deja el acceso directo «Blender Amatista» en el menú del sistema. Devuelve (ok, texto). Nunca lanza."""
+    if not binario:
+        return False, "No sé dónde está Blender."
+    try:
+        casa = Path(casa or Path.home())
+        if sys.platform.startswith("win"):
+            menu = Path(os.environ.get("APPDATA") or casa / "AppData" / "Roaming") / "Microsoft" / "Windows" / \
+                "Start Menu" / "Programs" / f"{NOMBRE_LANZADOR}.lnk"
+            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command",
+                            guion_lanzador_windows(binario, menu)], check=True, timeout=60, capture_output=True,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            return True, f"Windows: {menu}"
+        if sys.platform == "darwin":
+            app = casa / "Applications" / f"{NOMBRE_LANZADOR}.app"
+            app.parent.mkdir(parents=True, exist_ok=True)
+            guion = app.parent / ".blender-amatista.applescript"
+            guion.write_text(guion_lanzador_mac(binario), encoding="utf-8")
+            subprocess.run(["osacompile", "-o", str(app), str(guion)], check=True, timeout=60, capture_output=True)
+            guion.unlink(missing_ok=True)
+            return True, f"macOS: {app}"
+        carpeta = Path(os.environ.get("XDG_DATA_HOME") or casa / ".local" / "share") / "applications"
+        carpeta.mkdir(parents=True, exist_ok=True)
+        archivo = carpeta / DESKTOP_LANZADOR
+        archivo.write_text(texto_desktop_lanzador(binario, icono), encoding="utf-8")
+        return True, f"Linux: {archivo}"
+    except Exception as error:  # noqa: BLE001
+        return False, f"No se pudo crear el acceso directo «{NOMBRE_LANZADOR}» ({error})."
 
 
 def registrar(binario):
