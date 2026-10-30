@@ -1222,6 +1222,55 @@ def _motor_foto(contexto, extras):
     return practicas.capturar(contexto.scene)
 
 
+def probar_entrega(contexto):
+    """Panel del profesor: el modelo ligero de la escena (con modificadores) y su revisión en el servidor."""
+    print("Entrega al profesor")
+    import importlib.util
+
+    from amatista_blender import entrega, modelo_ligero
+
+    import bmesh
+
+    # La escena de la práctica es siempre la activa (practicas.escena): se prueba en la activa.
+    escena = contexto.scene
+    datos_malla = bpy.data.meshes.new("Cubo entrega")
+    b = bmesh.new()
+    bmesh.ops.create_cube(b, size=2.0)
+    b.to_mesh(datos_malla)
+    b.free()
+    cubo = bpy.data.objects.new("Cubo entrega", datos_malla)
+    escena.collection.objects.link(cubo)
+    cubo.location = (1.0, 0.0, 1.0)
+    cubo.modifiers.new("Bisel", "BEVEL")
+    material = bpy.data.materials.new("Rojo")
+    material.diffuse_color = (0.9, 0.1, 0.1, 1.0)
+    material.use_nodes = True
+    principled = next(n for n in material.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
+    principled.inputs["Base Color"].default_value = (0.9, 0.1, 0.1, 1.0)
+    cubo.data.materials.append(material)
+    luz = bpy.data.objects.new("Luz", bpy.data.lights.new("Luz", "POINT"))
+    escena.collection.objects.link(luz)
+    datos = entrega.extraer(escena)
+    tipos = {o["nombre"]: o["tipo"] for o in datos["objetos"]}
+    revisar(tipos.get(cubo.name) == "MESH" and tipos.get("Luz") == "LIGHT", f"entrega: cubo y luz ({tipos})")
+    malla = next(o for o in datos["objetos"] if o["nombre"] == cubo.name)
+    revisar(len(malla["t"]) // 3 > 12, "entrega: el bisel (modificador) viaja aplicado")
+    xs = malla["v"][0::3]
+    medio = datos["centro"][0] + (max(xs) + min(xs)) / 2 / modelo_ligero.COORDENADA * datos["escala"]
+    revisar(abs(medio - 1.0) < 0.05, f"entrega: vértices en el espacio del mundo (x medio {medio:.2f})")
+    rojo = datos["materiales"][malla["material"]] if malla.get("material", -1) >= 0 else {}
+    revisar(rojo.get("nombre") == "Rojo" and rojo["color"][0] > 0.8, f"entrega: el material y su color ({rojo})")
+    paquete = modelo_ligero.empaquetar(datos)
+    revisar(len(paquete) < 20000, f"entrega: pocos KB ({len(paquete)} caracteres)")
+    spec = importlib.util.spec_from_file_location(
+        "servidor_modelo_ligero", ADDON.parent / "backend" / "contenido" / "modelo_ligero.py")
+    servidor = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(servidor)
+    revisar(servidor.resumen_de(paquete)["objetos"] == len(datos["objetos"]), "entrega: el servidor acepta el modelo")
+    for obj in (cubo, luz):
+        bpy.data.objects.remove(obj)
+
+
 def main():
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -1370,6 +1419,7 @@ def main():
     probar_idioma(contexto)
     probar_integracion(contexto)
     probar_motor6(contexto)
+    probar_entrega(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

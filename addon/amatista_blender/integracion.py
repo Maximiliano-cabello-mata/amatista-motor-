@@ -234,6 +234,8 @@ class AMATISTA_MT_principal(bpy.types.Menu):
             layout.operator("amatista.taller_accion", text="Mírame hacerlo", icon="HIDE_OFF").accion = "mirame"
             layout.operator("amatista.taller_accion", text="Pausa", icon="PAUSE").accion = "pausa"
         layout.operator("amatista.taller_accion", text="Mi isla", icon="WORLD").accion = "isla"
+        # Panel del profesor (sql/014): la práctica abierta se entrega con el modelo en pocos KB.
+        layout.operator("amatista.entregar_profesor", text="Entregar a mi profesor", icon="EXPORT")
         layout.separator()
         layout.operator("amatista.espacio", text="Ir al espacio Amatista", icon="WORKSPACE")
         layout.operator("amatista.mostrar_panel", text="Mostrar el panel (N)", icon="MENU_PANEL")
