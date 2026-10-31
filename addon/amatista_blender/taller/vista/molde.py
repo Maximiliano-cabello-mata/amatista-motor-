@@ -10,6 +10,11 @@ el revisor nunca lo ve. Cada pieza tiene el color de su estado:
 
 En «Hazlo tú» con piezas de inicio solo se dibuja la **marca**: la huella
 de cada pieza en el suelo, sin volumen (dónde va, no cómo es).
+
+Motor 6.2: la **luz** del acompañamiento (taller/acompanar.py) decide cuánto
+se nota la pieza que toca. Con luz (``fuerza`` > 0) respira más fuerte y
+lleva un **faro** encima: una flecha que baja y un anillo en el suelo que
+dicen «aquí sigue». Con más dificultad, más fuerte; con el dominio, se apaga.
 """
 import math
 import time
@@ -148,8 +153,37 @@ def _shader_lineas():
         return gpu.shader.from_builtin("UNIFORM_COLOR")
 
 
-def dibujar(piezas, estados, actual, marca=False, reducir_movimiento=False):
-    """Dibuja el molde. estados: un estado por pieza (vacia, llena, casi, equivocada); actual: índice o None."""
+def _faro(lineas, mundo, fuerza, pulso, reducir_movimiento):
+    """La flecha que baja sobre la pieza que toca y su anillo en el suelo (motor 6.2)."""
+    if not mundo:
+        return
+    xs, ys, zs = [p[0] for p in mundo], [p[1] for p in mundo], [p[2] for p in mundo]
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    radio = max(0.35, (max(xs) - min(xs) + max(ys) - min(ys)) / 4)
+    baile = 0.0 if reducir_movimiento else 0.18 * math.sin(time.time() * 4.0)
+    punta = Vector((cx, cy, max(zs) + 0.25 + baile))
+    alto = 0.55 + 0.25 * fuerza
+    ala = 0.18 + 0.08 * fuerza
+    segmentos = [punta + Vector((0, 0, alto)), punta,
+                 punta, punta + Vector((ala, 0, ala)), punta, punta + Vector((-ala, 0, ala)),
+                 punta, punta + Vector((0, ala, ala)), punta, punta + Vector((0, -ala, ala))]
+    anillo = []
+    z = min(zs) + 0.002
+    r = radio * (1.0 + 0.15 * pulso)
+    for k in range(LADOS):
+        a0, a1 = 2 * math.pi * k / LADOS, 2 * math.pi * (k + 1) / LADOS
+        anillo += [Vector((cx + r * math.cos(a0), cy + r * math.sin(a0), z)),
+                   Vector((cx + r * math.cos(a1), cy + r * math.sin(a1), z))]
+    color = (*AMBAR, 0.55 + 0.45 * fuerza * pulso)
+    gpu.state.depth_test_set("NONE")
+    lineas.uniform_float("color", color)
+    batch_for_shader(lineas, "LINES", {"pos": segmentos + anillo}).draw(lineas)
+
+
+def dibujar(piezas, estados, actual, marca=False, reducir_movimiento=False, fuerza=0.0):
+    """Dibuja el molde. estados: un estado por pieza (vacia, llena, casi, equivocada); actual: índice o None.
+
+    fuerza (0 a 1, motor 6.2): cuánta luz lleva la pieza que toca (0 = como antes, sin faro)."""
     if gpu is None or not piezas:
         return
     formas = _formas(piezas, marca)
@@ -161,8 +195,9 @@ def dibujar(piezas, estados, actual, marca=False, reducir_movimiento=False):
     for i, (mundo, tris, aristas) in enumerate(formas):
         estado = estados[i] if i < len(estados) else "vacia"
         color = AMBAR if i == actual and estado != "llena" else COLOR_ESTADO.get(estado, AZUL)
-        alfa_cara = 0.10 if estado == "llena" else (0.16 + 0.12 * pulso if i == actual else 0.13)
-        alfa_linea = 0.45 if estado == "llena" else (0.6 + 0.35 * pulso if i == actual else 0.55)
+        extra = fuerza if i == actual and estado != "llena" else 0.0
+        alfa_cara = 0.10 if estado == "llena" else (0.16 + (0.12 + 0.14 * extra) * pulso if i == actual else 0.13)
+        alfa_linea = 0.45 if estado == "llena" else (min(1.0, 0.6 + 0.35 * pulso + 0.1 * extra) if i == actual else 0.55)
         # Las caras, sin tapar lo del alumno: se ven a través de lo que está delante.
         gpu.state.depth_test_set("LESS_EQUAL")
         batch = batch_for_shader(relleno, "TRIS", {"pos": mundo}, indices=tris)
@@ -177,6 +212,9 @@ def dibujar(piezas, estados, actual, marca=False, reducir_movimiento=False):
         gpu.state.depth_test_set("LESS_EQUAL")
         lineas.uniform_float("color", (*color, alfa_linea))
         batch.draw(lineas)
+        if extra > 0:
+            _faro(lineas, mundo, extra, pulso, reducir_movimiento)
+            gpu.state.depth_test_set("LESS_EQUAL")
     gpu.state.depth_test_set("NONE")
     gpu.state.depth_mask_set(True)
     gpu.state.blend_set("NONE")

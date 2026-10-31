@@ -23,6 +23,7 @@ acercar el ratón, con cada novedad (una pieza llena, una pista, un aviso) y
 en «Mira», en la pausa y en el logro. Solo se dibuja si le toca
 (interfaz/turno.py): nunca encima de otra tarjeta de Amatista.
 """
+import math
 import time
 
 import bpy
@@ -205,6 +206,25 @@ def _linea_pieza():
     return None, None
 
 
+def _linea_accion():
+    """Motor 6.2: «Te toca: Extruir · Estás haciendo: Mover» cuando la luz lo pide (nunca las teclas).
+
+    Devuelve (te_toca, haciendo, coincide) o None. Con la luz media o plena el
+    alumno ve qué herramienta pide la actividad y qué está usando ahora: en
+    verde si es la que toca, en ámbar si es otra.
+    """
+    from .. import acompanar
+
+    luz = acompanar.luz()
+    if luz is None or not luz.accion or sesion.estado() != sesion.TRABAJANDO:
+        return None
+    toca = acompanar.te_toca()
+    ahora = acompanar.haciendo()
+    if not toca and ahora is None:
+        return None
+    return toca, (ahora[0] if ahora else ""), bool(ahora and ahora[1])
+
+
 def _teclas_visibles():
     pista = sesion.SESION["pista"]
     if pista is not None and pista.nivel >= ayudas.COMO and pista.teclas:
@@ -237,6 +257,36 @@ def _region_base(contexto, escala):
     return y
 
 
+def _dibujar_volver(contexto, region, clave):
+    """Motor 6.2: la pastilla «Volver a mi práctica» abajo al centro (navegar.py)."""
+    from ... import navegar
+
+    escala = contexto.preferences.system.ui_scale or 1.0
+    tam, tam_chico = int(13 * escala), int(10 * escala)
+    texto = navegar.texto_boton() + "  ›"
+    aviso = "Tu práctica sigue en otra escena"
+    ancho = max(hud._ancho(texto, tam), hud._ancho(aviso, tam_chico)) + 40 * escala
+    if ancho > region.width - 24 * escala:
+        return
+    alto_boton = 30 * escala
+    alto = alto_boton + tam_chico + 26 * escala
+    x = (region.width - ancho) / 2
+    y = _region_base(contexto, escala)
+    shader = gpu.shader.from_builtin("UNIFORM_COLOR")
+    gpu.state.blend_set("ALPHA")
+    respira = 0.5 + 0.5 * math.sin(time.time() * 2.4) if animaciones() else 1.0
+    borde = (*hud.NEON[:3], 0.55 + 0.45 * respira)
+    hud._tarjeta(shader, x, y, ancho, alto, FONDO, borde, escala, radio=12.0)
+    hud._texto(x + (ancho - hud._ancho(aviso, tam_chico)) / 2, y + alto - 10 * escala - tam_chico, aviso, tam_chico,
+               SUAVE)
+    bx, by = x + 12 * escala, y + 10 * escala
+    hover = HOVER["region"] == clave and HOVER["indice"] == 0
+    _boton(shader, bx, by, ancho - 24 * escala, alto_boton, texto, tam, escala, True, True, hover, hud.NEON)
+    BOTONES[clave] = [(bx, by, bx + ancho - 24 * escala, by + alto_boton, "volver_amatista", True)]
+    RECTAS.pop(clave, None)
+    gpu.state.blend_set("NONE")
+
+
 def dibujar():
     if gpu is None:
         return
@@ -252,6 +302,9 @@ def dibujar():
     from ...interfaz import turno
 
     quien = turno.de_quien(contexto) if region is not None else ""
+    if quien == turno.VOLVER:
+        _dibujar_volver(contexto, region, clave)
+        return
     if quien not in (turno.TALLER, turno.FICHA):
         return
     if fichas.visible() is not None:
@@ -303,17 +356,20 @@ def dibujar():
     contador = f"{a.numero} de {a.de}" if a.de > 1 and st != sesion.LOGRADA else ""
     lineas_texto = hud._partir(texto, tam_grande, ancho_texto, 2)
     lineas_linea = hud._partir(linea, tam, ancho_texto - 12 * escala, 2) if linea else []
+    accion = _linea_accion() if st == sesion.TRABAJANDO and not sesion.SESION["mirame"] else None
     lista = botones()
     chica = compacta(clave)
     if chica:
         # Referencia, no estorbo: una línea (lo que dice el molde o lo que pide) y los botones.
         lineas_texto = hud._partir(linea or texto, tam_grande, ancho_texto, 1)
         lineas_linea, teclas = [], []
+        accion = None
 
     alto = relleno + tam_chico + 10 * escala  # cabecera
     alto += len(lineas_texto) * (tam_grande + 6 * escala)
     alto += len(lineas_linea) * (tam + 5 * escala) + (6 * escala if lineas_linea else 0)
     alto += (tam + 14 * escala) if teclas and not demo.activa() else 0
+    alto += (tam_chico + 12 * escala) if accion else 0
     alto += 30 * escala + relleno  # fila de botones
 
     entra = _suave((time.time() - sesion.SESION["entrada"]) / ENTRADA) if animaciones() else 1.0
@@ -361,6 +417,23 @@ def dibujar():
                 hud._texto(tx + 2 * escala, cy + 4 * escala, "›", tam, SUAVE)
                 tx += 12 * escala
             tx += hud._tecla(shader, tx, cy + 4 * escala, tecla, tam_chico, escala) + 2 * escala
+
+    if accion:
+        # Motor 6.2: qué toca y qué estás haciendo (la luz del acompañamiento lo enciende).
+        toca, haciendo_ahora, coincide = accion
+        cy -= tam_chico + 12 * escala
+        tx = x + relleno
+        if toca:
+            etiqueta = f"Te toca: {toca}"
+            hud._punto(shader, tx + 4 * escala, cy + tam_chico * 0.45, 4 * escala, _con_alfa(hud.NEON, alfa))
+            hud._texto(tx + 12 * escala, cy, etiqueta, tam_chico, _con_alfa(TEXTO, alfa))
+            tx += hud._ancho(etiqueta, tam_chico) + 28 * escala
+        if haciendo_ahora:
+            color = hud.VERDE if coincide else COLOR_ESTADO["vacia"]
+            etiqueta = f"Estás haciendo: {haciendo_ahora}" + ("  ✓" if coincide else "")
+            hud._punto(shader, tx + 4 * escala, cy + tam_chico * 0.45, 4 * escala, _con_alfa(color, alfa))
+            hud._texto(tx + 12 * escala, cy, hud._recortar(etiqueta, tam_chico, x + ancho - relleno - tx - 12 * escala),
+                       tam_chico, _con_alfa(color, alfa))
 
     # Pie: avance (piezas o demostración) y los botones.
     fila_y = y + relleno

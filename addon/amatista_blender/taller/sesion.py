@@ -39,7 +39,7 @@ import bpy
 from bpy.app.handlers import persistent
 
 from .. import _motor, ajustes, enfoque, enlace
-from . import datos, demo, escena
+from . import acompanar, datos, demo, escena
 
 taller = _motor.taller
 ayudas = _motor.taller.ayudas
@@ -365,6 +365,9 @@ def empezar(context, a):
     SESION.update(taller=a.taller, actividad=a, inicio=ahora, entrada=ahora,
                   escalera=dataclasses.replace(escalera, techo=a.techo, freno=a.freno),
                   plan=datos.plan(a.taller))
+    acompanar.reiniciar(ahora)  # motor 6.2: el ánimo y la luz son de esta actividad
+    if a.habilidad and SALTOS.get(a.habilidad):
+        acompanar.salto(SALTOS[a.habilidad])
     if a.tipo == taller.PROYECTO:
         return _empezar_proyecto(context, a)
     practica = _practica_generada(a) if a.revisa else None
@@ -440,7 +443,9 @@ def al_abrir_practica(practica, origen="paquete"):
     t = c.taller_de_proyecto(practica.id) if c is not None else None
     a = SESION["actividad"]
     if t is None:
-        if a is not None and not SESION["proyecto"]:
+        # Motor 6.2: también si lo de antes era el proyecto de OTRA práctica (antes su molde seguía
+        # dibujándose encima de la práctica nueva).
+        if a is not None and (not SESION["proyecto"] or a.practica_id != practica.id):
             demo.detener(llamar=False)
             SESION.update(_vacia(), repaso_ofrecido=SESION["repaso_ofrecido"])
             _redibujar()
@@ -457,6 +462,7 @@ def al_abrir_practica(practica, origen="paquete"):
                       estado=TRABAJANDO, proyecto=True, plan=datos.plan(t.id),
                       escalera=dataclasses.replace(ayudas.escalera_para(taller.SOLA, ahora), techo=nueva.techo))
         datos.recordar_taller(t.id)
+        acompanar.reiniciar(ahora)
     SESION["molde_proyecto"] = taller.molde_del_proyecto(practica)
     _al_cambiar_estado()
     return True
@@ -480,6 +486,10 @@ def _avanzo(llenas, cumplidos):
         SESION["escalera"] = ayudas.avance(SESION["escalera"], time.time())
         SESION["ofrecida"] = -1
         _apagar_brillo()
+        acompanar.avanzo()
+        acompanar.apagar_brillo_auto()
+    elif llenas < SESION["llenas"]:
+        acompanar.retrocedio()  # motor 6.2: una pieza que estaba y se deshizo
     SESION["llenas"], SESION["cumplidos"] = llenas, cumplidos
 
 
@@ -489,6 +499,7 @@ def _equivocadas(revision):
         if p.estado == "equivocada" and p.indice not in SESION["equivocadas"]:
             SESION["equivocadas"].add(p.indice)
             SESION["escalera"] = ayudas.fallo(SESION["escalera"])
+            acompanar.fallo()
 
 
 def evaluar(context=None):
@@ -743,6 +754,7 @@ def pedir_pista(context=None):
     h = habilidad_actual()
     pista = ayudas.pista_para(nivel, h, pieza_actual())
     SESION.update(escalera=nueva, pista=pista, ayuda=max(SESION["ayuda"], nivel), ofrecida=-1)
+    acompanar.pidio_pista()
     if nivel == ayudas.CON_QUE:
         _poner_herramienta(context, h)
     if nivel == ayudas.MIRAME:
@@ -901,6 +913,8 @@ def detalle():
         "etapa_cumplida": bool(RUTA["cumplida"]),
         # Motor 6.1: la herramienta nueva que Blender está presentando (la lección lo dice al lado).
         "ficha": _ficha_vivo(),
+        # Motor 6.2: el ánimo y la luz (sin contar errores: dónde se atora, no cuántas veces falló).
+        "acompanamiento": acompanar.para_latido(),
     }
 
 
@@ -968,6 +982,7 @@ def _al_cambiar(scene, depsgraph=None):
 def _al_deshacer(*_args):
     if SESION["escalera"] is not None and SESION["estado"] == TRABAJANDO:
         SESION["escalera"] = ayudas.deshizo(SESION["escalera"])
+        acompanar.deshizo()
         SESION["sucio"] = True
         SESION["ultimo_cambio"] = time.time()
 
@@ -988,6 +1003,7 @@ def _vigilante():
 
             if tarjeta.cambio_compacta():
                 _redibujar()  # motor 6: la tarjeta se achica sola al quedarse quieta
+            acompanar.vigilar()  # motor 6.2: el ánimo del alumno decide cuánta luz se enciende
         e = SESION["escalera"]
         if e is not None and SESION["estado"] == TRABAJANDO and not demo.activa():
             ahora = time.time()
