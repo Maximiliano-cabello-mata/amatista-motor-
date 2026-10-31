@@ -1337,6 +1337,84 @@ def probar_motor61(contexto):
     p.modo_curioso = "auto"
 
 
+def probar_motor62(contexto):
+    """Motor 6.2: cambiar de práctica sale limpio, «Volver a mi práctica» y el acompañamiento según el ánimo."""
+    print("Motor 6.2")
+    from amatista_blender import ajustes, navegar, practicas
+    from amatista_blender.interfaz import turno
+    from amatista_blender.taller import acompanar, datos, escena, operadores, sesion
+    from amatista_blender.taller.vista import brillo, tarjeta
+
+    p = ajustes.prefs()
+    p.presentar_herramientas = False
+    sesion.terminar()
+    catalogo = practicas.catalogo()
+    c = datos.catalogo()
+
+    # Una escena sin práctica pero con cosas del alumno no se usa: la práctica empieza limpia.
+    sc_suelta = _escena_nueva(contexto, "Mis pruebas")
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(3, 0, 0))
+    contexto.active_object.name = "Mi cosa"
+    suelta = next(pid for pid in sorted(catalogo) if c.taller_de_proyecto(pid) is None
+                  and catalogo[pid].get("definicion"))
+    practicas.activar(contexto, catalogo[suelta]["definicion"], "paquete")
+    revisar(contexto.scene != sc_suelta and "Mi cosa" not in contexto.scene.objects,
+            f"cambio limpio: lo suelto del alumno no entra a la práctica ({[o.name for o in contexto.scene.objects]})")
+    revisar("Mi cosa" in sc_suelta.objects, "cambio limpio: lo del alumno sigue en su escena")
+
+    # El proyecto de un taller y luego otra práctica: el molde del proyecto ya no se queda dibujado.
+    t = next(t for t in c.talleres if t.proyecto and t.proyecto in catalogo)
+    practicas.activar(contexto, catalogo[t.proyecto]["definicion"], "paquete")
+    revisar(sesion.SESION["proyecto"] and sesion.actividad() is not None, f"cambio limpio: el proyecto de {t.id} abre el taller")
+    practicas.activar(contexto, catalogo[suelta]["definicion"], "paquete")
+    revisar(sesion.actividad() is None and sesion.molde_visible() is None,
+            "cambio limpio: otra práctica suelta el proyecto anterior y su molde")
+    practicas.cerrar(contexto)
+
+    # Acompañamiento: una habilidad nueva tiene todo encendido; los fallos suben el ánimo a «atorado».
+    for archivo in ajustes.carpeta_usuario().glob("avance_taller_*.json"):
+        archivo.unlink()
+    datos.reiniciar_cache()
+    contexto = _abrir_actividad(contexto, "blender.bp.m3", "conmigo:bl-espejo:ala")
+    revisar(sesion.estado() == sesion.TRABAJANDO, f"acompañar: trabajando en el taller ({sesion.estado()})")
+    luz = acompanar.calcular()
+    revisar(luz is not None and luz.nivel == 3 and luz.pieza and luz.accion,
+            f"acompañar: habilidad nueva al principio del curso, luz plena ({luz})")
+    revisar(acompanar.te_toca() == "Espejo" and tarjeta._linea_accion() is not None,
+            f"acompañar: la tarjeta dice qué herramienta toca ({acompanar.te_toca()})")
+    revisar(acompanar.pulso() > 0, "acompañar: la pieza que toca lleva faro")
+    for _ in range(3):
+        acompanar.fallo()
+    brillo.apagar()
+    acompanar.ESTADO["leido"] = 0.0
+    acompanar.vigilar()
+    animo = acompanar.animo()
+    revisar(animo is not None and animo.nivel in ("atorado", "frustrado"), f"acompañar: tres fallos, atorado ({animo})")
+    revisar(sesion.mensaje() != "" and brillo.activo(), f"acompañar: se ofrece ayuda y brilla la herramienta ({sesion.mensaje()})")
+    detalle = sesion.detalle()["acompanamiento"]
+    revisar(detalle["animo"] == animo.nivel and detalle["luz"] == "plena" and detalle["razones"],
+            f"acompañar: la plataforma recibe el ánimo, no los errores ({detalle})")
+    acompanar.avanzo()
+    revisar(acompanar.calcular() is not None and acompanar.animo().indice < 2, "acompañar: avanzar calma el ánimo")
+
+    # Volver: en otra escena aparece «Volver a mi práctica» y un clic regresa a la actividad.
+    del_taller = contexto.scene
+    revisar(escena.es_del_taller(del_taller), "volver: la actividad está en la escena del taller")
+    otra = _escena_nueva(contexto, "Me perdí")
+    revisar(navegar.hace_falta(contexto) and turno.de_quien(contexto) == turno.VOLVER,
+            f"volver: fuera de la actividad sale la pastilla ({turno.de_quien(contexto)})")
+    texto = operadores.ejecutar(contexto, "volver_amatista")
+    revisar(contexto.scene == del_taller and texto.startswith("Aquí sigues"),
+            f"volver: un clic regresa a la escena del taller ({contexto.scene.name}, {texto})")
+    revisar(not navegar.hace_falta(contexto) and turno.de_quien(contexto) == turno.TALLER,
+            "volver: de vuelta, la tarjeta del taller otra vez")
+    revisar(bpy.ops.amatista.volver() == {"FINISHED"}, "volver: el operador existe para el menú y la cabecera")
+    sesion.terminar()
+    sesion.RUTA.update(etapa=None, leccion="", cumplida=False)
+    bpy.data.scenes.remove(otra)
+    bpy.data.scenes.remove(sc_suelta)
+
+
 def _motor_foto(contexto, extras):
     from amatista_blender import practicas
 
@@ -1452,7 +1530,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "6.1.0", "el intento lleva la versión 6.1 del add-on")
+    revisar(datos["version_addon"] == "6.2.0", "el intento lleva la versión 6.2 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1500,6 +1578,7 @@ def main():
     probar_integracion(contexto)
     probar_motor6(contexto)
     probar_motor61(contexto)
+    probar_motor62(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

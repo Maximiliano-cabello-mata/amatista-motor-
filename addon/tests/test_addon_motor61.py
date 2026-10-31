@@ -70,9 +70,3 @@ def test_las_fichas_viajan_con_el_add_on():
     assert len(datos["fichas"]) >= 20 and len(datos["zonas"]) >= 8
     fuente = (ADDON / "fichas.py").read_text(encoding="utf-8")
     assert '"fichas.json"' in fuente
-
-
-def test_version_61():
-    manifiesto = (ADDON / "blender_manifest.toml").read_text(encoding="utf-8")
-    assert 'version = "6.1.0"' in manifiesto
-    assert 'VERSION_ADDON = "6.1.0"' in (ADDON / "ajustes.py").read_text(encoding="utf-8")
