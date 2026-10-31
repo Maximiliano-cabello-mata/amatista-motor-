@@ -14,9 +14,11 @@ amatista_engine/
 ├─ taller/                    motor 5: habilidades (catálogo amatista.skill/1), modelo del alumno, actividades y plan, molde, pistas, demostraciones y repaso
 ├─ curriculum.py              plan de estudios (amatista.curriculum/1, con el taller de cada módulo) y desbloqueo
 ├─ testing.py, cli.py         escenas de prueba (Escena) y la terminal de autor
+├─ corazon/                   Corazón Amatista (amatista.corazon/1): director, andamio, señales, perfiles de cada programa, extensiones y ramas
 ├─ guide/                     etapa 2: guía paso a paso (coach) y acompañante (companion)
 ├─ tools/                     catálogo de herramientas de Blender y avisos de nivel
 └─ blender/                   único lugar con bpy: capturar la escena y roles (tagger)
+herramientas/corazon.py        ramas · perfiles · extensiones · turno (el Corazón, sin Blender)
 herramientas/practicas.py      nueva · revisar · probar (también que el ejemplo complete su práctica) · simular · validadores · plan (sin Blender)
 herramientas/referencias.py    imagen y plano del modelo de referencia (con bpy)
 herramientas/run_in_blender.py  prueba manual desde Scripting
@@ -48,4 +50,4 @@ Cada `practica.json` lleva un bloque `example` con la solución en pasos, en el 
 
 Campos, pasos admitidos y cómo revisa cada aspecto: [el ejemplo y la revisión](../docs/motor/referencia/14_ejemplo_y_revision.md).
 
-Documentación: [docs/motor/](../docs/motor/README.md), sobre todo [arquitectura](../docs/motor/referencia/01_arquitectura.md), [formato de práctica](../docs/motor/referencia/02_formato_de_practica.md), [guía y acompañamiento](../docs/motor/referencia/07_guia_y_acompanamiento.md), [prácticas v3 y herramientas de autor](../docs/motor/referencia/08_practicas_v3_y_herramientas.md), [validadores](../docs/motor/referencia/09_validadores.md) y [el ejemplo y la revisión](../docs/motor/referencia/14_ejemplo_y_revision.md). Historia: [etapas](../docs/motor/etapas/etapa-1.md).
+Documentación: [docs/motor/](../docs/motor/README.md), sobre todo [el Corazón Amatista](../docs/motor/referencia/23_corazon.md), [arquitectura](../docs/motor/referencia/01_arquitectura.md), [formato de práctica](../docs/motor/referencia/02_formato_de_practica.md), [guía y acompañamiento](../docs/motor/referencia/07_guia_y_acompanamiento.md), [prácticas v3 y herramientas de autor](../docs/motor/referencia/08_practicas_v3_y_herramientas.md), [validadores](../docs/motor/referencia/09_validadores.md) y [el ejemplo y la revisión](../docs/motor/referencia/14_ejemplo_y_revision.md). Historia: [etapas](../docs/motor/etapas/etapa-1.md).
