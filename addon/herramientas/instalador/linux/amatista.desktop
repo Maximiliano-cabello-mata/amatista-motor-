@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Amatista
+GenericName=Aprende Blender con Amatista
+Comment=Instala o actualiza Amatista en tu Blender y abre «Blender Amatista»
+Exec=amatista %u
+Icon=amatista
+Terminal=false
+Categories=Education;Graphics;3DGraphics;
+MimeType=x-scheme-handler/amatista;
+Keywords=Blender;3D;Amatista;modelado;
+StartupNotify=true
