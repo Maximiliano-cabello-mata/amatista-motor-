@@ -48,6 +48,9 @@ MENUS = {
     "Renderizar imagen": "Render Image", "Vista renderizada": "Rendered", "Enlazar materiales": "Link Materials",
     "Vincular materiales": "Link Materials", "Sistema": "System", "Entrada": "Input", "Interfaz": "Interface",
     "Emular teclado numérico": "Emulate Numpad", "Ver": "View", "Seleccionar": "Select",
+    # Motor 7 (guion/donde.py): los menús que nombra cada paso.
+    "Duplicar objetos": "Duplicate Objects", "Eliminar": "Delete", "Colección": "Collection",
+    "Mover a colección": "Move to Collection", "Renderizar": "Render",
 }
 IDIOMAS = ("es", "en")
 _IDIOMA = {"actual": "es"}

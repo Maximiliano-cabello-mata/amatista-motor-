@@ -75,13 +75,19 @@ def proportion(target: TargetDefinition, scene: SceneState) -> ValidationResult:
         base = max(otros) or 1e-6
         razon = d[indice] / base
         if not minimo <= razon <= maximo:
-            fallan.append({"object": obj.name, "value": round(razon, 2)})
+            otro = max((i for i in range(3) if i != indice), key=lambda i: d[i])
+            fallan.append({"object": obj.name, "value": round(razon, 2), "other": otro})
     if not fallan:
         mensaje = f"Las proporciones de «{que}» están bien."
     else:
         valor = fallan[0]["value"]
-        veces = "vez" if valor == 1 else "veces"
-        limite = f"como máximo {maximo:g}" if valor > maximo else f"al menos {minimo:g}"
-        mensaje = f"«{fallan[0]['object']}» mide en {eje.upper()} {valor:g} {veces} su ancho; se busca {limite}."
+        # Motor 7: qué medida se compara y qué hacer (antes decía siempre «su ancho» y solo daba números).
+        medida = {0: "largo (X)", 1: "ancho (Y)", 2: "alto (Z)"}[fallan[0]["other"]]
+        if valor > maximo:
+            mensaje = (f"«{fallan[0]['object']}» está demasiado estirado en {eje.upper()}: achícalo con S y luego "
+                       f"{eje.upper()} hasta que mida como máximo {maximo:g} veces su {medida}.")
+        else:
+            mensaje = (f"«{fallan[0]['object']}» todavía es corto en {eje.upper()} ({valor:g} veces su {medida}): "
+                       f"estíralo con S y luego {eje.upper()} hasta pasar de {minimo:g} veces.")
     return result(target, not fallan, mensaje, {"selector": sel, "axis": eje, "min": minimo,
                                                  "max": None if maximo == float("inf") else maximo, "failed": fallan})

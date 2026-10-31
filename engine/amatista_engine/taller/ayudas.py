@@ -121,8 +121,13 @@ def pista_para(nivel: int, habilidad, pieza=None) -> Pista:
         texto = pieza.mensaje if pieza is not None and pieza.mensaje else (getattr(habilidad, "que", "") or "")
         return Pista(QUE, NOMBRES[QUE], texto)
     if nivel == CON_QUE:
-        return Pista(CON_QUE, NOMBRES[CON_QUE], "Mira la herramienta que brilla en la barra de la izquierda.",
-                     herramientas=herramientas)
+        # Motor 7: el lugar real de la herramienta (antes: «la que brilla en la barra de la izquierda», aunque
+        # fuera Agregar o Guardar, que no están ahí, o la barra estuviera escondida).
+        from ..guion import donde as _donde
+
+        lugar = next((_donde.de(h) for h in herramientas if _donde.de(h) is not None), None)
+        texto = _donde.frase(lugar) if lugar is not None else "Usa la herramienta que pide la actividad."
+        return Pista(CON_QUE, NOMBRES[CON_QUE], texto, herramientas=herramientas)
     if nivel == COMO:
         como = getattr(habilidad, "como", "") or ""
         return Pista(COMO, NOMBRES[COMO], como or "Estas son las teclas.", teclas=teclas, herramientas=herramientas)

@@ -104,8 +104,8 @@
       },
       "weight": 10,
       "requires": ["vagones"],
-      "tip": "Estira cada vagón solo a lo largo: S, luego X, y mueve el ratón (cerca del doble de largo que de alto).",
-      "hints": ["Selecciona un vagón y pulsa S y luego X.", "Escribe 1.6 y Enter: quedará más largo que alto."]
+      "tip": "Estira cada vagón a lo largo: S, luego X, hasta que sea más largo que ancho (cerca del doble).",
+      "hints": ["Selecciona un vagón y pulsa S y luego X.", "Escribe 1.6 y Enter: quedará más largo que ancho."]
     },
     {
       "id": "ruedas",

@@ -622,6 +622,11 @@ def _con_ejemplo(objetivos: List[TargetDefinition], ejemplo: Optional[ExampleDef
         validator="example.matches",
         params=inyectados,
         weight=PESO_EJEMPLO,
+        # Motor 7: la comparación con el ejemplo orienta pero no traba. Era un paso obligatorio escondido:
+        # con todos los pasos del autor hechos, el alumno no avanzaba porque su archivo no se llamaba igual
+        # que el del ejemplo (simulaciones del 31 de octubre de 2026). Si el ejemplo es lo único que se revisa,
+        # sigue siendo obligatorio.
+        optional=any(not t.optional for t in objetivos),
         hints=(
             Hint(1, "Mira la lista «Comparado con el ejemplo»: cada punto que falta dice cómo hacerlo."),
             Hint(2, "Abre el ejemplo resuelto (botón «Ver el ejemplo») y compáralo con tu escena; vuelve con "

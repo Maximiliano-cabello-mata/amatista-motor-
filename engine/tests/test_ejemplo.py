@@ -1,5 +1,6 @@
 """Motor 3.5: el ejemplo resuelto de cada práctica y la revisión autónoma contra él (ejemplo/)."""
 import copy
+from dataclasses import replace
 import json
 from pathlib import Path
 
@@ -230,6 +231,9 @@ def test_la_figura_sin_modelo_usa_las_mallas_del_ejemplo():
 def test_el_instructor_guia_con_el_primer_punto_pendiente():
     practica = practica_simple([{"cubo": {"nombre": "Caja"}}, {"modificador": {"objeto": "Caja", "tipo": "BEVEL"}},
                                 {"guardado": {"archivo": "mi_caja.blend"}}], check=["modificadores", "archivo"])
+    # Motor 7: con objetivos propios el ejemplo orienta sin trabar; aquí la malla es opcional y el ejemplo manda.
+    practica = replace(practica, targets=tuple(replace(t, optional=True) if t.id == "malla" else
+                                               replace(t, optional=False) for t in practica.targets))
     escena = Escena().cubo("Caja").construir()
     guia = build_guidance(practica, escena, MOTOR.evaluate(practica, escena))
     assert guia.target_id == "ejemplo"
