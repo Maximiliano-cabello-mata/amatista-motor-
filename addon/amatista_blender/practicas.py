@@ -587,6 +587,12 @@ def evaluar(context=None, motivo="manual"):
         del_taller = False
         print(f"[Amatista] Taller al evaluar: {error}")
     try:
+        from . import guion
+
+        guion.al_evaluar(context, practica, reporte)  # motor 7: el paso que toca, con este mismo reporte
+    except Exception as error:  # noqa: BLE001 - el guion nunca impide evaluar
+        print(f"[Amatista] Guion al evaluar: {error}")
+    try:
         aprendizaje.actualizar_pildoras(practica, foto, reporte)
         nueva = aprendizaje.pildora_principal()
         if motivo != "abrir" and not del_taller and nueva is not None and nueva.id in aprendizaje.ESTADO["nuevas"]:
@@ -780,6 +786,8 @@ def sincronizar(context=None, forzar=False, al_terminar=None):
         return
     if sc.amatista.origen == "borrador":
         return  # un borrador del modo desarrollador no es progreso de alumno
+    if ajustes.sin_progreso():
+        return  # motor 7: el administrador practica sin progreso
     if not vinculado():
         ESTADO["sync"] = SYNC_SIN_CUENTA
         redibujar()

@@ -34,7 +34,10 @@ def dibujar_molde():
     from ...interfaz import turno
 
     contexto = bpy.context
-    if not turno.me_toca(turno.TALLER, contexto):
+    quien = turno.de_quien(contexto)
+    # Motor 7: con el guion, el molde solo en las actividades cortas (el del proyecto pedía las piezas en el
+    # orden del modelo y contradecía al paso que se revisaba).
+    if quien != turno.TALLER and not (quien == turno.GUION and not sesion.SESION["proyecto"]):
         return
     visible = sesion.molde_visible()
     if visible is None:

@@ -1,4 +1,15 @@
-"""Amatista para Blender (Amatista Motor 6: Blender y Amatista como una sola cosa).
+"""Amatista para Blender (Amatista Motor 7: el guion paso a paso, por el resultado real).
+
+Motor 7 (add-on 7.0, guion/): un paso a la vez, arriba de la vista 3D y en
+N › Amatista. Avanza en cuanto la escena cumple el paso (se revisa a los
+0,15 s de cada cambio, de cada guardado y de cada Ctrl + Z), en cualquier
+orden y con cualquier herramienta. Lo que falta sale del paso que toca, la
+pista «¿Dónde está?» dice el lugar real de la herramienta y la señala de
+verdad (la deja elegida, abre su menú o su pestaña, selecciona la pieza);
+nada dice «brilla» si no se señaló nada. Mientras el guion manda, la
+tarjeta del taller, el molde del proyecto, el brillo y las fichas no se
+dibujan, y la barra de herramientas ya no se esconde. Un administrador
+practica sin progreso: cada arranque empieza de cero.
 
 Motor 6.2 (add-on 6.2): Amatista acompaña según cómo vas (taller/acompanar.py):
 lee tu ánimo con lo que Blender ya registra (intentos, deshacer, ráfagas de
@@ -82,7 +93,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (6, 2, 0),
+    "version": (7, 0, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Aprende Blender habilidad por habilidad con Amatista Taller",
@@ -91,8 +102,8 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import (ajustes, blender_amatista, cuenta, desarrollo, enfoque, enlace, escenarios, estado, fichas, guia, integracion,
-               mision, navegar, operadores, plataforma, practicas, recorrido, red, saneamiento)
+from . import (ajustes, blender_amatista, cuenta, desarrollo, enfoque, enlace, escenarios, estado, fichas, guia, guion,
+               integracion, mision, navegar, operadores, plataforma, practicas, recorrido, red, saneamiento)
 from . import taller
 from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
 
@@ -125,6 +136,7 @@ def register():
     for clase in CLASES:
         bpy.utils.register_class(clase)
     taller.register()  # después de los paneles: su panel cuelga de AMATISTA_PT_principal
+    guion.register()  # motor 7: el guion paso a paso (panel, banda y revisión en el momento)
     practicas.register()
     enlace.register()
     hud.register()
@@ -157,6 +169,7 @@ def unregister():
     cuenta.unregister()  # deja de preguntar por el código de vinculación
     guia.unregister()
     mision.unregister()
+    guion.unregister()
     taller.unregister()
     red.unregister()
     for clase in reversed(CLASES):

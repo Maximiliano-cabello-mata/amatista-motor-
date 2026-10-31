@@ -249,9 +249,13 @@ def vigilar():
     """Lo llama el vigilante del taller cada 0.25 s: anota, lee y enciende lo que haga falta."""
     from . import sesion
 
+    from .. import guion
+
     ahora = time.time()
     if sesion.actividad() is None or sesion.estado() != sesion.TRABAJANDO:
         return
+    if guion.activo():
+        return  # motor 7: nada se enciende solo; el guion dice el paso y señala solo cuando se pide
     _anotar_operaciones(ahora)
     if ahora - ESTADO["leido"] < CADA:
         return

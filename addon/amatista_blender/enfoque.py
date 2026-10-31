@@ -103,7 +103,8 @@ def _enfocar_area(pantalla, indice, area):
         guardado[clave] = [int(espacio.show_region_toolbar), int(espacio.show_region_tool_header),
                            int(espacio.show_region_ui)]
         pantalla[PROPIEDAD] = guardado
-    espacio.show_region_toolbar = False
+    # Motor 7: la barra de herramientas (T) ya no se esconde. Escondida, la pista «la herramienta que
+    # brilla a la izquierda» señalaba una barra que el alumno no veía (simulaciones del 31 de octubre de 2026).
     espacio.show_region_tool_header = False
     espacio.show_region_ui = True
     for region in area.regions:

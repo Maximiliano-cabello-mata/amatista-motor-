@@ -385,7 +385,10 @@ def empezar(context, a):
     # Motor 6.1: una herramienta que el alumno nunca vio se presenta antes (su ficha, iluminada en su lugar).
     from .. import fichas
 
-    cola = fichas.por_presentar(a)
+    from .. import guion
+
+    # Motor 7: con el guion no se abre una ficha encima antes de la actividad (la herramienta la dice el paso).
+    cola = () if guion.preferido() and modo_alumno() else fichas.por_presentar(a)
     if cola and fichas.mostrar(cola, fichas.PRESENTAR):
         SESION["estado"] = PRESENTANDO
         _al_cambiar_estado()
@@ -518,6 +521,12 @@ def evaluar(context=None):
     reporte = _motor.MOTOR.evaluate(SESION["practica"], foto)
     revision = taller.revisar_molde(a.piezas, foto, a.modo, a.nivel) if a.piezas else None
     SESION.update(reporte=reporte, revision=revision)
+    try:
+        from .. import guion
+
+        guion.al_evaluar(context, SESION["practica"], reporte)  # motor 7
+    except Exception as error:  # noqa: BLE001 - el guion nunca impide revisar
+        print(f"[Amatista] Guion: {error}")
     if revision is not None:
         _equivocadas(revision)
     _avanzo(revision.llenas if revision is not None else 0, sum(1 for r in reporte.results if r.passed))

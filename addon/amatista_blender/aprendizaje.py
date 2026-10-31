@@ -36,6 +36,10 @@ def _ruta_avance():
 
 
 def avance():
+    if ajustes.sin_progreso():
+        if ESTADO.get("avance_admin") is None:  # motor 7: el administrador, de cero en cada arranque
+            ESTADO["avance_admin"] = {"completadas": [], "pildoras_vistas": {}, "repaso": {}}
+        return ESTADO["avance_admin"]
     if ESTADO["avance"] is None:
         try:
             datos = json.loads(_ruta_avance().read_text(encoding="utf-8"))
@@ -49,6 +53,8 @@ def avance():
 
 
 def guardar_avance():
+    if ajustes.sin_progreso():
+        return
     try:
         _ruta_avance().write_text(json.dumps(avance(), ensure_ascii=False, indent=1), encoding="utf-8")
     except OSError as error:

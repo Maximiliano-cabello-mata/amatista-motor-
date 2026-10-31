@@ -5,7 +5,7 @@ Hasta el 5.4 cada tarjeta decidía sola si se dibujaba: la del recorrido
 suelta. Con un recorrido abierto encima de un taller salían dos tarjetas, una
 sobre la otra. Ahora hay un turno con prioridad fija:
 
-    recorrido  >  taller (actividad o proyecto)  >  ficha  >  misión de la práctica  >  volver
+    recorrido  >  guion (motor 7)  >  taller (actividad o proyecto)  >  ficha  >  misión  >  volver
 
 (motor 6.1: la **ficha** de una herramienta que el alumno tocó fuera de un
 taller, en el modo curioso; dentro del taller la ficha va en la tarjeta del
@@ -19,6 +19,7 @@ hay una práctica o actividad en curso en otra.
 import bpy
 
 RECORRIDO, TALLER, FICHA, MISION = "recorrido", "taller", "ficha", "mision"
+GUION = "guion"  # motor 7: el guion paso a paso manda en modo alumno (guion/banda.py); los demás no dibujan
 VOLVER = "volver"  # motor 6.2: nada que mostrar aquí, pero hay una práctica en curso en otra escena
 
 
@@ -32,6 +33,13 @@ def de_quien(contexto=None):
         return RECORRIDO
     contexto = contexto or bpy.context
     escena = getattr(contexto, "scene", None)
+    try:
+        from .. import guion
+
+        if guion.activo(escena):
+            return GUION
+    except Exception:  # noqa: BLE001 - sin guion, el turno de siempre
+        pass
     try:
         from ..taller import sesion
 
@@ -62,4 +70,4 @@ def me_toca(quien, contexto=None):
     return de_quien(contexto) == quien
 
 
-__all__ = ["FICHA", "MISION", "RECORRIDO", "TALLER", "VOLVER", "de_quien", "me_toca"]
+__all__ = ["FICHA", "GUION", "MISION", "RECORRIDO", "TALLER", "VOLVER", "de_quien", "me_toca"]

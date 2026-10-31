@@ -8,6 +8,7 @@ Sale con código 1 si algo falla. No necesita red: el servidor no se usa.
 """
 import importlib
 import json
+import re
 import sys
 import tempfile
 import traceback
@@ -374,7 +375,8 @@ def probar_motor_34(contexto):
     revisar(enfoque.ESTADO["primitivas"] == ("cube", "cylinder"), f"enfoque: piezas del tren {enfoque.ESTADO['primitivas']}")
     if vistas:
         espacio = vistas[0].spaces.active
-        revisar(not espacio.show_region_toolbar and espacio.show_region_ui, "enfoque: sin barra T, con la barra lateral")
+        # Motor 7: la barra de herramientas ya no se esconde (con ella escondida, «brilla a la izquierda» mentía).
+        revisar(espacio.show_region_toolbar and espacio.show_region_ui, "enfoque: con la barra T y la barra lateral")
     menu = type("Menu", (), {"layout": Diseno()})()
     bpy.types.VIEW3D_MT_add.draw(menu, contexto)
     bpy.types.VIEW3D_MT_editor_menus.draw(menu, contexto)
@@ -1415,6 +1417,179 @@ def probar_motor62(contexto):
     bpy.data.scenes.remove(sc_suelta)
 
 
+def _tren_del_alumno(contexto, eje_largo=0):
+    """El tren como lo arma un principiante: Shift+A, S, R y G sobre piezas de tamaño por defecto."""
+    import math
+
+    piezas = []
+
+    def agregar(tipo, escala, lugar, giro=(0, 0, 0)):
+        getattr(bpy.ops.mesh, f"primitive_{tipo}_add")()
+        obj = contexto.active_object
+        obj.scale, obj.location, obj.rotation_euler = escala, lugar, giro
+        piezas.append(obj)
+        return obj
+
+    agregar("cube", (1.0, 0.6, 0.5), (1.0, 0, 0.9))
+    agregar("cube", (0.9, 0.6, 0.5), (-1.0, 0, 0.9))
+    for x in (1.6, 0.4, -0.4, -1.6):
+        for y in (0.75, -0.75):
+            agregar("cylinder", (0.35, 0.35, 0.1), (x, y, 0.35), (math.radians(90), 0, 0))
+    agregar("cylinder", (0.2, 0.2, 0.35), (1.5, 0, 1.75))
+    contexto.view_layer.update()
+    return piezas
+
+
+def probar_motor7(contexto):
+    """Motor 7 · Guion: un paso a la vez, avanza por el resultado, señales reales y el administrador sin progreso."""
+    print("Motor 7")
+    from types import SimpleNamespace
+
+    from amatista_blender import ajustes, aprendizaje, enfoque, guion, practicas
+    from amatista_blender.guion import banda, panel, senalar
+    from amatista_blender.interfaz import hud, turno
+    from amatista_blender.taller import datos, sesion
+    from amatista_blender.taller import panel as panel_taller
+
+    bpy.ops.wm.read_homefile(use_empty=False)  # un Blender recién abierto: sin archivo guardado
+    contexto = bpy.context
+    p = ajustes.prefs()
+    p.guion_paso_a_paso = True
+    p.presentar_herramientas = True  # lo que tiene un alumno nuevo: el guion no abre fichas encima
+    p.enfoque = "auto"
+    contexto.window_manager.amatista.modo = "alumno"
+    sesion.terminar()
+    for archivo in ajustes.carpeta_usuario().glob("avance_taller_*.json"):
+        archivo.unlink()
+    datos.reiniciar_cache()
+
+    # El tren, como proyecto del taller: una sola voz (el guion) y sin la barra escondida.
+    _limpiar()
+    sesion.abrir(contexto, "blender.bp.m1", "proyecto:blender.bp.m1")
+    sc = contexto.scene
+    revisar(sc.amatista.practica_id == "blender.bp.m1.tren" and guion.activo(sc), "guion: manda en el proyecto del tren")
+    revisar(turno.de_quien(contexto) == turno.GUION, f"guion: el turno es del guion ({turno.de_quien(contexto)})")
+    vistas = [a for v in contexto.window_manager.windows for a in v.screen.areas if a.type == "VIEW_3D"]
+    if vistas:
+        revisar(vistas[0].spaces.active.show_region_toolbar, "guion: la barra de herramientas se ve (nivel 1, enfocado)")
+    revisar(enfoque.activo(), "guion: Shift+A sigue enfocado en las piezas del tren")
+    revisar(panel.AMATISTA_PT_guion.poll(contexto) and not panel_taller.AMATISTA_PT_taller.poll(contexto),
+            "guion: un solo panel dice lo que sigue (el del taller se esconde)")
+    guion.revisar_ya(contexto)
+    v = guion.vista()
+    revisar(v["numero"] == 1 and v["total"] == 10 and v["objetivo"] == "vagones" and "cubo" in v["haz"].lower(),
+            f"guion: paso 1 de 10, agregar los vagones ({v['numero']}/{v['total']}: {v['haz']})")
+    revisar(not re.search(r"brilla|resaltad", v["haz"] + v["por_que"], re.I), "guion: nada dice que brilla")
+
+    # «¿Dónde está?» del primer paso: Agregar es un menú de arriba, no la barra de la izquierda.
+    pista = guion.pedir_pista(contexto, 2)
+    revisar(pista is not None and "cabecera" in pista["texto"] and "izquierda" not in pista["texto"].split("atajo")[0]
+            and not pista["senalado"] and not re.search(r"brilla|resaltad", pista["texto"], re.I),
+            f"guion: Agregar se busca en la cabecera, sin brillos inventados ({pista and pista['texto']})")
+
+    # Todo de una vez y en otro orden: el resultado manda, sin esperar herramientas.
+    _tren_del_alumno(contexto)
+    guion.revisar_ya(contexto)
+    v = guion.vista()
+    revisar(v["objetivo"] == "guardar" and sum(1 for _t, e in v["pasos"] if e == "hecho") == 9,
+            f"guion: con el tren armado solo falta guardar ({v['objetivo']}, {v['pasos']})")
+    pista = guion.pedir_pista(contexto, 2)
+    revisar("Guardar como" in pista["texto"] and "arriba de todo" in pista["texto"] and "barra de herramientas" not in pista["texto"],
+            f"guion: guardar se busca en Archivo, arriba ({pista['texto']})")
+    revisar(senalar.se_puede_abrir("file.save"), "guion: el panel ofrece abrir «Guardar como»")
+
+    # Deshacer una pieza la vuelve a pedir en el momento.
+    rueda = next(o for o in sc.objects if o.name.startswith("Cylinder"))
+    rueda.location.z += 1.0
+    contexto.view_layer.update()
+    guion.revisar_ya(contexto)
+    revisar(guion.vista()["objetivo"] != "guardar" and guion.avance().deshechos, "guion: levantar una rueda se nota al instante")
+    pista = guion.pedir_pista(contexto, 1)
+    revisar(pista["senalado"] and rueda.select_get(), f"guion: «¿Qué falta?» selecciona la pieza de la que habla ({pista['texto']})")
+    pista = guion.pedir_pista(contexto, 2)
+    revisar(pista["senalado"] == bool(re.search(r"resaltad", pista["texto"])) and senalar.herramienta_elegida(contexto)
+            in ("builtin.move", "builtin.scale", "builtin.rotate"), f"guion: la herramienta queda elegida de verdad ({pista['texto']})")
+    rueda.location.z -= 1.0
+    contexto.view_layer.update()
+
+    # Guardar: el manejador de save_post revisa sin esperar al depsgraph.
+    bpy.ops.wm.save_as_mainfile(filepath=str(Path(tempfile.mkdtemp()) / "mi_tren.blend"))
+    revisar(guion.ESTADO["sucio"], "guion: guardar pide revisar en el momento")
+    guion.revisar_ya(contexto)
+    revisar(guion.completo() and sesion.estado() == sesion.LOGRADA, f"guion: el tren guardado termina el proyecto ({guion.vista()['modo']})")
+
+    # La banda y el panel se dibujan sin errores (gpu y blf falsos).
+    falso = Diseno()
+    blf_falso = SimpleNamespace(size=lambda *a: None, color=lambda *a: None, position=lambda *a: None,
+                                draw=lambda *a: None, dimensions=lambda f, t: (len(t) * 6.0, 10.0))
+    originales = {k: getattr(hud, k, None) for k in ("gpu", "blf", "batch_for_shader")}
+    hud.gpu, hud.blf, hud.batch_for_shader = falso, blf_falso, (lambda *a, **k: falso)
+    banda_gpu, banda_bpy = banda.gpu, banda.bpy
+    try:
+        class ContextoFalso:
+            region = SimpleNamespace(width=1200, height=700, x=0, y=0)
+            area = None
+
+            def __getattr__(self, nombre):
+                return getattr(contexto, nombre)
+
+        banda.gpu = falso
+        banda.bpy = SimpleNamespace(context=ContextoFalso(), app=bpy.app, types=bpy.types)
+        banda.dibujar()
+        panel.AMATISTA_PT_guion.draw(_Envoltura(panel.AMATISTA_PT_guion, 0), contexto)
+        revisar(True, "guion: la banda y el panel se dibujan")
+    except Exception as error:  # noqa: BLE001
+        traceback.print_exc()
+        revisar(False, f"guion: dibujar la banda o el panel: {error}")
+    finally:
+        banda.gpu, banda.bpy = banda_gpu, banda_bpy
+        for k, val in originales.items():
+            setattr(hud, k, val)
+
+    # Una actividad corta: el paso es lo que pide la actividad y el molde se sigue dibujando.
+    sesion.abrir(contexto, "blender.bp.m1", "conmigo:bl-mover:baja")
+    a = sesion.actividad()
+    revisar(a is not None and a.id == "conmigo:bl-mover:baja" and sesion.estado() == sesion.TRABAJANDO,
+            f"guion: la actividad empieza sin una ficha encima ({sesion.estado()})")
+    guion.revisar_ya(contexto)
+    v = guion.vista()
+    revisar(v["haz"] == a.pide and v["total"] >= 1, f"guion: el paso de la actividad es su frase ({v['haz']})")
+    caja = contexto.scene.objects.get("Caja")
+    if caja is not None:
+        caja.location.z = 1.0
+        contexto.view_layer.update()
+        guion.revisar_ya(contexto)
+        revisar(sesion.estado() == sesion.LOGRADA, "guion: bajar la caja al suelo logra la actividad")
+
+    # Administrador: practica sin progreso, nada se guarda ni se envía, y arranca de cero.
+    token, rol = p.token, p.rol
+    p.token, p.rol = "prueba-admin", "admin"
+    try:
+        datos.reiniciar_cache()
+        aprendizaje.ESTADO["avance_admin"] = None
+        revisar(ajustes.sin_progreso() and guion.sin_progreso(), "admin: la cuenta admin practica sin progreso")
+        revisar(not datos.avance()["completadas"] and not datos.avance()["cola"], "admin: el taller empieza de cero")
+        sesion.abrir(contexto, "blender.bp.m1", "conmigo:bl-mover:baja")
+        caja = contexto.scene.objects.get("Caja")
+        if caja is not None:
+            caja.location.z = 1.0
+            contexto.view_layer.update()
+            guion.revisar_ya(contexto)
+        revisar(not datos.avance()["cola"], "admin: el intento no se guarda para enviar")
+        revisar(not list(ajustes.carpeta_usuario().glob("avance_taller_*.json"))
+                or all("admin" not in f.read_text(encoding="utf-8") for f in ajustes.carpeta_usuario().glob("avance_taller_*.json")),
+                "admin: nada se escribe en el equipo")
+        aprendizaje.marcar_completada("blender.bp.m1.tren")
+        aprendizaje.ESTADO["avance_admin"] = None  # otro arranque de Blender
+        revisar("blender.bp.m1.tren" not in aprendizaje.completadas(), "admin: al volver a entrar todo empieza de cero")
+    finally:
+        p.token, p.rol = token, rol
+        datos.reiniciar_cache()
+    sesion.terminar()
+    practicas.cerrar(contexto)
+    p.guion_paso_a_paso = False
+
+
 def _motor_foto(contexto, extras):
     from amatista_blender import practicas
 
@@ -1446,6 +1621,8 @@ def main():
     # Motor 6.1: las pruebas de antes no esperan fichas ni el modo curioso (probar_motor61 los prueba).
     ajustes.prefs().presentar_herramientas = False
     ajustes.prefs().modo_curioso = "nunca"
+    # Motor 7: las pruebas de antes prueban la interfaz del motor 6 (probar_motor7 prueba el guion).
+    ajustes.prefs().guion_paso_a_paso = False
     catalogo = practicas.catalogo()
     revisar("blender.bp.m1.tren" in catalogo and "blender.bpi.m3.pelota" in catalogo,
             "las 6 prácticas del plan de estudios están en el catálogo")
@@ -1530,7 +1707,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "6.2.0", "el intento lleva la versión 6.2 del add-on")
+    revisar(datos["version_addon"] == "7.0.0", "el intento lleva la versión 7.0 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1579,6 +1756,7 @@ def main():
     probar_motor6(contexto)
     probar_motor61(contexto)
     probar_motor62(contexto)
+    probar_motor7(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

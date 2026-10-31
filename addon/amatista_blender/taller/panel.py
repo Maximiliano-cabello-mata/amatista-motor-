@@ -49,7 +49,9 @@ class AMATISTA_PT_taller(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return _alumno(context)
+        from .. import guion
+
+        return _alumno(context) and not guion.activo(context.scene)  # motor 7: el guion tiene su panel
 
     def draw(self, context):
         layout = self.layout

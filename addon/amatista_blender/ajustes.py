@@ -12,7 +12,7 @@ from pathlib import Path
 import bpy
 
 PAQUETE = __package__
-VERSION_ADDON = "6.2.0"
+VERSION_ADDON = "7.0.0"
 CARPETA = Path(__file__).resolve().parent
 
 
@@ -70,6 +70,13 @@ def es_desarrollador():
     return bool(p and (p.modo_desarrollador or p.rol in ("profesor", "admin")))
 
 
+def sin_progreso():
+    """Motor 7: un administrador no lleva progreso. Practica cuantas veces quiera; nada se guarda en este equipo
+    ni se envía, y cada vez que Blender arranca todo empieza de cero (pedido del creador, 31 de octubre de 2026)."""
+    p = prefs()
+    return bool(p and getattr(p, "token", "") and getattr(p, "rol", "") == "admin")
+
+
 def _al_cambiar_hud(self, context):
     from .interfaz import hud
 
@@ -116,9 +123,17 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
         description="Mientras trabajas, la tarjeta se achica a una línea; se abre al pasar el ratón o cuando hay algo nuevo",
         default=True,
     )
+    # Motor 7: el guion paso a paso (guion/): avanza por el resultado y señala de verdad.
+    guion_paso_a_paso: bpy.props.BoolProperty(
+        name="Guía paso a paso (motor 7)",
+        description="Un paso a la vez, arriba de la vista 3D y en N › Amatista. Avanza en cuanto tu escena lo "
+                    "cumple; las pistas dicen dónde está de verdad cada herramienta",
+        default=True,
+    )
     brillo_herramientas: bpy.props.BoolProperty(
         name="Hacer brillar la herramienta que necesito",
-        description="Si te atascas, la herramienta de la actividad brilla en la barra T (no te dice cómo usarla)",
+        description="Guía del motor 6 (con la guía paso a paso apagada): si te atascas, se marca dónde está la "
+                    "herramienta de la actividad",
         default=True,
     )
     # Motor 6.1: la ayuda que enseña (fichas.py).
@@ -259,6 +274,7 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
 
         caja = layout.box()
         caja.label(text="En la vista 3D", icon="HEART")
+        caja.prop(self, "guion_paso_a_paso")
         caja.prop(self, "mostrar_hud")
         caja.prop(self, "tarjeta_compacta")
         caja.prop(self, "brillo_herramientas")
