@@ -22,6 +22,10 @@ def ejecutar(context, accion):
             return sesion.siguiente(context)
         # Motor 6: con la cuenta conectada, lo que sigue lo marca la lección de la plataforma.
         return sesion.volver_a_la_plataforma() if sesion.manda_la_plataforma() else sesion.abrir(context)
+    if accion == "volver_amatista":
+        from .. import navegar
+
+        return navegar.volver(context)  # motor 6.2: la pastilla «Volver a mi práctica»
     if accion == "volver_plataforma":
         return sesion.volver_a_la_plataforma()
     if accion == "abrir_plataforma":
