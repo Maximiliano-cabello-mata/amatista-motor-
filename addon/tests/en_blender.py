@@ -1211,6 +1211,210 @@ def probar_motor6(contexto):
     revisar(not blender_amatista.devolver_tema(), "Blender Amatista: no queda nada por devolver")
 
 
+def probar_motor61(contexto):
+    """Motor 6.1: la herramienta nueva se presenta con su ficha, brilla en su zona, el modo curioso y la plataforma."""
+    print("Motor 6.1")
+    from amatista_blender import ajustes, cuenta, enlace, fichas, plataforma
+    from amatista_blender.interfaz import turno
+    from amatista_blender.taller import datos, operadores, panel, sesion
+    from amatista_blender.taller.vista import brillo, ficha, tarjeta
+
+    p = ajustes.prefs()
+    p.presentar_herramientas = True
+    sesion.terminar()
+    for archivo in ajustes.carpeta_usuario().glob("avance_taller_*.json"):
+        archivo.unlink()
+    datos.reiniciar_cache()
+    revisar(len(fichas.fichas()) >= 20 and fichas.ficha("mesh.extrude").zona == "herramientas",
+            "fichas: se leen las mismas de la teoría de la plataforma")
+
+    # Presentar: la primera actividad con herramientas nuevas empieza por sus fichas, de a una.
+    sesion.abrir(contexto, "blender.bp.m2", "mira:bl-extruir")
+    a = sesion.actividad()
+    revisar(a is not None and sesion.estado() == sesion.PRESENTANDO, f"presentar: antes de Mira, la ficha ({sesion.estado()})")
+    f = fichas.visible()
+    revisar(f is not None and f.id == "mesh.edit" and fichas.chip() == "HERRAMIENTA NUEVA · 1 de 2",
+            f"presentar: primero Modo Edición, 1 de 2 ({f and f.id}, {fichas.chip()})")
+    revisar(brillo.activo() and brillo.ESTADO["region"] == "HEADER" and "cabecera" in brillo.ESTADO["texto"],
+            f"presentar: Modo Edición brilla en la cabecera ({brillo.ESTADO})")
+    revisar(turno.de_quien(contexto) == turno.TALLER and [b[1] for b in tarjeta.botones()][0] == "ficha_entendido",
+            f"presentar: la ficha ocupa la tarjeta del taller ({tarjeta.botones()})")
+    revisar(sesion.detalle()["ficha"] == {"id": "mesh.edit", "nombre": "Modo Edición"} and
+            sesion.detalle()["estado"] == "presentando", "presentar: la lección sabe qué herramienta se presenta")
+    operadores.ejecutar(contexto, "ficha_como")
+    pasos = [t for t, _tam, _c, _s, v in ficha.lineas(f, 500, 12, 14) if v.isdigit()]
+    revisar(fichas.ESTADO["abierta"] and len(pasos) >= 3, f"presentar: «¿Cómo se usa?» abre los pasos ({pasos})")
+    operadores.ejecutar(contexto, "ficha_entendido")
+    revisar(fichas.visible().id == "mesh.extrude" and fichas.chip().endswith("2 de 2") and sesion.estado() == sesion.PRESENTANDO,
+            "presentar: «Entendido» pasa a la siguiente herramienta nueva")
+    revisar(brillo.ESTADO["region"] == "TOOLS", "presentar: Extruir brilla en la barra de herramientas")
+    operadores.ejecutar(contexto, "ficha_entendido")
+    revisar(fichas.visible() is None and sesion.estado() == sesion.MIRANDO, f"presentar: después de las fichas, Mira ({sesion.estado()})")
+    revisar(fichas.vistas().get("mesh.edit") == 1 and fichas.vistas().get("mesh.extrude") == 1,
+            "presentar: las fichas vistas quedan en el avance del alumno")
+
+    # La segunda vez ya no se presenta: una línea de recordatorio en la tarjeta (se retira con el uso).
+    sesion.abrir(contexto, "blender.bp.m2", "mira:bl-extruir")
+    revisar(sesion.estado() == sesion.MIRANDO and fichas.visible() is None, "andamio: vista una vez, ya no se presenta")
+    linea = fichas.recordatorio(sesion.actividad())
+    revisar(linea.startswith("Modo Edición (Tab):"), f"andamio: queda un recordatorio de una línea ({linea})")
+    sesion.terminar()
+
+    # «Ya la conozco»: esa herramienta no se vuelve a presentar sola.
+    sesion.abrir(contexto, "blender.bp.m2", "mira:bl-corte-bucle")
+    revisar(fichas.visible() is not None and fichas.visible().id == "mesh.loopcut", "presentar: Corte de bucle es nueva")
+    operadores.ejecutar(contexto, "ficha_conozco")
+    revisar("mesh.loopcut" in fichas.conocidas() and sesion.estado() == sesion.MIRANDO,
+            "presentar: «Ya la conozco» la guarda y sigue con la actividad")
+    sesion.terminar()
+
+    # Consulta: «¿Qué es esto?» del panel abre cualquier ficha; Propiedades también brilla.
+    revisar(bpy.ops.amatista.ficha(herramienta="modifier.mirror") == {"FINISHED"} and fichas.modo() == fichas.CONSULTA,
+            "consulta: «¿Qué es?» abre la ficha del Espejo")
+    revisar(turno.de_quien(contexto) == turno.FICHA, "consulta: sin taller, la ficha tiene su propio turno")
+    revisar(brillo.ESTADO["espacio"] == "PROPERTIES" and "Propiedades" in brillo.ESTADO["texto"],
+            f"consulta: el Espejo brilla en Propiedades ({brillo.ESTADO['texto']})")
+    operadores.ejecutar(contexto, "ficha_entendido")
+    revisar(fichas.visible() is None and not brillo.activo(), "consulta: «Cerrar» la quita y apaga el brillo")
+    revisar(bpy.ops.amatista.ficha(herramienta="no.existe") == {"CANCELLED"}, "consulta: sin ficha, no abre nada")
+    revisar(len(panel.fichas_del_panel()) > 0, "panel: «¿Qué es esto?» lista las herramientas del módulo")
+
+    # Modo curioso: lo que el alumno toca se explica las primeras veces.
+    # Sin ventana Blender no anota los operadores en wm.operators: se prueba con lo que «tocó» el alumno.
+    fichas.ULTIMO.update(op=None, herramienta=None, listo=False)
+    revisar(fichas.tocado() is None and fichas.ULTIMO["listo"], "curioso: la primera vez solo anota lo que hay")
+    original_tocado = fichas.tocado
+    toques = [("MESH_OT_primitive_cube_add", ""), ("MESH_OT_primitive_cube_add", ""), ("OBJECT_OT_delete", "")]
+    fichas.tocado = lambda: toques.pop(0) if toques else None
+    try:
+        p.modo_curioso = "auto"
+        explicada = fichas.revisar_curioso()
+        revisar(explicada is not None and explicada.id == "object.add" and fichas.chip() == "¿QUÉ ES ESTO?",
+                f"curioso: agregar un cubo explica «Agregar formas» ({explicada and explicada.id})")
+        revisar(turno.de_quien(contexto) == turno.FICHA and brillo.ESTADO["region"] == "HEADER",
+                "curioso: la ficha corta se ve y Agregar brilla en la cabecera")
+        operadores.ejecutar(contexto, "ficha_conozco")
+        revisar(fichas.revisar_curioso() is None, "curioso: «No me lo expliques» no la repite")
+        p.modo_curioso = "nunca"
+        revisar(fichas.revisar_curioso() is None and fichas.visible() is None, "curioso: apagado no explica nada")
+    finally:
+        fichas.tocado = original_tocado
+    fichas.cerrar(marcar=False)
+
+    # La plataforma: Blender sabe en qué lección va y no abre otra pestaña al cumplir la etapa.
+    enlace.cumplir({"id": "leccion-1", "tipo": "leccion", "datos": {
+        "curso": "blender_principiante", "leccion": "bp1_blender", "clase": "blender", "titulo": "Explora en Blender",
+        "numero": 2, "total": 5}})
+    revisar(plataforma.viva() and plataforma.texto_corto().startswith("Lección 2 de 5"),
+            f"plataforma: Blender sabe la lección ({plataforma.texto_corto()})")
+    p.presentar_herramientas = False
+    sesion.orden(contexto, "taller_abrir", {"taller": "blender.bp.m1", "etapa": "exploracion",
+                                            "habilidades": ["bl-agregar-primitivas"], "leccion": "bp1_blender"})
+    operadores.ejecutar(contexto, "ahora_tu")
+    _armar(contexto, sesion.actividad().piezas)
+    sesion.evaluar(contexto)
+    revisar(sesion.SESION["volver"] and "ya lo sabe" in sesion.frase_logro(),
+            f"plataforma: al cumplir la etapa, la lección del navegador sigue sola ({sesion.frase_logro()})")
+    enlace.cumplir({"id": "leccion-2", "tipo": "leccion", "datos": {
+        "curso": "blender_principiante", "leccion": "bp1_explora", "clase": "teoria", "titulo": "Muévete y transforma",
+        "numero": 3, "total": 5}})
+    revisar("«Muévete y transforma»" in sesion.frase_logro() and [b[1] for b in tarjeta.botones()] == ["otra_vez"],
+            f"plataforma: Blender dice a dónde pasó la lección ({sesion.frase_logro()}, {tarjeta.botones()})")
+    abiertas = []
+    original = cuenta.abrir_plataforma
+    cuenta.abrir_plataforma = lambda ruta="": abiertas.append(ruta) or True
+    try:
+        operadores.ejecutar(contexto, "volver_plataforma")
+        revisar(abiertas == [], "plataforma: abierta, no se abre otra pestaña")
+        operadores.ejecutar(contexto, "abrir_plataforma")
+        revisar(abiertas == ["#/curso/blender_principiante/leccion/bp1_explora"],
+                f"plataforma: «Mi lección» abre la lección en la que va ({abiertas})")
+    finally:
+        cuenta.abrir_plataforma = original
+    sesion.terminar()
+    sesion.RUTA.update(etapa=None, leccion="", cumplida=False)
+    plataforma.reiniciar()
+    p.modo_curioso = "auto"
+
+
+def probar_motor62(contexto):
+    """Motor 6.2: cambiar de práctica sale limpio, «Volver a mi práctica» y el acompañamiento según el ánimo."""
+    print("Motor 6.2")
+    from amatista_blender import ajustes, navegar, practicas
+    from amatista_blender.interfaz import turno
+    from amatista_blender.taller import acompanar, datos, escena, operadores, sesion
+    from amatista_blender.taller.vista import brillo, tarjeta
+
+    p = ajustes.prefs()
+    p.presentar_herramientas = False
+    sesion.terminar()
+    catalogo = practicas.catalogo()
+    c = datos.catalogo()
+
+    # Una escena sin práctica pero con cosas del alumno no se usa: la práctica empieza limpia.
+    sc_suelta = _escena_nueva(contexto, "Mis pruebas")
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(3, 0, 0))
+    contexto.active_object.name = "Mi cosa"
+    suelta = next(pid for pid in sorted(catalogo) if c.taller_de_proyecto(pid) is None
+                  and catalogo[pid].get("definicion"))
+    practicas.activar(contexto, catalogo[suelta]["definicion"], "paquete")
+    revisar(contexto.scene != sc_suelta and "Mi cosa" not in contexto.scene.objects,
+            f"cambio limpio: lo suelto del alumno no entra a la práctica ({[o.name for o in contexto.scene.objects]})")
+    revisar("Mi cosa" in sc_suelta.objects, "cambio limpio: lo del alumno sigue en su escena")
+
+    # El proyecto de un taller y luego otra práctica: el molde del proyecto ya no se queda dibujado.
+    t = next(t for t in c.talleres if t.proyecto and t.proyecto in catalogo)
+    practicas.activar(contexto, catalogo[t.proyecto]["definicion"], "paquete")
+    revisar(sesion.SESION["proyecto"] and sesion.actividad() is not None, f"cambio limpio: el proyecto de {t.id} abre el taller")
+    practicas.activar(contexto, catalogo[suelta]["definicion"], "paquete")
+    revisar(sesion.actividad() is None and sesion.molde_visible() is None,
+            "cambio limpio: otra práctica suelta el proyecto anterior y su molde")
+    practicas.cerrar(contexto)
+
+    # Acompañamiento: una habilidad nueva tiene todo encendido; los fallos suben el ánimo a «atorado».
+    for archivo in ajustes.carpeta_usuario().glob("avance_taller_*.json"):
+        archivo.unlink()
+    datos.reiniciar_cache()
+    contexto = _abrir_actividad(contexto, "blender.bp.m3", "conmigo:bl-espejo:ala")
+    revisar(sesion.estado() == sesion.TRABAJANDO, f"acompañar: trabajando en el taller ({sesion.estado()})")
+    luz = acompanar.calcular()
+    revisar(luz is not None and luz.nivel == 3 and luz.pieza and luz.accion,
+            f"acompañar: habilidad nueva al principio del curso, luz plena ({luz})")
+    revisar(acompanar.te_toca() == "Espejo" and tarjeta._linea_accion() is not None,
+            f"acompañar: la tarjeta dice qué herramienta toca ({acompanar.te_toca()})")
+    revisar(acompanar.pulso() > 0, "acompañar: la pieza que toca lleva faro")
+    for _ in range(3):
+        acompanar.fallo()
+    brillo.apagar()
+    acompanar.ESTADO["leido"] = 0.0
+    acompanar.vigilar()
+    animo = acompanar.animo()
+    revisar(animo is not None and animo.nivel in ("atorado", "frustrado"), f"acompañar: tres fallos, atorado ({animo})")
+    revisar(sesion.mensaje() != "" and brillo.activo(), f"acompañar: se ofrece ayuda y brilla la herramienta ({sesion.mensaje()})")
+    detalle = sesion.detalle()["acompanamiento"]
+    revisar(detalle["animo"] == animo.nivel and detalle["luz"] == "plena" and detalle["razones"],
+            f"acompañar: la plataforma recibe el ánimo, no los errores ({detalle})")
+    acompanar.avanzo()
+    revisar(acompanar.calcular() is not None and acompanar.animo().indice < 2, "acompañar: avanzar calma el ánimo")
+
+    # Volver: en otra escena aparece «Volver a mi práctica» y un clic regresa a la actividad.
+    del_taller = contexto.scene
+    revisar(escena.es_del_taller(del_taller), "volver: la actividad está en la escena del taller")
+    otra = _escena_nueva(contexto, "Me perdí")
+    revisar(navegar.hace_falta(contexto) and turno.de_quien(contexto) == turno.VOLVER,
+            f"volver: fuera de la actividad sale la pastilla ({turno.de_quien(contexto)})")
+    texto = operadores.ejecutar(contexto, "volver_amatista")
+    revisar(contexto.scene == del_taller and texto.startswith("Aquí sigues"),
+            f"volver: un clic regresa a la escena del taller ({contexto.scene.name}, {texto})")
+    revisar(not navegar.hace_falta(contexto) and turno.de_quien(contexto) == turno.TALLER,
+            "volver: de vuelta, la tarjeta del taller otra vez")
+    revisar(bpy.ops.amatista.volver() == {"FINISHED"}, "volver: el operador existe para el menú y la cabecera")
+    sesion.terminar()
+    sesion.RUTA.update(etapa=None, leccion="", cumplida=False)
+    bpy.data.scenes.remove(otra)
+    bpy.data.scenes.remove(sc_suelta)
+
+
 def _motor_foto(contexto, extras):
     from amatista_blender import practicas
 
@@ -1239,6 +1443,9 @@ def main():
     shutil.rmtree(ajustes.carpeta_usuario() / "isla", ignore_errors=True)
 
     revisar(bpy.context.preferences.addons.get("amatista_blender") is not None, "preferencias disponibles")
+    # Motor 6.1: las pruebas de antes no esperan fichas ni el modo curioso (probar_motor61 los prueba).
+    ajustes.prefs().presentar_herramientas = False
+    ajustes.prefs().modo_curioso = "nunca"
     catalogo = practicas.catalogo()
     revisar("blender.bp.m1.tren" in catalogo and "blender.bpi.m3.pelota" in catalogo,
             "las 6 prácticas del plan de estudios están en el catálogo")
@@ -1323,7 +1530,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "6.0.0", "el intento lleva la versión 6.0 del add-on")
+    revisar(datos["version_addon"] == "6.2.0", "el intento lleva la versión 6.2 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1370,6 +1577,8 @@ def main():
     probar_idioma(contexto)
     probar_integracion(contexto)
     probar_motor6(contexto)
+    probar_motor61(contexto)
+    probar_motor62(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

@@ -215,6 +215,12 @@ class AMATISTA_MT_principal(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator_context = "INVOKE_DEFAULT"
+        from . import navegar
+
+        if navegar.hace_falta(context):
+            # Motor 6.2: lo primero, volver a lo que estabas haciendo (la escena de tu práctica).
+            layout.operator("amatista.volver", text=navegar.texto_boton(), icon="LOOP_BACK")
+            layout.separator()
         sesion = _sesion()
         a = sesion.actividad()
         if a is None and sesion.manda_la_plataforma():
@@ -281,6 +287,14 @@ class AMATISTA_PT_rapido(bpy.types.Panel):
 def _boton_cabecera(self, context):
     if ajustes.prefs() is None:
         return
+    from . import navegar
+
+    if navegar.hace_falta(context):
+        # Motor 6.2: fuera de la escena de tu práctica el botón te devuelve (un clic, sin buscar nada).
+        fila = self.layout.row(align=True)
+        fila.alert = True
+        fila.operator("amatista.volver", text="Volver a Amatista", icon_value=estilo.icono("logo"))
+        return
     corta = actividad_corta()
     texto = f"Amatista · {corta[1]}" if corta else "Amatista"
     fila = self.layout.row(align=True)
@@ -288,11 +302,32 @@ def _boton_cabecera(self, context):
 
 
 def _barra_estado(self, context):
+    from . import plataforma
+
     corta = actividad_corta()
-    if corta is None:
+    en_plataforma = plataforma.texto_corto()
+    if corta is None and not en_plataforma:
         return
     fila = self.layout.row(align=True)
-    fila.label(text=f"Amatista: {corta[0]} · {corta[1]}", icon_value=estilo.icono("logo"))
+    from . import navegar
+
+    if navegar.hace_falta(context):
+        fila.operator("amatista.volver", text="Volver a Amatista", icon="LOOP_BACK", emboss=False)
+    if corta is not None:
+        fila.label(text=f"Amatista: {corta[0]} · {corta[1]}", icon_value=estilo.icono("logo"))
+    elif en_plataforma:
+        # Motor 6.1: Blender sabe en qué lección va el alumno en la plataforma.
+        fila.label(text=f"En la plataforma: {en_plataforma}", icon_value=estilo.icono("logo"))
+
+
+def redibujar_barras():
+    """La barra de estado, la de arriba y la vista 3D (la lección de la plataforma cambió)."""
+    if bpy.app.background:
+        return
+    for ventana in getattr(bpy.context.window_manager, "windows", ()) or ():
+        for area in ventana.screen.areas:
+            if area.type in ("STATUSBAR", "TOPBAR", "VIEW_3D"):
+                area.tag_redraw()
 
 
 CLASES = (AMATISTA_MT_principal, AMATISTA_PT_rapido, AMATISTA_OT_espacio, AMATISTA_OT_mostrar_panel,

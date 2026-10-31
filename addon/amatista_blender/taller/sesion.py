@@ -39,13 +39,14 @@ import bpy
 from bpy.app.handlers import persistent
 
 from .. import _motor, ajustes, enfoque, enlace
-from . import datos, demo, escena
+from . import acompanar, datos, demo, escena
 
 taller = _motor.taller
 ayudas = _motor.taller.ayudas
 etapas = _motor.taller.etapas
 
 MIRANDO, TRABAJANDO, LOGRADA, PAUSA = "mirando", "trabajando", "lograda", "pausa"
+PRESENTANDO = "presentando"  # motor 6.1: la ficha de una herramienta nueva antes de la actividad
 CALMA = 0.35  # s sin cambios antes de revisar
 MENSAJE_DURA = 6.0
 
@@ -147,10 +148,13 @@ def ruta_de_vuelta():
     return f"#/curso/{t.curso}/leccion/{leccion}"
 
 
-def volver_a_la_plataforma():
-    from .. import cuenta
+def volver_a_la_plataforma(forzar=False):
+    """Motor 6.1: si la plataforma está abierta, la lección ya siguió sola y no se abre otra pestaña."""
+    from .. import cuenta, plataforma
 
-    if not cuenta.abrir_plataforma(ruta_de_vuelta()):
+    if plataforma.viva() and not forzar:
+        return plataforma.frase_al_volver(RUTA["leccion"]) or "Sigue en tu navegador: tu lección ya está ahí."
+    if not cuenta.abrir_plataforma(plataforma.ruta() if plataforma.viva() else ruta_de_vuelta()):
         return "Abre la plataforma en tu navegador para seguir."
     return "Sigue en la plataforma: tu avance ya está allá."
 
@@ -347,8 +351,12 @@ def _practica_generada(a):
 
 def empezar(context, a):
     """Empieza una actividad (Actividad del motor)."""
+    from .. import fichas
+
     context = context or bpy.context
     demo.detener(llamar=False)
+    if fichas.modo() == fichas.PRESENTAR:
+        fichas.cerrar(marcar=False)  # la presentación era de la actividad anterior
     _apagar_brillo()
     repaso = SESION["repaso_ofrecido"]
     SESION.update(_vacia(), repaso_ofrecido=repaso)
@@ -357,6 +365,9 @@ def empezar(context, a):
     SESION.update(taller=a.taller, actividad=a, inicio=ahora, entrada=ahora,
                   escalera=dataclasses.replace(escalera, techo=a.techo, freno=a.freno),
                   plan=datos.plan(a.taller))
+    acompanar.reiniciar(ahora)  # motor 6.2: el ánimo y la luz son de esta actividad
+    if a.habilidad and SALTOS.get(a.habilidad):
+        acompanar.salto(SALTOS[a.habilidad])
     if a.tipo == taller.PROYECTO:
         return _empezar_proyecto(context, a)
     practica = _practica_generada(a) if a.revisa else None
@@ -371,6 +382,29 @@ def empezar(context, a):
         escena.encuadrar(context, a.molde or a.piezas or a.inicio)
     except Exception as error:  # noqa: BLE001
         print(f"[Amatista] No se pudo encuadrar la vista: {error}")
+    # Motor 6.1: una herramienta que el alumno nunca vio se presenta antes (su ficha, iluminada en su lugar).
+    from .. import fichas
+
+    cola = fichas.por_presentar(a)
+    if cola and fichas.mostrar(cola, fichas.PRESENTAR):
+        SESION["estado"] = PRESENTANDO
+        _al_cambiar_estado()
+        return None
+    return _arrancar(context, a, sc)
+
+
+def despues_de_presentar(context=None):
+    """Las fichas de la actividad ya se vieron: ahora sí empieza (Mira o el trabajo)."""
+    a = SESION["actividad"]
+    if a is None or SESION["estado"] != PRESENTANDO:
+        return None
+    SESION["entrada"] = time.time()
+    context = context or bpy.context
+    return _arrancar(context, a, escena.escena_del_taller(context, cambiar=False))
+
+
+def _arrancar(context, a, sc):
+    sc = sc or getattr(context, "scene", None) or bpy.context.scene
     if a.tipo == taller.MIRA:
         SESION["estado"] = MIRANDO
         h = datos.catalogo().habilidad(a.habilidad)
@@ -409,7 +443,9 @@ def al_abrir_practica(practica, origen="paquete"):
     t = c.taller_de_proyecto(practica.id) if c is not None else None
     a = SESION["actividad"]
     if t is None:
-        if a is not None and not SESION["proyecto"]:
+        # Motor 6.2: también si lo de antes era el proyecto de OTRA práctica (antes su molde seguía
+        # dibujándose encima de la práctica nueva).
+        if a is not None and (not SESION["proyecto"] or a.practica_id != practica.id):
             demo.detener(llamar=False)
             SESION.update(_vacia(), repaso_ofrecido=SESION["repaso_ofrecido"])
             _redibujar()
@@ -426,6 +462,7 @@ def al_abrir_practica(practica, origen="paquete"):
                       estado=TRABAJANDO, proyecto=True, plan=datos.plan(t.id),
                       escalera=dataclasses.replace(ayudas.escalera_para(taller.SOLA, ahora), techo=nueva.techo))
         datos.recordar_taller(t.id)
+        acompanar.reiniciar(ahora)
     SESION["molde_proyecto"] = taller.molde_del_proyecto(practica)
     _al_cambiar_estado()
     return True
@@ -449,6 +486,10 @@ def _avanzo(llenas, cumplidos):
         SESION["escalera"] = ayudas.avance(SESION["escalera"], time.time())
         SESION["ofrecida"] = -1
         _apagar_brillo()
+        acompanar.avanzo()
+        acompanar.apagar_brillo_auto()
+    elif llenas < SESION["llenas"]:
+        acompanar.retrocedio()  # motor 6.2: una pieza que estaba y se deshizo
     SESION["llenas"], SESION["cumplidos"] = llenas, cumplidos
 
 
@@ -458,6 +499,7 @@ def _equivocadas(revision):
         if p.estado == "equivocada" and p.indice not in SESION["equivocadas"]:
             SESION["equivocadas"].add(p.indice)
             SESION["escalera"] = ayudas.fallo(SESION["escalera"])
+            acompanar.fallo()
 
 
 def evaluar(context=None):
@@ -543,6 +585,12 @@ def frase_logro():
         return ""
     c = datos.catalogo()
     if SESION["volver"]:
+        from .. import plataforma
+
+        # Motor 6.1: con la plataforma abierta, la lección ya avanzó sola: se dice a dónde.
+        dicho = plataforma.frase_al_volver(RUTA["leccion"])
+        if dicho:
+            return dicho
         e = RUTA["etapa"]
         if e is not None and e.nombre == etapas.EXPLORACION:
             return "Exploración lista. Vuelve a la plataforma: ahora viene el porqué."
@@ -706,6 +754,7 @@ def pedir_pista(context=None):
     h = habilidad_actual()
     pista = ayudas.pista_para(nivel, h, pieza_actual())
     SESION.update(escalera=nueva, pista=pista, ayuda=max(SESION["ayuda"], nivel), ofrecida=-1)
+    acompanar.pidio_pista()
     if nivel == ayudas.CON_QUE:
         _poner_herramienta(context, h)
     if nivel == ayudas.MIRAME:
@@ -773,7 +822,11 @@ def repasar(context=None, taller_id="", habilidad_id=""):
 
 def terminar():
     """Cierra la sesión del taller (la escena queda como está)."""
+    from .. import fichas
+
     demo.detener(llamar=False)
+    if fichas.modo() == fichas.PRESENTAR:
+        fichas.cerrar(marcar=False)
     repaso = SESION["repaso_ofrecido"]
     SESION.update(_vacia(), repaso_ofrecido=repaso)
     _al_cambiar_estado()
@@ -831,7 +884,8 @@ def detalle():
     pieza = r.pieza_actual if r is not None else None
     pista = SESION["pista"]
     plan = SESION["plan"]
-    estado_vivo = SESION["estado"] if SESION["estado"] in (MIRANDO, TRABAJANDO, LOGRADA, PAUSA) else TRABAJANDO
+    estado_vivo = SESION["estado"] if SESION["estado"] in (MIRANDO, TRABAJANDO, LOGRADA, PAUSA, PRESENTANDO) \
+        else TRABAJANDO
     if SESION["mirame"]:
         estado_vivo = MIRANDO
     mensaje_vivo = frase_logro() if SESION["estado"] == LOGRADA else (r.mensaje if r is not None else "")
@@ -857,7 +911,18 @@ def detalle():
         # Motor 6: la etapa que mandó la plataforma y si ya se cumplió (la lección se da por hecha).
         "etapa": RUTA["etapa"].nombre if RUTA["etapa"] is not None else "",
         "etapa_cumplida": bool(RUTA["cumplida"]),
+        # Motor 6.1: la herramienta nueva que Blender está presentando (la lección lo dice al lado).
+        "ficha": _ficha_vivo(),
+        # Motor 6.2: el ánimo y la luz (sin contar errores: dónde se atora, no cuántas veces falló).
+        "acompanamiento": acompanar.para_latido(),
     }
+
+
+def _ficha_vivo():
+    from .. import fichas
+
+    f = fichas.visible() if fichas.modo() == fichas.PRESENTAR else None
+    return {"id": f.id[:40], "nombre": f.nombre[:60]} if f is not None else None
 
 
 def datos_latido():
@@ -917,6 +982,7 @@ def _al_cambiar(scene, depsgraph=None):
 def _al_deshacer(*_args):
     if SESION["escalera"] is not None and SESION["estado"] == TRABAJANDO:
         SESION["escalera"] = ayudas.deshizo(SESION["escalera"])
+        acompanar.deshizo()
         SESION["sucio"] = True
         SESION["ultimo_cambio"] = time.time()
 
@@ -937,6 +1003,7 @@ def _vigilante():
 
             if tarjeta.cambio_compacta():
                 _redibujar()  # motor 6: la tarjeta se achica sola al quedarse quieta
+            acompanar.vigilar()  # motor 6.2: el ánimo del alumno decide cuánta luz se enciende
         e = SESION["escalera"]
         if e is not None and SESION["estado"] == TRABAJANDO and not demo.activa():
             ahora = time.time()

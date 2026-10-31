@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Amatista para Blender (paquete .deb): instala o actualiza Amatista en tu Blender y lo abre.
+#
+#   amatista                 # instala si hace falta y abre «Blender Amatista»
+#   amatista amatista://…    # lo mismo, siguiendo el enlace de la plataforma
+#   amatista --instalar      # solo instala o actualiza (sin abrir Blender)
+#   amatista --desinstalar   # quita Amatista de tu Blender (tu avance no se toca)
+#   AMATISTA_BLENDER=/ruta/a/blender amatista
+#
+# Se ejecuta como tu usuario: Amatista vive en tu carpeta de Blender, no en el sistema.
+set -u
+COMUN=/usr/share/amatista
+VERSION="$(cat "$COMUN/VERSION" 2>/dev/null || echo 0)"
+MARCA="${XDG_CONFIG_HOME:-$HOME/.config}/amatista/instalado"
+
+avisar() {
+  echo "$1"
+  if [ ! -t 1 ] && command -v notify-send >/dev/null 2>&1; then
+    notify-send -i amatista "Amatista" "$1" 2>/dev/null || true
+  fi
+}
+
+BLENDER=()
+if [ -n "${AMATISTA_BLENDER:-}" ]; then
+  BLENDER=("$AMATISTA_BLENDER")
+elif command -v blender >/dev/null 2>&1; then
+  BLENDER=("$(command -v blender)")
+elif [ -x /snap/bin/blender ]; then
+  BLENDER=(/snap/bin/blender)
+else
+  suelto="$(ls -d "$HOME"/blender-*/blender "$HOME"/Descargas/blender-*/blender "$HOME"/Downloads/blender-*/blender \
+                  /opt/blender*/blender 2>/dev/null | sort -V | tail -n 1)"
+  if [ -n "$suelto" ]; then
+    BLENDER=("$suelto")
+  elif command -v flatpak >/dev/null 2>&1 && flatpak info org.blender.Blender >/dev/null 2>&1; then
+    BLENDER=(flatpak run org.blender.Blender)
+  fi
+fi
+if [ ${#BLENDER[@]} -eq 0 ]; then
+  avisar "No encontré Blender. Instálalo (4.2 o más nuevo): sudo apt install blender, o desde https://www.blender.org/download/"
+  command -v xdg-open >/dev/null 2>&1 && xdg-open "https://www.blender.org/download/" >/dev/null 2>&1 &
+  exit 1
+fi
+
+instalar() {
+  ZIP="$(ls "$COMUN"/amatista-*.zip 2>/dev/null | sort -V | tail -n 1)"
+  "${BLENDER[@]}" --background --python-exit-code 9 --python "$COMUN/instalar_en_blender.py" -- "$ZIP"
+  codigo=$?
+  case $codigo in
+    0) mkdir -p "$(dirname "$MARCA")" && echo "$VERSION" > "$MARCA"
+       avisar "Amatista $VERSION quedó instalado en tu Blender." ;;
+    3) avisar "Tu Blender no es compatible: Amatista necesita Blender 4.2 o más nuevo." ;;
+    *) avisar "No se pudo instalar Amatista (código $codigo). Prueba en una terminal: amatista --instalar" ;;
+  esac
+  return $codigo
+}
+
+case "${1:-}" in
+  --instalar) instalar; exit $? ;;
+  --desinstalar)
+    "${BLENDER[@]}" --background --python "$COMUN/desinstalar_en_blender.py"
+    rm -f "$MARCA"
+    exit 0 ;;
+esac
+
+if [ "$(cat "$MARCA" 2>/dev/null)" != "$VERSION" ]; then
+  instalar || exit $?
+fi
+case "${1:-}" in
+  amatista://*) exec "${BLENDER[@]}" --app-template amatista -- --amatista "$1" ;;
+esac
+exec "${BLENDER[@]}" --app-template amatista

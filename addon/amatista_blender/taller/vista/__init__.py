@@ -41,7 +41,10 @@ def dibujar_molde():
         return
     piezas, estados, actual, marca = visible
     p = ajustes.prefs()
-    molde.dibujar(piezas, estados, actual, marca, reducir_movimiento=p is not None and not p.animaciones)
+    from .. import acompanar
+
+    molde.dibujar(piezas, estados, actual, marca, reducir_movimiento=p is not None and not p.animaciones,
+                  fuerza=acompanar.pulso())  # motor 6.2: la luz del acompañamiento
 
 
 class AMATISTA_GT_boton_taller(bpy.types.Gizmo):
@@ -87,7 +90,8 @@ class AMATISTA_GGT_tarjeta_taller(bpy.types.GizmoGroup):
     def poll(cls, context):
         from ...interfaz import turno
 
-        return turno.me_toca(turno.TALLER, context)
+        # motor 6.1: la ficha usa los mismos botones; motor 6.2: la pastilla «Volver» también
+        return turno.de_quien(context) in (turno.TALLER, turno.FICHA, turno.VOLVER)
 
     def setup(self, context):
         for i in range(tarjeta.MAX_BOTONES):

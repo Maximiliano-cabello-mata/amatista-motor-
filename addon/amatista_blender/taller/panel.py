@@ -8,6 +8,7 @@
     │ Recuérdalo: 1 repaso de un minuto                        │
     │ [ Mi isla ] [ Abrir la plataforma ]                      │
     └──────────────────────────────────────────────────────────┘
+    ▸ ¿Qué es esto? Tus herramientas  (motor 6.1: las fichas de la actividad)
     ▸ ¿Ya sabes esto? Demuéstralo     (cerrado)
     ▸ Otros módulos                   (cerrado)
 
@@ -63,6 +64,13 @@ class AMATISTA_PT_taller(_Base, bpy.types.Panel):
         a = sesion.actividad()
         titulo = t.titulo if t is not None else "Taller"
         cuerpo = estilo.tarjeta(layout, titulo, icono_propio="logo")
+        from .. import plataforma
+
+        en_plataforma = plataforma.texto_corto()
+        if en_plataforma:  # motor 6.1: Blender sabe en qué lección va el alumno en la plataforma
+            fila = cuerpo.row()
+            fila.active = False
+            fila.label(text=f"En la plataforma: {en_plataforma}", icon="URL")
         if plan is not None:
             fila = cuerpo.row()
             fila.active = False
@@ -82,7 +90,12 @@ class AMATISTA_PT_taller(_Base, bpy.types.Panel):
         elif a is None:
             principal.operator("amatista.taller_abrir", text="Empezar el taller", icon="PLAY").taller = tid
         elif sesion.SESION["volver"]:
-            principal.operator("amatista.taller_accion", text="Volver a la plataforma", icon="URL").accion = "volver_plataforma"
+            if plataforma.viva():
+                estilo.parrafo(cuerpo, context, sesion.frase_logro(), margen=4)
+                principal.operator("amatista.taller_accion", text="Otra vez", icon="LOOP_BACK").accion = "otra_vez"
+            else:
+                principal.operator("amatista.taller_accion", text="Ir a la plataforma", icon="URL").accion = \
+                    "volver_plataforma"
         elif not sesion.cubre(context.scene):
             principal.operator("amatista.taller_accion", text="Volver a la actividad", icon="LOOP_BACK").accion = "continuar"
         elif sesion.estado() == sesion.PAUSA:
@@ -125,6 +138,49 @@ class AMATISTA_PT_taller(_Base, bpy.types.Panel):
             nota.label(text=estado_red[:90], icon="INFO")
         elif pendientes_envio:
             nota.label(text="Enviando tu avance…", icon="TIME")
+
+
+class AMATISTA_PT_taller_fichas(_Base, bpy.types.Panel):
+    """Motor 6.1: las fichas de las herramientas de la actividad (las mismas de la teoría de la plataforma)."""
+
+    bl_idname = "AMATISTA_PT_taller_fichas"
+    bl_label = "¿Qué es esto? Tus herramientas"
+    bl_parent_id = "AMATISTA_PT_principal"
+
+    @classmethod
+    def poll(cls, context):
+        return _alumno(context) and datos.catalogo() is not None
+
+    def draw(self, context):
+        from .. import fichas
+
+        layout = self.layout
+        lista = fichas_del_panel()
+        if not lista:
+            estilo.parrafo(layout, context, "Empieza una actividad y aquí verás qué es cada herramienta que usa.",
+                           margen=4)
+            return
+        vistas = fichas.vistas()
+        for f in lista:
+            fila = layout.row(align=True)
+            tecla = f" ({f.tecla})" if f.tecla else ""
+            fila.label(text=f"{f.nombre}{tecla}", icon="CHECKMARK" if vistas.get(f.id) else "LIGHT")
+            fila.operator("amatista.ficha", text="¿Qué es?").herramienta = f.id
+
+
+def fichas_del_panel():
+    """Las fichas de la actividad de ahora o, sin actividad, las del taller del módulo (máximo 6)."""
+    from .. import fichas
+
+    a = sesion.actividad()
+    if a is not None:
+        ids = list(fichas.herramientas_de(a))
+    else:
+        c = datos.catalogo()
+        t = c.taller(_taller_actual()) if c is not None else None
+        ids = [hid for h in (t.habilidades if t is not None else ()) for hid in
+               (c.habilidad(h).herramientas if c.habilidad(h) is not None else ())]
+    return fichas.fichas().de_herramientas(ids)[:6]
 
 
 class AMATISTA_PT_taller_habilidades(_Base, bpy.types.Panel):
@@ -179,4 +235,4 @@ class AMATISTA_PT_taller_modulos(_Base, bpy.types.Panel):
             op.taller = t.id
 
 
-CLASES = (AMATISTA_PT_taller, AMATISTA_PT_taller_habilidades, AMATISTA_PT_taller_modulos)
+CLASES = (AMATISTA_PT_taller, AMATISTA_PT_taller_fichas, AMATISTA_PT_taller_habilidades, AMATISTA_PT_taller_modulos)

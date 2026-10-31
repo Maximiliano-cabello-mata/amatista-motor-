@@ -1,0 +1,5 @@
+#!/bin/sh
+# Al quitar el paquete, Amatista sigue en el Blender de cada usuario hasta que corra «amatista --desinstalar».
+# (El paquete no entra a las carpetas personales: eso le toca a cada quien.)
+set -e
+exit 0
