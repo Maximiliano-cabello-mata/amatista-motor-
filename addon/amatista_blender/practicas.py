@@ -229,13 +229,18 @@ def _escena_para(context, practica, origen):
 
     Nada se borra: lo de la práctica anterior queda en su escena (selector
     de escenas arriba a la derecha) y se recupera al volver a abrirla.
+
+    Motor 6.2: una escena sin práctica pero con cosas del alumno (lo que
+    modeló suelto, el cubo del recorrido, la isla) tampoco se usa: la práctica
+    empieza en una escena propia y limpia, y lo de antes queda donde estaba.
     """
     sc = escena(context)
     anterior = _practica_de_escena(sc)
     inicio = getattr(practica, "starter", None)
     continua = bool(inicio is not None and inicio.from_practice and inicio.from_practice == anterior)
     del_taller = bool(sc is not None and sc.get("amatista_taller"))  # add-on 5: esa escena se vacía en cada actividad
-    if not del_taller and (not anterior or anterior == practica.id or origen == "borrador" or continua):
+    ajena = not anterior and _tiene_cosas_ajenas(sc)
+    if not del_taller and not ajena and (not anterior or anterior == practica.id or origen == "borrador" or continua):
         return sc, ""
     suyas = [s for s in bpy.data.scenes if _practica_de_escena(s) == practica.id]
     destino = max(suyas, key=lambda s: float(s.get(USADA_EN, 0.0)), default=None)  # la última en que trabajaste
@@ -259,6 +264,44 @@ def _escena_para(context, practica, origen):
     if creada:
         return destino, f"Empiezas en una escena nueva. Lo de «{titulo}» quedó guardado en su escena."
     return destino, f"Volviste a tu escena de esta práctica. Lo de «{titulo}» sigue en la suya."
+
+
+def _tiene_cosas_ajenas(sc):
+    """¿La escena (sin práctica) tiene objetos que no son el cubo, la luz y la cámara de inicio intactos?"""
+    if sc is None:
+        return False
+    if sc.get("amatista_isla") or sc.get("amatista_recorrido"):
+        return True
+    intactos = set(escenarios._intactos())
+    return any(obj not in intactos and not obj.get("amatista_ignore") for obj in sc.objects)
+
+
+def _cambio_limpio():
+    """Motor 6.2: nada de la práctica o actividad anterior sigue encendido al abrir otra.
+
+    La demostración se detiene (y se borran sus objetos temporales), la ficha y
+    el brillo se apagan y el ánimo del acompañamiento vuelve a cero.
+    """
+    try:
+        from .taller import acompanar, demo
+
+        demo.detener(llamar=False)
+        acompanar.reiniciar()
+    except Exception as error:  # noqa: BLE001 - limpiar nunca impide abrir
+        print(f"[Amatista] Al cambiar de práctica: {error}")
+    try:
+        from . import fichas
+
+        if fichas.visible() is not None:
+            fichas.cerrar(marcar=False)
+    except Exception as error:  # noqa: BLE001
+        print(f"[Amatista] Ficha al cambiar de práctica: {error}")
+    try:
+        from .taller.vista import brillo
+
+        brillo.apagar()
+    except Exception:  # noqa: BLE001 - sin vista (CI) no hay brillo
+        pass
 
 
 def _a_modo_objeto():
@@ -299,6 +342,7 @@ def activar(context, datos, origen="paquete"):
     sc.amatista.practica_json = json.dumps(datos, ensure_ascii=False)
     sc.amatista.origen = origen
     if nueva:
+        _cambio_limpio()
         sc.amatista.pistas_json = "{}"
         sc.amatista.correcciones = 0
         sc.amatista.mejor_progreso = 0.0
