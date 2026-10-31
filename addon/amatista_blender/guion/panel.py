@@ -98,6 +98,15 @@ class AMATISTA_PT_guion(bpy.types.Panel):
         estilo.parrafo(fila.column(), context, v["haz"])
         if v["por_que"]:
             estilo.parrafo(cuerpo, context, v["por_que"], icon="ERROR" if g.avance().pausa else "INFO", alerta=False)
+        if v.get("senal"):
+            perdida = v.get("senal_estado") == "perdida"
+            estilo.parrafo(cuerpo, context, v["senal"], icon="ERROR" if perdida else "RESTRICT_SELECT_OFF")
+            if v.get("senal_repetir"):
+                cuerpo.operator("amatista.guion_senal_otra_vez", text="Señálalo otra vez", icon="FILE_REFRESH")
+        elif v.get("donde") and not v["pista"]:
+            estilo.parrafo(cuerpo, context, "Dónde: " + v["donde"], icon="VIEWZOOM")
+        if v.get("sugerir_pista") and not v["pista"]:
+            estilo.parrafo(cuerpo, context, "¿Te atoraste? Pide una pista: no cuenta en contra.", icon="QUESTION")
         if v["pista"]:
             caja = cuerpo.box()
             estilo.parrafo(caja, context, f"{v['pista_titulo']} {v['pista']}", icon="LIGHT")
@@ -116,6 +125,8 @@ class AMATISTA_PT_guion(bpy.types.Panel):
             cuerpo.operator("amatista.guion_mirame", text="Mírame hacerlo", icon="HIDE_OFF")
         if g.sin_progreso():
             estilo.parrafo(cuerpo, context, "Administrador: practicas sin guardar progreso.", icon="INFO")
+        if v.get("ultimo"):
+            estilo.parrafo(cuerpo, context, v["ultimo"], icon="CHECKMARK")
         self._lista(layout, v)
 
     def _lista(self, layout, v):
@@ -141,6 +152,19 @@ class AMATISTA_OT_guion_pista(bpy.types.Operator):
         p = _g().pedir_pista(context, self.nivel)
         if p is None:
             self.report({"INFO"}, "No hay un paso pendiente.")
+        return {"FINISHED"}
+
+
+class AMATISTA_OT_guion_senal_otra_vez(bpy.types.Operator):
+    """Vuelve a señalar la herramienta del paso (la deja elegida o abre su pestaña otra vez)"""
+
+    bl_idname = "amatista.guion_senal_otra_vez"
+    bl_label = "Señálalo otra vez"
+    bl_options = {"INTERNAL"}
+
+    def execute(self, context):
+        if _g().repetir_senal() is None:
+            self.report({"INFO"}, "No hay nada que señalar en este paso.")
         return {"FINISHED"}
 
 
@@ -185,10 +209,15 @@ class AMATISTA_OT_guion_mirame(bpy.types.Operator):
             return {"CANCELLED"}
         if not demo.empezar(h, lambda _c: _g()._redibujar(), context.scene, pasos=sesion._pasos_demo(h, sesion.actividad())):
             self.report({"WARNING"}, "La demostración no se pudo mostrar.")
+        else:
+            from .. import corazon
+
+            corazon.evento(corazon.contrato.DEMO_VISTA, herramienta=paso.herramienta)  # el paso cuenta con ayuda
         return {"FINISHED"}
 
 
-CLASES = (AMATISTA_PT_guion, AMATISTA_OT_guion_pista, AMATISTA_OT_guion_abrir, AMATISTA_OT_guion_mirame)
+CLASES = (AMATISTA_PT_guion, AMATISTA_OT_guion_pista, AMATISTA_OT_guion_senal_otra_vez, AMATISTA_OT_guion_abrir,
+          AMATISTA_OT_guion_mirame)
 
 
 def register():

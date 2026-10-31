@@ -27,6 +27,12 @@ Lo que cambia para el alumno (modo alumno, preferencia «Guía paso a paso»):
 - **Administradores sin progreso** (``sin_progreso``): con una cuenta admin
   nada se guarda ni se envía y cada vez que Blender arranca las prácticas
   empiezan de cero.
+
+Corazón Amatista (``amatista.corazon/1``, ``corazon/`` del add-on): desde
+aquí el guion le pasa cada reporte al director del corazón, que decide la
+señal (sola si la herramienta es nueva para el alumno), la comprueba cada
+0,5 s y la dice como está de verdad: vigente, perdida (con «Señálalo otra
+vez») o solo dónde está. Si el corazón falla, el guion sigue como en el 7.0.
 """
 import re
 import time
@@ -35,7 +41,7 @@ from importlib import import_module
 import bpy
 from bpy.app.handlers import persistent
 
-from .. import _motor, ajustes
+from .. import _motor, ajustes, corazon
 
 g7 = import_module(_motor.engine.__name__ + ".guion")
 
@@ -141,6 +147,7 @@ def al_evaluar(context, practica, reporte):
     if nuevo.actual != ESTADO["paso_de_la_pista"]:
         # Otro paso: la pista y la señal eran del anterior.
         ESTADO.update(pista=None, nivel=0, paso_de_la_pista=nuevo.actual or "", senal="")
+    corazon.al_evaluar(practica, ESTADO["guion"], reporte)
     if nuevo.recien:
         ultimo = ESTADO["guion"].paso(nuevo.recien[-1])
         if nuevo.completo:
@@ -247,17 +254,20 @@ def _al_cambiar(scene, depsgraph=None):
 @persistent
 def _al_guardar(*_args):
     if activo():
+        corazon.evento(corazon.contrato.GUARDADO)
         _marcar_cambio()  # guardar no pasa por el depsgraph: el paso «guarda tu tren» se ve en el momento
 
 
 @persistent
 def _al_deshacer(*_args):
     if activo():
+        corazon.evento(corazon.contrato.DESHACER)
         _marcar_cambio()
 
 
 @persistent
 def _al_abrir(*_args):
+    corazon.olvidar()
     ESTADO.update(practica_id="", guion=None, avance=None, pista=None, nivel=0, paso_de_la_pista="", senal="",
                   aviso="")
 
@@ -292,6 +302,10 @@ def pedir_pista(context=None, nivel=0):
         return None
     if av.actual != ESTADO["paso_de_la_pista"]:
         ESTADO.update(nivel=0, paso_de_la_pista=av.actual, senal="")
+    if corazon.activo():
+        respuesta = _pista_del_corazon(nivel)
+        if respuesta is not None:
+            return respuesta
     nivel = nivel or (ESTADO["nivel"] % 3) + 1
     p = g7.pista(g, av, nivel, _idioma())
     if p is None:
@@ -313,10 +327,50 @@ def pedir_pista(context=None, nivel=0):
             "herramientas": [p.herramienta] if p.herramienta else [], "teclas": list(p.teclas), "senalado": senalado}
 
 
+def _pista_del_corazon(nivel):
+    """La pista la decide el corazón; la señal (si hubo) ya está hecha y comprobada."""
+    p, t = corazon.pedir_pista(nivel)
+    if p is None:
+        return None
+    texto, senalado = p.texto, False
+    s = t.senal if t is not None else None
+    if s is not None and s.senal.tipo != corazon.contrato.DECIR and s.estado in (corazon.contrato.VIGENTE,
+                                                                                 corazon.contrato.MOSTRADA):
+        texto += " " + s.texto
+        senalado = True
+    ESTADO.update(pista=p, nivel=p.nivel, senal=texto if senalado else "")
+    _redibujar()
+    return {"nivel": p.nivel, "titulo": p.titulo, "texto": texto, "herramienta": p.herramienta,
+            "herramientas": [p.herramienta] if p.herramienta else [], "teclas": list(p.teclas), "senalado": senalado}
+
+
+def repetir_senal():
+    """«Señálalo otra vez»: la señal que se perdió vuelve a hacerse (y a comprobarse)."""
+    t = corazon.repetir_senal()
+    _redibujar()
+    return t
+
+
+def _del_corazon():
+    """Lo que el corazón dice ahora de la señal, el escalón y lo último que pasó (todo vivo, sin relojes)."""
+    t = corazon.turno()
+    salida = {"senal": "", "senal_estado": "", "senal_repetir": False, "nivel": "", "donde": "", "ultimo": "",
+              "sugerir_pista": False}
+    if t is None:
+        return salida
+    s = t.senal
+    if s is not None and s.senal.tipo != corazon.contrato.DECIR and s.estado != corazon.contrato.CUMPLIDA:
+        salida.update(senal=s.texto, senal_estado=s.estado, senal_repetir=s.se_puede_repetir)
+    salida.update(nivel=t.nivel, donde=t.donde, ultimo=t.ultimo, sugerir_pista=t.sugerir_pista)
+    return salida
+
+
 def texto_pista():
     p = ESTADO["pista"]
     if p is None:
         return "", ""
+    if corazon.activo():
+        return p.titulo, p.texto  # la señal va aparte (vista()["senal"]), siempre comprobada
     return p.titulo, ESTADO["senal"] or p.texto
 
 
@@ -329,6 +383,7 @@ def vista():
     salida = {"activo": activo(), "modo": "", "titulo": "", "numero": 0, "total": 0, "parte": "", "haz": "",
               "por_que": "", "pista": "", "pista_titulo": "", "teclas": [], "pasos": [], "objetivo": None,
               "completo": completo(), "aviso": aviso(), "herramienta": ""}
+    salida.update(_del_corazon())
     if sesion is not None and a is not None and sesion.cubre(_escena()):
         if sesion.estado() == sesion.MIRANDO or sesion.SESION.get("mirame"):
             from ..taller import demo
@@ -414,7 +469,8 @@ def unregister():
         bpy.app.timers.unregister(_revisar_si_calmo)
     panel.unregister()
     _al_abrir()
+    corazon.unregister()
 
 
 __all__ = ["activo", "al_evaluar", "avance", "completo", "guion", "para_latido", "paso_actual", "pedir_pista",
-           "revisar_ya", "sin_progreso", "vista"]
+           "repetir_senal", "revisar_ya", "sin_progreso", "vista"]

@@ -2,7 +2,7 @@
 
 Uso desde la terminal (en la raíz del repositorio):
 
-    python addon/herramientas/construir.py                      # dist/amatista-7.0.0.zip
+    python addon/herramientas/construir.py                      # dist/amatista-7.1.0.zip
     python addon/herramientas/construir.py --sistema windows \\
         --servidor https://api.ejemplo.cl --plataforma https://ejemplo.cl
 
@@ -16,7 +16,8 @@ Qué hace:
    extensión no dependa de nada instalado aparte.
 3. Copia las prácticas de practices/blender/ (cursos.json, temas.json, cada
    practica.json con su ejemplo resuelto e imágenes de referencia; no los
-   pruebas.json) a practicas/ (funcionan sin red).
+   pruebas.json) a practicas/ (funcionan sin red), y las ramas del Corazón
+   Amatista de practices/ramas/ a ramas/.
 4. Escribe config.json con las direcciones del servidor y de la plataforma y,
    si se pide, un vínculo de un solo uso para conectar la cuenta sin pasos.
 5. Comprime con fechas fijas: el mismo código produce el mismo .zip (y el
@@ -42,6 +43,7 @@ RAIZ = Path(__file__).resolve().parents[2]
 ADDON = RAIZ / "addon" / "amatista_blender"
 MOTOR = RAIZ / "engine" / "amatista_engine"
 PRACTICAS = RAIZ / "practices" / "blender"
+RAMAS = RAIZ / "practices" / "ramas"  # ramas del Corazón Amatista (amatista.rama/1)
 INSTALADOR = Path(__file__).resolve().parent / "instalador"
 
 FECHA_FIJA = (2026, 1, 1, 0, 0, 0)
@@ -109,7 +111,7 @@ def configuracion(servidor: str, plataforma: str, canal: str = "estable", vincul
 def _huella_fuentes() -> tuple:
     """Cambia cuando cambia algún archivo que entra al paquete (fecha y tamaño)."""
     datos = []
-    for carpeta in (ADDON, MOTOR, PRACTICAS):
+    for carpeta in (ADDON, MOTOR, PRACTICAS, RAMAS):
         for ruta, nombre in _archivos(carpeta):
             info = ruta.stat()
             datos.append((nombre, info.st_mtime_ns, info.st_size))
@@ -153,6 +155,9 @@ def _base_extension(_huella: tuple) -> bytes:
             # Prácticas, mapa de cursos e imágenes de referencia; los casos de prueba se quedan en el repo.
             if ruta.suffix in (".json", ".svg", ".png", ".jpg") and ruta.name != "pruebas.json":
                 poner(f"practicas/{nombre}", ruta.read_bytes())
+        for ruta, nombre in _archivos(RAMAS):
+            if ruta.suffix == ".json":
+                poner(f"ramas/{nombre}", ruta.read_bytes())
         _agregar(zf, ARCHIVO_INTEGRIDAD, integridad(hashes))
     return salida.getvalue()
 

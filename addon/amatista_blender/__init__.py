@@ -1,5 +1,12 @@
 """Amatista para Blender (Amatista Motor 7: el guion paso a paso, por el resultado real).
 
+Add-on 7.1 · Corazón Amatista 1.0 (corazon/): quien decide qué ve el alumno
+es el corazón del motor (``amatista_engine.corazon``, contrato estable
+``amatista.corazon/1``), no el add-on. Aquí solo vive el adaptador de
+Blender: hace las señales con lo que Blender muestra y las vuelve a
+comprobar cada 0,5 s; si dejan de ser verdad, la banda lo dice y ofrece
+«Señálalo otra vez». Nada desaparece por reloj.
+
 Motor 7 (add-on 7.0, guion/): un paso a la vez, arriba de la vista 3D y en
 N › Amatista. Avanza en cuanto la escena cumple el paso (se revisa a los
 0,15 s de cada cambio, de cada guardado y de cada Ctrl + Z), en cualquier
@@ -93,7 +100,7 @@ Documentación: docs/motor/ en el repositorio.
 bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_manifest.toml
     "name": "Amatista Motor",
     "author": "Maximiliano Cabello Mata",
-    "version": (7, 0, 0),
+    "version": (7, 1, 0),
     "blender": (4, 2, 0),
     "location": "Vista 3D › Barra lateral (N) › Amatista",
     "description": "Aprende Blender habilidad por habilidad con Amatista Taller",

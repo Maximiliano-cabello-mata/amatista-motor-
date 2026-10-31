@@ -1440,6 +1440,87 @@ def _tren_del_alumno(contexto, eje_largo=0):
     return piezas
 
 
+def probar_corazon(contexto):
+    """Corazón Amatista: el director decide, el adaptador de Blender cumple el contrato y la señal se comprueba."""
+    print("Corazón Amatista")
+    import re
+    from importlib import import_module
+
+    from amatista_blender import _motor, ajustes, corazon, guion
+    from amatista_blender.corazon.adaptador import AdaptadorBlender
+    from amatista_blender.guion import senalar
+    from amatista_blender.taller import datos, sesion
+
+    conformidad = import_module(_motor.engine.__name__ + ".corazon.conformidad")
+    c = corazon.contrato
+
+    problemas = conformidad.revisar_adaptador(AdaptadorBlender())
+    revisar(problemas == [], f"corazón: el adaptador de Blender cumple el contrato ({problemas})")
+
+    bpy.ops.wm.read_homefile(use_empty=False)
+    contexto = bpy.context
+    p = ajustes.prefs()
+    p.guion_paso_a_paso = True
+    contexto.window_manager.amatista.modo = "alumno"
+    sesion.terminar()
+    for archivo in ajustes.carpeta_usuario().glob("corazon_andamio_*.json"):
+        archivo.unlink()
+    corazon.unregister()
+    datos.reiniciar_cache()
+    _limpiar()
+    sesion.abrir(contexto, "blender.bp.m1", "proyecto:blender.bp.m1")
+    guion.revisar_ya(contexto)
+    revisar(corazon.activo() and corazon.director().practica_id == "blender.bp.m1.tren",
+            f"corazón: hay un director para el tren ({corazon.ESTADO['error']})")
+    v = guion.vista()
+    revisar(v["nivel"] == "mostrar" and "cabecera" in v["donde"],
+            f"corazón: el alumno nuevo ve dónde está Agregar ({v['nivel']}: {v['donde']})")
+    revisar(not v["senal"], "corazón: Agregar es un menú y no se abre solo")
+
+    # Con el tren armado solo falta guardar; una rueda levantada vuelve al paso de las ruedas.
+    _tren_del_alumno(contexto)
+    guion.revisar_ya(contexto)
+    rueda = next(o for o in contexto.scene.objects if o.name.startswith("Cylinder"))
+    rueda.location.z += 1.0
+    contexto.view_layer.update()
+    guion.revisar_ya(contexto)
+    pista = guion.pedir_pista(contexto, 2)
+    elegida = senalar.herramienta_elegida(contexto)
+    revisar(pista is not None and (pista["senalado"] == bool(re.search("resaltad", pista["texto"]))),
+            f"corazón: la pista solo dice «resaltado» si Blender lo confirma ({pista and pista['texto']})")
+    if pista and pista["senalado"]:
+        d = corazon.director()
+        revisar(d.senal.estado == c.VIGENTE and elegida == d.senal.senal.objetivo,
+                f"corazón: la señal está vigente y es la herramienta elegida ({elegida})")
+        # El alumno elige otra herramienta: la señal se pierde y se dice, sin reloj.
+        otra = "builtin.select_box" if elegida != "builtin.select_box" else "builtin.move"
+        ventana, area = senalar._primera_vista(contexto)
+        try:
+            region = next(r for r in area.regions if r.type == "WINDOW")
+            with contexto.temp_override(window=ventana, area=area, region=region):
+                bpy.ops.wm.tool_set_by_id(name=otra)
+        except (RuntimeError, AttributeError, StopIteration):
+            pass
+        revisar(senalar.herramienta_elegida(contexto) == otra, f"corazón: el alumno eligió otra herramienta ({otra})")
+        if senalar.herramienta_elegida(contexto) == otra:
+            d.ciclo(corazon.programa(), None, d.inicio_paso + 1)
+            v = guion.vista()
+            revisar(v["senal_estado"] == "perdida" and v["senal_repetir"] and "otra herramienta" in v["senal"],
+                    f"corazón: cambiar de herramienta se nota y se ofrece señalar otra vez ({v['senal']})")
+            guion.repetir_senal()
+            revisar(senalar.herramienta_elegida(contexto) == d.senal.senal.objetivo and d.senal.estado == c.VIGENTE,
+                    "corazón: «Señálalo otra vez» la vuelve a elegir")
+    rueda.location.z -= 1.0
+    contexto.view_layer.update()
+    guion.revisar_ya(contexto)
+    h = corazon.historial()
+    revisar(any(u.solos or u.ayudados for u in h.usos.values()), f"corazón: el andamio anota lo que usó ({h.como_dict()})")
+    archivos = list(ajustes.carpeta_usuario().glob("corazon_andamio_*.json"))
+    revisar(bool(archivos) or ajustes.sin_progreso(), "corazón: el andamio se guarda por cuenta (no para admin)")
+    sesion.terminar()
+    _limpiar()
+
+
 def probar_motor7(contexto):
     """Motor 7 · Guion: un paso a la vez, avanza por el resultado, señales reales y el administrador sin progreso."""
     print("Motor 7")
@@ -1707,7 +1788,7 @@ def main():
 
     datos = practicas.datos_intento(contexto)
     revisar(datos["pistas"] == {"patas": 1} and datos["practica_id"] == "blender.n1.mesa", "datos del intento completos")
-    revisar(datos["version_addon"] == "7.0.0", "el intento lleva la versión 7.0 del add-on")
+    revisar(datos["version_addon"] == "7.1.0", "el intento lleva la versión 7.1 del add-on")
 
     # --- Amatista Author ---
     contexto.window_manager.amatista.modo = "autor"
@@ -1757,6 +1838,7 @@ def main():
     probar_motor61(contexto)
     probar_motor62(contexto)
     probar_motor7(contexto)
+    probar_corazon(contexto)
 
     addon_utils.disable("amatista_blender", default_set=True)
     revisar(not hasattr(bpy.types.Scene, "amatista"), "se desregistra limpio")

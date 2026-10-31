@@ -25,8 +25,8 @@ def _instaladores():
 
 def test_version_62():
     manifiesto = (ADDON / "blender_manifest.toml").read_text(encoding="utf-8")
-    assert 'version = "7.0.0"' in manifiesto  # motor 7 (test_addon_motor7.py) sigue sobre el 6.2
-    assert 'VERSION_ADDON = "7.0.0"' in (ADDON / "ajustes.py").read_text(encoding="utf-8")
+    assert 'version = "7.1.0"' in manifiesto  # motor 7 (test_addon_motor7.py) sigue sobre el 6.2
+    assert 'VERSION_ADDON = "7.1.0"' in (ADDON / "ajustes.py").read_text(encoding="utf-8")
 
 
 def test_preparar_lleva_lo_necesario(tmp_path):

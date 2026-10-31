@@ -11,6 +11,8 @@ N › Amatista, que son botones de Blender de verdad).
     │ PASO 3 DE 10 · LAS RUEDAS                 ▓▓▓▓░░░░░░ │
     │ Las ruedas son cilindros: cuatro por vagón…          │
     │ • Tienes 3 de 8 «Rueda». Faltan 5.                   │
+    │ • Te dejé elegida «Escalar»: es el botón resaltado…  │  ← corazón: la señal viva
+    │ Listo: dos vagones.                                  │  ← lo último, hasta que pase otra cosa
     └──────────────────────────────────────────────────────┘
 """
 import bpy
@@ -83,8 +85,16 @@ def dibujar():
     segunda = v["aviso"] or v["pista"] or v["por_que"]
     color_segunda = hud.VERDE if v["aviso"] else ((0.85, 0.78, 1.0, 1.0) if v["pista"] else AMBAR)
     lineas2 = hud._partir(segunda, tam, ancho - 2 * relleno - 12 * escala, 3) if segunda else []
+    # Corazón: la señal tal como está de verdad (vigente o perdida), sin reloj que la borre.
+    senal = v.get("senal", "")
+    color_senal = AMBAR if v.get("senal_estado") == "perdida" else ACENTO
+    lineas3 = hud._partir(senal, tam, ancho - 2 * relleno - 12 * escala, 2) if senal else []
+    ultimo = v.get("ultimo", "") if not v["aviso"] else ""
+    lineas4 = hud._partir(ultimo, tam_chico, ancho - 2 * relleno, 1) if ultimo else []
     alto = relleno * 2 + tam_chico + 8 * escala + len(lineas) * (tam_grande + 6 * escala)
     alto += len(lineas2) * (tam + 5 * escala) + (6 * escala if lineas2 else 0)
+    alto += len(lineas3) * (tam + 5 * escala) + (6 * escala if lineas3 else 0)
+    alto += len(lineas4) * (tam_chico + 5 * escala)
     alto += 14 * escala  # «Botones: N › Amatista»
     x = x0 + (x1 - x0 - ancho) / 2
     y = arriba - alto
@@ -109,6 +119,16 @@ def dibujar():
             if i == 0:
                 hud._punto(shader, x + relleno + 4 * escala, cy + tam * 0.4, 4 * escala, color_segunda)
             hud._texto(x + relleno + 14 * escala, cy + 2 * escala, linea, tam, color_segunda)
+    if lineas3:
+        cy -= 6 * escala
+        for i, linea in enumerate(lineas3):
+            cy -= tam + 5 * escala
+            if i == 0:
+                hud._punto(shader, x + relleno + 4 * escala, cy + tam * 0.4, 4 * escala, color_senal)
+            hud._texto(x + relleno + 14 * escala, cy + 2 * escala, linea, tam, color_senal)
+    for linea in lineas4:
+        cy -= tam_chico + 5 * escala
+        hud._texto(x + relleno, cy + 2 * escala, linea, tam_chico, hud.VERDE)
     hud._texto(x + relleno, y + 8 * escala, "Pistas y pasos: barra lateral (N) › Amatista", tam_chico, hud.TEXTO_SUAVE)
     gpu.state.blend_set("NONE")
 

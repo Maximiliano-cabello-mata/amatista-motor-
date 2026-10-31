@@ -50,5 +50,5 @@ def test_el_texto_solo_dice_resaltado_despues_de_comprobarlo():
 
 
 def test_version_7():
-    assert 'version = "7.0.0"' in (ADDON / "blender_manifest.toml").read_text(encoding="utf-8")
-    assert "(7, 0, 0)" in (ADDON / "__init__.py").read_text(encoding="utf-8")
+    assert 'version = "7.1.0"' in (ADDON / "blender_manifest.toml").read_text(encoding="utf-8")
+    assert "(7, 1, 0)" in (ADDON / "__init__.py").read_text(encoding="utf-8")

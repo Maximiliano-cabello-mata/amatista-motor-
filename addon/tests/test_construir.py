@@ -26,6 +26,7 @@ def test_extension_trae_manifiesto_motor_y_practicas():
     assert "practicas/principiante/m1-tren/practica.json" in nombres
     assert "practicas/cursos.json" in nombres
     assert "practicas/temas.json" in nombres  # temática por módulo (add-on 3.2)
+    assert "ramas/blender-principiante.json" in nombres  # Corazón Amatista: la rama por defecto viaja en el .zip
     assert not [n for n in nombres if n.endswith("pruebas.json") or "archivo/" in n]
     assert "iconos/logo.png" in nombres
     assert not [n for n in nombres if "__pycache__" in n or n.startswith("tests/") or n.endswith(".pyc")]
