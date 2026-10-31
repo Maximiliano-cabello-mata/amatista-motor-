@@ -45,7 +45,7 @@ from .actividades import (
 )
 from .ayudas import COMO, CON_QUE, MIRAME, NINGUNA, QUE, Escalera, Pista, atascado, pedir_pista, pista_para, puede_pedir
 from .demo import PasoDemo, linea_de_tiempo, pasos_de_actividad, pieza_de_revision
-from . import etapas, fichas
+from . import acompanamiento, etapas, fichas
 from .habilidades import (
     SCHEMA,
     Catalogo,
@@ -80,7 +80,7 @@ __all__ = [
     "RevisionMolde", "Taller", "Variacion", "actividad_de_proyecto", "actividad_de_prueba", "actividad_de_repaso",
     "actividad_de_reto_final", "actividad_por_id",
     "atascado", "cargar_catalogo", "dominio", "estado_a_dict", "estado_desde_dict", "fase", "leer_catalogo", "linea_de_tiempo",
-    "etapas", "fichas", "marcar_demo", "molde_del_proyecto", "pasos_de_actividad", "pieza_de_revision", "pedir_pista", "pista_para", "planear", "practica_de_actividad",
+    "acompanamiento", "etapas", "fichas", "marcar_demo", "molde_del_proyecto", "pasos_de_actividad", "pieza_de_revision", "pedir_pista", "pista_para", "planear", "practica_de_actividad",
     "proximas", "puede_pedir",
     "registrar_intento", "revisar_molde", "revisar_proyecto", "vencidas",
 ]
