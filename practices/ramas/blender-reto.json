@@ -1,0 +1,10 @@
+{
+  "formato": "amatista.rama/1",
+  "id": "blender-reto",
+  "hereda": "blender-principiante",
+  "nombre": "Blender · modo reto",
+  "descripcion": "Para quien ya sabe: solo el objetivo; dónde y cómo, si se piden. Hereda las extensiones del principiante menos las vistas.",
+  "quitar": ["vistas-espaciales"],
+  "andamio": {"senalar": 0, "recordar": 0, "reto": 0, "espera_reto": 120},
+  "senal_sola": false
+}

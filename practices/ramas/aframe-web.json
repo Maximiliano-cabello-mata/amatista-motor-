@@ -1,0 +1,9 @@
+{
+  "formato": "amatista.rama/1",
+  "id": "aframe-web",
+  "nombre": "A-Frame · Motor Web",
+  "descripcion": "Retos del Motor Web en la plataforma: sin barra de herramientas, se dice dónde y se marcan las piezas.",
+  "software": "aframe",
+  "extensiones": ["rescate-tras-tropiezos"],
+  "andamio": {"espera_recordar": 30, "espera_reto": 60}
+}

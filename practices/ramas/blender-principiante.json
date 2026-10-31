@@ -1,0 +1,10 @@
+{
+  "formato": "amatista.rama/1",
+  "id": "blender-principiante",
+  "nombre": "Blender · principiante",
+  "descripcion": "La rama por defecto del add-on: la señal se hace sola mientras la herramienta es nueva y la ayuda se retira con el uso.",
+  "software": "blender",
+  "extensiones": ["rescate-tras-tropiezos", "vistas-espaciales"],
+  "andamio": {"senalar": 1, "recordar": 3, "reto": 5, "olvido_dias": 7},
+  "senal_sola": true
+}
