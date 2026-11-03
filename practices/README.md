@@ -1,48 +1,38 @@
-# Prácticas del motor
+# Prácticas, habilidades y ramas del motor
 
-Las prácticas guiadas de Blender del plan de estudios, en formato [`amatista.practice/2`](../docs/motor/referencia/08_practicas_v3_y_herramientas.md), cada una con sus casos de prueba.
+Contenido declarativo que leen **Amatista Engine**, el **add-on de Blender**, el **backend** y la **PWA**.
 
-| Carpeta | Qué hay |
+| Carpeta / archivo | Qué hay |
 |---|---|
-| `blender/cursos.json` | El mapa de la ruta de Blender (`amatista.curriculum/1`): cursos, requisitos y módulos. Lo usa el add-on para «Mi curso». |
-| `blender/<curso>/m<n>-<nombre>/` | `practica.json` (la práctica, con su modelo de referencia en `reference` y su ejemplo resuelto en `example`), `pruebas.json` (sus casos), `referencia.jpg` y `plano.svg` (cómo se debe ver, generados con `engine/herramientas/referencias.py`; solo las prácticas con `reference`: cinco exploraciones no lo tienen) e imágenes de sus píldoras. Van dentro del add-on (sin `pruebas.json`). El servidor las registra y publica solo al arrancar; también con `python herramientas/contenido.py practicas` (desde `backend/`) o Admin › Prácticas de Blender. |
-| `blender/temas.json` | El mundo de cada módulo: colores, escenario, personaje (consejos, charla, datos y reacciones) y jefe. Lo comparten la plataforma y el add-on. |
-| `blender/referencias.json` | Índice de las imágenes de referencia (lo escribe `referencias.py`). |
-| `archivo/v2/` | Las prácticas anteriores al motor v3 (mesa, podio y el ejemplo `table.json`). No se empaquetan ni se registran; el add-on las muestra solo en modo Desarrollador. |
+| `blender/cursos.json` | El mapa de la ruta de Blender (`amatista.curriculum/1`): cursos, requisitos, módulos y el taller de cada módulo. |
+| `blender/habilidades.json` | Catálogo de **Amatista Taller** (`amatista.skill/1`): 33 habilidades con 62 variaciones cortas y 9 talleres (uno por módulo de Blender). El backend lo sincroniza al arrancar en la tabla `HABILIDADES`. |
+| `blender/fichas.json` | Fuente única de las **26 fichas de herramientas** y **9 zonas de la ventana de Blender** (para qué sirve, a qué se parece, dónde está, cómo se usa y error típico). La usan la teoría de la PWA, el motor y el add-on. |
+| `blender/palabras.json` | Diccionario bilingüe de menús y términos de Blender («Agregar (Add) › Malla (Mesh)»). |
+| `blender/temas.json` | El mundo de cada módulo: colores, escenario, personaje y jefe final. |
+| `blender/referencias.json` | Índice de las imágenes y planos de referencia (generado con `engine/herramientas/referencias.py`). |
+| `blender/<curso>/m<n>-<nombre>/` | Las **9 prácticas de proyecto** que cierran cada módulo (`practica.json` en formato `amatista.practice/2` con `reference` y `example`, `pruebas.json`, `referencia.jpg` y `plano.svg`). |
+| `ramas/` | Ramas del **Corazón Amatista 1.0** (`blender-principiante.json`, `blender-reto.json`, `aframe-web.json`): configuran perfil, andamio y extensiones con herencia ([ramas/README.md](ramas/README.md)). |
+| `archivo/blender/` | Las 9 prácticas cortas de exploración anteriores al Motor 5 (reemplazadas por las actividades de `habilidades.json`). |
+| `archivo/v2/` | Prácticas históricas anteriores al motor v3 (`mesa.json`, `podio.json`, `table.json`). |
 
-Prácticas actuales (18: en cada módulo, una exploración corta y una práctica de cierre, intercaladas con la teoría):
+## Prácticas de proyecto activas (9 módulos de Blender, 58 casos de prueba)
 
-| Id | Carpeta | Curso › módulo | Lección |
+| Id | Carpeta | Curso › Módulo | Lección de proyecto |
 |---|---|---|---|
-| `blender.bp.m1.explora` | `blender/principiante/m1-explora/` | Principiante › 1 · exploración | `bp1_blender` |
-| `blender.bp.m1.tren` | `blender/principiante/m1-tren/` | Principiante › 1 · cierre | `bp1_practica` |
-| `blender.bp.m2.explora` | `blender/principiante/m2-explora/` | Principiante › 2 · exploración | `bp2_blender` |
-| `blender.bp.m2.espada` | `blender/principiante/m2-espada/` | Principiante › 2 · cierre | `bp2_practica` |
-| `blender.bp.m3.explora` | `blender/principiante/m3-explora/` | Principiante › 3 · exploración | `bp3_blender` |
-| `blender.bp.m3.nave` | `blender/principiante/m3-nave/` | Principiante › 3 · cierre | `bp3_practica` |
-| `blender.bpi.m1.explora` | `blender/principiante-intermedio/m1-explora/` | Principiante-Intermedio › 1 · exploración | `bpi1_blender` |
-| `blender.bpi.m1.pinta-nave` | `blender/principiante-intermedio/m1-pinta-nave/` | Principiante-Intermedio › 1 · cierre | `bpi1_practica` |
-| `blender.bpi.m2.explora` | `blender/principiante-intermedio/m2-explora/` | Principiante-Intermedio › 2 · exploración | `bpi2_blender` |
-| `blender.bpi.m2.tres-puntos` | `blender/principiante-intermedio/m2-tres-puntos/` | Principiante-Intermedio › 2 · cierre | `bpi2_practica` |
-| `blender.bpi.m3.explora` | `blender/principiante-intermedio/m3-explora/` | Principiante-Intermedio › 3 · exploración | `bpi3_blender` |
-| `blender.bpi.m3.pelota` | `blender/principiante-intermedio/m3-pelota/` | Principiante-Intermedio › 3 · cierre | `bpi3_practica` |
-| `blender.bi.m1.explora` | `blender/intermedio/m1-explora/` | Intermedio › 1 · exploración | `bi1_blender` |
-| `blender.bi.m1.puente` | `blender/intermedio/m1-puente/` | Intermedio › 1 · cierre | `bi1_practica` |
-| `blender.bi.m2.explora` | `blender/intermedio/m2-explora/` | Intermedio › 2 · exploración | `bi2_blender` |
-| `blender.bi.m2.aldea` | `blender/intermedio/m2-aldea/` | Intermedio › 2 · cierre | `bi2_practica` |
-| `blender.bi.m3.explora` | `blender/intermedio/m3-explora/` | Intermedio › 3 · exploración | `bi3_blender` |
-| `blender.bi.m3.diorama` | `blender/intermedio/m3-diorama/` | Intermedio › 3 · cierre | `bi3_practica` |
+| `blender.bp.m1.tren` | `blender/principiante/m1-tren/` | Principiante › Módulo 1 | `bp1_practica` |
+| `blender.bp.m2.espada` | `blender/principiante/m2-espada/` | Principiante › Módulo 2 | `bp2_practica` |
+| `blender.bp.m3.nave` | `blender/principiante/m3-nave/` | Principiante › Módulo 3 | `bp3_practica` |
+| `blender.bpi.m1.pinta-nave` | `blender/principiante-intermedio/m1-pinta-nave/` | Principiante-Intermedio › Módulo 1 | `bpi1_practica` |
+| `blender.bpi.m2.tres-puntos` | `blender/principiante-intermedio/m2-tres-puntos/` | Principiante-Intermedio › Módulo 2 | `bpi2_practica` |
+| `blender.bpi.m3.pelota` | `blender/principiante-intermedio/m3-pelota/` | Principiante-Intermedio › Módulo 3 | `bpi3_practica` |
+| `blender.bi.m1.puente` | `blender/intermedio/m1-puente/` | Intermedio › Módulo 1 | `bi1_practica` |
+| `blender.bi.m2.aldea` | `blender/intermedio/m2-aldea/` | Intermedio › Módulo 2 | `bi2_practica` |
+| `blender.bi.m3.diorama` | `blender/intermedio/m3-diorama/` | Intermedio › Módulo 3 | `bi3_practica` |
 
-El curso Avanzado está bloqueado y todavía no tiene prácticas ([ruta de aprendizaje](../docs/cursos/03_ruta_de_aprendizaje_blender.md)).
-
-Una práctica nueva:
+## Comprobación desde la terminal
 
 ```bash
-python engine/herramientas/practicas.py nueva blender.bp.m4.casa --plantilla modelado --curso blender_principiante --modulo 4
 python engine/herramientas/practicas.py revisar
 python engine/herramientas/practicas.py probar
+python engine/herramientas/corazon.py ramas
 ```
-
-Toda práctica lleva un bloque `example`: la solución escrita en pasos (`example.steps`, como los casos de `pruebas.json`). El motor agrega con él el objetivo «ejemplo» (validador `example.matches`), el add-on lo arma con «Ver el ejemplo» y la lista «Comparado con el ejemplo» dice qué le falta al alumno. `practicas.py probar` también comprueba que el ejemplo complete su práctica. Cómo escribirlo: [`engine/README.md`](../engine/README.md#escribir-el-ejemplo-de-una-práctica) y [el ejemplo y la revisión](../docs/motor/referencia/14_ejemplo_y_revision.md).
-
-Guía completa: [prácticas v3 y herramientas de autor](../docs/motor/referencia/08_practicas_v3_y_herramientas.md). Cambiar una práctica publicada = subir `version` y volver a registrar: el admin publica la nueva.
