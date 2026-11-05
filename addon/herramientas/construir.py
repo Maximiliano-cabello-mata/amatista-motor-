@@ -212,6 +212,8 @@ def construir_paquete(sistema: str, **opciones) -> bytes:
         script = (INSTALADOR / lanzador).read_bytes()
         if lanzador.endswith(".bat"):  # cmd.exe necesita CRLF
             script = script.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+        else:
+            script = script.replace(b"\r\n", b"\n")
         _agregar(zf, f"{CARPETA_PAQUETE}/{lanzador}", script, permisos)
         _agregar(zf, f"{CARPETA_PAQUETE}/instalar_en_blender.py", (INSTALADOR / "instalar_en_blender.py").read_bytes())
         # La extensión ya viene comprimida: se guarda tal cual (comprimirla otra vez solo gasta CPU).

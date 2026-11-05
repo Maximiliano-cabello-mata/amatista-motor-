@@ -1,3 +1,4 @@
+import os
 """Motor 6.2 en el add-on, sin Blender: la versión, los instaladores y sus scripts.
 
 Lo que necesita Blender de verdad (cambio limpio, «Volver a mi práctica», el
@@ -64,6 +65,7 @@ def test_arbol_deb(tmp_path):
     raiz = inst.armar_arbol_deb(comun, tmp_path / "deb")
     control = (raiz / "DEBIAN" / "control").read_text(encoding="utf-8")
     assert f"Version: {inst.version()}" in control and "Architecture: all" in control
-    assert (raiz / "usr" / "bin" / "amatista").stat().st_mode & 0o111
+    if os.name != "nt":
+        assert (raiz / "usr" / "bin" / "amatista").stat().st_mode & 0o111
     assert (raiz / "usr" / "share" / "applications" / "amatista.desktop").is_file()
     assert (raiz / "usr" / "share" / "amatista" / f"amatista-{inst.version()}.zip").is_file()
