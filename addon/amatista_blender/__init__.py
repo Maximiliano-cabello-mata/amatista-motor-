@@ -109,7 +109,7 @@ bl_info = {  # solo para instalarlo como add-on clásico; en 4.2+ manda blender_
 
 import bpy  # noqa: E402
 
-from . import (ajustes, blender_amatista, cuenta, desarrollo, enfoque, enlace, escenarios, estado, fichas, guia, guion,
+from . import (ajustes, blender_amatista, cuenta, desarrollo, enfoque, enlace, entrega, escenarios, estado, fichas, guia, guion,
                integracion, mision, navegar, operadores, plataforma, practicas, recorrido, red, saneamiento)
 from . import taller
 from .interfaz import aprender, dialogos, estilo, herramientas, hud, paneles
@@ -123,6 +123,7 @@ CLASES = (
     + herramientas.CLASES
     + paneles.CLASES
     + recorrido.CLASES
+    + entrega.CLASES
 )
 
 

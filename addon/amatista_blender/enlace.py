@@ -429,6 +429,12 @@ def _guardar(context):
     return practicas.guardar_practica(context)
 
 
+def _entregar(context):
+    from . import entrega
+
+    return entrega.entregar(context)
+
+
 def _reiniciar(context):
     from . import practicas
 
@@ -436,7 +442,7 @@ def _reiniciar(context):
 
 
 MANEJO = {"comprobar": _comprobar, "pista": _pista, "hazlo_conmigo": _hazlo_conmigo, "guardar": _guardar,
-          "reiniciar": _reiniciar}
+          "reiniciar": _reiniciar, "entregar": _entregar}
 
 
 def _latidor():
