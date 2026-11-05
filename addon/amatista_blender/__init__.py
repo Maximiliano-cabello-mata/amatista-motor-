@@ -129,11 +129,14 @@ CLASES = (
 
 def _primer_arranque():
     cuenta.al_iniciar()
+    if bpy.app.background:
+        return None
     p = ajustes.prefs()
-    if p is not None and not p.bienvenida_vista and not bpy.app.background:
-        p.bienvenida_vista = True
-        ajustes.guardar_preferencias()
-        practicas._invocar("amatista.bienvenida")
+    if p is None or p.bienvenida_vista:
+        return None
+    p.bienvenida_vista = True
+    ajustes.guardar_preferencias()
+    practicas._invocar("amatista.bienvenida")
     return None
 
 

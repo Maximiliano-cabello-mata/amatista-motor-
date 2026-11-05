@@ -201,6 +201,20 @@ def leeme(sistema: str) -> str:
     return texto.replace("{{NOMBRE}}", NOMBRE_COMPLETO.upper()).replace("{{VERSION}}", VERSION).replace("{{LANZADOR}}", LANZADORES[sistema][0])
 
 
+def _script_instalador(lanzador: str) -> bytes:
+    script = (INSTALADOR / lanzador).read_bytes()
+    if lanzador.endswith(".bat"):  # cmd.exe necesita CRLF
+        return script.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    return script.replace(b"\r\n", b"\n")
+
+
+def _texto_leeme(sistema: str) -> bytes:
+    texto = leeme(sistema)
+    if sistema == "windows":
+        texto = texto.replace("\n", "\r\n")
+    return texto.encode("utf-8")
+
+
 def construir_paquete(sistema: str, **opciones) -> bytes:
     """Carpeta «Amatista Motor X.Y» con la extensión, el instalador y las instrucciones."""
     if sistema not in SISTEMAS:
@@ -209,19 +223,10 @@ def construir_paquete(sistema: str, **opciones) -> bytes:
     lanzador, permisos = LANZADORES[sistema]
     salida = io.BytesIO()
     with zipfile.ZipFile(salida, "w") as zf:
-        script = (INSTALADOR / lanzador).read_bytes()
-        if lanzador.endswith(".bat"):  # cmd.exe necesita CRLF
-            script = script.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
-        else:
-            script = script.replace(b"\r\n", b"\n")
-        _agregar(zf, f"{CARPETA_PAQUETE}/{lanzador}", script, permisos)
+        _agregar(zf, f"{CARPETA_PAQUETE}/{lanzador}", _script_instalador(lanzador), permisos)
         _agregar(zf, f"{CARPETA_PAQUETE}/instalar_en_blender.py", (INSTALADOR / "instalar_en_blender.py").read_bytes())
-        # La extensión ya viene comprimida: se guarda tal cual (comprimirla otra vez solo gasta CPU).
         _agregar(zf, f"{CARPETA_PAQUETE}/{nombre_extension()}", extension, comprimir=False)
-        texto = leeme(sistema)
-        if sistema == "windows":
-            texto = texto.replace("\n", "\r\n")
-        _agregar(zf, f"{CARPETA_PAQUETE}/LEEME.txt", texto.encode("utf-8"))
+        _agregar(zf, f"{CARPETA_PAQUETE}/LEEME.txt", _texto_leeme(sistema))
     return salida.getvalue()
 
 

@@ -242,84 +242,108 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
     )
 
     def draw(self, context):
-        from .interfaz import estilo
-
         layout = self.layout
-        cabecera = layout.row()
-        cabecera.label(text=f"Amatista Motor {VERSION_ADDON.rsplit('.', 1)[0]}", icon_value=estilo.icono("logo"))
-        cabecera.label(text=f"Add-on {VERSION_ADDON}")
-
-        caja = layout.box()
-        caja.label(text="Cuenta", icon="USER")
-        if self.token:
-            fila = caja.row()
-            fila.label(text=self.cuenta or "Cuenta vinculada", icon="CHECKMARK")
-            if self.rol:
-                fila.label(text=self.rol.capitalize())
-            caja.operator("amatista.desvincular", icon="UNLINKED")
-        else:
-            caja.label(text="Sin vincular: tu progreso se queda solo en esta computadora.")
-            caja.operator("amatista.vincular", icon="LINKED")
-
-        caja = layout.box()
-        caja.label(text="Amatista dentro de Blender", icon="WORKSPACE")
-        caja.prop(self, "espacio_amatista")
-        caja.prop(self, "blender_amatista")
-        fila = caja.row(align=True)
-        fila.operator("amatista.reparar_enlace", icon="URL")
-        fila.operator("amatista.blender_amatista", icon="BLENDER")
-        nota = caja.row()
-        nota.active = False
-        nota.label(text="Hace que «Abrir en Blender» de la plataforma abra este Blender aunque esté cerrado.")
-
-        caja = layout.box()
-        caja.label(text="En la vista 3D", icon="HEART")
-        caja.prop(self, "guion_paso_a_paso")
-        caja.prop(self, "mostrar_hud")
-        caja.prop(self, "tarjeta_compacta")
-        caja.prop(self, "brillo_herramientas")
-        caja.prop(self, "presentar_herramientas")
-        caja.row().prop(self, "modo_curioso", expand=True)
-        caja.prop(self, "animaciones")
-        caja.prop(self, "sincronizar_solo")
-
-        caja = layout.box()
-        caja.label(text="Modo enfocado", icon="HIDE_ON")
-        caja.row().prop(self, "enfoque", expand=True)
-        nota = caja.row()
-        nota.active = False
-        nota.label(text="También lo puedes elegir en la plataforma, en «Mi Blender».")
-
+        _dibujar_cabecera(layout)
+        _dibujar_cuenta(layout, self)
+        _dibujar_espacio(layout, self)
+        _dibujar_vista_3d(layout, self)
+        _dibujar_enfoque(layout, self)
         if self.modo_desarrollador:
-            # Add-on 5: el taller decide la ayuda (escalera con freno); esto queda para las prácticas sueltas.
-            caja = layout.box()
-            caja.label(text="Prácticas sueltas (desarrollo)", icon="PREFERENCES")
-            caja.row().prop(self, "acompanamiento", expand=True)
-            sub = caja.column()
-            sub.active = self.acompanamiento != "silencioso"
-            sub.prop(self, "resaltar_3d")
-            sub.prop(self, "dialogo_por_mision")
-            sub.prop(self, "preparar_herramienta")
-            fila = sub.row(align=True)
-            fila.prop(self, "ayuda_tras_intentos")
-            fila.prop(self, "ayuda_tras_segundos")
-            caja.prop(self, "comprobar_solo")
-            caja.prop(self, "avisar_herramientas")
+            _dibujar_desarrollo(layout, self)
+        _dibujar_copias(layout)
+        _dibujar_avanzado(layout, self)
 
-        from . import saneamiento
 
-        copias = saneamiento.resumen()
-        if copias["apagadas"] or copias["encendidas"]:
-            caja = layout.box()
-            caja.label(text="Otras copias de Amatista", icon="ERROR" if copias["encendidas"] else "CHECKMARK")
-            for nombre in copias["apagadas"]:
-                caja.label(text=f"Apagada para que no se cruce: {nombre}")
-            for nombre in copias["encendidas"]:
-                caja.label(text=f"Sigue encendida (es más nueva): {nombre}")
+def _dibujar_cabecera(layout):
+    from .interfaz import estilo
 
+    cabecera = layout.row()
+    cabecera.label(text=f"Amatista Motor {VERSION_ADDON.rsplit('.', 1)[0]}", icon_value=estilo.icono("logo"))
+    cabecera.label(text=f"Add-on {VERSION_ADDON}")
+
+
+def _dibujar_cuenta(layout, prefs):
+    caja = layout.box()
+    caja.label(text="Cuenta", icon="USER")
+    if prefs.token:
+        fila = caja.row()
+        fila.label(text=prefs.cuenta or "Cuenta vinculada", icon="CHECKMARK")
+        if prefs.rol:
+            fila.label(text=prefs.rol.capitalize())
+        caja.operator("amatista.desvincular", icon="UNLINKED")
+    else:
+        caja.label(text="Sin vincular: tu progreso se queda solo en esta computadora.")
+        caja.operator("amatista.vincular", icon="LINKED")
+
+
+def _dibujar_espacio(layout, prefs):
+    caja = layout.box()
+    caja.label(text="Amatista dentro de Blender", icon="WORKSPACE")
+    caja.prop(prefs, "espacio_amatista")
+    caja.prop(prefs, "blender_amatista")
+    fila = caja.row(align=True)
+    fila.operator("amatista.reparar_enlace", icon="URL")
+    fila.operator("amatista.blender_amatista", icon="BLENDER")
+    nota = caja.row()
+    nota.active = False
+    nota.label(text="Hace que «Abrir en Blender» de la plataforma abra este Blender aunque esté cerrado.")
+
+
+def _dibujar_vista_3d(layout, prefs):
+    caja = layout.box()
+    caja.label(text="En la vista 3D", icon="HEART")
+    caja.prop(prefs, "guion_paso_a_paso")
+    caja.prop(prefs, "mostrar_hud")
+    caja.prop(prefs, "tarjeta_compacta")
+    caja.prop(prefs, "brillo_herramientas")
+    caja.prop(prefs, "presentar_herramientas")
+    caja.row().prop(prefs, "modo_curioso", expand=True)
+    caja.prop(prefs, "animaciones")
+    caja.prop(prefs, "sincronizar_solo")
+
+
+def _dibujar_enfoque(layout, prefs):
+    caja = layout.box()
+    caja.label(text="Modo enfocado", icon="HIDE_ON")
+    caja.row().prop(prefs, "enfoque", expand=True)
+    nota = caja.row()
+    nota.active = False
+    nota.label(text="También lo puedes elegir en la plataforma, en «Mi Blender».")
+
+
+def _dibujar_desarrollo(layout, prefs):
+    caja = layout.box()
+    caja.label(text="Prácticas sueltas (desarrollo)", icon="PREFERENCES")
+    caja.row().prop(prefs, "acompanamiento", expand=True)
+    sub = caja.column()
+    sub.active = prefs.acompanamiento != "silencioso"
+    sub.prop(prefs, "resaltar_3d")
+    sub.prop(prefs, "dialogo_por_mision")
+    sub.prop(prefs, "preparar_herramienta")
+    fila = sub.row(align=True)
+    fila.prop(prefs, "ayuda_tras_intentos")
+    fila.prop(prefs, "ayuda_tras_segundos")
+    caja.prop(prefs, "comprobar_solo")
+    caja.prop(prefs, "avisar_herramientas")
+
+
+def _dibujar_copias(layout):
+    from . import saneamiento
+
+    copias = saneamiento.resumen()
+    if copias["apagadas"] or copias["encendidas"]:
         caja = layout.box()
-        caja.label(text="Avanzado", icon="TOOL_SETTINGS")
-        caja.prop(self, "modo_desarrollador")
-        caja.prop(self, "servidor")
-        caja.prop(self, "plataforma")
-        caja.label(text=f"Servidor en uso: {servidor()}", icon="WORLD")
+        caja.label(text="Otras copias de Amatista", icon="ERROR" if copias["encendidas"] else "CHECKMARK")
+        for nombre in copias["apagadas"]:
+            caja.label(text=f"Apagada para que no se cruce: {nombre}")
+        for nombre in copias["encendidas"]:
+            caja.label(text=f"Sigue encendida (es más nueva): {nombre}")
+
+
+def _dibujar_avanzado(layout, prefs):
+    caja = layout.box()
+    caja.label(text="Avanzado", icon="TOOL_SETTINGS")
+    caja.prop(prefs, "modo_desarrollador")
+    caja.prop(prefs, "servidor")
+    caja.prop(prefs, "plataforma")
+    caja.label(text=f"Servidor en uso: {servidor()}", icon="WORLD")
