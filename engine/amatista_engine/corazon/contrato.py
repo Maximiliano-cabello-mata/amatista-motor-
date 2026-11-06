@@ -3,7 +3,7 @@
 Todo lo que cruza la frontera entre el corazón y un programa 3D está aquí,
 en datos normales de Python: qué señal pedir, qué pasó al pedirla, qué ve
 el alumno ahora (el turno) y qué eventos manda el programa. Nada de este
-archivo conoce Blender, A-Frame, Maya ni 3ds Max.
+archivo conoce Blender, A-Frame ni Godot.
 
 Regla de estabilidad: dentro de ``amatista.corazon/1`` solo se **agregan**
 campos con valor por defecto, tipos de señal y tipos de evento. Quitar o

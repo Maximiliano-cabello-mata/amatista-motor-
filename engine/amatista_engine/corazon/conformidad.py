@@ -1,6 +1,6 @@
 """¿Este adaptador cumple el contrato del corazón? (como un kit de conformidad)
 
-Un adaptador nuevo (Maya, 3ds Max, otro A-Frame) se da por bueno cuando
+Un adaptador nuevo (Blender, A-Frame u otro software libre) se da por bueno cuando
 ``revisar_adaptador`` no devuelve problemas. Revisa lo que hace que el alumno
 no se confunda: que la foto sea una escena, que el perfil ubique las
 herramientas base, que una señal que no sabe hacer diga «no» en lugar de

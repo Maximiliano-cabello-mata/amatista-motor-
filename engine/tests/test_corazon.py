@@ -58,12 +58,12 @@ def test_el_contrato_tiene_version_y_el_corazon_no_importa_bpy():
 
 def test_cada_perfil_ubica_las_herramientas_base():
     todos = perfiles.todos()
-    assert {"blender", "aframe", "maya", "3dsmax"} <= set(todos)
+    assert set(todos) == {"blender", "aframe"}
     for nombre, p in todos.items():
         assert not p.faltan(), (nombre, p.faltan())
         for h, lugar in p.lugares.items():
             assert lugar.herramienta == h and lugar.lugar and lugar.tipo in c.TIPOS_LUGAR, (nombre, h)
-    assert todos["maya"].estado == todos["3dsmax"].estado == "borrador"
+    assert todos["blender"].estado == todos["aframe"].estado == "estable"
 
 
 def test_el_perfil_de_blender_es_la_tabla_del_guion():

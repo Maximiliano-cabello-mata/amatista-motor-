@@ -4,7 +4,7 @@ Contrato estable ``amatista.corazon/1`` (ver ``contrato.py``). Las piezas:
 
 - ``contrato``     señales, eventos, lugares y el turno (lo único que ve el alumno)
 - ``adaptador``    el perfil de un programa (datos) y la interfaz del adaptador
-- ``perfiles/``    Blender (estable), A-Frame (estable), Maya y 3ds Max (borrador)
+- ``perfiles/``    Blender (estable), A-Frame (estable)
 - ``andamiaje``    cuánta ayuda dar por herramienta (mostrar › señalar › recordar › reto)
 - ``senales``      qué señal pedir y su ciclo de vida (nunca caduca por reloj)
 - ``director``     junta todo: observa el reporte, decide el turno, pide y comprueba la señal

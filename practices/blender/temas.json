@@ -593,7 +593,7 @@
         ],
         "datos": [
           "A glTF le dicen «el JPEG del 3D».",
-          "3ds Max exporta glTF de serie desde la versión 2023.",
+          "Blender y Godot leen y exportan glTF 2.0 y GLB de serie sin complementos externos.",
           "Un .glb junta malla, materiales y texturas en un solo archivo."
         ],
         "charla": [

@@ -7,7 +7,7 @@ Dos piezas por programa, separadas a propósito:
   arregla cada validador y cómo se llaman las primitivas. Se prueba sin el
   programa y lo usa también el servidor.
 - **Adaptador** (``Adaptador``, vive dentro del programa: el add-on de
-  Blender, el Motor Web de A-Frame, un plug-in de Maya): toma la foto de la
+  Blender, el Motor Web de A-Frame): toma la foto de la
   escena, hace las señales y comprueba si siguen siendo verdad.
 
 Un adaptador nuevo hereda de ``AdaptadorBase`` y sobreescribe lo que su
