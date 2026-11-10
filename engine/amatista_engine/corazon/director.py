@@ -62,6 +62,7 @@ class Director:
         self._paso_id = ""
         self._terminado_avisado = False
         self._contadas: set = set()
+        self.juicio = None  # corazon.juicio.Juicio de la última escena vista, o None
         self.notificar(Evento(PRACTICA_ABIERTA, ahora, {"practica": getattr(practica, "id", "")}))
 
     # --- Lo que se lee -----------------------------------------------------------------------
@@ -244,6 +245,31 @@ class Director:
         t = self.turno(ev.momento) if getattr(self, "avance", None) is not None else None
         self.extensiones.correr("observadores", ev, t)
 
+    # --- El juicio: la escena contra el ejemplo ------------------------------------------------
+
+    def juzgar(self, escena, reporte=None) -> None:
+        """Compara la escena con el ejemplo, pieza por pieza. Un fallo aquí nunca rompe el turno."""
+        try:
+            from .juicio import juzgar
+
+            self.juicio = juzgar(self.practica, escena, reporte) if escena is not None else None
+        except Exception:  # noqa: BLE001 - el juicio es un apoyo: sin él el turno sigue como antes
+            self.juicio = None
+
+    def _revision(self) -> Dict[str, Any]:
+        """Los campos del turno que salen del juicio. Solo corrige piezas que ya existen:
+        qué agregar lo dice el paso del guion, y dos voces a la vez confunden."""
+        j = self.juicio
+        if j is None:
+            return {}
+        from .juicio import AJUSTAR_TAMANO, GIRAR
+
+        datos: Dict[str, Any] = {"piezas": j.avance}
+        if j.decision.accion in (GIRAR, AJUSTAR_TAMANO):
+            datos.update(revision=self.perfil.en_pantalla(j.decision.texto, self.idioma),
+                         revision_objeto=j.decision.objeto)
+        return datos
+
     # --- El turno ------------------------------------------------------------------------------
 
     def turno(self, ahora: float = 0.0) -> Turno:
@@ -269,14 +295,20 @@ class Director:
             por_que=self.perfil.en_pantalla(av.pausa or (av.por_que if av.por_que != p.listo else ""), self.idioma),
             donde=donde if nivel != andamiaje.RETO else "", herramienta=p.herramienta, senal=self.senal, nivel=nivel,
             pistas=tuple(self._titulos(ahora)), sugerir_pista=self.pista is None and ahora - self.inicio_paso >= espera > 0,
-            ultimo=self.ultimo, pasos=pasos, completo=False,
+            ultimo=self.ultimo, pasos=pasos, completo=False, **self._revision(),
         )
         return self.extensiones.encadenar("turno", t)
 
     # --- El ciclo con un adaptador -------------------------------------------------------------
 
-    def ciclo(self, adaptador: Adaptador, reporte, ahora: float) -> Turno:
-        """Observa, hace la señal pendiente y comprueba la vigente. Devuelve el turno."""
+    def ciclo(self, adaptador: Adaptador, reporte, ahora: float, escena=None) -> Turno:
+        """Observa, hace la señal pendiente y comprueba la vigente. Devuelve el turno.
+
+        Con ``escena`` (la misma foto que evaluó el motor) también juzga las piezas
+        contra el ejemplo; sin ella, el turno conserva el último juicio.
+        """
+        if escena is not None:
+            self.juzgar(escena, reporte)
         if reporte is not None:
             self.observar(reporte, ahora)
         s = self.pendiente()

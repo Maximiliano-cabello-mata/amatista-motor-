@@ -240,6 +240,22 @@ def probar_corazon(contexto):
     rueda.location.z -= 1.0
     contexto.view_layer.update()
     guion.revisar_ya(contexto)
+    # Corazón 1.1 (juicio): el tren bien armado no recibe correcciones; una rueda gruesa sí, con medidas.
+    v = guion.vista()
+    revisar(v["piezas"] == (11, 11) and not v["revision"],
+            f"corazón: el juicio da por buenas las 11 piezas del tren ({v['piezas']}, «{v['revision']}»)")
+    escala_antes = tuple(rueda.scale)
+    rueda.scale.z *= 3.0  # el grosor de la rueda (su eje local Z), al triple
+    contexto.view_layer.update()
+    guion.revisar_ya(contexto)
+    v = guion.vista()
+    revisar(v["revision_objeto"] == rueda.name and " m" in v["revision"] and "S y luego" in v["revision"],
+            f"corazón: el juicio señala la rueda gruesa con sus medidas («{v['revision']}»)")
+    revisar(v["piezas"] == (10, 11), f"corazón: el juicio cuenta 10 de 11 piezas bien ({v['piezas']})")
+    rueda.scale = escala_antes
+    contexto.view_layer.update()
+    guion.revisar_ya(contexto)
+    revisar(not guion.vista()["revision"], "corazón: al corregir la rueda, la corrección desaparece")
     h = corazon.historial()
     revisar(any(u.solos or u.ayudados for u in h.usos.values()), f"corazón: el andamio anota lo que usó ({h.como_dict()})")
     archivos = list(ajustes.carpeta_usuario().glob("corazon_andamio_*.json"))

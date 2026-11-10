@@ -96,8 +96,12 @@ class AMATISTA_PT_guion(bpy.types.Panel):
         fila = cuerpo.row()
         fila.scale_y = 1.15
         estilo.parrafo(fila.column(), context, v["haz"])
-        if v["por_que"]:
-            estilo.parrafo(cuerpo, context, v["por_que"], icon="ERROR" if g.avance().pausa else "INFO", alerta=False)
+        # Corazón 1.1: la corrección de una pieza (con medidas) reemplaza al motivo general del
+        # paso; una pausa del motor siempre se muestra.
+        pausa = bool(g.avance().pausa)
+        motivo = v["por_que"] if pausa else (v.get("revision") or v["por_que"])
+        if motivo:
+            estilo.parrafo(cuerpo, context, motivo, icon="ERROR" if pausa else "INFO", alerta=False)
         if v.get("senal"):
             perdida = v.get("senal_estado") == "perdida"
             estilo.parrafo(cuerpo, context, v["senal"], icon="ERROR" if perdida else "RESTRICT_SELECT_OFF")

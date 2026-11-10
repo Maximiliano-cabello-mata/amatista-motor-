@@ -83,3 +83,25 @@ Si más adelante una medición muestra un cuello de botella real, Rust es mejor 
 - No envía los errores del complemento al servidor cuando hay conexión.
 - No divide los archivos grandes del complemento (`practicas.py`, 989 líneas; `interfaz/`, 3.775).
 - No corrige las pistas del tren, que siguen sin decir que hay que subir los vagones ni achicar las ruedas. Ahora el mensaje de error sí lo dice.
+
+## Corazón 1.1: el juicio (agregado el mismo día)
+
+`engine/amatista_engine/corazon/juicio/` compara la escena del alumno con el ejemplo, pieza por pieza, y decide **una** indicación. Son tres módulos sin estado:
+
+| Módulo | Tarea |
+|---|---|
+| `plano.py` | Lo que se espera: las piezas del ejemplo con sus medidas |
+| `diferencia.py` | Lo que hay contra lo que se espera. Cada pieza queda como bien, falta, tamaño o girada |
+| `decision.py` | Una sola indicación, por reglas en orden fijo: girar, corregir tamaño, agregar lo que falta y, con todo bien, lo que diga el motor |
+
+Las medidas se piden **en la escala del alumno**: si su tren es el doble de grande, la rueda «debería medir» el doble. Ejemplo real, con una rueda de pie pero gruesa en un tren al doble:
+
+> «Cylinder» (Rueda) mide 0.9 m en Y; en tu figura debería medir cerca de 0.4 m. Redúcela con S y luego Y.
+
+Límites:
+
+- Cubre las prácticas de piezas sueltas (tren, puente, aldea, diorama y pelota). Las cuatro que se modelan en una sola malla (espada, nave, pinta-nave y tres-puntos) no: ahí no hay piezas que separar y sigue mandando la silueta.
+- **Conectado al complemento el mismo día.** El `Director` juzga la escena en cada revisión y el turno trae `revision`, `revision_objeto` y `piezas`. En la banda y en el panel, la corrección de una pieza ocupa la línea que antes mostraba el motivo general del paso: no se agrega texto. Solo se muestran correcciones de piezas que ya existen; qué agregar lo sigue diciendo el paso. Probado dentro de Blender 5.0.1 sin ventana (`addon/tests/en_blender.py`); falta verlo con un alumno.
+- Una pieza tan deformada que ya no se reconoce (una rueda al triple de grosor) no se reporta como faltante: si sobra un objeto de la misma primitiva, se toma como esa pieza y se dice qué medida corregir.
+- Juzga tamaño y giro por la caja de cada pieza. La posición la sigue juzgando el motor.
+- El orden en que pide las piezas es el del modelo de referencia, no el de los pasos de la práctica.

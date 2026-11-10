@@ -110,8 +110,10 @@ def guardar_historial():
 # --- El director de la práctica abierta --------------------------------------------------------
 
 
-def al_evaluar(practica, guion, reporte):
-    """El guion avanzó con un reporte nuevo: el corazón decide el turno. Devuelve el turno o None."""
+def al_evaluar(practica, guion, reporte, escena=None):
+    """El guion avanzó con un reporte nuevo: el corazón decide el turno. Devuelve el turno o None.
+
+    ``escena`` es la foto que evaluó el motor: con ella el corazón compara cada pieza con el ejemplo."""
     try:
         d = ESTADO["director"]
         if d is None or ESTADO["practica_id"] != practica.id or ESTADO["guion"] is not guion:
@@ -120,7 +122,7 @@ def al_evaluar(practica, guion, reporte):
                                      guion=guion, ahora=time.time())
             ESTADO.update(director=d, practica_id=practica.id, guion=guion)
         antes = d.historial.como_dict()
-        t = d.ciclo(programa(), reporte, time.time())
+        t = d.ciclo(programa(), reporte, time.time(), escena=escena)
         if d.historial.como_dict() != antes:
             guardar_historial()
         _vigilar_encendido(not t.completo)
