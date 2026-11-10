@@ -8,8 +8,10 @@ Orden de búsqueda de cada vecino:
   1. Variable de entorno (AMATISTA_API_DIR, AMATISTA_WEB_DIR): la raíz del
      checkout que contiene `backend/` o `frontend/`.
   2. Carpeta hermana de este repositorio (`../amatista-api-`, `../amatista-web-`,
-     `../amatista`).
-  3. Este mismo árbol, si es el monorepo original.
+     `../amatista-recuperada-20261106`).
+
+No busca `../amatista` sin sufijo para evitar leer copias antiguas previas a la
+separación de repositorios.
 """
 from __future__ import annotations
 
@@ -20,19 +22,21 @@ from typing import Optional
 RAIZ = Path(__file__).resolve().parent
 
 _VECINOS = {
-    "backend": ("AMATISTA_API_DIR", ("amatista-api-", "amatista-api", "amatista")),
-    "frontend": ("AMATISTA_WEB_DIR", ("amatista-web-", "amatista-web", "amatista")),
+    "backend": ("AMATISTA_API_DIR", ("amatista-api-", "amatista-api")),
+    "frontend": (
+        "AMATISTA_WEB_DIR",
+        ("amatista-web-", "amatista-web", "amatista-recuperada-20261106", "amatista-recuperada"),
+    ),
 }
 
 
 def carpeta(nombre: str) -> Optional[Path]:
     """La carpeta `backend` o `frontend` de un repositorio vecino, o None si no está."""
     variable, hermanos = _VECINOS[nombre]
-    candidatos = []
     if os.getenv(variable):
-        candidatos.append(Path(os.environ[variable]).expanduser() / nombre)
-    candidatos += [RAIZ.parent / hermano / nombre for hermano in hermanos]
-    candidatos.append(RAIZ / nombre)
+        explicito = Path(os.environ[variable]).expanduser() / nombre
+        return explicito if explicito.is_dir() else None
+    candidatos = [RAIZ.parent / hermano / nombre for hermano in hermanos]
     return next((c for c in candidatos if c.is_dir()), None)
 
 
