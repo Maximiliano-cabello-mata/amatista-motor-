@@ -36,7 +36,7 @@ tests/
 ```bash
 python addon/herramientas/construir.py                         # dist/amatista-7.1.0.zip
 python addon/herramientas/construir.py --sistema macos \
-       --servidor https://api.amatista-3d.tech --plataforma https://amatista-3d.tech
+       --servidor https://api.amatista-3dt.tech --plataforma https://amatista-3dt.tech
 ```
 
 Licencia de esta carpeta: `GPL-3.0-or-later` (usa `bpy`).

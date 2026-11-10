@@ -40,8 +40,8 @@ import construir  # noqa: E402
 RAIZ = construir.RAIZ
 INSTALADOR = construir.INSTALADOR
 SALIDA = RAIZ / "dist" / "instaladores"
-SERVIDOR = "https://api.amatista-3d.tech"
-PLATAFORMA = "https://amatista-3d.tech"
+SERVIDOR = "https://api.amatista-3dt.tech"
+PLATAFORMA = "https://amatista-3dt.tech"
 ICONOS = (RAIZ / "frontend" / "public" / "icons" / "pwa-192.png", construir.ADDON / "iconos" / "logo.png")
 PAQUETE_DEB = "amatista"
 COMUNES = ("instalar_en_blender.py", "desinstalar_en_blender.py")
@@ -95,11 +95,11 @@ def control_deb(tam_kb: int) -> str:
         "Recommends: blender (>= 4.2) | flatpak",
         f"Installed-Size: {tam_kb}",
         "Maintainer: Maximiliano Cabello Mata <noreply@amatista-3d.tech>",
-        "Homepage: https://amatista-3d.tech",
+        "Homepage: https://amatista-3dt.tech",
         "Description: Amatista para Blender: aprende 3D habilidad por habilidad",
         " Instala Amatista Motor en tu Blender (4.2 o más nuevo) y lo abre como",
         " «Blender Amatista»: prácticas guiadas, la herramienta que toca iluminada",
-        " y tu avance conectado con la plataforma amatista-3d.tech.",
+        " y tu avance conectado con la plataforma amatista-3dt.tech.",
         "",
     ])
 
