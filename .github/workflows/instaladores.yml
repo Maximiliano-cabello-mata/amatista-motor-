@@ -1,0 +1,152 @@
+# Instaladores de Amatista (motor 6.2): .exe para Windows y .deb para Linux.
+#
+# - En cada push que toca el add-on o los instaladores: se compilan sin firmar (para ver que funcionan).
+# - A mano (Actions › Instaladores › Run workflow) o con una etiqueta v*: se firman si están los secretos
+#   y, con la etiqueta, se suben a la página de la versión (Releases).
+#
+# Firma de Windows (una de las dos; docs/motor/referencia/21_motor_6_2.md §6):
+#   SignPath (gratis para código abierto): secreto SIGNPATH_API_TOKEN y variables SIGNPATH_ORGANIZATION_ID,
+#     SIGNPATH_PROJECT_SLUG y SIGNPATH_POLICY_SLUG.
+#   Certificado propio .pfx: secretos WINDOWS_CERT_PFX (en base64) y WINDOWS_CERT_PASSWORD.
+# Firma de Linux: secretos LINUX_GPG_PRIVATE_KEY y LINUX_GPG_PASSPHRASE (firma separada .asc y SHA256SUMS).
+name: Instaladores
+
+on:
+  # Como CI: en cada push que toca el add-on (las etiquetas v* no miran las rutas).
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+    paths:
+      - "addon/**"
+      - "engine/**"
+      - "practices/blender/**"
+      - ".github/workflows/instaladores.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  comun:
+    runs-on: ubuntu-latest
+    env:
+      LLAVE: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+      FRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: version
+        run: echo "version=$(python addon/herramientas/instaladores.py version)" >> "$GITHUB_OUTPUT"
+      - name: Preparar lo común y el .deb
+        run: python addon/herramientas/instaladores.py deb
+      - name: Probar el .deb (instalar y que el lanzador responda)
+        run: |
+          sudo apt-get install -y ./dist/instaladores/amatista_*_all.deb
+          test -x /usr/bin/amatista
+          test -f /usr/share/applications/amatista.desktop
+          bash -n /usr/bin/amatista
+      - name: Firmar el .deb (si hay llave GPG)
+        if: ${{ env.LLAVE != '' }}
+        run: |
+          echo "$LLAVE" | gpg --batch --import
+          cd dist/instaladores
+          sha256sum amatista_*_all.deb > SHA256SUMS
+          for f in amatista_*_all.deb SHA256SUMS; do
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$FRASE" --armor --detach-sign "$f"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: comun
+          path: dist/instaladores/comun
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/instaladores/*.deb
+            dist/instaladores/SHA256SUMS*
+            dist/instaladores/*.asc
+
+  windows:
+    needs: comun
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.comun.outputs.version }}
+      PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+      PFX_CLAVE: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+      SIGNPATH: ${{ secrets.SIGNPATH_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: comun
+          path: dist/instaladores/comun
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - name: Compilar el .exe
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          $comun = (Resolve-Path dist/instaladores/comun).Path
+          $salida = (Resolve-Path dist/instaladores).Path
+          $parametros = @("/DVersion=$env:VERSION", "/DComun=$comun", "/DSalida=$salida")
+          if ($env:PFX -ne "" -and ("${{ github.ref_type }}" -eq "tag" -or "${{ github.event_name }}" -eq "workflow_dispatch")) {
+            [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\firma.pfx", [Convert]::FromBase64String($env:PFX))
+            $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1).FullName
+            $parametros += "/DFirmar"
+            $parametros += "/Sfirma=`"$signtool`" sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 /f `"$env:RUNNER_TEMP\firma.pfx`" /p `"$env:PFX_CLAVE`" `$f"
+          }
+          & $iscc @parametros addon\herramientas\instalador\windows\amatista.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Remove-Item "$env:RUNNER_TEMP\firma.pfx" -ErrorAction SilentlyContinue
+      - name: Tamaño del .exe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem dist/instaladores/Amatista-*-Windows.exe | Select-Object -First 1
+          Write-Host "Instalador: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 1)) MB)"
+      - id: sin_firmar
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-sin-firmar
+          path: dist/instaladores/Amatista-*-Windows.exe
+      - name: Firmar con SignPath
+        if: ${{ env.SIGNPATH != '' && (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch') }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.sin_firmar.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: dist/instaladores/firmado
+      - name: Juntar el .exe final
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/final | Out-Null
+          if (Test-Path dist/instaladores/firmado) { Copy-Item dist/instaladores/firmado/*.exe dist/final/ }
+          else { Copy-Item dist/instaladores/Amatista-*-Windows.exe dist/final/ }
+          Get-AuthenticodeSignature dist/final/*.exe | Format-List Status, SignerCertificate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/final/*.exe
+
+  publicar:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [comun, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: entrega
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            entrega/windows/*.exe
+            entrega/linux/*

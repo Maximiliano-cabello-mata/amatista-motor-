@@ -46,7 +46,10 @@ def test_no_acepta_entrega_con_cambios_sin_guardar():
     assert reporte.result("guardar").passed is False
 
 def test_enlace_y_pasos_del_modulo_coinciden_con_la_practica():
-    modulo = json.loads((REPO / "frontend/src/data/modulos/archivo/blender-modulo-3.json").read_text(encoding="utf-8"))["module"]
+    # Contrato con la web: la lección que enlaza esta práctica vive en su repositorio.
+    import vecinos
+    lecciones = vecinos.requerir("frontend") / "src/data/modulos/archivo/blender-modulo-3.json"
+    modulo = json.loads(lecciones.read_text(encoding="utf-8"))["module"]
     bloques = [b for l in modulo["lessons"] for b in l.get("contentBlocks", []) if b["type"] == "blender_practice"]
     assert len(bloques) == 1
     assert bloques[0]["practica"] == practica.id

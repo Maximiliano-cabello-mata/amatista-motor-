@@ -113,6 +113,25 @@ def _error_forma(a: Sequence[float], b: Sequence[float]) -> float:
     return max(abs(math.log(x / y)) for x, y in zip(_forma(a), _forma(b)))
 
 
+def _clase(medidas: Sequence[float]) -> str:
+    """«disco» (dos lados grandes y uno chico), «barra» (dos chicos y uno grande) o «» si no se distingue."""
+    chico, medio, grande = _forma(medidas)
+    if grande / chico < 1.25:  # casi un cubo: ni disco ni barra
+        return ""
+    return "disco" if medio * medio > chico * grande else "barra"
+
+
+# Confundir un disco con una barra pesa como equivocarse al doble en una medida:
+# una rueda gruesa (0.7 × 0.7 × 0.45) sigue siendo una rueda, no una chimenea.
+CASTIGO_CLASE = math.log(2.0)
+
+
+def _error_reconocer(medidas: Sequence[float], prototipo: Sequence[float]) -> float:
+    """Diferencia de forma para decidir qué pieza es: proporciones y clase (disco o barra)."""
+    a, b = _clase(medidas), _clase(prototipo)
+    return _error_forma(medidas, prototipo) + (CASTIGO_CLASE if a and b and a != b else 0.0)
+
+
 @dataclass(frozen=True)
 class _Prototipo:
     grupo: str
@@ -175,7 +194,7 @@ def inferir_roles(partes: Sequence[Dict[str, Any]], objetos: Sequence[SceneObjec
         if not candidatos:
             continue
         medidas = _medidas(obj)
-        mejor = min(candidatos, key=lambda p: (_error_forma(medidas, p.medidas), p.grupo))
+        mejor = min(candidatos, key=lambda p: (_error_reconocer(medidas, p.medidas), p.grupo))
         propuestas[obj.name] = (mejor.grupo, mejor)
     # Segunda vuelta: con la figura armada, lo que es demasiado chico o grande es adorno.
     con_rol = [o for o in objetos if o.object_type == "MESH" and ((usar_roles and o.roles) or o.name in propuestas)]
@@ -335,6 +354,18 @@ def revisar(relaciones: Sequence[Relacion], modelo: Dict[str, List[_Caja]], grup
     parejas = _parejas(alumno_rel, modelo_rel, perfil.tolerancia)
     holgura = 0.05 * perfil.holgura
     piso = min(_min(c, 2) for cajas in alumno_rel.values() for c in cajas)
+    # ¿Quién marca el piso? Si es una pieza que en el modelo NO va en el suelo (un
+    # vagón hundido bajo sus ruedas), la falla es de esa pieza y no de las ruedas.
+    en_suelo = {r.grupo for r in relaciones if r.tipo == SUELO}
+    grupo_piso, caja_piso = min(((g, c) for g, cajas in alumno_rel.items() for c in cajas), key=lambda par: _min(par[1], 2))
+    hundida = None
+    if en_suelo and grupo_piso not in en_suelo:
+        apoyo = min((_min(c, 2) for g in en_suelo for c in alumno_rel.get(g, ())), default=None)
+        # Solo si las piezas de suelo quedan a un costado de ella. Si están encima
+        # (ruedas en el techo), las que están mal puestas son ellas.
+        techo = _max(caja_piso, 2)
+        if apoyo is not None and apoyo - piso > holgura * 1.2 and apoyo < techo - 0.25 * (techo - piso):
+            hundida = {"hundida": caja_piso.nombre, "grupo_hundida": grupo_piso}
     total = cumplido = 0.0
     fallas = []
     for r in relaciones:
@@ -350,6 +381,8 @@ def revisar(relaciones: Sequence[Relacion], modelo: Dict[str, List[_Caja]], grup
             detalle["objeto"] = a.nombre
             if r.tipo == SUELO:
                 ok = _min(a, 2) - piso <= holgura * 1.2
+                if not ok and hundida:
+                    detalle.update(hundida)
             else:
                 b = parejas.get((r.otro, r.otro_indice))
                 if b is None:

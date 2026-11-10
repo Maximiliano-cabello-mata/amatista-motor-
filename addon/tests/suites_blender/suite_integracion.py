@@ -289,11 +289,18 @@ def probar_entrega(contexto):
     revisar(rojo.get("nombre") == "Rojo" and rojo["color"][0] > 0.8, f"entrega: el material y su color ({rojo})")
     paquete = modelo_ligero.empaquetar(datos)
     revisar(len(paquete) < 20000, f"entrega: pocos KB ({len(paquete)} caracteres)")
-    spec = importlib.util.spec_from_file_location(
-        "servidor_modelo_ligero", ADDON.parent / "backend" / "contenido" / "modelo_ligero.py")
-    servidor = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(servidor)
-    revisar(servidor.resumen_de(paquete)["objetos"] == len(datos["objetos"]), "entrega: el servidor acepta el modelo")
+    # Contrato con la API: solo se comprueba si su repositorio está junto a este.
+    if str(ADDON.parent) not in sys.path:
+        sys.path.insert(0, str(ADDON.parent))
+    import vecinos
+    backend = vecinos.carpeta("backend")
+    if backend is None:
+        print("  (omitido) entrega: el servidor acepta el modelo; falta el repositorio de la API")
+    else:
+        spec = importlib.util.spec_from_file_location("servidor_modelo_ligero", backend / "contenido" / "modelo_ligero.py")
+        servidor = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(servidor)
+        revisar(servidor.resumen_de(paquete)["objetos"] == len(datos["objetos"]), "entrega: el servidor acepta el modelo")
     for obj in (cubo, luz):
         bpy.data.objects.remove(obj)
 

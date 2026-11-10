@@ -71,17 +71,22 @@ def statuses(
     results: Mapping[str, ValidationResult],
 ) -> Tuple[Tuple[TargetStatus, ...], Optional[str]]:
     """Estado de cada objetivo y el id del objetivo actual (o None si no queda ninguno)."""
-    aprobados = {tid for tid, r in results.items() if r.passed is True}
+    from .progress import desbloqueados
+
+    libres = desbloqueados(targets, results)
     actual: Optional[str] = None
     pasos = []
     for target in ordered(targets):
         r = results.get(target.id)
         if r is not None and r.passed is None:
             estado = DESCONOCIDO
+        elif target.id not in libres:
+            # Requisitos directos o indirectos sin cumplir. También si ya «pasa»: con una sola rueda, «ruedas de pie» se cumple en
+            # vacío. Mostrarlo hecho y deshacerlo al llegar la octava se siente como
+            # retroceder un paso.
+            estado = BLOQUEADO
         elif r is not None and r.passed:
             estado = COMPLETADO
-        elif any(req not in aprobados for req in target.requires):
-            estado = BLOQUEADO
         elif actual is None and not target.optional:
             estado = ACTUAL
             actual = target.id
