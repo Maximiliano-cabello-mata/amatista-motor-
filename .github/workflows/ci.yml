@@ -1,5 +1,5 @@
 # CI del motor: sin Blender (motor, constructor del complemento y contrato con la
-# API) y dentro de Blender (módulo bpy de PyPI).
+# API y la web) y dentro de Blender (módulo bpy de PyPI).
 name: CI
 
 on:
@@ -23,11 +23,16 @@ jobs:
         with:
           path: amatista-motor-
 
-      # Vecino para la prueba de contrato del modelo ligero (vecinos.py).
+      # Vecinos para las pruebas de contrato del modelo ligero y de lecciones (vecinos.py).
       - uses: actions/checkout@v4
         with:
           repository: Maximiliano-cabello-mata/amatista-api-
           path: amatista-api-
+
+      - uses: actions/checkout@v4
+        with:
+          repository: Maximiliano-cabello-mata/amatista-recuperada-20261106
+          path: amatista-recuperada-20261106
 
       - uses: actions/setup-python@v5
         with:
