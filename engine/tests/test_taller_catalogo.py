@@ -32,7 +32,7 @@ from amatista_engine.testing import Escena, escena_desde_pasos
 
 CRUDO = json.loads((PRACTICAS / "habilidades.json").read_text(encoding="utf-8"))
 CATALOGO = leer_catalogo(PRACTICAS / "habilidades.json")
-MODULOS = PRACTICAS.parents[1] / "frontend" / "src" / "data" / "modulos"
+
 CRUDAS = {h["id"]: h for h in CRUDO["habilidades"]}
 
 
@@ -117,7 +117,10 @@ def test_los_repasos_vienen_de_talleres_anteriores():
 def test_cada_leccion_de_la_plataforma_tiene_su_taller():
     talleres = {t.id: t for t in CATALOGO.talleres}
     vistos = set()
-    for archivo in sorted(MODULOS.glob("blender_*.json")):
+    # Contrato con la web: las lecciones viven en su repositorio.
+    import vecinos
+    modulos = vecinos.requerir("frontend") / "src" / "data" / "modulos"
+    for archivo in sorted(modulos.glob("blender_*.json")):
         modulo = json.loads(archivo.read_text(encoding="utf-8"))["module"]
         for leccion in modulo["lessons"]:
             for bloque in leccion.get("contentBlocks", []):

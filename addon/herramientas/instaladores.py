@@ -42,7 +42,7 @@ INSTALADOR = construir.INSTALADOR
 SALIDA = RAIZ / "dist" / "instaladores"
 SERVIDOR = "https://api.amatista-3dt.tech"
 PLATAFORMA = "https://amatista-3dt.tech"
-ICONOS = (RAIZ / "frontend" / "public" / "icons" / "pwa-192.png", construir.ADDON / "iconos" / "logo.png")
+ICONOS = (INSTALADOR / "iconos" / "amatista-192.png", construir.ADDON / "iconos" / "logo.png")
 PAQUETE_DEB = "amatista"
 COMUNES = ("instalar_en_blender.py", "desinstalar_en_blender.py")
 

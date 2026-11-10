@@ -6,6 +6,8 @@ y lo vuelve a armar el navegador del profesor: los tres deben entenderse.
 import importlib.util
 from pathlib import Path
 
+import vecinos
+
 RAIZ = Path(__file__).resolve().parents[2]
 
 
@@ -17,7 +19,8 @@ def cargar(nombre, ruta):
 
 
 addon = cargar("addon_modelo_ligero", RAIZ / "addon" / "amatista_blender" / "modelo_ligero.py")
-servidor = cargar("servidor_modelo_ligero", RAIZ / "backend" / "contenido" / "modelo_ligero.py")
+# Contrato con la API: el validador del servidor vive en su repositorio.
+servidor = cargar("servidor_modelo_ligero", vecinos.requerir("backend") / "contenido" / "modelo_ligero.py")
 
 CUBO = [(x, y, z) for x in (0, 2) for y in (0, 2) for z in (0, 2)]
 CARAS = [(0, 1, 3), (0, 3, 2), (4, 6, 7), (4, 7, 5), (0, 4, 5), (0, 5, 1),
