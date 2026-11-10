@@ -28,6 +28,10 @@ def _pieza(nombre: str, grupo: str, etiquetas: Dict[str, str]) -> str:
 def mensaje_relacion(relacion, detalle: Dict[str, Any], etiquetas: Dict[str, str]) -> str:
     objeto = detalle.get("objeto", "")
     if relacion.tipo == SUELO:
+        if detalle.get("hundida"):
+            # La pieza señalada sí está bien: otra quedó más abajo que ella.
+            return (f"{_pieza(detalle['hundida'], detalle.get('grupo_hundida', ''), etiquetas)} quedó más abajo que "
+                    f"las piezas «{_nombre_grupo(relacion.grupo, etiquetas)}»: súbela con G y luego Z.")
         return f"{_pieza(objeto, relacion.grupo, etiquetas)} debería tocar el suelo, como en el modelo."
     if relacion.tipo == ENCIMA:
         return (f"{_pieza(objeto, relacion.grupo, etiquetas)} debería ir apoyada encima de "

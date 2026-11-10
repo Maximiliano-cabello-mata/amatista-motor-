@@ -45,7 +45,9 @@ class EngineTests(unittest.TestCase):
 
         report = create_default_engine().evaluate(practice, scene)
 
-        self.assertEqual(report.progress, 25.0)
+        # «b» vale 25. «a» es de conteo y lleva 3 de 4: suma tres cuartos de sus 75
+        # (pedagogy/progress.py, avance parcial). Antes valía 0 hasta la cuarta pata.
+        self.assertEqual(report.progress, 25.0 + 75.0 * 3 / 4)
         self.assertFalse(report.completed)
 
 

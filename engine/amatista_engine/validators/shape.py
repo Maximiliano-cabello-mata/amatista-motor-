@@ -43,15 +43,24 @@ def thinnest_axis(target: TargetDefinition, scene: SceneState) -> ValidationResu
         delgado = min(range(3), key=lambda i: d[i])
         ok_eje = delgado in ((0, 1) if eje == "horizontal" else (EJES[eje],))
         if not ok_eje or d[delgado] > razon * grande:
-            fallan.append({"object": obj.name, "thinnest": "xyz"[delgado], "ratio": round(d[delgado] / grande, 3)})
+            fallan.append({"object": obj.name, "thinnest": "xyz"[delgado], "ratio": round(d[delgado] / grande, 3),
+                           "wrong_axis": not ok_eje, "thin": round(d[delgado], 3), "large": round(grande, 3)})
     if not fallan:
         mensaje = f"La forma de «{que}» es la esperada."
     else:
+        # Dos fallas distintas, cada una con sus medidas: está acostado (hay que
+        # girarlo) o está de pie pero todavía es grueso (hay que adelgazarlo).
         f = fallan[0]
-        mensaje = (
-            f"«{f['object']}» todavía no es delgado en {NOMBRES_EJE[eje]}: "
-            f"su lado más delgado es {f['thinnest'].upper()}."
-        )
+        if f["wrong_axis"]:
+            mensaje = (
+                f"«{f['object']}» está acostado: su lado delgado es {f['thinnest'].upper()} ({f['thin']:g} m) "
+                f"y debe ser {NOMBRES_EJE[eje]}. Gíralo con R."
+            )
+        else:
+            mensaje = (
+                f"«{f['object']}» todavía es grueso: mide {f['thin']:g} m de grosor y {f['large']:g} m de ancho. "
+                f"Adelgázalo hasta {razon * f['large']:.2g} m o menos."
+            )
     return result(target, not fallan, mensaje, {"selector": sel, "axis": eje, "max_ratio": razon, "failed": fallan})
 
 
