@@ -12,6 +12,7 @@ Contrato estable ``amatista.corazon/1`` (ver ``contrato.py``). Las piezas:
 - ``ramas``        variantes del motor en JSON (``amatista.rama/1``), con herencia
 - ``conformidad``  revisa que un adaptador nuevo cumpla el contrato
 - ``simulado``     un programa de mentira para probar
+- ``juicio/``      compara la escena con el ejemplo, pieza por pieza, y decide UNA indicación
 
 Python puro, sin ``bpy``: corre en Blender, en el servidor y en pytest.
 Referencia: docs/motor/referencia/23_corazon.md.
@@ -22,7 +23,7 @@ from .director import Director
 from .extensiones import Extension, Extensiones
 from .ramas import Rama, crear_director, leer_rama
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"  # 1.1: juicio/ (comparar con el ejemplo y decidir), sin cambiar el contrato
 
 __all__ = ["Adaptador", "AdaptadorBase", "CONTRATO", "Capacidades", "Director", "EstadoSenal", "Evento", "Extension",
            "Extensiones", "Lugar", "Perfil", "Rama", "ResultadoSenal", "Senal", "Turno", "VERSION", "crear_director",
