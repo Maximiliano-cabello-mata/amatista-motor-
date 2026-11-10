@@ -10,7 +10,7 @@ python engine/herramientas/auditar.py
 
 | Queja | Reproducido | Causa | Estado |
 |---|---|---|---|
-| «Le puse las 8 ruedas y me regresó un paso» | Sí. Con 7 ruedas bien puestas, agregar la octava recién aplanada bajaba el progreso de 70,8 % a 54,2 % y desmarcaba «ruedas en el suelo» y «ruedas pegadas» | Los pasos posteriores se daban por hechos antes que su requisito: con una sola rueda, «ruedas de pie» se cumple en vacío | Corregido |
+| «Le puse las 8 ruedas y me regresó un paso» | Sí. Con 7 ruedas bien puestas, agregar la octava recién aplanada bajaba el progreso de 66,7 % a 54,2 % y desmarcaba «ruedas en el suelo» y «ruedas pegadas» | Los pasos posteriores se daban por hechos antes que su requisito: con una sola rueda, «ruedas de pie» se cumple en vacío | Corregido |
 | «No avanza» mientras se ponen las ruedas | Sí. El progreso saltaba de 29 % a 67 % con la primera rueda y se quedaba quieto hasta la octava | Un objetivo de conteo valía todo o nada | Corregido: suma en proporción (4 de 8 ruedas, la mitad de su peso) |
 | «Es muy exigente con las ruedas, se confunde» | Sí. Ocho ruedas un poco gruesas (0,7 × 0,7 × 0,45) se tomaban todas por chimeneas: «Tienes 0 ruedas» | El reconocimiento comparaba proporciones sin distinguir un disco de una barra | Corregido |
 | «No te muestra las medidas» | Sí. «Todavía no es delgado en X o Y: su lado más delgado es Y» para una rueda de pie pero gruesa | Un solo mensaje para dos fallas distintas, sin cifras | Corregido: «está acostado… gíralo con R» o «todavía es grueso: mide 0.45 m de grosor y 0.7 m de ancho. Adelgázalo hasta 0.35 m o menos» |
@@ -68,7 +68,7 @@ Lo que sí ayudaría a que el código crezca sano:
 
 | Necesidad | Propuesta | Por qué |
 |---|---|---|
-| Que una regla vieja no se quede atrás en silencio | La auditoría de este documento, corriendo en cada cambio | Ya está: encontró lo que las 669 pruebas no veían |
+| Que una regla vieja no se quede atrás en silencio | La auditoría de este documento, corriendo en cada cambio | Ya está: encontró lo que las pruebas que ya existían no veían |
 | Errores de forma en las prácticas (JSON) | Un esquema JSON de `amatista.practice/2` validado en CI | Lo valida cualquier lenguaje y cualquier editor |
 | Errores de tipos entre módulos | Revisión estática de tipos (`mypy` o `pyright`) en el motor | El motor ya está anotado; falta exigirlo |
 | Geometría pesada (silueta de mallas grandes) | Medir primero. Si de verdad es lenta, `numpy`, que Blender ya trae | Sin binarios propios |
