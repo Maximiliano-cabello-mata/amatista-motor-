@@ -82,7 +82,9 @@ def dibujar():
     else:
         cabecera = (f"PASO {v['numero']} DE {v['total']}" + (f" · {v['parte']}" if v["parte"] else "")).upper()
     lineas = hud._partir(v["haz"], tam_grande, ancho - 2 * relleno, 3)
-    segunda = v["aviso"] or v["pista"] or v["por_que"]
+    # Corazón 1.1: si una pieza no cuadra con el ejemplo, eso (con sus medidas) va en lugar
+    # del motivo general del paso. Es la misma línea: no se agrega texto a la banda.
+    segunda = v["aviso"] or v["pista"] or v.get("revision") or v["por_que"]
     color_segunda = hud.VERDE if v["aviso"] else ((0.85, 0.78, 1.0, 1.0) if v["pista"] else AMBAR)
     lineas2 = hud._partir(segunda, tam, ancho - 2 * relleno - 12 * escala, 3) if segunda else []
     # Corazón: la señal tal como está de verdad (vigente o perdida), sin reloj que la borre.

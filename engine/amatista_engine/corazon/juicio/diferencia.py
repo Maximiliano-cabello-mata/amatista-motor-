@@ -76,10 +76,12 @@ def _error(medidas: Sequence[float], esperadas: Sequence[float], escala: float) 
     return sum(abs(a - e * escala) / (e * escala) for a, e in zip(medidas, esperadas) if e > 1e-6)
 
 
-def _por_grupo(escena, reporte, plano: Plano) -> Dict[str, List]:
-    """Las mallas del alumno según lo que son: por su rol (puesto o deducido) o por su primitiva."""
+def _por_grupo(escena, reporte, plano: Plano) -> Tuple[Dict[str, List], List]:
+    """Las mallas del alumno según lo que son (por su rol, puesto o deducido, o por su primitiva)
+    y las que no se reconocieron como nada."""
     deducidos = dict(getattr(reporte, "inferred_roles", ()) or ()) if reporte is not None else {}
     grupos: Dict[str, List] = {g: [] for g in plano.grupos}
+    sueltas: List = []
     for obj in escena.objects:
         if obj.object_type != "MESH":
             continue
@@ -88,7 +90,9 @@ def _por_grupo(escena, reporte, plano: Plano) -> Dict[str, List]:
             grupos[rol].append(obj)
         elif not rol and obj.primitive in grupos:
             grupos[obj.primitive].append(obj)
-    return grupos
+        else:
+            sueltas.append(obj)
+    return grupos, sueltas
 
 
 def _escala(grupos: Dict[str, List], plano: Plano) -> float:
@@ -136,23 +140,48 @@ def _juzgar(obj, esperada: PiezaEsperada, escala: float, girada: bool, toleranci
 def comparar(plano: Plano, escena, reporte=None, tolerancia: Optional[float] = None) -> Diferencia:
     """Empareja cada pieza del plano con un objeto del alumno y dice cómo está."""
     tol = plano.tolerancia if tolerancia is None else tolerancia
-    grupos = _por_grupo(escena, reporte, plano)
+    grupos, sueltas = _por_grupo(escena, reporte, plano)
     escala = _escala(grupos, plano)
     girada = _figura_girada(grupos, plano, escala)
-    piezas: List[EstadoPieza] = []
-    sobran: Dict[str, int] = {}
+
+    def cercania(esperada: PiezaEsperada):
+        return lambda o: _error(_orientar(_medidas(o), girada), esperada.medidas, escala)
+
+    # Primera vuelta: cada pieza del ejemplo con el objeto de su grupo que mejor le queda.
+    piezas: List[Optional[EstadoPieza]] = []
+    faltantes: List[Tuple[int, PiezaEsperada]] = []
+    restos: Dict[str, List] = {}
     for grupo in plano.grupos:
-        esperadas = list(plano.del_grupo(grupo))
         libres = list(grupos.get(grupo, ()))
-        for esperada in esperadas:
+        for esperada in plano.del_grupo(grupo):
             if not libres:
-                piezas.append(EstadoPieza(grupo, esperada.nombre, FALTA))
+                faltantes.append((len(piezas), esperada))
+                piezas.append(None)
                 continue
-            # La que mejor le queda a esta pieza del ejemplo.
-            obj = min(libres, key=lambda o: _error(_orientar(_medidas(o), girada), esperada.medidas, escala))
+            obj = min(libres, key=cercania(esperada))
             libres.remove(obj)
             estado, ajuste = _juzgar(obj, esperada, escala, girada, tol)
             piezas.append(EstadoPieza(grupo, esperada.nombre, estado, obj.name, ajuste))
-        if libres:
-            sobran[grupo] = len(libres)
-    return Diferencia(plano, tuple(piezas), round(escala, 4), girada, sobran)
+        restos[grupo] = libres
+
+    # Segunda vuelta: una pieza que «falta» casi siempre está en la escena, deformada al punto
+    # de no reconocerse (una rueda tan gruesa que parece otra cosa) o contada en otro grupo.
+    # Si sobra un objeto de la misma primitiva, es esa pieza y hay que decir qué corregirle.
+    for indice, esperada in faltantes:
+        candidatos = [o for o in sueltas if o.primitive == esperada.primitiva]
+        candidatos += [o for g, lista in restos.items() if g != esperada.grupo for o in lista
+                       if o.primitive == esperada.primitiva]
+        if not candidatos:
+            piezas[indice] = EstadoPieza(esperada.grupo, esperada.nombre, FALTA)
+            continue
+        obj = min(candidatos, key=cercania(esperada))
+        if obj in sueltas:
+            sueltas.remove(obj)
+        for lista in restos.values():
+            if obj in lista:
+                lista.remove(obj)
+        estado, ajuste = _juzgar(obj, esperada, escala, girada, tol)
+        piezas[indice] = EstadoPieza(esperada.grupo, esperada.nombre, estado, obj.name, ajuste)
+
+    sobran = {g: len(lista) for g, lista in restos.items() if lista}
+    return Diferencia(plano, tuple(p for p in piezas if p is not None), round(escala, 4), girada, sobran)

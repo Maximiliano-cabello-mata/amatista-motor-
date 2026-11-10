@@ -589,7 +589,7 @@ def evaluar(context=None, motivo="manual"):
     try:
         from . import guion
 
-        guion.al_evaluar(context, practica, reporte)  # motor 7: el paso que toca, con este mismo reporte
+        guion.al_evaluar(context, practica, reporte, foto)  # motor 7: el paso que toca, con este mismo reporte
     except Exception as error:  # noqa: BLE001 - el guion nunca impide evaluar
         print(f"[Amatista] Guion al evaluar: {error}")
     try:

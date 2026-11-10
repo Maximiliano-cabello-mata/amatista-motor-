@@ -169,6 +169,11 @@ class Turno:
     ultimo: str = ""  # lo último que pasó; dura hasta que pase otra cosa
     pasos: Tuple[Tuple[str, str], ...] = ()  # (título, estado) de cada paso
     completo: bool = False
+    # Corazón 1.1 (juicio/): una pieza que ya existe y no cuadra con el ejemplo, con medidas.
+    # Vacío si no hay nada que corregir. Campos nuevos con valor por defecto: el contrato no cambia.
+    revision: str = ""
+    revision_objeto: str = ""  # el objeto a resaltar
+    piezas: Tuple[int, int] = (0, 0)  # (piezas bien, piezas del ejemplo); (0, 0) si no se compara por piezas
     contrato: str = CONTRATO
 
     def como_dict(self) -> Dict[str, Any]:

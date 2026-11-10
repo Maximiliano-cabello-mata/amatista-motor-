@@ -524,7 +524,7 @@ def evaluar(context=None):
     try:
         from .. import guion
 
-        guion.al_evaluar(context, SESION["practica"], reporte)  # motor 7
+        guion.al_evaluar(context, SESION["practica"], reporte, foto)  # motor 7
     except Exception as error:  # noqa: BLE001 - el guion nunca impide revisar
         print(f"[Amatista] Guion: {error}")
     if revision is not None:

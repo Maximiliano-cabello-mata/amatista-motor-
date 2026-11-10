@@ -132,8 +132,10 @@ def _guion_para(practica):
     return g7.guion_de_practica(practica)
 
 
-def al_evaluar(context, practica, reporte):
-    """practicas.evaluar o sesion.evaluar revisaron la escena: el guion avanza con ese reporte."""
+def al_evaluar(context, practica, reporte, foto=None):
+    """practicas.evaluar o sesion.evaluar revisaron la escena: el guion avanza con ese reporte.
+
+    ``foto`` es la escena capturada que se evaluó; el corazón la compara, pieza por pieza, con el ejemplo."""
     if practica is None or reporte is None:
         return None
     sc = _escena(context)
@@ -147,7 +149,7 @@ def al_evaluar(context, practica, reporte):
     if nuevo.actual != ESTADO["paso_de_la_pista"]:
         # Otro paso: la pista y la señal eran del anterior.
         ESTADO.update(pista=None, nivel=0, paso_de_la_pista=nuevo.actual or "", senal="")
-    corazon.al_evaluar(practica, ESTADO["guion"], reporte)
+    corazon.al_evaluar(practica, ESTADO["guion"], reporte, escena=foto)
     if nuevo.recien:
         ultimo = ESTADO["guion"].paso(nuevo.recien[-1])
         if nuevo.completo:
@@ -355,13 +357,15 @@ def _del_corazon():
     """Lo que el corazón dice ahora de la señal, el escalón y lo último que pasó (todo vivo, sin relojes)."""
     t = corazon.turno()
     salida = {"senal": "", "senal_estado": "", "senal_repetir": False, "nivel": "", "donde": "", "ultimo": "",
-              "sugerir_pista": False}
+              "sugerir_pista": False, "revision": "", "revision_objeto": "", "piezas": (0, 0)}
     if t is None:
         return salida
     s = t.senal
     if s is not None and s.senal.tipo != corazon.contrato.DECIR and s.estado != corazon.contrato.CUMPLIDA:
         salida.update(senal=s.texto, senal_estado=s.estado, senal_repetir=s.se_puede_repetir)
-    salida.update(nivel=t.nivel, donde=t.donde, ultimo=t.ultimo, sugerir_pista=t.sugerir_pista)
+    salida.update(nivel=t.nivel, donde=t.donde, ultimo=t.ultimo, sugerir_pista=t.sugerir_pista,
+                  revision=getattr(t, "revision", ""), revision_objeto=getattr(t, "revision_objeto", ""),
+                  piezas=tuple(getattr(t, "piezas", (0, 0))))
     return salida
 
 
