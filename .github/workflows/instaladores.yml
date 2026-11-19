@@ -44,8 +44,13 @@ jobs:
       - name: Preparar lo común y el .deb
         run: python addon/herramientas/instaladores.py deb
       - name: Probar el .deb (instalar y que el lanzador responda)
+        timeout-minutes: 10
         run: |
-          sudo apt-get install -y ./dist/instaladores/amatista_*_all.deb
+          # Sin «update», apt usa el índice de la imagen del runner: si el espejo ya reemplazó un paquete,
+          # la instalación muere con 404 (pasó con gstreamer1.0-plugins-base el 19 nov 2026, tras 31 min).
+          # Los recomendados no hacen falta para probar el lanzador y eran ~219 MB.
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ./dist/instaladores/amatista_*_all.deb
           test -x /usr/bin/amatista
           test -f /usr/share/applications/amatista.desktop
           bash -n /usr/bin/amatista
