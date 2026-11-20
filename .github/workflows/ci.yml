@@ -19,12 +19,12 @@ jobs:
   motor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: amatista-motor-
 
       # Vecinos para las pruebas de contrato del modelo ligero y de lecciones (vecinos.py).
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           repository: Maximiliano-cabello-mata/amatista-api-
           path: amatista-api-
@@ -33,14 +33,14 @@ jobs:
       # Con el secreto AMATISTA_WEB_TOKEN (un token con lectura de ese repositorio) se
       # clona y corren las pruebas de contrato con las lecciones. Sin él, este paso
       # falla sin detener el trabajo y esas pruebas se saltan con su aviso.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         continue-on-error: true
         with:
           repository: Maximiliano-cabello-mata/amatista-recuperada-20261106
           path: amatista-recuperada-20261106
           token: ${{ secrets.AMATISTA_WEB_TOKEN || github.token }}
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -56,9 +56,9 @@ jobs:
     # prácticas, «Ver el ejemplo», modo Author y paneles.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 

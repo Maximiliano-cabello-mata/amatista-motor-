@@ -13,4 +13,4 @@ extensión, no como una versión nueva del motor.
 | `aframe-web` | A-Frame | Retos del Motor Web en la plataforma |
 
 Revisar las ramas: `python engine/herramientas/corazon.py ramas`.
-Referencia: [el Corazón Amatista](../../docs/motor/referencia/23_corazon.md).
+Referencia: [el Corazón Amatista](https://github.com/Maximiliano-cabello-mata/amatista-recuperada-20261106/blob/recuperacion/docs/motor/referencia/23_corazon.md).

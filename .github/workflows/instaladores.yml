@@ -35,8 +35,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - id: version
@@ -63,11 +63,11 @@ jobs:
           for f in amatista_*_all.deb SHA256SUMS; do
             gpg --batch --yes --pinentry-mode loopback --passphrase "$FRASE" --armor --detach-sign "$f"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: comun
           path: dist/instaladores/comun
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: linux
           path: |
@@ -84,8 +84,8 @@ jobs:
       PFX_CLAVE: ${{ secrets.WINDOWS_CERT_PASSWORD }}
       SIGNPATH: ${{ secrets.SIGNPATH_API_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
         with:
           name: comun
           path: dist/instaladores/comun
@@ -115,7 +115,7 @@ jobs:
           $exe = Get-ChildItem dist/instaladores/Amatista-*-Windows.exe | Select-Object -First 1
           Write-Host "Instalador: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 1)) MB)"
       - id: sin_firmar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-sin-firmar
           path: dist/instaladores/Amatista-*-Windows.exe
@@ -137,7 +137,7 @@ jobs:
           if (Test-Path dist/instaladores/firmado) { Copy-Item dist/instaladores/firmado/*.exe dist/final/ }
           else { Copy-Item dist/instaladores/Amatista-*-Windows.exe dist/final/ }
           Get-AuthenticodeSignature dist/final/*.exe | Format-List Status, SignerCertificate
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: windows
           path: dist/final/*.exe
@@ -147,7 +147,7 @@ jobs:
     needs: [comun, windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           path: entrega
       - uses: softprops/action-gh-release@v2
