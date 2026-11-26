@@ -1,0 +1,23 @@
+name: Coordinación entre repositorios
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+  schedule:
+    - cron: '23 11 * * *'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  seguimiento:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Revisar los repositorios y publicar el resumen de esta ejecución
+        uses: Maximiliano-cabello-mata/amatista-g7b-etl/.github/actions/coordinacion@74d48f3c1e0ae9cc3fc6644390792c4fd50475e1
