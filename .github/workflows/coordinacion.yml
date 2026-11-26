@@ -20,4 +20,4 @@ jobs:
         with:
           persist-credentials: false
       - name: Revisar los repositorios y publicar el resumen de esta ejecución
-        uses: Maximiliano-cabello-mata/amatista-g7b-etl/.github/actions/coordinacion@74d48f3c1e0ae9cc3fc6644390792c4fd50475e1
+        uses: Maximiliano-cabello-mata/amatista-g7b-etl/.github/actions/coordinacion@12b88a8feb2865fcad7ecd5c6957852ab1c2f011
