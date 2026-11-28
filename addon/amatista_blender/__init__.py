@@ -146,6 +146,7 @@ def register():
     saneamiento.antes_de_registrar()  # motor 6: sin restos de cargas anteriores ni de otras copias
     estado.register()
     estilo.cargar_iconos()
+    ajustes.migrar_token()  # antes de las clases: un token viejo en claro en userpref.blend pasa al almacén cifrado
     for clase in CLASES:
         bpy.utils.register_class(clase)
     taller.register()  # después de los paneles: su panel cuelga de AMATISTA_PT_principal
