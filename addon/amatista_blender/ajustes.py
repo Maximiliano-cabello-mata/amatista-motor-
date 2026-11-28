@@ -36,7 +36,8 @@ def prefs():
 def servidor():
     """URL base de la API (preferencias > config.json > http://localhost:8000), sin barra final."""
     p = prefs()
-    # [REVISION-SEGURIDAD] el valor por defecto es HTTP sin cifrar; en una copia sin config.json el token se enviaría en claro (ver red.pedir).
+    # El valor por defecto es http://localhost:8000 (solo esta PC); red.pedir rechaza http:// hacia
+    # cualquier otro equipo (direcciones.revisar_servidor), así que el token no viaja en claro.
     url = (p.servidor if p and p.servidor else CONFIG.get("servidor")) or "http://localhost:8000"
     return url.rstrip("/")
 

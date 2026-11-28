@@ -22,7 +22,7 @@ import uuid
 
 import bpy
 
-from . import ajustes, integridad
+from . import ajustes, direcciones, integridad
 
 _resultados = queue.Queue()
 _activos = 0
@@ -92,11 +92,12 @@ def pedir(metodo, ruta, al_terminar=None, datos=None, con_token=True, segundos=1
             al_terminar(None, SIN_INTERNET, 0)
         return
     url = ajustes.servidor() + ruta
-    # [REVISION-SEGURIDAD] se acepta http:// con cualquier host: el token Bearer viaja en claro si el servidor configurado no es HTTPS (el valor por defecto de ajustes.servidor() es http://localhost:8000). Exigir https salvo localhost/127.0.0.1.
-    if not url.lower().startswith(("https://", "http://")):
-        # Solo HTTP(S): una dirección file:// o rara en las preferencias no debe leerse.
+    # Solo https:// (o http:// hacia esta misma PC): el token Bearer nunca viaja en claro por la red,
+    # y una dirección file:// o rara en las preferencias no se lee.
+    problema = direcciones.revisar_servidor(url)
+    if problema:
         if al_terminar:
-            al_terminar(None, "La dirección del servidor debe empezar con https:// (o http://)", 0)
+            al_terminar(None, problema, 0)
         return
     cabeceras = _cabeceras(con_token)
     cuerpo = json.dumps(datos).encode("utf-8") if datos is not None else None
