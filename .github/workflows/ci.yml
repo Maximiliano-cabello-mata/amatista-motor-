@@ -29,16 +29,24 @@ jobs:
           repository: Maximiliano-cabello-mata/amatista-api-
           path: amatista-api-
 
-      # El repositorio de la web es privado: el token de este flujo no lo puede leer.
-      # Con el secreto AMATISTA_WEB_TOKEN (un token con lectura de ese repositorio) se
-      # clona y corren las pruebas de contrato con las lecciones. Sin él, este paso
-      # falla sin detener el trabajo y esas pruebas se saltan con su aviso.
+      # Si la lectura privada está configurada, una avería de checkout debe fallar la CI.
+      - name: Comprobar disponibilidad de las lecciones privadas
+        id: lecciones
+        env:
+          CONFIGURADO: ${{ secrets.AMATISTA_WEB_TOKEN != '' }}
+        run: |
+          echo "disponibles=$CONFIGURADO" >> "$GITHUB_OUTPUT"
+          if [ "$CONFIGURADO" != true ]; then
+            echo '::notice::Esta CI cubre el repositorio público. Los contratos con las lecciones se comprueban en la CI privada de Amatista.'
+            echo 'Contratos con las lecciones privadas: consultar el trabajo **contratos** de la CI web.' >> "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/checkout@v5
-        continue-on-error: true
+        if: steps.lecciones.outputs.disponibles == 'true'
         with:
           repository: Maximiliano-cabello-mata/amatista-recuperada-20261106
           path: amatista-recuperada-20261106
-          token: ${{ secrets.AMATISTA_WEB_TOKEN || github.token }}
+          token: ${{ secrets.AMATISTA_WEB_TOKEN }}
+          persist-credentials: false
 
       - uses: actions/setup-python@v6
         with:
