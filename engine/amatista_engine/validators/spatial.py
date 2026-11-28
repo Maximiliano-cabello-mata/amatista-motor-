@@ -45,6 +45,11 @@ def _separacion(a: SceneObject, b: SceneObject) -> float:
 
 
 def _referencias(target: TargetDefinition, scene: SceneState):
+    """Selector y objetos de referencia (reference_role, reference o reference_primitive) contra los que se mide.
+
+    Raises:
+        ValueError: si no se da ninguna forma de referencia.
+    """
     rol = text(target, "reference_role")
     nombre = text(target, "reference")
     primitiva = text(target, "reference_primitive")

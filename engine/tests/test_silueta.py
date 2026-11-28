@@ -30,26 +30,31 @@ ESPADA = Path(__file__).resolve().parents[2] / "practices/blender/principiante/m
 
 @pytest.fixture(scope="module")
 def practica():
+    """Fixture: la práctica de la espada."""
     return parse_practice(json.loads(ESPADA.read_text(encoding="utf-8")))
 
 
 @pytest.fixture(scope="module")
 def piezas(practica):
+    """Fixture: piezas comparables de la espada como dicts."""
     return [{"name": p.name, "primitive": p.primitive, "size": list(p.size), "location": list(p.location),
              "rotation": list(p.rotation), "segments": p.segments} for p in practica.reference.compared]
 
 
 @pytest.fixture(scope="module")
 def modelo(piezas):
+    """Fixture: silueta y partes del modelo de la espada."""
     return partes_del_modelo(piezas)
 
 
 def revisar(piezas_alumno, modelo, exigencia="proporcion"):
+    """Compara la silueta de unas piezas del alumno con el modelo con la exigencia dada."""
     silueta, partes = modelo
     return comparar_siluetas(silueta_de_piezas(piezas_alumno), silueta, partes, exigencia)
 
 
 def estado(revision, parte):
+    """Estado de una parte en la lista de revisión."""
     return next(i["estado"] for i in lista_de_revision(revision) if i["texto"] == parte)
 
 
@@ -57,6 +62,7 @@ def estado(revision, parte):
 
 
 def test_un_cubo_se_mide_en_su_eje_mas_largo():
+    """Comprueba que la silueta de un cubo se mide en su eje más largo con anchos constantes."""
     puntos, aristas = malla_de_pieza("cube", (0.4, 0.2, 3.0), (5, 5, 1.5))
     s = silueta_de_malla(puntos, aristas, 8)
     assert s.eje == 2 and s.largo == pytest.approx(3.0)
@@ -64,12 +70,14 @@ def test_un_cubo_se_mide_en_su_eje_mas_largo():
 
 
 def test_un_cono_se_afila():
+    """Comprueba que la silueta de un cono se estrecha hacia la punta."""
     puntos, aristas = malla_de_pieza("cone", (1.0, 1.0, 4.0), segmentos=16)
     s = silueta_de_malla(puntos, aristas, 8)
     assert s.anchos[0][0] > 0.8 and s.anchos[-1][0] < 0.2
 
 
 def test_las_partes_del_modelo_van_en_orden(modelo):
+    """Comprueba el orden y la extensión de las partes de la espada."""
     _, partes = modelo
     assert [p.nombre for p in partes] == ["Pomo", "Mango", "Guarda", "Hoja", "Punta"]
     assert partes[0].desde == 0 and partes[-1].hasta == pytest.approx(1.0)
@@ -80,12 +88,14 @@ def test_las_partes_del_modelo_van_en_orden(modelo):
 
 
 def test_la_espada_del_modelo_esta_completa(piezas, modelo):
+    """Comprueba que el propio modelo se reconoce completo."""
     r = revisar(piezas, modelo)
     assert not r.criticas and not r.fuera and r.puntaje > 0.85
     assert all(i["estado"] == "Bien" for i in lista_de_revision(r))
 
 
 def test_sin_guarda_falta_la_guarda_en_todos_los_niveles(piezas, modelo):
+    """Comprueba que sin guarda se marca crítica en todos los niveles con su consejo."""
     sin_guarda = copy.deepcopy(piezas)
     sin_guarda[2]["size"] = [0.2, 0.2, 0.18]
     for exigencia in ("forma", "proporcion", "exacta"):
@@ -96,6 +106,7 @@ def test_sin_guarda_falta_la_guarda_en_todos_los_niveles(piezas, modelo):
 
 
 def test_una_punta_cuadrada_no_se_afila(piezas, modelo):
+    """Comprueba que una punta cúbica se reporta como «No se afila»."""
     cuadrada = copy.deepcopy(piezas)
     cuadrada[4]["primitive"] = "cube"
     r = revisar(cuadrada, modelo)
@@ -104,6 +115,7 @@ def test_una_punta_cuadrada_no_se_afila(piezas, modelo):
 
 
 def test_al_reves_o_acostada_sigue_siendo_espada(piezas, modelo):
+    """Comprueba que la espada invertida o acostada se sigue reconociendo."""
     al_reves = copy.deepcopy(piezas)
     for p in al_reves:
         p["location"][2] = -p["location"][2]
@@ -119,6 +131,7 @@ def test_al_reves_o_acostada_sigue_siendo_espada(piezas, modelo):
 
 
 def test_sin_pomo_pasa_y_se_sugiere_como_detalle(piezas, modelo):
+    """Comprueba que sin pomo aprueba y se sugiere como detalle."""
     r = revisar([p for p in piezas if p["name"] != "Pomo"], modelo)
     assert not r.criticas and not r.fuera
     item = next(i for i in lista_de_revision(r) if i["texto"] == "Pomo")
@@ -126,6 +139,7 @@ def test_sin_pomo_pasa_y_se_sugiere_como_detalle(piezas, modelo):
 
 
 def test_la_exigencia_sube_con_el_nivel(piezas, modelo):
+    """Comprueba que la exigencia de proporciones aumenta con el nivel."""
     corta = copy.deepcopy(piezas)
     corta[3]["size"][2] = 1.3  # hoja a la mitad
     corta[3]["location"][2] = 1.82
@@ -137,6 +151,7 @@ def test_la_exigencia_sube_con_el_nivel(piezas, modelo):
 
 
 def test_es_rapida_para_revisar_en_vivo(piezas, modelo):
+    """Comprueba que la comparación tarda menos de 60 ms (revisión en vivo)."""
     alumno = silueta_de_piezas(piezas)
     inicio = time.perf_counter()
     for _ in range(5):
@@ -148,33 +163,39 @@ def test_es_rapida_para_revisar_en_vivo(piezas, modelo):
 
 
 def objetivo(piezas, nivel=2):
+    """Objetivo figure.silhouette de prueba con las piezas y el nivel."""
     return TargetDefinition(id="silueta", validator="figure.silhouette",
                             params={"type": "MESH", "parts": piezas, "level": nivel, "title": "Espada low-poly"})
 
 
 def escena_con(silueta):
+    """Escena con una sola malla «Espada» con la silueta dada."""
     return SceneState("5.0.1", "", False, objects=(SceneObject("Espada", "MESH", dimensions=(1, 1, 4), vertices=40, faces=38,
                                            silhouette=silueta),))
 
 
 def test_el_validador_da_la_lista_del_instructor(piezas):
+    """Comprueba que el validador aprueba y da la lista de partes del instructor."""
     r = silhouette(objetivo(piezas), escena_con(silueta_de_piezas(piezas)))
     assert r.passed and "Amatista reconoce tu figura" in r.message
     assert [i["texto"] for i in r.details["checklist"]] == ["Pomo", "Mango", "Guarda", "Hoja", "Punta"]
 
 
 def test_sin_malla_pide_un_cubo(piezas):
+    """Comprueba que sin malla pide agregar un cubo."""
     r = silhouette(objetivo(piezas), SceneState("5.0.1", "", False, objects=()))
     assert not r.passed and "Shift + A" in r.message and len(r.details["checklist"]) == 5
 
 
 def test_una_foto_sin_silueta_no_se_aprueba(piezas):
+    """Comprueba que sin silueta medida no se aprueba."""
     r = silhouette(objetivo(piezas), escena_con(None))
     assert not r.passed and r.details["no_silhouette"]
     assert "Pendiente de verificación" in r.message
 
 
 def test_en_el_nivel_5_cuenta_el_tamano(piezas):
+    """Comprueba que en el nivel 5 cuenta la escala real y en el 2 no."""
     grande = [{**p, "size": [m * 2 for m in p["size"]], "location": [m * 2 for m in p["location"]]} for p in piezas]
     r = silhouette(objetivo(piezas, nivel=5), escena_con(silueta_de_piezas(grande)))
     assert not r.passed and "redúcela" in r.message
@@ -182,6 +203,7 @@ def test_en_el_nivel_5_cuenta_el_tamano(piezas):
 
 
 def test_la_silueta_viaja_en_la_foto(piezas):
+    """Comprueba que la silueta se serializa en la foto y se validan datos malos."""
     escena = escena_con(silueta_de_piezas(piezas))
     llegada = scene_from_dict(json.loads(json.dumps(scene_to_dict(escena)))).objects[0].silhouette
     assert llegada.eje == 2 and len(llegada.anchos) == 32
@@ -190,6 +212,7 @@ def test_la_silueta_viaja_en_la_foto(piezas):
 
 
 def test_la_practica_de_la_espada_sigue_una_ruta(practica):
+    """Comprueba la ruta de objetivos de la espada y su evaluación."""
     assert [t.id for t in practica.targets] == ["malla", "alargar", "silueta", "low-poly", "guardar", "ejemplo"]
     assert not practica.roles  # nada de «asígnale el rol»: se modela
     motor = create_default_engine()

@@ -89,6 +89,7 @@ def asignacion_para(asignaciones, practica_id):
 
 
 def _avisar(texto, tono="animo"):
+    """Guarda el mensaje de la entrega y lo muestra como aviso «Entrega a tu profesor»."""
     from . import guia, practicas
 
     ESTADO["mensaje"] = texto
@@ -126,6 +127,7 @@ def entregar(context=None, al_terminar=None):
     ESTADO["enviando"] = True
 
     def con_asignaciones(respuesta, error, estado):
+        """Con la lista de tareas del profesor: elige la asignación de la práctica y envía la entrega; sin red ni lista previa no adivina."""
         if error is None:
             ESTADO["asignaciones"] = respuesta.get("asignaciones") or []
         elif ESTADO["asignaciones"] is None:
@@ -141,6 +143,7 @@ def entregar(context=None, al_terminar=None):
         datos = {"asignacion_id": asignacion["id"], "modelo": paquete, "version_addon": ajustes.VERSION_ADDON}
 
         def entregada(respuesta, error, estado):
+            """Al responder la entrega: avisa «¡Entregado!» con el tamaño del modelo, o si hay que reintentar o qué falló."""
             ESTADO["enviando"] = False
             if error is None:
                 kb = max(1, round((respuesta.get("modelo_bytes") or 0) / 1024))
@@ -168,11 +171,13 @@ class AMATISTA_OT_entregar_profesor(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """Disponible con una práctica abierta y sin otra entrega en curso."""
         from . import practicas
 
         return practicas.practica_activa(context) is not None and not ESTADO["enviando"]
 
     def execute(self, context):
+        """Botón «Entregar a mi profesor»: inicia la entrega del modelo y muestra el mensaje resultante."""
         self.report({"INFO"}, entregar(context))
         return {"FINISHED"}
 

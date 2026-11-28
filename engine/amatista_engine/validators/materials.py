@@ -54,6 +54,7 @@ def distinct(target: TargetDefinition, scene: SceneState) -> ValidationResult:
 
 
 def _cumple(material: MaterialInfo, condiciones: List[tuple]) -> bool:
+    """True si el material cumple todas las condiciones (propiedad, «>=»|«<=», valor), con margen 1e-6."""
     for propiedad, comparacion, valor in condiciones:
         actual = getattr(material, propiedad)
         if comparacion == ">=" and actual < valor - 1e-6:

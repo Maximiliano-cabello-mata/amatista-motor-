@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+# [REVISION-MUERTO] ``List`` y ``Sequence`` (y ``Hint`` de models) se importan pero no se usan.
 from typing import Any, Dict, List, Optional, Sequence
 
 from ..models import (
@@ -24,6 +25,7 @@ class PracticaDumper:
     """Transforma una PracticeDefinition en su estructura canónica de diccionario JSON."""
 
     def __init__(self, practice: PracticeDefinition):
+        """Prepara la serialización: guarda la práctica y calcula lo que el cargador inyectó desde el ejemplo y las etiquetas de roles."""
         self.practice = practice
         self.reference = practice.reference
         self.roles = practice.roles
@@ -36,6 +38,11 @@ class PracticaDumper:
         self.etiquetas = _etiquetas(self.roles)
 
     def to_dict(self) -> Dict[str, Any]:
+        """Devuelve la práctica como diccionario JSON canónico (el que escribiría un autor).
+
+        Omite los campos vacíos o con valor por defecto y lo que el cargador dedujo de
+        la referencia o del ejemplo, para que leer → escribir no infle el archivo.
+        """
         p = self.practice
         datos: Dict[str, Any] = {
             "schema": p.schema,
@@ -105,6 +112,7 @@ class PracticaDumper:
         return datos
 
     def _dump_ejemplo(self, ejemplo) -> Dict[str, Any]:
+        """Serializa el ejemplo resuelto: título, descripción, pasos y comprobaciones."""
         ej: Dict[str, Any] = {}
         if ejemplo.title:
             ej["title"] = ejemplo.title
@@ -116,6 +124,7 @@ class PracticaDumper:
         return ej
 
     def dump_objetivo(self, t: TargetDefinition) -> Dict[str, Any]:
+        """Serializa un objetivo con el contexto de esta práctica (referencia, roles, nivel, parámetros inyectados)."""
         return _dump_objetivo(
             t,
             referencia=self.reference,
@@ -126,6 +135,7 @@ class PracticaDumper:
 
 
 def _dump_referencia(r: ReferenceModel) -> Dict[str, Any]:
+    """Serializa el modelo de referencia (piezas, tolerancias, luces…) omitiendo valores por defecto."""
     salida: Dict[str, Any] = {}
     if r.title:
         salida["title"] = r.title
@@ -166,6 +176,7 @@ def _dump_referencia(r: ReferenceModel) -> Dict[str, Any]:
 
 
 def _dump_pildora(p: PillDefinition) -> Dict[str, Any]:
+    """Serializa una píldora de teoría; solo escribe «once» si es False y el disparo sin campos vacíos."""
     salida: Dict[str, Any] = {"id": p.id, "title": p.title, "text": p.text}
     if p.keys:
         salida["keys"] = list(p.keys)
@@ -188,6 +199,11 @@ def _podar_params_figura(
     nivel: int,
 ) -> None:
     # Las piezas viven en «reference»; el objetivo solo guarda lo propio.
+    """Quita (in situ) de los params de un validador de figura lo que se hereda de la referencia o del nivel.
+
+    Las piezas viven en «reference»; si nivel, exigencia, título o tolerancia son
+    iguales a los de la referencia, no se repiten en el objetivo.
+    """
     params.pop("parts", None)
     if validator in CON_NIVEL:
         for clave, valor in (
@@ -206,6 +222,7 @@ def _podar_params_figura(
 
 
 def _dump_guia(guide) -> Optional[Dict[str, Any]]:
+    """Serializa la guía de un objetivo (why y micro pasos); None si está vacía."""
     if guide is None or not (guide.why or guide.steps):
         return None
     guia: Dict[str, Any] = {}
@@ -219,6 +236,7 @@ def _dump_guia(guide) -> Optional[Dict[str, Any]]:
 
 
 def _dump_fix(fix) -> Optional[Dict[str, Any]]:
+    """Serializa el arreglo de un vigilante; omite la etiqueta si está vacía."""
     if fix is None:
         return None
     return {"action": fix.action, "label": fix.label} if fix.label else {"action": fix.action}
@@ -231,6 +249,12 @@ def _dump_objetivo(
     nivel: int = 1,
     inyectados: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    """Serializa un objetivo a JSON canónico, quitando los params que inyectó el cargador.
+
+    Para ``example.matches`` solo se eliminan los valores idénticos a los inyectados
+    (lo que el autor escribió distinto se conserva); para validadores de figura poda
+    lo heredado de la referencia.
+    """
     objetivo: Dict[str, Any] = {"id": t.id}
     if t.title:
         objetivo["title"] = t.title

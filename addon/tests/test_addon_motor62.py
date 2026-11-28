@@ -1,3 +1,4 @@
+# [REVISION-BUG] ``import os`` está ANTES del docstring: el texto de abajo ya no es el docstring del módulo (__doc__ es None). Mover el import debajo.
 import os
 """Motor 6.2 en el add-on, sin Blender: la versión, los instaladores y sus scripts.
 
@@ -18,6 +19,7 @@ HERRAMIENTAS = RAIZ / "addon" / "herramientas"
 
 
 def _instaladores():
+    """Carga herramientas/instaladores.py."""
     spec = importlib.util.spec_from_file_location("amatista_instaladores", HERRAMIENTAS / "instaladores.py")
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -25,12 +27,14 @@ def _instaladores():
 
 
 def test_version_62():
+    """Comprueba la versión del add-on en manifiesto y ajustes."""
     manifiesto = (ADDON / "blender_manifest.toml").read_text(encoding="utf-8")
     assert 'version = "7.1.0"' in manifiesto  # motor 7 (test_addon_motor7.py) sigue sobre el 6.2
     assert 'VERSION_ADDON = "7.1.0"' in (ADDON / "ajustes.py").read_text(encoding="utf-8")
 
 
 def test_preparar_lleva_lo_necesario(tmp_path):
+    """Comprueba que la carpeta común del instalador trae zip, scripts, licencia e icono."""
     inst = _instaladores()
     comun = inst.preparar(tmp_path / "comun")
     nombres = {p.name for p in comun.iterdir()}
@@ -42,6 +46,7 @@ def test_preparar_lleva_lo_necesario(tmp_path):
 
 
 def test_el_instalador_de_windows_usa_lo_que_prepara():
+    """Comprueba que el .iss de Windows usa los archivos preparados y no pide administrador."""
     iss = (HERRAMIENTAS / "instalador" / "windows" / "amatista.iss").read_text(encoding="utf-8")
     for nombre in ("instalar_en_blender.py", "desinstalar_en_blender.py", "amatista.ico", "LICENSE.txt"):
         assert nombre in iss
@@ -51,6 +56,7 @@ def test_el_instalador_de_windows_usa_lo_que_prepara():
 
 
 def test_lanzador_linux_es_bash_valido():
+    """Comprueba que el lanzador de Linux es bash válido y abre la plantilla."""
     lanzador = HERRAMIENTAS / "instalador" / "linux" / "amatista"
     if sys.platform.startswith("win"):
         pytest.skip("bash no está en Windows")
@@ -60,6 +66,7 @@ def test_lanzador_linux_es_bash_valido():
 
 
 def test_arbol_deb(tmp_path):
+    """Comprueba el árbol del paquete .deb."""
     inst = _instaladores()
     comun = inst.preparar(tmp_path / "comun")
     raiz = inst.armar_arbol_deb(comun, tmp_path / "deb")

@@ -51,6 +51,7 @@ def _libre(contexto, escala):
 
 
 def dibujar():
+    """Callback POST_PIXEL: la banda arriba al centro de la vista 3D con el paso que toca, la señal y el aviso."""
     if gpu is None:
         return
     from ..interfaz import hud, turno
@@ -136,6 +137,7 @@ def dibujar():
 
 
 def activar(encendido=True):
+    """Registra o quita el draw handler de la banda (nada sin GPU o en background)."""
     from .. import saneamiento
 
     if gpu is None or bpy.app.background:

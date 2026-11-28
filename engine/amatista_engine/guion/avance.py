@@ -23,6 +23,7 @@ HECHO, ACTUAL, PENDIENTE = "hecho", "actual", "pendiente"
 
 @dataclass(frozen=True)
 class EstadoPaso:
+    """Estado de un paso del guion (hecho, actual, pendiente…) con el mensaje de su objetivo."""
     id: str
     estado: str
     mensaje: str = ""
@@ -30,6 +31,7 @@ class EstadoPaso:
 
 @dataclass(frozen=True)
 class Avance:
+    """Qué pasos están hechos según la escena real: estados, si está completo, hechos/total, paso actual y por qué falta."""
     practica_id: str
     pasos: Tuple[EstadoPaso, ...]
     completo: bool
@@ -42,10 +44,12 @@ class Avance:
     pausa: str = ""  # un vigilante pausó el progreso: qué arreglar
 
     def estado(self, paso_id: str) -> str:
+        """Estado del paso con ese id (PENDIENTE si no aparece)."""
         return next((p.estado for p in self.pasos if p.id == paso_id), PENDIENTE)
 
     @property
     def progreso(self) -> float:
+        """Porcentaje de avance (0..100)."""
         return 100.0 if self.completo else (100.0 * self.hechos / self.total if self.total else 0.0)
 
 

@@ -31,6 +31,7 @@ class GuideInstruction:
 
 @dataclass(frozen=True)
 class Highlight:
+    """Resaltado de un objeto en la vista 3D: ``kind`` es bien (verde), corregir (naranja) o candidato (punteado), con su etiqueta."""
     object_name: str
     kind: str
     label: str = ""
@@ -83,6 +84,12 @@ class GuideAction:
 
 @dataclass(frozen=True)
 class Guidance:
+    """La guía del paso actual que pinta la tarjeta del add-on.
+
+    Incluye título, número de paso/total, retroalimentación y tono, el porqué,
+    micro pasos con teclas, resaltados, ayudas visuales, la acción «Hazlo conmigo»
+    y si la práctica está completa o en pausa por un vigilante.
+    """
     target_id: Optional[str]
     title: str
     step_number: int

@@ -16,8 +16,10 @@ from .contrato import ELEGIR_HERRAMIENTA, SELECCIONAR, ResultadoSenal, Senal
 
 
 class AdaptadorSimulado(AdaptadorBase):
+    """Adaptador de mentira para pruebas: guarda la herramienta activa, la selección y las señales hechas, sin programa 3D real."""
     def __init__(self, perfil: Perfil, escena: Optional[SceneState] = None, *, sabe_elegir: bool = True,
                  sabe_seleccionar: bool = True) -> None:
+        """Crea el simulado con una escena opcional; ``sabe_elegir``/``sabe_seleccionar`` deciden qué señales entiende."""
         super().__init__(perfil, id=f"simulado-{perfil.software}", version="simulado")
         self.escena = escena or SceneState(blender_version="", file_path="", file_saved=False)
         self.activa = ""
@@ -30,11 +32,13 @@ class AdaptadorSimulado(AdaptadorBase):
             self.ver[SELECCIONAR] = lambda s: set(s.objetos) <= set(self.escena.selected)
 
     def _elegir(self, s: Senal) -> ResultadoSenal:
+        """Simula elegir la herramienta de la señal."""
         self.activa = s.objetivo or s.herramienta
         self.hechas.append(s)
         return ResultadoSenal(True)
 
     def _seleccionar(self, s: Senal) -> ResultadoSenal:
+        """Simula seleccionar los objetos de la señal; falla si ninguno está en la escena."""
         nombres = {o.name for o in self.escena.objects}
         if not set(s.objetos) & nombres:
             return ResultadoSenal(False, "no están en la escena")
@@ -43,13 +47,16 @@ class AdaptadorSimulado(AdaptadorBase):
         return ResultadoSenal(True)
 
     def capturar(self) -> SceneState:
+        """Devuelve la escena simulada actual."""
         return self.escena
 
     def herramienta_activa(self) -> str:
+        """Herramienta elegida en el simulado."""
         return self.activa
 
     # Lo que haría el alumno.
     def elegir_otra(self, herramienta: str) -> None:
+        """Simula que el alumno elige otra herramienta (para probar señales perdidas)."""
         self.activa = herramienta
 
 

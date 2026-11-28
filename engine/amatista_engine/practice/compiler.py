@@ -32,15 +32,19 @@ TIPOS_OBJETO = ("MESH", "CURVE", "SURFACE", "META", "FONT", "EMPTY", "CAMERA", "
 
 @dataclass
 class CompileResult:
+    """Resultado de compilar una práctica: la definición (o None si no se pudo leer), errores y avisos para el autor."""
     practice: Optional[PracticeDefinition]
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
+        """True si la práctica se leyó y no tiene errores (los avisos no impiden publicarla)."""
         return self.practice is not None and not self.errors
 
+    # [REVISION-MUERTO] summary() no se usa en ningún repo de scratch (grep); API pública sin consumidores.
     def summary(self) -> Dict[str, Any]:
+        """Resumen apto para JSON (CLI y API): ok, errores, avisos, id y número de objetivos, validadores y habilidades."""
         p = self.practice
         return {
             "ok": self.ok,
@@ -109,6 +113,12 @@ def _revisar_tipos(target, spec, errores) -> bool:
 
 
 def _revisar_parametros(target, spec, roles_declarados, errores, avisos, registry=None):
+    """Revisa los params de un objetivo contra la ficha de su validador y anota problemas.
+
+    Errores: tipos incorrectos, parámetros obligatorios ausentes, roles no
+    declarados, casos especiales (logic.any, spatial.below). Avisos: parámetros
+    que el validador no usa. ``errores`` y ``avisos`` son listas que se amplían in situ.
+    """
     donde = f"Objetivo «{target.id}»"
     if not _revisar_tipos(target, spec, errores):
         return

@@ -27,15 +27,18 @@ ICONO_FASE = {"nueva": "RADIOBUT_OFF", "acompanada": "RADIOBUT_ON", "sola": "CHE
 
 
 def _alumno(context):
+    """True si el panel se ve como alumno (modo alumno o no desarrollador) y no en vista previa de autor."""
     wm = context.window_manager.amatista
     return (wm.modo == "alumno" or not ajustes.es_desarrollador()) and not wm.vista_previa
 
 
 def _taller_actual():
+    """Taller de la sesión o, si no hay, el taller inicial del catálogo."""
     return sesion.SESION["taller"] or datos.taller_inicial()
 
 
 class _Base:
+    """Mezcla de los paneles del taller: barra lateral (N) de la vista 3D, pestaña Amatista."""
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Amatista"
@@ -49,11 +52,13 @@ class AMATISTA_PT_taller(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible para el alumno cuando no está activo el guion paso a paso (que tiene su propio panel)."""
         from .. import guion
 
         return _alumno(context) and not guion.activo(context.scene)  # motor 7: el guion tiene su panel
 
     def draw(self, context):
+        """Panel del taller: actividad actual con sus botones (seguir, pista, Mírame, pausa), progreso de habilidades o aviso si el taller no está disponible."""
         layout = self.layout
         c = datos.catalogo()
         if c is None:
@@ -151,9 +156,11 @@ class AMATISTA_PT_taller_fichas(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible para el alumno si hay catálogo del taller."""
         return _alumno(context) and datos.catalogo() is not None
 
     def draw(self, context):
+        """Lista de fichas de las herramientas de la actividad (qué es cada una) o una invitación a empezar una actividad."""
         from .. import fichas
 
         layout = self.layout
@@ -194,9 +201,11 @@ class AMATISTA_PT_taller_habilidades(_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         # Motor 6: con la cuenta conectada, «Demuéstralo» vive en la lección de la plataforma.
+        """Visible si hay catálogo y la plataforma no lleva la ruta (con cuenta, «Demuéstralo» vive en la lección web)."""
         return _alumno(context) and datos.catalogo() is not None and not sesion.manda_la_plataforma()
 
     def draw(self, context):
+        """Habilidades del taller con su estado y botón «Demuéstralo» para saltarse la guía si ya se saben."""
         layout = self.layout
         tid = _taller_actual()
         plan = datos.plan(tid)
@@ -221,9 +230,11 @@ class AMATISTA_PT_taller_modulos(_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         # Motor 6: los módulos se eligen en la plataforma, no en Blender (sin cuenta, Blender sigue solo).
+        """Visible si hay catálogo y la plataforma no elige los módulos."""
         return _alumno(context) and datos.catalogo() is not None and not sesion.manda_la_plataforma()
 
     def draw(self, context):
+        """Lista de talleres/módulos con su estado (completo, actual) para cambiar de módulo."""
         layout = self.layout
         c = datos.catalogo()
         actual = _taller_actual()

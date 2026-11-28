@@ -52,11 +52,13 @@ ESTADO = {
 
 
 def preferencia():
+    """Preferencia del modo enfocado: «auto», «siempre» o «nunca»."""
     p = ajustes.prefs()
     return getattr(p, "enfoque", "auto") if p else "auto"
 
 
 def debe_enfocar(practica):
+    """True si al abrir la práctica hay que enfocar Blender según la preferencia (y, en auto, el nivel de la práctica)."""
     modo = preferencia()
     if practica is None or modo == "nunca":
         return False
@@ -66,6 +68,7 @@ def debe_enfocar(practica):
 
 
 def activo():
+    """True si el modo enfocado está activo."""
     return ESTADO["activo"]
 
 
@@ -85,6 +88,7 @@ def primitivas_de(practica):
 
 
 def _areas_3d():
+    """Recorre (pantalla, índice, área) de las vistas 3D de todas las ventanas."""
     wm = getattr(bpy.context, "window_manager", None)
     for ventana in getattr(wm, "windows", ()) or ():
         pantalla = ventana.screen
@@ -96,6 +100,7 @@ def _areas_3d():
 
 
 def _enfocar_area(pantalla, indice, area):
+    """Esconde barras de la vista 3D guardando antes en la pantalla cómo las tenía el alumno (para restaurarlas)."""
     espacio = area.spaces.active
     guardado = dict(pantalla.get(PROPIEDAD, {}) or {})
     clave = str(indice)
@@ -143,6 +148,7 @@ def restaurar_pantalla(pantalla):
 
 
 def _menus_enfocados(self, context):
+    """Cabecera de menús reducida de la vista 3D en modo enfocado (Vista, Agregar… según el modo)."""
     layout = self.layout
     layout.menu("VIEW3D_MT_view")
     modo = context.mode
@@ -157,6 +163,7 @@ def _menus_enfocados(self, context):
 
 
 def _agregar_enfocado(self, context):
+    """Menú Agregar reducido: solo las primitivas que usa la práctica."""
     layout = self.layout
     layout.operator_context = "EXEC_REGION_WIN"
     for clave in ESTADO["primitivas"]:
@@ -178,6 +185,7 @@ def _seguro(enfocado, original):
     """Si el dibujo enfocado falla, Blender dibuja su menú de siempre."""
 
     def dibujar(self, context):
+        """Dibuja la versión enfocada del menú si el enfoque está activo; si falla, vuelve a la original."""
         if not ESTADO["activo"]:
             return original(self, context)
         try:
@@ -194,6 +202,7 @@ MENUS = (("VIEW3D_MT_editor_menus", _menus_enfocados), ("VIEW3D_MT_add", _agrega
 
 
 def _parchar_menus():
+    """Sustituye el draw de los menús de Blender por la versión enfocada (guardando el original)."""
     for nombre, enfocado in MENUS:
         clase = getattr(bpy.types, nombre, None)
         if clase is None or getattr(clase.draw, "_amatista", False):
@@ -203,6 +212,7 @@ def _parchar_menus():
 
 
 def _devolver_menus():
+    """Restaura el draw original de los menús parchados."""
     for nombre, original in list(ESTADO["originales"].items()):
         clase = getattr(bpy.types, nombre, None)
         if clase is not None and getattr(clase.draw, "_amatista", False):
@@ -278,6 +288,7 @@ def al_abrir_archivo():
 
 
 def unregister():
+    """Sale del modo enfocado; si falla, al menos devuelve los menús originales."""
     try:
         desactivar()
     except Exception as error:  # noqa: BLE001 - desregistrar nunca debe fallar

@@ -24,10 +24,12 @@ from .base import number, result, select, selector, text
 
 @lru_cache(maxsize=32)
 def _modelo(clave: str):
+    """Silueta y tramos del modelo para una lista de piezas en JSON (cacheado: el modelo no cambia entre evaluaciones)."""
     return partes_del_modelo(json.loads(clave))
 
 
 def modelo_de(partes: List[Dict[str, Any]]):
+    """Silueta y tramos del modelo de referencia; serializa las piezas para poder usar la caché."""
     return _modelo(json.dumps(partes, sort_keys=True))
 
 
@@ -41,6 +43,15 @@ def mejor_malla(mallas, modelo, tramos, exigencia: str, candidatas: int = 3):
 
 
 def silhouette(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``figure.silhouette``: Amatista reconoce la silueta de la malla del alumno frente al modelo.
+
+    Elige la malla más parecida, compara su silueta por tramos con la exigencia
+    del nivel (y la escala real si el nivel lo pide) y devuelve una lista de
+    revisión por partes en ``details``. Sin silueta medida nunca aprueba.
+
+    Raises:
+        ValueError: si faltan las piezas o el modelo no tiene forma.
+    """
     partes = target.params.get("parts")
     if not isinstance(partes, list) or not partes:
         raise ValueError("figure.silhouette necesita las piezas del modelo («reference» en la práctica)")

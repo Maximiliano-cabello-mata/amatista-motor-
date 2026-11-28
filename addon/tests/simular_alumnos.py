@@ -59,6 +59,7 @@ BRILLO = re.compile(r"(brilla|resaltad|iluminad|se enciende|encendid)", re.I)
 
 
 def preparar(motor):
+    """Abre un Blender de fábrica y activa el add-on Amatista para la simulación."""
     bpy.ops.wm.read_factory_settings(use_empty=False)
     addon_utils.enable("amatista_blender", default_set=True, handle_error=None)
     import shutil
@@ -78,15 +79,18 @@ def preparar(motor):
 
 
 def _actualizar():
+    """Actualiza la capa de vista para que medidas y matrices reflejen los últimos cambios."""
     bpy.context.view_layer.update()
 
 
 def agregar(tipo, **kw):
+    """Agrega una primitiva de malla como lo haría el alumno (Shift+A) y la devuelve."""
     getattr(bpy.ops.mesh, f"primitive_{tipo}_add")(**kw)
     return bpy.context.active_object
 
 
 def duplicar(obj):
+    """Duplica el objeto como con Shift+D (deselecciona el resto antes)."""
     for o in bpy.context.scene.objects:
         o.select_set(False)
     obj.select_set(True)
@@ -96,6 +100,7 @@ def duplicar(obj):
 
 
 def aplicar_escala(obj):
+    """Aplica la escala del objeto (Ctrl+A › Escala)."""
     for o in bpy.context.scene.objects:
         o.select_set(False)
     obj.select_set(True)
@@ -104,11 +109,13 @@ def aplicar_escala(obj):
 
 
 def guardar(nombre):
+    """Guarda el .blend con ese nombre en una carpeta temporal."""
     carpeta = Path(tempfile.mkdtemp(prefix="amatista_sim_"))
     bpy.ops.wm.save_as_mainfile(filepath=str(carpeta / nombre))
 
 
 def caja(obj):
+    """Caja envolvente del objeto en el mundo (mín, máx)."""
     _actualizar()
     from mathutils import Vector
 
@@ -153,12 +160,14 @@ def armar(a):
     hecho = {"vagones": [], "ruedas": []}
 
     def vector(a_lo_largo, a_lo_ancho, z):
+        """Vector con ``a_lo_largo`` en el eje del tren y altura ``z``."""
         v = [0.0, 0.0, z]
         v[eje] = a_lo_largo
         v[otro] = a_lo_ancho
         return tuple(v)
 
     def escala_vagon(f=1.0):
+        """Escala del vagón según su largo (con el factor de error del alumno simulado) y alto."""
         s = [0.0, 0.0, alto / 2]
         s[eje] = largo * f / 2
         s[otro] = ancho / 2
@@ -168,7 +177,9 @@ def armar(a):
     acciones = []
 
     def vagon(i):
+        """Acción de armar el vagón ``i`` (duplicándolo si el alumno lo hace así)."""
         def hacer():
+            """Crea o duplica el vagón y lo coloca y escala."""
             if i == 1 and a["duplica"] and hecho["vagones"]:
                 v = duplicar(hecho["vagones"][0])
             else:
@@ -181,7 +192,9 @@ def armar(a):
         return (f"vagón {i + 1}", hacer)
 
     def rueda(i):
+        """Acción de armar la rueda ``i``."""
         def hacer():
+            """Crea la rueda, la pone de pie y la coloca en su vagón y lado."""
             vi = i // 4
             lado = 1 if i % 2 == 0 else -1
             delante = 1 if (i // 2) % 2 == 0 else -1
@@ -202,7 +215,9 @@ def armar(a):
         return (f"rueda {i + 1}", hacer)
 
     def chimenea():
+        """Acción de armar la chimenea."""
         def hacer():
+            """Crea el cilindro de la chimenea, lo escala y lo coloca sobre la locomotora."""
             c = agregar("cylinder", vertices=a["vertices"])
             c.scale = (0.2, 0.2, 0.35)
             base = 2 * radio * 0.55 + alto
@@ -329,9 +344,11 @@ def seguir_pista(texto, escena, a):
 
 
 class Motor6:
+    """Lector de la interfaz del motor 6 (taller y tarjeta) para el alumno simulado."""
     nombre = "6.2"
 
     def abrir(self, C):
+        """Abre el taller del módulo como lo haría el alumno."""
         from amatista_blender.taller import datos, sesion
 
         from amatista_blender import ajustes
@@ -343,17 +360,20 @@ class Motor6:
         sesion.abrir(C, TALLER, PROYECTO)
 
     def evaluar(self, C):
+        """Fuerza la evaluación de la práctica tras un cambio."""
         from amatista_blender import practicas
 
         _actualizar()
         return practicas.evaluar(C, "cambio")
 
     def completo(self, C):
+        """True si la actividad del taller quedó lograda."""
         from amatista_blender.taller import sesion
 
         return sesion.estado() == sesion.LOGRADA
 
     def leer(self, C):
+        """Lo que ve el alumno ahora: texto de la tarjeta, botones, brillos y paneles."""
         from amatista_blender import practicas
         from amatista_blender.taller.vista import tarjeta
         from amatista_blender.taller import sesion
@@ -376,6 +396,7 @@ class Motor6:
         }
 
     def pistas(self, C, n):
+        """Pide las pistas disponibles y devuelve sus textos."""
         from amatista_blender.taller import sesion
 
         salida = []
@@ -398,23 +419,28 @@ class Motor6:
 
 
 class Motor7:
+    """Lector de la interfaz del motor 7 (guion paso a paso) para el alumno simulado."""
     nombre = "7"
 
     def abrir(self, C):
+        """Abre igual que el motor 6."""
         Motor6.abrir(self, C)
 
     def evaluar(self, C):
+        """Fuerza la revisión del guion tras un cambio."""
         from amatista_blender import guion
 
         _actualizar()
         return guion.revisar_ya(C)
 
     def completo(self, C):
+        """True si el guion quedó completo."""
         from amatista_blender import guion
 
         return guion.completo()
 
     def leer(self, C):
+        """Lo que ve el alumno: banda del guion, paso, señal y quién dibuja en la vista."""
         from amatista_blender import guion, practicas
         from amatista_blender.interfaz import turno
 
@@ -434,6 +460,7 @@ class Motor7:
         }
 
     def pistas(self, C, n):
+        """Pide las pistas del paso actual y devuelve sus textos."""
         from amatista_blender import guion
 
         salida = []
@@ -448,6 +475,7 @@ class Motor7:
 
 
 def _rol_de_texto(texto):
+    """Pieza (rol) que menciona un texto de la interfaz, o «»."""
     m = PIEZAS.search(texto or "")
     if not m:
         return ""
@@ -457,6 +485,7 @@ def _rol_de_texto(texto):
 
 
 def _rol_de_objetivo(practica, objetivo):
+    """Rol que pide un objetivo de la práctica, o «»."""
     if practica is None or not objetivo:
         return ""
     t = next((x for x in practica.targets if x.id == objetivo), None)
@@ -469,6 +498,7 @@ def _rol_de_objetivo(practica, objetivo):
 
 
 def _barra_visible(C):
+    """True si la barra lateral (N) está abierta en alguna vista 3D."""
     for ventana in C.window_manager.windows:
         for area in ventana.screen.areas:
             if area.type == "VIEW_3D":
@@ -477,6 +507,7 @@ def _barra_visible(C):
 
 
 def _alguna_en_barra(herramientas):
+    """True si alguna de las herramientas está visible en la barra de herramientas."""
     from amatista_blender import _motor
 
     for hid in herramientas or ():
@@ -531,6 +562,7 @@ def _paneles_que_guian(C):
 
 
 def correr(motor, semilla):
+    """Simula un alumno armando el tren paso a paso y anota los tropiezos de interfaz que encuentra."""
     bpy.ops.wm.read_homefile(use_empty=False)  # cada alumno abre su Blender (sin archivo guardado)
     bpy.context.window_manager.amatista.modo = "alumno"
     C = bpy.context
@@ -542,6 +574,7 @@ def correr(motor, semilla):
     motor.evaluar(C)
 
     def mirar(accion):
+        """Lee la interfaz tras una acción y la anota en el registro."""
         ve = motor.leer(C)
         ve["accion"] = accion
         pasos.append(ve)
@@ -599,6 +632,7 @@ def correr(motor, semilla):
 
 
 def resumen(corridas):
+    """Resume los tropiezos por tipo (brillo fantasma, señal cruzada, instrucción vaga…)."""
     tipos = ("brillo fantasma", "señal cruzada", "instrucción vaga", "pista inútil", "bloqueo", "superposición",
              "varios paneles")
     salida = {"corridas": len(corridas), "completas": sum(c["completo"] for c in corridas)}
@@ -611,6 +645,7 @@ def resumen(corridas):
 
 
 def main():
+    """CLI (dentro de Blender): simula varios alumnos y escribe el informe."""
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     ap = argparse.ArgumentParser()
     ap.add_argument("--motor", type=int, default=7)

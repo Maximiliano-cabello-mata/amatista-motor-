@@ -15,10 +15,12 @@ PROP_IGNORAR = "amatista_ignore"
 
 
 def _limpio(texto):
+    """Normaliza un rol o etiqueta: minúsculas, sin espacios extremos y con «_» en lugar de espacios."""
     return str(texto or "").strip().lower().replace(" ", "_")
 
 
 def assign_role(obj, role):
+    """Guarda el rol en la propiedad personalizada del objeto de Blender (vacío = quitarlo); devuelve el rol guardado."""
     role = _limpio(role)
     if not role:
         remove_role(obj)
@@ -28,21 +30,25 @@ def assign_role(obj, role):
 
 
 def get_role(obj):
+    """Rol guardado en el objeto, o None."""
     valor = obj.get(PROP_ROL)
     return str(valor) if valor else None
 
 
 def remove_role(obj):
+    """Quita la propiedad de rol del objeto si existe."""
     if PROP_ROL in obj.keys():
         del obj[PROP_ROL]
 
 
 def get_tags(obj):
+    """Etiquetas educativas del objeto (se guardan separadas por comas en una propiedad personalizada)."""
     crudo = obj.get(PROP_ETIQUETAS) or ""
     return tuple(t for t in (x.strip() for x in str(crudo).split(",")) if t)
 
 
 def _guardar_etiquetas(obj, etiquetas):
+    """Escribe las etiquetas en el objeto o borra la propiedad si queda vacía."""
     if etiquetas:
         obj[PROP_ETIQUETAS] = ",".join(etiquetas)
     elif PROP_ETIQUETAS in obj.keys():
@@ -50,6 +56,7 @@ def _guardar_etiquetas(obj, etiquetas):
 
 
 def add_tag(obj, tag):
+    """Añade una etiqueta normalizada al objeto si no la tenía; devuelve todas."""
     tag = _limpio(tag)
     etiquetas = list(get_tags(obj))
     if tag and tag not in etiquetas:
@@ -59,16 +66,19 @@ def add_tag(obj, tag):
 
 
 def remove_tag(obj, tag):
+    """Quita una etiqueta del objeto; devuelve las que quedan."""
     etiquetas = [t for t in get_tags(obj) if t != _limpio(tag)]
     _guardar_etiquetas(obj, etiquetas)
     return tuple(etiquetas)
 
 
 def is_ignored(obj):
+    """True si el objeto está marcado para que el motor no lo evalúe (p. ej. ayudas visuales de Amatista)."""
     return bool(obj.get(PROP_IGNORAR))
 
 
 def set_ignored(obj, ignored=True):
+    """Marca o desmarca el objeto como ignorado por el motor."""
     if ignored:
         obj[PROP_IGNORAR] = 1
     elif PROP_IGNORAR in obj.keys():

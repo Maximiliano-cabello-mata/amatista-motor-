@@ -32,11 +32,13 @@ ESTADOS_SYNC = {
 
 
 def modo_alumno(context):
+    """True si los paneles deben verse como los ve el alumno (modo alumno, vista previa del autor o usuario sin modo desarrollador)."""
     wm = context.window_manager.amatista
     return wm.modo == "alumno" or wm.vista_previa or not ajustes.es_desarrollador()
 
 
 def modo_autor(context):
+    """True si el desarrollador tiene activo el modo Autor (paneles de depuración y edición de prácticas)."""
     return ajustes.es_desarrollador() and context.window_manager.amatista.modo == "autor"
 
 
@@ -58,6 +60,7 @@ def secciones_v4(context):
 
 
 def seccion(context, nombre):
+    """True si está activa la pestaña ``nombre`` de la barra lateral (practicar, aprender, curso…) en la interfaz v4."""
     return secciones_v4(context) and context.window_manager.amatista.pestana == nombre
 
 
@@ -93,6 +96,7 @@ ICONO_MENSAJE = {"hola": "HEART", "consejo": "LIGHT", "charla": "OUTLINER_OB_SPE
 
 
 def icono_tema(tema):
+    """Icono de Blender para el tema visual del módulo según su escena (SHADERFX por defecto)."""
     return ICONO_ESCENA.get(tema.get("escena"), "SHADERFX")
 
 
@@ -136,6 +140,7 @@ def tarjeta_tema(layout, context, practica, reporte=None):
 
 
 class _Base:
+    """Mezcla común de los paneles de Amatista: viven en la barra lateral (N) de la vista 3D, pestaña Amatista."""
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = CATEGORIA
@@ -149,9 +154,16 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
     bl_label = "Amatista"
 
     def draw_header(self, context):
+        """Dibuja el logo de Amatista en la cabecera del panel principal."""
         self.layout.label(text="", icon_value=estilo.icono("logo"))
 
     def draw(self, context):
+        """Panel principal: lo primero que ve el alumno en N › Amatista.
+
+        Según el estado muestra el aviso de «Sin acceso a internet», el código de
+        vínculo en curso, la invitación a vincular la cuenta o la cuenta vinculada y
+        las pestañas de secciones.
+        """
         layout = self.layout
         p = ajustes.prefs()
 
@@ -211,6 +223,7 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
             fila.prop(context.window_manager.amatista, "pestana", expand=True)
 
     def _dibujar_codigo(self, layout, context):
+        """Tarjeta «Vincular con tu cuenta»: el código grande a escribir en la plataforma y la cuenta atrás hasta que vence."""
         cuerpo = estilo.tarjeta(layout, "Vincular con tu cuenta", icono_propio="logo")
         estilo.parrafo(cuerpo, context, "1. Abre la plataforma › Blender › Vincular.\n2. Escribe este código:")
         codigo = cuerpo.row()
@@ -231,6 +244,7 @@ class AMATISTA_PT_principal(_Base, bpy.types.Panel):
 
 
 def _dibujar_mision_completada(layout, context, practica, ruta, panel):
+    """Tarjeta «¡Práctica completada!»: barra llena, mensaje final de la práctica y botón «Siguiente práctica» si la hay."""
     cuerpo = estilo.tarjeta(layout, "¡Práctica completada!", icono_propio="celebrar",
                             derecha=f"{ruta.total}/{ruta.total}")
     estilo.barra(cuerpo, 1.0, f"{ruta.total} de {ruta.total} misiones")
@@ -242,6 +256,7 @@ def _dibujar_mision_completada(layout, context, practica, ruta, panel):
 
 
 def _dibujar_mision_cuerpo(caja, context, m, ruta, parte, silencioso):
+    """Cuerpo de la misión actual: «Misión n de N», la parte de la ruta, barra de avance, título y qué hacer."""
     cabecera = caja.row(align=True)
     cabecera.label(text=f"Misión {m.numero} de {ruta.total}", icon_value=estilo.icono("actual"))
     derecha = cabecera.row()
@@ -279,6 +294,7 @@ def _dibujar_mision_cuerpo(caja, context, m, ruta, parte, silencioso):
 
 
 def _dibujar_mision_ayuda(layout, context, m, silencioso):
+    """Botones de ayuda de la misión: «Muéstrame cómo» (Hazlo conmigo o explicar el paso) y las pistas reveladas/por pedir."""
     g = guia.guia_actual()
     if g is not None and g.action is not None and not g.completed and not silencioso:
         estilo.boton_principal(layout, "amatista.hazlo_conmigo", f"Muéstrame cómo: {g.action.label}",
@@ -296,6 +312,7 @@ def _dibujar_mision_ayuda(layout, context, m, silencioso):
 
 
 def _dibujar_mision_herramientas(layout, m):
+    """Fila «Herramientas de esta misión» con hasta 4 botones de las herramientas de Blender que se usan."""
     if not m.herramientas:
         return
     registro = _motor.MOTOR.tools
@@ -315,6 +332,7 @@ def _dibujar_mision_herramientas(layout, m):
 
 
 def _dibujar_mision_extras(layout, context, practica, ruta, panel):
+    """Lo que viene después («Después: …») y botones para ver la referencia («Así se ve») y el plano."""
     siguientes = ruta.siguientes(2)
     if siguientes:
         sub = layout.row()
@@ -330,6 +348,7 @@ def _dibujar_mision_extras(layout, context, practica, ruta, panel):
 
 
 def _clasico_cabecera(layout, context, practica, reporte):
+    """Cabecera de la vista clásica: migas curso › módulo, tarjeta del tema y tarjeta con el título y la barra de progreso."""
     curso, modulo = aprendizaje.lugar(practica)
     if curso is not None:
         miga = layout.row()
@@ -361,6 +380,7 @@ def _clasico_cabecera(layout, context, practica, reporte):
 
 
 def _clasico_progreso(layout, context, practica, reporte, panel):
+    """Bloques de progreso de la vista clásica: tarjeta de pausa (si un vigilante detuvo el avance), modelo y ejemplo."""
     if reporte.paused:
         panel._tarjeta_pausa(layout, context, practica, reporte)
     panel._modelo(layout, context, practica, reporte)
@@ -368,6 +388,7 @@ def _clasico_progreso(layout, context, practica, reporte, panel):
 
 
 def _clasico_guia(layout, context, practica, reporte, cuerpo, panel):
+    """Guía de la vista clásica: botón de la píldora de teoría y la tarjeta guía del paso actual."""
     g = guia.guia_actual()
     pildora = aprendizaje.pildora_principal()
     if pildora is not None and not reporte.completed:
@@ -399,6 +420,7 @@ def _clasico_guia(layout, context, practica, reporte, cuerpo, panel):
 
 
 def _clasico_pie(layout, context, practica, reporte, panel):
+    """Pie de la vista clásica: estado de sincronización, «Siguiente práctica» y botones Plataforma / Otra práctica / De nuevo."""
     panel._estado_sync(layout, context)
     if reporte.completed and practica.place is not None and practica.place.next:
         estilo.boton_principal(layout, "amatista.abrir_practica", "Siguiente práctica", icon="FORWARD",
@@ -416,9 +438,14 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en la pestaña «practicar»."""
         return seccion(context, "practicar")
 
     def draw(self, context):
+        """Panel de la práctica: la misión actual (o vista clásica) y, sin práctica abierta, el mapa o la lista para elegir.
+
+        Dibujar no modifica la escena: si aún no hay reporte, solo programa la evaluación.
+        """
         layout = self.layout
         practica = practicas.practica_activa(context)
         if practica is None:
@@ -440,6 +467,7 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
     # --- Motor 4: la misión de ahora ---------------------------------------------------------
 
     def _mision(self, layout, context, practica, reporte, ruta):
+        """Vista de misiones (motor 4): migas, aviso de add-on desactualizado, pausa, misión actual con ayudas y extras."""
         curso, modulo = aprendizaje.lugar(practica)
         if curso is not None:
             miga = layout.row()
@@ -557,6 +585,7 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
             dialogos.botones_guia(caja, g)
 
     def _estado_sync(self, layout, context):
+        """Línea de estado de sincronización con la plataforma (borrador, sin cuenta, enviando, guardado, error)."""
         sc = context.scene
         if sc.amatista.origen == "borrador":
             fila = layout.row()
@@ -581,6 +610,7 @@ class AMATISTA_PT_practica(_Base, bpy.types.Panel):
             estilo.parrafo(layout, context, practicas.ESTADO["sync_detalle"], alerta=estado == practicas.SYNC_ERROR)
 
     def _elegir(self, layout, context):
+        """Tarjeta «Elige una práctica»: botón para abrir la lección actual y la lista del catálogo con «Empezar»."""
         cuerpo = estilo.tarjeta(layout, "Elige una práctica", icono_propio="logo")
         estilo.parrafo(cuerpo, context, "Abre la práctica de tu lección o elige una de la lista. "
                        "Amatista revisará tu escena mientras trabajas.")
@@ -647,13 +677,16 @@ class AMATISTA_PT_objetivos(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en «practicar» (o en modo autor) cuando hay una práctica abierta."""
         visible = seccion(context, "practicar") or modo_autor(context)
         return visible and practicas.practica_activa(context) is not None
 
     def draw_header(self, context):
+        """Icono de casilla en la cabecera del panel de objetivos."""
         self.layout.label(text="", icon="CHECKBOX_HLT")
 
     def draw(self, context):
+        """Panel de objetivos: la ruta de misiones para el alumno o, en modo autor, cada objetivo con su estado y mensaje del validador."""
         layout = self.layout
         practica = practicas.practica_activa(context)
         reporte = practicas.ESTADO["reporte"]
@@ -739,14 +772,17 @@ class AMATISTA_PT_figura(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en «practicar» si la práctica tiene lista de revisión del instructor (figura/ejemplo)."""
         if not seccion(context, "practicar") or practicas.practica_activa(context) is None:
             return False
         return bool(practicas.lista_instructor()[1])
 
     def draw_header(self, context):
+        """Icono de malla en la cabecera."""
         self.layout.label(text="", icon="OUTLINER_OB_MESH")
 
     def draw(self, context):
+        """Lista de revisión de la figura (qué está bien y qué falta) y botón «Ver el ejemplo»."""
         dibujar_lista(self.layout, context, *practicas.lista_instructor())
         self.layout.operator("amatista.ver_ejemplo", text="Ver el ejemplo", icon="HIDE_OFF")
 
@@ -784,12 +820,15 @@ class AMATISTA_PT_herramientas(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en «practicar» con una práctica abierta."""
         return seccion(context, "practicar") and practicas.practica_activa(context) is not None
 
     def draw_header(self, context):
+        """Icono de herramientas en la cabecera."""
         self.layout.label(text="", icon="TOOL_SETTINGS")
 
     def draw(self, context):
+        """Panel de herramientas de la práctica: fichas de las herramientas de Blender que se usan y avisos de las no permitidas."""
         practica = practicas.practica_activa(context)
         reporte = practicas.ESTADO["reporte"]
         if practica is None or reporte is None:
@@ -804,6 +843,7 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible si la práctica tiene roles y Amatista no los deduce por la forma (o si es desarrollador)."""
         practica = practicas.practica_activa(context)
         if not (seccion(context, "practicar") and practica is not None and bool(practica.roles)):
             return False
@@ -811,9 +851,11 @@ class AMATISTA_PT_roles(_Base, bpy.types.Panel):
         return not practica.infers_roles or ajustes.es_desarrollador()
 
     def draw_header(self, context):
+        """Icono de marcador en la cabecera."""
         self.layout.label(text="", icon="BOOKMARKS")
 
     def draw(self, context):
+        """Panel de roles: el alumno elige un rol y lo asigna al objeto seleccionado; si los roles se deducen, solo sirve para corregir."""
         layout = self.layout
         practica = practicas.practica_activa(context)
         obj = context.active_object
@@ -864,12 +906,15 @@ class AMATISTA_PT_mas(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en «practicar» con una práctica abierta."""
         return seccion(context, "practicar") and practicas.practica_activa(context) is not None
 
     def draw_header(self, context):
+        """Icono de menú en la cabecera."""
         self.layout.label(text="", icon="COLLAPSEMENU")
 
     def draw(self, context):
+        """Panel «Más»: tarjeta del tema, modelo de referencia, ejemplo resuelto, píldora de teoría y opciones extra."""
         layout = self.layout
         practica = practicas.practica_activa(context)
         reporte = practicas.ESTADO["reporte"]
@@ -994,14 +1039,17 @@ class AMATISTA_PT_aprender(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en la pestaña «aprender»."""
         return seccion(context, "aprender")
 
     def draw(self, context):
+        """Pestaña Aprender: la teoría de la práctica y el glosario de palabras de Blender."""
         layout = self.layout
         self.dibujar_teoria(context)
         _palabras_de_blender(layout, context)
 
     def dibujar_teoria(self, context):
+        """Lista de píldoras de teoría de la práctica (vistas y por ver, con su pregunta de repaso) o una invitación a abrir una práctica."""
         layout = self.layout
         practica = practicas.practica_activa(context)
         if practica is None:
@@ -1051,9 +1099,11 @@ class AMATISTA_PT_curso(_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en la pestaña «curso»."""
         return seccion(context, "curso")
 
     def draw(self, context):
+        """Pestaña Mi curso: el mapa del plan de estudios con el estado de cada práctica y enlaces a la plataforma."""
         layout = self.layout
         if not dibujar_mapa(layout, context):
             estilo.parrafo(layout, context, "No encontramos el plan de estudios en este paquete.", icon="ERROR")
@@ -1070,6 +1120,7 @@ from .paneles_autor import (
     AMATISTA_PT_autor_depurador,
     AMATISTA_PT_autor_teoria,
     AMATISTA_PT_autor_publicar,
+    # [REVISION-MUERTO] CLASES_AUTOR se importa pero CLASES de abajo repite la lista a mano: usar ``*CLASES_AUTOR`` o quitar el import.
     CLASES_AUTOR,
 )
 

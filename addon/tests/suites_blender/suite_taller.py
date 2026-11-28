@@ -1,4 +1,5 @@
 # Pruebas de talleres del alumno, actividades y recorrido guiado.
+# [REVISION-MUERTO] imports sin uso: json, time, cubo, Diseno, dibujar_vista_3d, _limpiar, _escena_nueva, _inicio_de_blender, _tren_del_alumno, _aldea_del_alumno, _motor_foto, ARCHIVO_V2.
 import tempfile
 import json
 import time

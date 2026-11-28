@@ -11,6 +11,7 @@ ADDON = Path(__file__).resolve().parents[1]
 
 
 def _cargar_modulo():
+    """Carga recorrido_pasos.py sin bpy."""
     spec = importlib.util.spec_from_file_location(
         "amatista_recorrido_pasos", ADDON / "amatista_blender" / "recorrido_pasos.py")
     modulo = importlib.util.module_from_spec(spec)
@@ -24,6 +25,7 @@ USOS = {"plataforma", "guardar", "herramienta", "ayuda", "enfoque"}  # recorrido
 
 
 def test_tres_practicas_en_orden_con_paradas_de_id_unico():
+    """Comprueba las tres prácticas del recorrido en orden, con ids únicos y terminando en «listo»."""
     assert pasos.ORDEN == ("pestana", "vista", "taller")
     for rid in pasos.ORDEN:
         ids = [p["id"] for p in pasos.pasos_de(rid)]
@@ -33,6 +35,7 @@ def test_tres_practicas_en_orden_con_paradas_de_id_unico():
 
 
 def test_cada_parada_dice_que_hacer_y_cabe_en_el_servidor():
+    """Comprueba textos, comprobaciones y longitudes de cada parada."""
     for rid in pasos.ORDEN:
         assert len(pasos.RECORRIDOS[rid]["nombre"]) <= 60
         for p in pasos.pasos_de(rid):
@@ -45,6 +48,7 @@ def test_cada_parada_dice_que_hacer_y_cabe_en_el_servidor():
 
 
 def test_entre_las_tres_explican_todas_las_herramientas_del_addon():
+    """Comprueba que entre los tres recorridos se explican todas las herramientas del add-on."""
     temas = {p["id"] for rid in pasos.ORDEN for p in pasos.pasos_de(rid)}
     for tema in ("barra", "cuenta", "plataforma", "leccion", "ajustes", "guardar", "orbitar", "acercar", "elegir",
                  "mover", "girar", "escalar", "herramientas", "ayuda", "enfoque", "ciclo", "tarjeta", "mira", "molde",
@@ -53,6 +57,7 @@ def test_entre_las_tres_explican_todas_las_herramientas_del_addon():
 
 
 def test_mover_no_se_sale():
+    """Comprueba que moverse entre paradas no se sale de los límites."""
     assert pasos.mover("vista", 0, -1) == 0
     assert pasos.mover("vista", pasos.ultimo("vista"), 1) == pasos.ultimo("vista")
     assert pasos.mover("vista", 3, 1) == 4
@@ -61,6 +66,7 @@ def test_mover_no_se_sale():
 
 
 def test_las_paradas_que_se_comprueban_esperan_a_estar_hechas():
+    """Comprueba que las paradas con comprobación esperan a estar hechas."""
     indice = {p["id"]: i for i, p in enumerate(pasos.pasos_de("vista"))}
     assert not pasos.puede_seguir("vista", indice["mover"], set())
     assert pasos.puede_seguir("vista", indice["mover"], {"mover"})
@@ -72,12 +78,14 @@ def test_las_paradas_que_se_comprueban_esperan_a_estar_hechas():
 
 
 def test_hechos_se_guardan_en_orden():
+    """Comprueba que los recorridos hechos se leen y escriben en orden."""
     assert pasos.leer_hechos("taller, pestana,nada") == ["pestana", "taller"]
     assert pasos.escribir_hechos({"vista", "pestana"}) == "pestana,vista"
     assert pasos.leer_hechos("") == []
 
 
 def test_estado_publico_para_el_latido():
+    """Comprueba el estado público del recorrido que viaja en el latido."""
     estado = pasos.estado_publico("pestana", 4, {"barra", "plataforma"}, activo=True, hechos=[])
     assert estado["id"] == "pestana" and estado["nombre"] == "Tu pestaña Amatista"
     assert estado["activo"] and not estado["hecho"] and estado["hechos"] == []
@@ -92,6 +100,7 @@ def test_estado_publico_para_el_latido():
 
 
 def test_terminada_marca_todo():
+    """Comprueba que un recorrido terminado marca todas sus paradas."""
     estado = pasos.estado_publico("vista", 99, set(), activo=False, hechos=["pestana", "vista"])
     assert estado["hecho"] and estado["hechos"] == ["pestana", "vista"]
     assert estado["paso"] == pasos.ultimo("vista")

@@ -35,11 +35,13 @@ MAX_EXPLORAR = 4
 
 @dataclass(frozen=True)
 class Etapa:
+    """Qué parte del taller toca en una lección según la plataforma: exploración (algunas habilidades) o práctica completa."""
     taller: str
     nombre: str = PRACTICA
     habilidades: Tuple[str, ...] = ()  # exploración: las que se prueban (ya revisadas contra el taller)
 
     def a_dict(self) -> Dict[str, Any]:
+        """La etapa como dict JSON."""
         return {"taller": self.taller, "etapa": self.nombre, "habilidades": list(self.habilidades)}
 
 
@@ -63,6 +65,7 @@ def explorada(eh: Optional[EstadoHabilidad]) -> bool:
 
 
 def cumplida(etapa: Optional[Etapa], plan: Optional[Plan]) -> bool:
+    """True si la etapa está cumplida: en exploración, todas sus habilidades exploradas; en práctica, el proyecto hecho."""
     if etapa is None or plan is None:
         return False
     if etapa.nombre == EXPLORACION:
@@ -103,6 +106,7 @@ def permitida(etapa: Optional[Etapa], actividad: Optional[Actividad]) -> bool:
 
 
 def habilidades_de_etapa(etapa: Optional[Etapa], todas: Sequence[str]) -> Tuple[str, ...]:
+    """Habilidades que entran en la etapa: todas en práctica (o sin etapa), solo las de la etapa en exploración."""
     if etapa is None or etapa.nombre == PRACTICA:
         return tuple(todas)
     return tuple(h for h in todas if h in etapa.habilidades)

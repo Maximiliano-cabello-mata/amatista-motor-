@@ -15,6 +15,7 @@ NOMBRE_PRIMITIVA = {"cube": "cubo", "cylinder": "cilindro", "sphere": "esfera", 
 
 @dataclass(frozen=True)
 class PiezaEsperada:
+    """Pieza que el ejemplo espera: grupo (rol o primitiva), nombre para mostrar, primitiva y medidas en el mundo."""
     grupo: str  # el rol («rueda») o, sin rol, la primitiva
     nombre: str  # «Locomotora», o la etiqueta del rol
     primitiva: str
@@ -23,22 +24,26 @@ class PiezaEsperada:
 
 @dataclass(frozen=True)
 class Plano:
+    """Las piezas esperadas de una práctica, sus etiquetas y la tolerancia de medidas del ejemplo."""
     practica_id: str
     piezas: Tuple[PiezaEsperada, ...]
     etiquetas: Dict[str, str]  # grupo → nombre para mostrar
     tolerancia: float  # holgura de medidas del ejemplo (0.35 = ±35 %)
 
     def del_grupo(self, grupo: str) -> Tuple[PiezaEsperada, ...]:
+        """Piezas esperadas de un grupo."""
         return tuple(p for p in self.piezas if p.grupo == grupo)
 
     @property
     def grupos(self) -> Tuple[str, ...]:
+        """Grupos del plano sin repetir, en el orden en que aparecen."""
         vistos: Dict[str, None] = {}
         for p in self.piezas:
             vistos.setdefault(p.grupo)
         return tuple(vistos)
 
     def etiqueta(self, grupo: str) -> str:
+        """Nombre del grupo para el alumno (la etiqueta o el id capitalizado)."""
         return self.etiquetas.get(grupo) or grupo.capitalize()
 
 

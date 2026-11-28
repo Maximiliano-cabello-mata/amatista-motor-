@@ -21,10 +21,12 @@ AHORA = 1_800_000_000.0
 
 @pytest.fixture(scope="module")
 def catalogo():
+    """Fixture: el catálogo de habilidades."""
     return leer_catalogo(PRACTICAS / "habilidades.json")
 
 
 def _objetos(pasos):
+    """Nombres de objetos que crean o duplican los pasos de una demo."""
     return {p[a].get("nombre") for p in pasos for a in ("agregar", "duplicar") if a in p}
 
 
@@ -32,6 +34,7 @@ def _objetos(pasos):
 
 
 def test_mirame_hace_el_cono_que_pide_la_actividad_y_no_la_caja_generica(catalogo):
+    """Comprueba que «Mírame» usa la pieza de la actividad y no la caja genérica."""
     h = catalogo.habilidad("bl-agregar-primitivas")
     a = actividad_por_id(catalogo, TALLER, "conmigo:bl-agregar-primitivas:cono")
     pasos = pasos_de_actividad(h.demo, a.molde or a.piezas, a.inicio)
@@ -44,6 +47,7 @@ def test_mirame_hace_el_cono_que_pide_la_actividad_y_no_la_caja_generica(catalog
 
 
 def test_arregla_esta_escena_cambia_la_forma_equivocada(catalogo):
+    """Comprueba que la demo de «arregla esta escena» borra y cambia la forma equivocada."""
     h = catalogo.habilidad("bl-agregar-primitivas")
     a = actividad_por_id(catalogo, TALLER, "conmigo:bl-agregar-primitivas:cambia")
     pasos = pasos_de_actividad(h.demo, a.molde or a.piezas, a.inicio)
@@ -53,6 +57,7 @@ def test_arregla_esta_escena_cambia_la_forma_equivocada(catalogo):
 
 
 def test_el_gesto_de_la_habilidad_se_ve_sobre_la_pieza(catalogo):
+    """Comprueba que el gesto de la habilidad (escalar) se aplica sobre la pieza del molde."""
     h = catalogo.habilidad("bl-escalar-eje")
     a = actividad_por_id(catalogo, TALLER, "conmigo:bl-escalar-eje:tabla")
     pasos = pasos_de_actividad(h.demo, a.molde or a.piezas, a.inicio)
@@ -64,17 +69,20 @@ def test_el_gesto_de_la_habilidad_se_ve_sobre_la_pieza(catalogo):
 
 
 def test_sin_piezas_queda_la_demostracion_de_la_habilidad():
+    """Comprueba que sin piezas se usa la demo original."""
     demo = ({"agregar": {"primitiva": "cube", "nombre": "Caja"}}, {"material": {"objeto": "Caja"}})
     assert pasos_de_actividad(demo, ()) == demo
 
 
 def test_los_pasos_sin_forma_usan_una_pieza_de_la_actividad():
+    """Comprueba que pasos sin forma usan una pieza de la actividad."""
     demo = ({"agregar": {"primitiva": "cube", "nombre": "Caja"}}, {"modificador": {"objeto": "Caja", "tipo": "MIRROR"}})
     pasos = pasos_de_actividad(demo, ({"primitive": "cube", "name": "Ala", "size": [2, 2, 2], "location": [0, 0, 0]},))
     assert pasos[-1]["modificador"]["objeto"] == "Ala"
 
 
 def test_la_pieza_del_proyecto_se_vuelve_molde_para_su_demostracion():
+    """Comprueba que la pieza del proyecto se convierte en molde para la demo."""
     e = Escena().construir()
     r = revisar_molde([{"primitive": "cylinder", "name": "Rueda", "size": [0.7, 0.7, 0.2], "location": [1, 0, 0.35],
                         "rotation": [90, 0, 0]}], e)
@@ -88,11 +96,13 @@ CUBO = [{"primitive": "cube", "name": "Caja", "size": [2, 2, 2], "location": [0,
 
 
 def test_un_cubo_tres_veces_mas_grande_ya_no_llena_el_molde_del_nivel_1():
+    """Comprueba que un cubo demasiado grande no llena el molde de nivel 1."""
     e = Escena().malla("cube", "Caja", dims=(3.4, 3.4, 3.4), loc=(0, 0, 1.7)).construir()
     assert not revisar_molde(CUBO, e, "molde", 1).completa
 
 
 def test_llenar_el_molde_con_un_monton_de_piezas_no_cuenta():
+    """Comprueba que llenar el molde con muchas piezas no cuenta («revuelto»)."""
     e = Escena().malla("cube", "Caja", dims=(2, 2, 2), loc=(0, 0, 1))
     for i in range(6):
         e.malla("cube", dims=(0.5, 0.5, 0.5), loc=(4 + i, 4, 0.25))
@@ -101,6 +111,7 @@ def test_llenar_el_molde_con_un_monton_de_piezas_no_cuenta():
 
 
 def test_una_malla_irreconocible_no_llena_piezas_en_los_primeros_niveles():
+    """Comprueba que una malla muy editada no llena piezas en nivel 1 pero sí en el 3."""
     e = Escena().malla("cube", "Caja", dims=(2, 2, 2), loc=(0, 0, 1), vertices=300, caras=290)
     objeto = e.construir()
     objeto = type(objeto)(**{**objeto.__dict__, "objects": tuple(
@@ -110,6 +121,7 @@ def test_una_malla_irreconocible_no_llena_piezas_en_los_primeros_niveles():
 
 
 def test_la_forma_se_reconoce_por_sus_vertices_aunque_se_renombre_la_malla():
+    """Comprueba que la forma se reconoce por vértices aunque se renombre la malla."""
     e = Escena().malla("cube", "Caja", dims=(2, 2, 2), loc=(0, 0, 1)).construir()
     e = type(e)(**{**e.__dict__, "objects": tuple(type(o)(**{**o.__dict__, "data_name": "MiCaja"}) for o in e.objects)})
     assert revisar_molde(CUBO, e, "molde", 1).completa
@@ -119,6 +131,7 @@ def test_la_forma_se_reconoce_por_sus_vertices_aunque_se_renombre_la_malla():
 
 
 def test_la_exploracion_solo_pide_las_primeras_habilidades(catalogo):
+    """Comprueba que la exploración pide solo las primeras habilidades."""
     t = catalogo.taller(TALLER)
     etapa = etapas.etapa_de(t, "exploracion")
     assert etapa.habilidades == tuple(t.habilidades[:2])
@@ -127,6 +140,7 @@ def test_la_exploracion_solo_pide_las_primeras_habilidades(catalogo):
 
 
 def test_la_exploracion_no_acepta_habilidades_de_otro_taller(catalogo):
+    """Comprueba que la exploración descarta habilidades de otro taller."""
     t = catalogo.taller(TALLER)
     etapa = etapas.etapa_de(t, "exploracion", ["bl-extruir", "bl-rotar", "inventada"])
     assert etapa.habilidades == ("bl-rotar",)
@@ -134,6 +148,7 @@ def test_la_exploracion_no_acepta_habilidades_de_otro_taller(catalogo):
 
 
 def test_la_exploracion_se_cumple_con_mira_y_un_intento_y_no_sigue_sola(catalogo):
+    """Comprueba que la exploración se cumple con Mira y un intento y no continúa."""
     t = catalogo.taller(TALLER)
     etapa = etapas.etapa_de(t, "exploracion")
     estado = {}
@@ -147,6 +162,7 @@ def test_la_exploracion_se_cumple_con_mira_y_un_intento_y_no_sigue_sola(catalogo
 
 
 def test_la_practica_es_el_taller_entero(catalogo):
+    """Comprueba que la etapa práctica permite todo el taller."""
     t = catalogo.taller(TALLER)
     etapa = etapas.etapa_de(t, "practica")
     a, _plan, cumplida = etapas.siguiente(catalogo, etapa, {}, AHORA)

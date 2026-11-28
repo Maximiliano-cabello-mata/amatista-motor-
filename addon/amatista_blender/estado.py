@@ -13,6 +13,7 @@ _CACHE = {"roles": [], "catalogo": [], "objetivos": [], "plantillas": []}
 
 
 def _items_roles(self, context):
+    """Opciones del desplegable de roles: los de la práctica abierta (o del borrador en modo autor)."""
     from . import practicas
 
     items = []
@@ -36,6 +37,7 @@ def _items_roles(self, context):
 
 
 def _items_catalogo(self, context):
+    """Opciones del desplegable de prácticas del catálogo (se cachean para que Blender no pierda las cadenas)."""
     from . import practicas
 
     items = [
@@ -47,6 +49,7 @@ def _items_catalogo(self, context):
 
 
 def _items_objetivos(self, context):
+    """Opciones de objetivos del borrador (cacheadas)."""
     from . import autor
 
     borrador = autor.leer_borrador() or {}
@@ -56,6 +59,7 @@ def _items_objetivos(self, context):
 
 
 def _items_requisito(self, context):
+    """Opciones de requisito: «Ninguno» más los objetivos del borrador."""
     items = [("__ninguno__", "Ninguno", "No depende de otro objetivo")] + [
         i for i in _items_objetivos(self, context) if i[0]
     ]
@@ -64,6 +68,7 @@ def _items_requisito(self, context):
 
 
 def _items_plantillas(self, context):
+    """Opciones de validador para el constructor: el catálogo de validadores del motor."""
     from . import _motor
 
     items = [
@@ -77,6 +82,7 @@ SIN_PLANTILLA = "__ninguna__"
 
 
 def _items_plantillas_practica(self, context):
+    """Opciones de plantilla de práctica nueva, empezando por «Sin plantilla»."""
     from . import _motor
 
     # Un identificador vacío en Blender es un título, no una opción: «Sin
@@ -190,6 +196,7 @@ CLASES = (EstadoEscena, EstadoAutor, EstadoSesion)
 
 
 def register():
+    """Registra los PropertyGroup y los cuelga de Scene (amatista, amatista_autor) y WindowManager (amatista)."""
     for clase in CLASES:
         bpy.utils.register_class(clase)
     bpy.types.Scene.amatista = bpy.props.PointerProperty(type=EstadoEscena)
@@ -198,6 +205,7 @@ def register():
 
 
 def unregister():
+    """Quita las propiedades de Scene/WindowManager y desregistra los PropertyGroup."""
     del bpy.types.WindowManager.amatista
     del bpy.types.Scene.amatista_autor
     del bpy.types.Scene.amatista

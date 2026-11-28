@@ -31,6 +31,7 @@ PROXIMAMENTE = "proximamente"
 
 @dataclass(frozen=True)
 class ModuleEntry:
+    """Módulo de un curso: número, título, la práctica que lo cierra y sus extras (proyecto, exploración, taller)."""
     number: int
     title: str
     practice: str  # id de la práctica que lo cierra ('' si aún no existe)
@@ -46,6 +47,7 @@ class ModuleEntry:
 
 @dataclass(frozen=True)
 class CourseEntry:
+    """Curso del plan de estudios: id, título, dificultad, estado (disponible/próximamente), módulos y curso previo recomendado."""
     id: str
     title: str
     difficulty: str
@@ -57,17 +59,21 @@ class CourseEntry:
 
 @dataclass(frozen=True)
 class Curriculum:
+    """Plan de estudios completo de una ruta (p. ej. Blender): cursos en orden con sus módulos y prácticas."""
     route: str
     title: str
     courses: Tuple[CourseEntry, ...]
 
     def course(self, course_id: str) -> Optional[CourseEntry]:
+        """Curso con ese id, o None si no está en el plan."""
         return next((c for c in self.courses if c.id == course_id), None)
 
     def practices(self) -> Tuple[str, ...]:
+        """Ids de todas las prácticas del plan en el orden en que el alumno las recorre (curso → módulo → secuencia)."""
         return tuple(p for c in self.courses for m in c.modules for p in m.sequence)
 
     def locate(self, practice_id: str) -> Optional[Tuple[CourseEntry, ModuleEntry]]:
+        """Curso y módulo al que pertenece una práctica, o None si no figura en el plan."""
         for c in self.courses:
             for m in c.modules:
                 if practice_id in m.sequence:
@@ -76,6 +82,11 @@ class Curriculum:
 
 
 def load_curriculum(data: Dict[str, Any]) -> Curriculum:
+    """Construye el Curriculum desde el JSON del plan de estudios (schema SCHEMA).
+
+    Raises:
+        InvalidPracticeError: si el schema no coincide o un curso tiene una dificultad no admitida.
+    """
     if not isinstance(data, dict) or data.get("schema") != SCHEMA:
         raise InvalidPracticeError(f"El plan de estudios debe tener schema {SCHEMA}")
     cursos = []
@@ -119,5 +130,6 @@ def unlock_state(plan: Curriculum, completadas: Iterable[str]) -> Dict[str, str]
 
 
 def next_practice(plan: Curriculum, completadas: Iterable[str]) -> Optional[str]:
+    """Primera práctica del plan que el alumno tiene disponible (desbloqueada y sin completar), o None."""
     estado = unlock_state(plan, completadas)
     return next((p for p in plan.practices() if estado.get(p) == DISPONIBLE), None)

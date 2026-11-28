@@ -33,6 +33,7 @@ ESTADO = {"orden_inicio": None, "intentos": 0, "protocolo": ""}
 
 
 def _sesion():
+    """Módulo de sesión del taller (import diferido para evitar ciclos)."""
     from .taller import sesion
 
     return sesion
@@ -62,6 +63,7 @@ def actividad_corta():
 
 
 def _ventana(context):
+    """Ventana del contexto o la primera abierta."""
     ventana = getattr(context, "window", None)
     if ventana is not None:
         return ventana
@@ -121,6 +123,7 @@ class AMATISTA_OT_espacio(bpy.types.Operator):
     bl_label = "Ir al espacio Amatista"
 
     def execute(self, context):
+        """Activa la preferencia del espacio de trabajo Amatista y entra en él; si no se puede, abre la barra lateral."""
         p = ajustes.prefs()
         if p is not None and not p.espacio_amatista:
             p.espacio_amatista = True
@@ -136,6 +139,7 @@ class AMATISTA_OT_mostrar_panel(bpy.types.Operator):
     bl_label = "Mostrar el panel Amatista"
 
     def execute(self, context):
+        """Abre la barra lateral (N) de la vista 3D con la pestaña Amatista."""
         abrir_barra_lateral(context.screen)
         return {"FINISHED"}
 
@@ -167,6 +171,7 @@ class AMATISTA_OT_reparar_enlace(bpy.types.Operator):
     bl_label = "Reparar «Abrir en Blender»"
 
     def execute(self, context):
+        """Vuelve a registrar el protocolo amatista:// para que «Abrir en Blender» de la plataforma abra este Blender."""
         ok = registrar_protocolo(forzar=True)
         if ok:
             self.report({"INFO"}, "Listo: «Abrir en Blender» de la plataforma abrirá este Blender.")
@@ -185,6 +190,7 @@ def orden_de_inicio(argv=None):
 
 
 def _cumplir_orden_de_inicio():
+    """Temporizador: cumple la orden con que la plataforma abrió Blender (abrir o una actividad) cuando ya hay ventana; reintenta INTENTOS_ORDEN veces."""
     orden = ESTADO["orden_inicio"]
     if orden is None:
         return None
@@ -213,6 +219,7 @@ class AMATISTA_MT_principal(bpy.types.Menu):
     bl_label = "Amatista"
 
     def draw(self, context):
+        """Menú «Amatista» de la barra superior: volver a la práctica, seguir el taller (pista, Mírame, pausa, Mi isla), entregar al profesor, espacio/panel, plataforma, cuenta y ayuda."""
         layout = self.layout
         layout.operator_context = "INVOKE_DEFAULT"
         from . import navegar
@@ -257,6 +264,7 @@ class AMATISTA_MT_principal(bpy.types.Menu):
 
 
 def _menu_superior(self, context):
+    """Añade el menú «Amatista» a la barra superior de Blender (junto a Ayuda)."""
     self.layout.menu("AMATISTA_MT_principal", text="Amatista")
 
 
@@ -270,6 +278,7 @@ class AMATISTA_PT_rapido(bpy.types.Panel):
     bl_ui_units_x = 17
 
     def draw(self, context):
+        """Panel rápido: «Conecta tu cuenta» si no hay vínculo; si lo hay, el resumen del taller, «Ver todo el panel» y «Ayuda»."""
         from .taller import panel
 
         layout = self.layout
@@ -287,6 +296,7 @@ class AMATISTA_PT_rapido(bpy.types.Panel):
 
 
 def _boton_cabecera(self, context):
+    """Botón «Amatista» en la cabecera de la vista 3D: devuelve a la práctica o despliega el taller."""
     if ajustes.prefs() is None:
         return
     from . import navegar
@@ -304,6 +314,7 @@ def _boton_cabecera(self, context):
 
 
 def _barra_estado(self, context):
+    """Texto en la barra de estado: la actividad en curso y la lección abierta en la plataforma."""
     from . import plataforma
 
     corta = actividad_corta()
@@ -339,6 +350,7 @@ AGREGADOS = (("TOPBAR_MT_editor_menus", _menu_superior), ("VIEW3D_HT_header", _b
 
 
 def _al_arrancar():
+    """Temporizador de arranque: registra el protocolo amatista:// (errores a consola)."""
     try:
         registrar_protocolo()
     except Exception as error:  # noqa: BLE001
@@ -347,6 +359,7 @@ def _al_arrancar():
 
 
 def register():
+    """Registra clases, añade menú/botones a la interfaz de Blender y programa el arranque."""
     for clase in CLASES:
         bpy.utils.register_class(clase)
     for nombre, funcion in AGREGADOS:
@@ -362,6 +375,7 @@ def register():
 
 
 def unregister():
+    """Cancela temporizadores, quita menú/botones y desregistra las clases."""
     for temporizador in (_al_arrancar, _cumplir_orden_de_inicio):
         if bpy.app.timers.is_registered(temporizador):
             bpy.app.timers.unregister(temporizador)

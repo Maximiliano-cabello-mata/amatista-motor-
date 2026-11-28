@@ -6,6 +6,7 @@ from . import estilo
 
 
 class _Autor:
+    """Mezcla de los paneles de autor: subpaneles del principal (N › Amatista), visibles solo en modo autor."""
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Amatista"
@@ -13,6 +14,7 @@ class _Autor:
 
     @classmethod
     def poll(cls, context):
+        """Visible para desarrolladores en modo «autor» y fuera de la vista previa como alumno."""
         return (ajustes.es_desarrollador()
                 and context.window_manager.amatista.modo == "autor"
                 and not context.window_manager.amatista.vista_previa)
@@ -23,9 +25,11 @@ class AMATISTA_PT_autor_borrador(_Autor, bpy.types.Panel):
     bl_label = "Borrador de práctica"
 
     def draw_header(self, context):
+        """Icono de autor en la cabecera."""
         self.layout.label(text="", icon_value=estilo.icono("autor"))
 
     def draw(self, context):
+        """Panel del borrador: formulario «Nueva práctica» (plantilla, id, título, nivel, curso) o, con borrador, validar y vista previa; también partir de la práctica abierta o importar un JSON."""
         layout = self.layout
         a = context.scene.amatista_autor
         datos = autor.leer_borrador()
@@ -61,9 +65,11 @@ class AMATISTA_PT_autor_tagger(_Autor, bpy.types.Panel):
     bl_label = "Tagger: roles y etiquetas"
 
     def draw_header(self, context):
+        """Icono de marcador en la cabecera."""
         self.layout.label(text="", icon="BOOKMARKS")
 
     def draw(self, context):
+        """Panel Tagger: rol y etiquetas del objeto activo, declarar roles nuevos y añadir/quitar etiquetas."""
         layout = self.layout
         a = context.scene.amatista_autor
         obj = context.active_object
@@ -103,9 +109,11 @@ class AMATISTA_PT_autor_inspector(_Autor, bpy.types.Panel):
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw_header(self, context):
+        """Icono de lupa en la cabecera."""
         self.layout.label(text="", icon="VIEWZOOM")
 
     def draw(self, context):
+        """Panel Inspector: lo que el motor ve del objeto activo (tipo, rol, etiquetas, medidas, malla, modificadores, materiales, colecciones) y qué validadores le aplican."""
         layout = self.layout
         obj = context.active_object
         if obj is None:
@@ -138,12 +146,15 @@ class AMATISTA_PT_autor_objetivos(_Autor, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en modo autor si hay borrador."""
         return super().poll(context) and autor.leer_borrador() is not None
 
     def draw_header(self, context):
+        """Icono de capas en la cabecera."""
         self.layout.label(text="", icon="OUTLINER_DATA_GP_LAYER")
 
     def draw(self, context):
+        """Panel de objetivos del borrador: lista con mover/quitar, constructor de objetivos nuevos y pistas por objetivo."""
         layout = self.layout
         a = context.scene.amatista_autor
         datos = autor.leer_borrador() or {}
@@ -211,12 +222,15 @@ class AMATISTA_PT_autor_depurador(_Autor, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en modo autor si hay borrador."""
         return super().poll(context) and autor.leer_borrador() is not None
 
     def draw_header(self, context):
+        """Icono de consola en la cabecera."""
         self.layout.label(text="", icon="CONSOLE")
 
     def draw(self, context):
+        """Panel Compilador: si el borrador compila, sus errores y avisos, y el resultado de cada objetivo con la escena actual."""
         layout = self.layout
         resultado = autor.compilar()
         if resultado is None:
@@ -256,12 +270,15 @@ class AMATISTA_PT_autor_teoria(_Autor, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en modo autor si hay borrador."""
         return super().poll(context) and autor.leer_borrador() is not None
 
     def draw_header(self, context):
+        """Icono de ayuda en la cabecera."""
         self.layout.label(text="", icon="HELP")
 
     def draw(self, context):
+        """Panel de teoría del borrador: píldoras con su disparo y formulario para agregar otra."""
         layout = self.layout
         a = context.scene.amatista_autor
         datos = autor.leer_borrador() or {}
@@ -300,12 +317,15 @@ class AMATISTA_PT_autor_publicar(_Autor, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible en modo autor si hay borrador."""
         return super().poll(context) and autor.leer_borrador() is not None
 
     def draw_header(self, context):
+        """Icono de exportar en la cabecera."""
         self.layout.label(text="", icon="EXPORT")
 
     def draw(self, context):
+        """Panel de publicación: exportar practice.json, registrar en Amatista (queda como borrador) y registrar la verificación de compatibilidad."""
         layout = self.layout
         a = context.scene.amatista_autor
         layout.operator("amatista.autor_exportar", text="Exportar practice.json", icon="EXPORT")

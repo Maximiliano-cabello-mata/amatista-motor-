@@ -13,6 +13,7 @@ ENGINE = RAIZ / "engine" / "amatista_engine"
 
 
 def _codigo(carpeta):
+    """Recorre los .py de una carpeta con su texto."""
     for ruta in carpeta.rglob("*.py"):
         texto = ruta.read_text(encoding="utf-8")
         # Sin los docstrings y comentarios, que cuentan la historia del error.
@@ -22,33 +23,39 @@ def _codigo(carpeta):
 
 
 def test_ningun_texto_dice_que_brilla_la_barra_de_la_izquierda():
+    """Comprueba que ningún texto promete que brilla la barra izquierda."""
     for carpeta in (ADDON, ENGINE):
         for ruta, texto in _codigo(carpeta):
             assert not re.search(r"brilla (en la barra )?(de )?(a )?la izquierda", texto), ruta
 
 
 def test_el_modo_enfocado_no_esconde_la_barra_de_herramientas():
+    """Comprueba que el modo enfocado no esconde la barra de herramientas."""
     texto = (ADDON / "enfoque.py").read_text(encoding="utf-8")
     assert "show_region_toolbar = False" not in texto
 
 
 def test_el_guion_tiene_el_turno_antes_que_el_taller():
+    """Comprueba que el guion tiene prioridad sobre el taller en la vista."""
     texto = (ADDON / "interfaz" / "turno.py").read_text(encoding="utf-8")
     assert texto.index("return GUION") < texto.index("return TALLER")
 
 
 def test_el_guion_revisa_al_guardar_y_al_deshacer():
+    """Comprueba que el guion registra los handlers de guardar, deshacer y rehacer."""
     texto = (ADDON / "guion" / "__init__.py").read_text(encoding="utf-8")
     for manejador in ("depsgraph_update_post", "save_post", "undo_post", "redo_post"):
         assert f'"{manejador}"' in texto
 
 
 def test_el_texto_solo_dice_resaltado_despues_de_comprobarlo():
+    """Comprueba que el texto «resaltado» solo se usa tras comprobar la herramienta."""
     texto = (ADDON / "guion" / "senalar.py").read_text(encoding="utf-8")
     elegir = texto[texto.index("def _elegir"):texto.index("def _abrir_menu")]
     assert elegir.index("herramienta_elegida(context, modo) != d.objetivo") < elegir.index("resaltado")
 
 
 def test_version_7():
+    """Comprueba la versión 7.1.0 en manifiesto y bl_info."""
     assert 'version = "7.1.0"' in (ADDON / "blender_manifest.toml").read_text(encoding="utf-8")
     assert "(7, 1, 0)" in (ADDON / "__init__.py").read_text(encoding="utf-8")

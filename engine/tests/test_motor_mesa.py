@@ -1,8 +1,10 @@
+"""Pruebas de punta a punta del motor con la práctica de la mesa (practices/archivo/v2/mesa.json)."""
 import json
 
 import pytest
 
 from amatista_engine import create_default_engine
+# [REVISION-MUERTO] ``ACTUAL`` se importa pero no se usa.
 from amatista_engine.models import ACTUAL, BLOQUEADO, COMPLETADO, SceneObject, SceneState
 from amatista_engine.pedagogy import classify, evidence, next_hint
 from amatista_engine.practice import compile_practice, dump_practice, load_practice, parse_practice
@@ -15,6 +17,7 @@ practica = load_practice(MESA)
 
 
 def test_mesa_completa_llega_al_100():
+    """Comprueba que la mesa completa llega al 100 % y solo queda el extra opcional."""
     reporte = motor.evaluate(practica, mesa_completa())
     assert reporte.progress == 100.0
     assert reporte.completed
@@ -22,6 +25,7 @@ def test_mesa_completa_llega_al_100():
 
 
 def test_mesa_vacia_empieza_por_la_cubierta():
+    """Comprueba que la mesa vacía empieza por la cubierta con el resto bloqueado."""
     reporte = motor.evaluate(practica, SceneState("5.1.1", "", False, ()))
     assert reporte.progress == 0
     assert reporte.current_target_id == "cubierta"
@@ -30,6 +34,7 @@ def test_mesa_vacia_empieza_por_la_cubierta():
 
 
 def test_tres_patas_dicen_cuantas_faltan():
+    """Comprueba que con tres patas el mensaje dice cuántas faltan."""
     escena = mesa_completa()
     escena = SceneState(escena.blender_version, escena.file_path, True, escena.objects[:4])
     reporte = motor.evaluate(practica, escena)
@@ -41,6 +46,7 @@ def test_tres_patas_dicen_cuantas_faltan():
 
 
 def test_pata_que_atraviesa_la_cubierta():
+    """Comprueba que una pata que atraviesa la cubierta falla spatial.below."""
     escena = mesa_completa()
     alta = pata("P4", 0.9, 0.4, alto=1.0)
     escena = SceneState("5.1.1", "x.blend", True, escena.objects[:4] + (alta,))
@@ -50,6 +56,7 @@ def test_pata_que_atraviesa_la_cubierta():
 
 
 def test_cubierta_gruesa_y_mensaje_personalizado():
+    """Comprueba el fallo de grosor y los mensajes personalizados del autor."""
     escena = mesa_completa()
     gruesa = SceneObject("Cubierta", "MESH", roles=("cubierta",), location=(0, 0, 1.0), dimensions=(2, 1, 0.5))
     reporte = motor.evaluate(practica, SceneState("5", "a.blend", True, (gruesa,) + escena.objects[1:]))
@@ -59,17 +66,20 @@ def test_cubierta_gruesa_y_mensaje_personalizado():
 
 
 def test_archivo_sin_guardar():
+    """Comprueba que sin guardar el progreso es 90 % y el paso actual es guardar."""
     reporte = motor.evaluate(practica, mesa_completa(guardada=False))
     assert reporte.progress == 90.0
     assert reporte.current_target_id == "guardar"
 
 
 def test_extra_opcional_no_cambia_el_progreso():
+    """Comprueba que el objetivo opcional no cambia el progreso."""
     reporte = motor.evaluate(practica, mesa_completa(materials=("Madera",)))
     assert reporte.result("color").passed and reporte.progress == 100.0
 
 
 def test_herramienta_fuera_de_nivel_avisa():
+    """Comprueba que una herramienta de nivel superior avisa sin bloquear."""
     escena = mesa_completa(modifiers=("BOOLEAN",))
     reporte = motor.evaluate(practica, escena)
     assert [w.tool_id for w in reporte.tool_warnings] == ["modifier.boolean"]
@@ -78,6 +88,7 @@ def test_herramienta_fuera_de_nivel_avisa():
 
 
 def test_pistas_progresivas_y_autonomia():
+    """Comprueba las pistas progresivas y la clasificación de autonomía."""
     estado = {}
     primera = next_hint(practica, estado, "patas")
     segunda = next_hint(practica, estado, "patas")
@@ -93,12 +104,14 @@ def test_pistas_progresivas_y_autonomia():
 
 
 def test_la_foto_de_la_escena_viaja_al_servidor_sin_cambiar_el_resultado():
+    """Comprueba que la foto serializada da el mismo resultado al evaluarla."""
     escena = mesa_completa()
     viaje = scene_from_dict(json.loads(json.dumps(scene_to_dict(escena))))
     assert motor.evaluate(practica, viaje).progress == motor.evaluate(practica, escena).progress == 100.0
 
 
 def test_todas_las_practicas_del_repositorio_compilan():
+    """Comprueba que todas las prácticas del repositorio compilan."""
     archivos = [
         a for a in sorted((REPO / "practices").rglob("*.json"))
         if str(json.loads(a.read_text(encoding="utf-8")).get("schema", "")).startswith("amatista.practice/")
@@ -110,10 +123,12 @@ def test_todas_las_practicas_del_repositorio_compilan():
 
 
 def test_exportar_y_volver_a_leer_da_la_misma_practica():
+    """Comprueba el ida y vuelta exportar → leer de la práctica."""
     assert parse_practice(dump_practice(practica)) == practica
 
 
 def test_eventos_solo_reevaluan_lo_afectado():
+    """Comprueba que un evento solo reevalúa los objetivos que lo vigilan."""
     afectados = motor.targets_for_event(practica, "FILE_SAVED")
     assert "guardar" in afectados and "patas" not in afectados
 
@@ -129,6 +144,7 @@ def test_eventos_solo_reevaluan_lo_afectado():
     ],
 )
 def test_el_compilador_explica_los_errores(cambio, error):
+    """Comprueba que el compilador explica cada tipo de error."""
     datos = json.loads(MESA.read_text(encoding="utf-8"))
     cambio(datos)
     resultado = compile_practice(datos)

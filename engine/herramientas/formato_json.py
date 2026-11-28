@@ -13,6 +13,7 @@ ANCHO = 118
 
 
 def formatear(valor, sangria: int = 0) -> str:
+    """JSON legible: sangría de 2 y en una sola línea lo que cabe en ANCHO columnas."""
     plano = json.dumps(valor, ensure_ascii=False)
     if not isinstance(valor, (dict, list)) or len(plano) + sangria <= ANCHO or not valor:
         return plano
@@ -25,6 +26,7 @@ def formatear(valor, sangria: int = 0) -> str:
 
 
 def escribir(ruta: Path, datos) -> None:
+    """Escribe ``datos`` en ``ruta`` con ese formato y salto de línea final."""
     ruta.write_text(formatear(datos) + "\n", encoding="utf-8")
 
 

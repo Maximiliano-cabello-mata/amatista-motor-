@@ -23,24 +23,29 @@ TREN = PRACTICAS / "principiante/m1-tren/practica.json"
 
 @pytest.fixture(scope="module")
 def tren():
+    """Fixture: la práctica del tren."""
     return parse_practice(json.loads(TREN.read_text(encoding="utf-8")))
 
 
 @pytest.fixture(scope="module")
 def motor():
+    """Fixture: motor por defecto."""
     return create_default_engine()
 
 
 def objetivo(tren, nivel=None, **params):
+    """Objetivo «figura» del tren con nivel y params cambiados."""
     base = tren.target("figura")
     return replace(base, params={**base.params, **({"level": nivel} if nivel else {}), **params})
 
 
 def evaluar(motor, tren, escena, nivel=None, **params):
+    """Ejecuta figure.recognize sobre la escena."""
     return motor.registry.get("figure.recognize")(objetivo(tren, nivel, **params), escena)
 
 
 def piezas_sin_sentido(tren):
+    """Variantes del tren que no tienen sentido (piezas mezcladas, flotando…) para probar rechazos."""
     P = tren.reference.parts
     azar = random.Random(3)
     return {
@@ -55,6 +60,7 @@ def piezas_sin_sentido(tren):
 
 
 def test_la_practica_usa_el_reconocedor_con_su_nivel(tren):
+    """Comprueba que la figura del tren usa figure.recognize con params heredados de la referencia."""
     params = tren.target("figura").params
     assert tren.target("figura").validator == "figure.recognize"
     assert params["level"] == 1 and params["title"] == "Tren de juguete" and len(params["parts"]) == 11
@@ -66,6 +72,7 @@ def test_la_practica_usa_el_reconocedor_con_su_nivel(tren):
 
 @pytest.mark.parametrize("nivel,perfil", [(1, "forma"), (2, "proporcion"), (3, "cercana"), (4, "medidas"), (5, "exacta")])
 def test_exigencia_por_nivel(nivel, perfil):
+    """Comprueba el perfil de exigencia por nivel y que las tolerancias bajan."""
     assert perfil_para(nivel).id == perfil
     assert perfil_para(1, "exacta").id == "exacta"  # la práctica puede fijarla
     tolerancias = [PERFILES[p].tolerancia for p in ("forma", "proporcion", "cercana", "medidas", "exacta")]
@@ -75,6 +82,7 @@ def test_exigencia_por_nivel(nivel, perfil):
 @pytest.mark.parametrize("roles", [True, False])
 @pytest.mark.parametrize("nivel", [1, 2, 3])
 def test_el_tren_a_mano_se_reconoce_con_o_sin_roles(motor, tren, roles, nivel):
+    """Comprueba que un tren armado con imprecisiones se reconoce con o sin roles."""
     for semilla in range(1, 5):
         escena = Escena().referencia(tren.reference.parts, roles=roles, variacion=0.25, semilla=semilla).construir()
         r = evaluar(motor, tren, escena, nivel)
@@ -84,6 +92,7 @@ def test_el_tren_a_mano_se_reconoce_con_o_sin_roles(motor, tren, roles, nivel):
 
 @pytest.mark.parametrize("nivel", [1, 2, 3, 4, 5])
 def test_figuras_sin_sentido_no_pasan_en_ningun_nivel(motor, tren, nivel):
+    """Comprueba que las figuras sin sentido no aprueban en ningún nivel."""
     for nombre, piezas in piezas_sin_sentido(tren).items():
         for roles in (True, False):
             r = evaluar(motor, tren, Escena().referencia(piezas, roles=roles).construir(), nivel)
@@ -91,6 +100,7 @@ def test_figuras_sin_sentido_no_pasan_en_ningun_nivel(motor, tren, nivel):
 
 
 def test_los_mensajes_dicen_que_no_tiene_sentido(motor, tren):
+    """Comprueba los mensajes de cada figura sin sentido."""
     casos = piezas_sin_sentido(tren)
     esperados = {
         "ruedas en el techo": "suelo",
@@ -105,6 +115,7 @@ def test_los_mensajes_dicen_que_no_tiene_sentido(motor, tren):
 
 
 def test_una_pieza_flotando_se_nombra(motor, tren):
+    """Comprueba que una pieza flotando aparece en las relaciones fallidas."""
     escena = Escena().referencia(tren.reference.parts, roles=False)
     escena.malla("cylinder", "Humo", dims=(0.3, 0.3, 0.6), loc=(1.9, 0, 3.4))
     r = evaluar(motor, tren, escena.construir(), 1)
@@ -113,6 +124,7 @@ def test_una_pieza_flotando_se_nombra(motor, tren):
 
 def test_en_el_nivel_1_la_forma_basta(motor, tren):
     # Una chimenea exagerada sigue siendo un tren reconocible para quien empieza…
+    """Comprueba que en nivel 1 basta la forma y en nivel 2 no."""
     P = [replace(p, size=(0.4, 0.4, 2.5), location=(1.9, 0, 2.7)) if p.role == "chimenea" else p
          for p in tren.reference.parts]
     escena = Escena().referencia(P).construir()
@@ -122,6 +134,7 @@ def test_en_el_nivel_1_la_forma_basta(motor, tren):
 
 
 def test_niveles_4_y_5_piden_el_tamano_real(motor, tren):
+    """Comprueba que en niveles 4 y 5 cuenta el tamaño real."""
     grande = Escena().referencia(tren.reference.parts, escala=1.6).construir()
     assert evaluar(motor, tren, grande, 3).passed
     for nivel in (4, 5):
@@ -135,6 +148,7 @@ def test_niveles_4_y_5_piden_el_tamano_real(motor, tren):
 
 
 def test_los_adornos_no_restan(motor, tren):
+    """Comprueba que las piezas extra cuentan como adornos y no restan."""
     escena = Escena().referencia(tren.reference.parts, roles=False)
     escena.malla("sphere", "Faro", dims=(0.3, 0.3, 0.3), loc=(2.4, 0, 1.0))
     escena.malla("cone", "Bandera", dims=(0.2, 0.2, 0.4), loc=(-1.15, 0, 1.55))
@@ -144,6 +158,7 @@ def test_los_adornos_no_restan(motor, tren):
 
 
 def test_deduce_los_roles_por_la_forma(tren):
+    """Comprueba que los roles se deducen por la forma (y no si ya tienen rol)."""
     partes = [pieza_como_dict(p) for p in tren.reference.compared]
     escena = (Escena().cubo("Cubo", dims=(2, 1.1, 1)).cilindro("Rueda?", dims=(0.7, 0.7, 0.2), rot=(90, 0, 0))
               .cilindro("Tubo", dims=(0.4, 0.4, 0.8)).construir())
@@ -163,6 +178,7 @@ def test_el_motor_ya_no_pide_roles(motor, tren):
 
 
 def test_identifica_otra_figura(motor, tren):
+    """Comprueba que una mesa se identifica como otra figura de la biblioteca."""
     mesa = next(f for f in biblioteca() if f["id"] == "mesa")
     escena = Escena().referencia(mesa["parts"], roles=False).construir()
     r = evaluar(motor, tren, escena, 1)
@@ -172,11 +188,13 @@ def test_identifica_otra_figura(motor, tren):
 
 @pytest.mark.parametrize("figura", [f["id"] for f in biblioteca()])
 def test_cada_figura_de_la_biblioteca_se_reconoce_a_si_misma(figura):
+    """Comprueba que cada figura de la biblioteca se identifica a sí misma."""
     datos = next(f for f in biblioteca() if f["id"] == figura)
     escena = Escena().referencia(datos["parts"], roles=False, variacion=0.15, semilla=4).construir()
     assert identificar(escena, biblioteca())[0]["id"] == figura
 
 
 def test_escena_vacia(motor, tren):
+    """Comprueba que una escena vacía no aprueba y pide piezas."""
     r = evaluar(motor, tren, Escena().construir(), 1)
     assert not r.passed and "piezas" in r.message

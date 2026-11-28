@@ -45,6 +45,7 @@ DATOS = {
 
 
 def _v(valor, defecto=(0.0, 0.0, 0.0)) -> Tuple[float, float, float]:
+    """Convierte un vector opcional en tupla de 3 floats; ``defecto`` si es None."""
     if valor is None:
         return defecto
     return tuple(float(x) for x in valor)
@@ -72,6 +73,7 @@ def caja_rotada(loc, dims, rot_rad):
 
 
 def _normal(v):
+    """Normaliza un vector (longitud 1); evita dividir por cero si es nulo."""
     largo = math.sqrt(sum(x * x for x in v)) or 1.0
     return tuple(x / largo for x in v)
 
@@ -80,6 +82,7 @@ class Escena:
     """Constructor fluido de SceneState para pruebas (sin Blender)."""
 
     def __init__(self, blender: str = "4.2.0") -> None:
+        """Empieza una escena de prueba vacía con los valores por defecto de Blender (modo objeto, EEVEE, 1..250)."""
         self._objetos: List[SceneObject] = []
         self._datos: Dict[str, Any] = {
             "blender_version": blender, "file_path": "", "file_saved": False, "mode": "OBJECT",
@@ -91,6 +94,7 @@ class Escena:
     # --- Objetos ---------------------------------------------------------------------
 
     def _nombre(self, base: str) -> str:
+        """Nombre único al estilo Blender: el primero es «base», los siguientes «base.001», «base.002»…"""
         n = self._usados.get(base, 0)
         self._usados[base] = n + 1
         return base if n == 0 else f"{base}.{n:03d}"
@@ -132,23 +136,29 @@ class Escena:
         return self
 
     def cubo(self, nombre: str = "", **kw) -> "Escena":
+        """Añade un cubo (ver ``malla``) y devuelve la escena para encadenar llamadas."""
         return self.malla("cube", nombre, **kw)
 
     def cilindro(self, nombre: str = "", **kw) -> "Escena":
+        """Añade un cilindro (ver ``malla``) y devuelve la escena para encadenar llamadas."""
         return self.malla("cylinder", nombre, **kw)
 
     def esfera(self, nombre: str = "", **kw) -> "Escena":
+        """Añade una esfera UV (ver ``malla``) y devuelve la escena para encadenar llamadas."""
         return self.malla("sphere", nombre, **kw)
 
     def plano(self, nombre: str = "", **kw) -> "Escena":
+        """Añade un plano; por defecto de 10×10 como el suelo típico de las prácticas."""
         kw.setdefault("dims", (10.0, 10.0, 0.0))
         return self.malla("plane", nombre, **kw)
 
     def cono(self, nombre: str = "", **kw) -> "Escena":
+        """Añade un cono (ver ``malla``) y devuelve la escena para encadenar llamadas."""
         return self.malla("cone", nombre, **kw)
 
     def luz(self, nombre: str = "Light", tipo: str = "POINT", loc=None, energia: float = 1000.0,
             mira_a=None) -> "Escena":
+        """Añade una luz de ``tipo`` (POINT, SUN, AREA, SPOT) con su energía; si se da ``mira_a`` la orienta hacia ese punto."""
         loc = _v(loc, (4.0, 1.0, 6.0))
         hacia = _normal(tuple(m - l for m, l in zip(_v(mira_a), loc))) if mira_a is not None else (0.0, 0.0, -1.0)
         self._objetos.append(SceneObject(
@@ -159,6 +169,7 @@ class Escena:
 
     def camara(self, nombre: str = "Camera", loc=None, mira_a=(0.0, 0.0, 0.0), angulo: float = 0.6911,
                activa: bool = True) -> "Escena":
+        """Añade una cámara que mira a ``mira_a`` con el ángulo de visión dado; si ``activa``, pasa a ser la cámara de la escena."""
         loc = _v(loc, (7.0, -7.0, 5.0))
         hacia = _normal(tuple(m - l for m, l in zip(_v(mira_a), loc)))
         self._objetos.append(SceneObject(
@@ -177,6 +188,11 @@ class Escena:
     # --- Datos de objetos que ya existen ----------------------------------------------------
 
     def _cambiar(self, nombre: str, **cambios) -> "Escena":
+        """Sustituye el objeto ``nombre`` por una copia con los campos cambiados.
+
+        Raises:
+            KeyError: si el objeto no existe en la escena de prueba.
+        """
         for i, o in enumerate(self._objetos):
             if o.name == nombre:
                 self._objetos[i] = replace(o, **cambios)
@@ -184,6 +200,11 @@ class Escena:
         raise KeyError(f"No hay un objeto «{nombre}» en la escena de prueba")
 
     def _obj(self, nombre: str) -> SceneObject:
+        """Objeto de la escena de prueba con ese nombre.
+
+        Raises:
+            KeyError: si no existe.
+        """
         obj = next((o for o in self._objetos if o.name == nombre), None)
         if obj is None:
             raise KeyError(f"No hay un objeto «{nombre}» en la escena")
@@ -191,6 +212,7 @@ class Escena:
 
     def modificador(self, objeto: str, tipo: str, ejes: Sequence[bool] = (True, False, False),
                     niveles: Optional[int] = None, encendido: bool = True) -> "Escena":
+        """Añade un modificador al objeto; para MIRROR usa ``ejes`` y para SUBSURF los ``niveles`` (1 si no se dan)."""
         o = self._obj(objeto)
         tipo = tipo.upper()
         m = ModifierInfo(tipo, tipo.capitalize(), tuple(bool(e) for e in ejes) if tipo == "MIRROR" else (False,) * 3,
@@ -209,6 +231,7 @@ class Escena:
                              materials_used=usados)
 
     def animar(self, objeto: str, propiedad: str, eje: str, claves: Iterable[Sequence[float]]) -> "Escena":
+        """Añade fotogramas clave ``(fotograma, valor)`` a la propiedad (location/rotation_euler/scale) en el eje «x», «y» o «z»."""
         o = self._obj(objeto)
         canal = AnimationChannel(propiedad, "xyz".index(eje.lower()), tuple((float(f), float(v)) for f, v in claves))
         return self._cambiar(objeto, animation=o.animation + (canal,))
@@ -220,46 +243,56 @@ class Escena:
         return self
 
     def rol(self, objeto: str, rol: str) -> "Escena":
+        """Asigna un rol de la práctica al objeto (sustituye los que tuviera)."""
         return self._cambiar(objeto, roles=(rol,))
 
     def mover(self, objeto: str, loc) -> "Escena":
+        """Mueve el objeto a ``loc`` y recalcula su caja envolvente teniendo en cuenta su rotación."""
         o = self._obj(objeto)
         loc = _v(loc)
         caja_min, caja_max = caja_rotada(loc, o.dimensions, o.rotation)
         return self._cambiar(objeto, location=loc, bbox_min=caja_min, bbox_max=caja_max)
 
     def quitar(self, objeto: str) -> "Escena":
+        """Elimina el objeto de la escena de prueba (si no existe, no hace nada)."""
         self._objetos = [o for o in self._objetos if o.name != objeto]
         return self
 
     # --- Escena ------------------------------------------------------------------------
 
     def modo(self, modo: str) -> "Escena":
+        """Cambia el modo de Blender de la escena («OBJECT», «EDIT»…)."""
         self._datos["mode"] = modo
         return self
 
     def seleccionar(self, *nombres: str) -> "Escena":
+        """Selecciona los objetos dados; el primero queda como objeto activo (ninguno si no se pasa nada)."""
         self._datos["selected"] = tuple(nombres)
         self._datos["active_object"] = nombres[0] if nombres else None
         return self
 
     def motor(self, motor: str) -> "Escena":
+        """Cambia el motor de render de la escena (p. ej. «CYCLES»)."""
         self._datos["render_engine"] = motor
         return self
 
     def renders(self, n: int = 1) -> "Escena":
+        """Fija cuántos renders (F12) se han hecho desde que se abrió la práctica."""
         self._datos["renders"] = n
         return self
 
     def guardado(self, archivo: str = "practica.blend", guardado: bool = True) -> "Escena":
+        """Simula que el .blend tiene ese nombre y si está guardado."""
         self._datos["file_path"] = archivo
         self._datos["file_saved"] = guardado
         return self
 
     def construir(self) -> SceneState:
+        """Devuelve la SceneState inmutable lista para pasarla al motor."""
         return SceneState(objects=tuple(self._objetos), **self._datos)
 
     def a_dict(self) -> Dict[str, Any]:
+        """La escena de prueba en el JSON compacto que enviaría el add-on (ver snapshot.scene_to_dict)."""
         return scene_to_dict(self.construir())
 
     def referencia(self, piezas: Sequence[Any] = (), escala: float = 1.0, variacion: float = 0.0, semilla: int = 1,
@@ -281,12 +314,15 @@ class Escena:
         azar = random.Random(semilla)
 
         def ruido() -> float:
+            """Factor aleatorio 1±variación para simular las imprecisiones de un alumno real."""
             return 1.0 + azar.uniform(-variacion, variacion) if variacion else 1.0
 
         def campo(pieza, clave, defecto=None):
+            """Lee una clave de la pieza tanto si es un dict del JSON como un objeto ReferencePart."""
             return pieza.get(clave, defecto) if isinstance(pieza, dict) else getattr(pieza, clave, defecto)
 
         def _medidas(pieza):
+            """Medidas de la pieza multiplicadas por el factor que pida ``cambiar`` para esa pieza."""
             factor = (cambiar or {}).get(campo(pieza, "name") or "", (1.0, 1.0, 1.0))
             return tuple(m * f for m, f in zip(_v(campo(pieza, "size")), _v(factor, (1.0, 1.0, 1.0))))
 

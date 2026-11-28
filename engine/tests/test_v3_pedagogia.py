@@ -11,6 +11,7 @@ DIA = spaced.DIA
 
 
 def _practica(**extra):
+    """Compila una práctica v2 de prueba con píldoras y vigilante; devuelve (motor, práctica)."""
     datos = {
         "schema": "amatista.practice/2", "id": "prueba.v3", "version": 1, "title": "Prueba", "level": 2,
         "course": {"id": "blender_principiante", "module": 1}, "estimatedMinutes": 10,
@@ -38,6 +39,7 @@ def _practica(**extra):
 
 
 def test_pildoras_por_disparo_y_prioridad():
+    """Comprueba qué píldoras se muestran según disparo y prioridad."""
     motor, p = _practica()
     escena = Escena().cubo("M", rol="modelo").modo("EDIT_MESH").construir()
     ids = [x.id for x in motor.pills(p, escena, motor.evaluate(p, escena))]
@@ -47,6 +49,7 @@ def test_pildoras_por_disparo_y_prioridad():
 
 
 def test_vigilante_pausa_el_progreso_y_ofrece_arreglo():
+    """Comprueba que un vigilante pausa el progreso y ofrece el arreglo."""
     motor, p = _practica()
     escena = Escena().cubo("M", rol="modelo", caras=20, encimados=3).construir()
     reporte = motor.evaluate(p, escena)
@@ -59,12 +62,14 @@ def test_vigilante_pausa_el_progreso_y_ofrece_arreglo():
 
 
 def test_mensajes_usan_la_etiqueta_del_rol():
+    """Comprueba que los mensajes usan la etiqueta del rol."""
     motor, p = _practica()
     reporte = motor.evaluate(p, Escena().construir())
     assert "«Modelo»" in reporte.results[0].message
 
 
 def test_repaso_espaciado_leitner():
+    """Comprueba las cajas de Leitner del repaso espaciado."""
     estado = spaced.introduce({}, "a#b", now=0)
     assert estado["a#b"] == {"box": 1, "due": DIA}
     assert spaced.due(estado, now=0) == []
@@ -80,6 +85,7 @@ def test_repaso_espaciado_leitner():
 
 
 def test_desbloqueo_del_plan():
+    """Comprueba el estado de desbloqueo del plan y la siguiente práctica."""
     plan = load_curriculum({
         "schema": "amatista.curriculum/1", "route": "blender", "title": "Ruta",
         "courses": [
@@ -99,6 +105,7 @@ def test_desbloqueo_del_plan():
 
 
 def test_desbloqueo_con_exploracion_a_mitad_del_modulo():
+    """Comprueba el desbloqueo con exploración a mitad del módulo."""
     plan = load_curriculum({
         "schema": "amatista.curriculum/1", "route": "blender", "title": "Ruta",
         "courses": [{"id": "a", "title": "A", "difficulty": "principiante", "modules": [

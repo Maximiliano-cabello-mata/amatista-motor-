@@ -42,6 +42,7 @@ ESTADO = {
 
 
 def _ruta_catalogo():
+    """Ruta del habilidades.json del paquete (en la carpeta o en blender/), o None."""
     from .. import practicas
 
     carpeta = practicas.carpeta_paquete()
@@ -67,6 +68,7 @@ def catalogo():
 
 
 def parametros():
+    """Parámetros BKT de cada habilidad del catálogo {id: ParametrosBKT}."""
     c = catalogo()
     return {hid: h.bkt for hid, h in c.habilidades.items()} if c is not None else {}
 
@@ -75,22 +77,26 @@ def parametros():
 
 
 def _cuenta():
+    """Id de la cuenta vinculada («» sin cuenta)."""
     p = ajustes.prefs()
     return (getattr(p, "cuenta_id", "") or "") if p and getattr(p, "token", "") else ""
 
 
 def _ruta_avance(cuenta):
+    """Archivo del avance del taller por cuenta (id anonimizado con SHA-1) en la carpeta de usuario."""
     nombre = "local" if not cuenta else hashlib.sha1(cuenta.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
     return ajustes.carpeta_usuario() / f"avance_taller_{nombre}.json"
 
 
 def _vacio():
     # Motor 6.1: «fichas» = veces que vio la ficha de cada herramienta; «conocidas» = las que marcó «Ya la conozco».
+    """Avance vacío: estado BKT, completadas, cola de envíos, isla, último taller, fichas vistas y conocidas."""
     return {"estado": {}, "completadas": [], "cola": [], "isla": {}, "ultimo_taller": "", "actualizado": 0.0,
             "fichas": {}, "conocidas": []}
 
 
 def _leer(ruta):
+    """Lee el avance de disco completando claves que falten; avance vacío si no existe o está dañado."""
     try:
         datos = json.loads(Path(ruta).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -136,6 +142,7 @@ def avance():
 
 
 def guardar():
+    """Guarda el avance del taller en disco (no en modo sin progreso ni para el administrador)."""
     datos = ESTADO["avance"]
     if datos is None or ajustes.sin_progreso() or ESTADO["cuenta"] == "~admin":
         return
@@ -165,6 +172,7 @@ def completadas():
 
 
 def plan(taller_id, elegida=""):
+    """Plan del taller para el alumno (actividades según su dominio), o None si no hay catálogo o taller."""
     c = catalogo()
     if c is None or c.taller(taller_id) is None:
         return None
@@ -189,6 +197,7 @@ def taller_inicial():
 
 
 def recordar_taller(taller_id):
+    """Guarda cuál fue el último taller abierto."""
     datos = avance()
     if datos.get("ultimo_taller") != taller_id:
         datos["ultimo_taller"] = taller_id
@@ -267,6 +276,7 @@ def registrar(actividad, correcto, ayuda=0, molde=False, segundos=0.0, escena=No
 
 
 def _vinculado():
+    """True si hay cuenta vinculada."""
     p = ajustes.prefs()
     return bool(p and p.token)
 
@@ -302,6 +312,7 @@ def sincronizar(al_terminar=None):
     ESTADO["enviando"] = True
     if not lote:
         def traido(respuesta, error, estado):
+            """Al traer el avance del servidor: lo mezcla con el local; si el servidor no tiene la ruta (404), deja de pedir un rato."""
             ESTADO["enviando"] = False
             if error is None:
                 _mezclar(respuesta)
@@ -316,6 +327,7 @@ def sincronizar(al_terminar=None):
     enviados = {i.get("en") for i in lote}
 
     def listo(respuesta, error, estado):
+        """Al enviar la cola: quita lo aceptado o rechazado para siempre y conserva lo reintentable."""
         ESTADO["enviando"] = False
         actual = avance()
         if error is None or (estado and not red.es_reintentable(estado) and estado != 404):
@@ -349,6 +361,7 @@ def sincronizar(al_terminar=None):
 
 
 def _sincronizar_ahora():
+    """Temporizador: sincroniza el avance del taller; los errores van a consola."""
     try:
         sincronizar()
     except Exception as error:  # noqa: BLE001
@@ -358,6 +371,7 @@ def _sincronizar_ahora():
 
 
 def sincronizar_pronto(segundos=2.0):
+    """Programa la sincronización del taller en ``segundos`` (si el alumno tiene activado sincronizar solo)."""
     import bpy
 
     p = ajustes.prefs()
@@ -375,6 +389,7 @@ def reiniciar_cache():
 
 
 def unregister():
+    """Cancela la sincronización pendiente."""
     import bpy
 
     if bpy.app.timers.is_registered(_sincronizar_ahora):

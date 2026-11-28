@@ -13,6 +13,7 @@ ADDON = Path(__file__).resolve().parents[1] / "amatista_blender"
 
 
 def _cargar(nombre, archivo):
+    """Carga un módulo del add-on desde su archivo (sin el paquete)."""
     spec = importlib.util.spec_from_file_location(nombre, ADDON / archivo)
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -23,6 +24,7 @@ protocolo = _cargar("amatista_protocolo_m6", "protocolo.py")
 
 
 def _saneamiento():
+    """Carga saneamiento.py con un bpy falso; devuelve (módulo, bpy falso)."""
     falso = types.ModuleType("bpy")
     falso.app = types.SimpleNamespace(driver_namespace={}, handlers=types.SimpleNamespace(), timers=None)
     anterior = sys.modules.get("bpy")
@@ -40,6 +42,7 @@ def _saneamiento():
 
 
 def test_el_enlace_lleva_la_etapa_de_la_leccion():
+    """Comprueba que el enlace amatista:// lleva etapa, habilidades y lección."""
     orden = protocolo.orden_de_url(
         "amatista://taller/blender.bp.m1?etapa=exploracion&habilidades=bl-agregar-primitivas,bl-mover&leccion=bp1_blender")
     assert orden == {"tipo": "taller_abrir", "datos": {
@@ -48,6 +51,7 @@ def test_el_enlace_lleva_la_etapa_de_la_leccion():
 
 
 def test_la_etapa_nunca_acepta_rutas_ni_etapas_inventadas():
+    """Comprueba que el enlace descarta etapas inventadas y rutas peligrosas y limita habilidades."""
     orden = protocolo.orden_de_url("amatista://taller/blender.bp.m1?etapa=todo&habilidades=../../x&leccion=/etc/passwd")
     assert orden == {"tipo": "taller_abrir", "datos": {"taller": "blender.bp.m1"}}
     orden = protocolo.orden_de_url("amatista://taller/blender.bp.m1?etapa=exploracion&habilidades=a,b,c,d,e,../x")
@@ -58,11 +62,13 @@ def test_la_etapa_nunca_acepta_rutas_ni_etapas_inventadas():
 
 
 def test_el_enlace_abre_blender_amatista():
+    """Comprueba que el enlace abre Blender con la plantilla Amatista."""
     assert "--app-template amatista -- --amatista" in protocolo.comando_linux("/opt/blender/blender", {})
     assert "--app-template amatista" in protocolo.guion_mac("/Applications/Blender.app/Contents/MacOS/Blender")
 
 
 def test_el_acceso_directo_de_linux(tmp_path, monkeypatch):
+    """Comprueba el .desktop del lanzador en Linux."""
     monkeypatch.setattr(protocolo.sys, "platform", "linux")
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     ok, texto = protocolo.crear_lanzador("/opt/blender 4.2/blender", "/x/logo.png")
@@ -74,15 +80,18 @@ def test_el_acceso_directo_de_linux(tmp_path, monkeypatch):
 
 
 def test_el_acceso_directo_de_windows_escapa_las_comillas():
+    """Comprueba que el lanzador de Windows escapa las comillas."""
     guion = protocolo.guion_lanzador_windows("C:/Program Files/Blender's/blender.exe", "C:/Menu/Blender Amatista.lnk")
     assert "Blender''s" in guion and "--app-template amatista" in guion
 
 
 def test_el_acceso_directo_nunca_lanza():
+    """Comprueba que crear el lanzador sin binario devuelve error sin lanzar."""
     assert protocolo.crear_lanzador("") == (False, "No sé dónde está Blender.")
 
 
 def test_la_plantilla_trae_su_pantalla_de_inicio():
+    """Comprueba que la plantilla trae sus PNG de inicio."""
     carpeta = ADDON / "plantilla_amatista"
     for nombre in ("__init__.py", "splash.png", "splash_2x.png"):
         assert (carpeta / nombre).is_file(), nombre
@@ -93,6 +102,7 @@ def test_la_plantilla_trae_su_pantalla_de_inicio():
 
 
 def test_reconoce_las_copias_de_amatista():
+    """Comprueba que se reconocen los nombres de las copias de Amatista."""
     s, _bpy = _saneamiento()
     assert s.es_amatista("amatista_blender")
     assert s.es_amatista("bl_ext.user_default.amatista")
@@ -103,6 +113,7 @@ def test_reconoce_las_copias_de_amatista():
 
 
 def test_gana_la_version_mas_nueva_y_a_igual_version_la_extension():
+    """Comprueba qué copia gana: la más nueva y, a igual versión, la extensión."""
     s, _bpy = _saneamiento()
     ext, clasico = "bl_ext.user_default.amatista", "amatista_blender"
     assert s.gana((6, 0, 0), (5, 4, 0), ext, clasico)
@@ -113,6 +124,7 @@ def test_gana_la_version_mas_nueva_y_a_igual_version_la_extension():
 
 
 def test_la_duena_del_dibujo():
+    """Comprueba tomar y soltar la propiedad del dibujo."""
     s, falso = _saneamiento()
     assert s.soy_duena()  # nadie la tomó todavía
     falso.app.driver_namespace[s.CLAVE_DUENA] = "otra_copia"

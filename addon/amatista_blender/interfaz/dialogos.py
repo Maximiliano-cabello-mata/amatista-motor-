@@ -17,12 +17,14 @@ ANCHO = 380
 
 
 def _popup(operador, context, ancho=ANCHO):
+    """Abre el diálogo flotante del operador con ese ancho; sin interfaz (modo background) ejecuta directamente."""
     if bpy.app.background:
         return operador.execute(context)
     return context.window_manager.invoke_popup(operador, width=ancho)
 
 
 class AMATISTA_OT_pista(bpy.types.Operator):
+    """Botón «Necesito una pista»: muestra en un diálogo la siguiente pista del objetivo (Amatista cuenta cuántas usó)."""
     bl_idname = "amatista.pista"
     bl_label = "Necesito una pista"
     bl_description = "Muestra la siguiente pista del objetivo (Amatista cuenta cuántas usaste)"
@@ -30,22 +32,26 @@ class AMATISTA_OT_pista(bpy.types.Operator):
     objetivo: bpy.props.StringProperty()
 
     def _revelar(self, context):
+        """Pide la siguiente pista del objetivo (o del actual) y la guarda en el operador."""
         self.revelada = practicas.pedir_pista(context, self.objetivo or None)
         return self.revelada
 
     def execute(self, context):
+        """Revela la pista si aún no se hizo; cancela si el paso no tiene pistas."""
         if getattr(self, "revelada", None) is None and self._revelar(context) is None:
             self.report({"INFO"}, "No hay pistas para este paso.")
             return {"CANCELLED"}
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Revela la pista y abre el diálogo; si no hay pistas, anima al alumno a intentarlo a su manera."""
         if self._revelar(context) is None or self.revelada.hint is None:
             self.report({"INFO"}, "Este paso no tiene pistas. ¡Inténtalo a tu manera!")
             return {"CANCELLED"}
         return _popup(self, context)
 
     def draw(self, context):
+        """Diálogo de pista: título del objetivo, «Pista n de N», el texto y, si quedan, el botón para la siguiente."""
         layout = self.layout
         revelada = self.revelada
         practica = practicas.practica_activa(context)
@@ -70,12 +76,15 @@ class AMATISTA_OT_felicitar(bpy.types.Operator):
     bl_label = "¡Práctica completada!"
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Abre el diálogo de felicitación."""
         return _popup(self, context, 420)
 
     def draw(self, context):
+        """Diálogo «¡Práctica completada!»: la práctica al 100 % y, según haya cuenta, «Ver en la plataforma» o «Vincular» para que cuente."""
         layout = self.layout
         practica = practicas.practica_activa(context)
         reporte = practicas.ESTADO["reporte"]
@@ -127,6 +136,7 @@ class AMATISTA_OT_felicitar(bpy.types.Operator):
 
 
 def _nombres_herramientas(ids, cuantas=6):
+    """Nombres cortos (sin el atajo entre paréntesis) de hasta ``cuantas`` herramientas del catálogo."""
     registro = _motor.MOTOR.tools
     if registro is None:
         return []
@@ -141,9 +151,11 @@ class AMATISTA_OT_mision_inicio(bpy.types.Operator):
     bl_description = "Qué vas a construir en esta práctica, sus partes y las herramientas que usarás"
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Al abrir una práctica: evalúa si aún no hay ruta y muestra el diálogo de inicio de la misión."""
         if practicas.practica_activa(context) is None:
             return {"CANCELLED"}
         if mision.ruta() is None:
@@ -151,6 +163,7 @@ class AMATISTA_OT_mision_inicio(bpy.types.Operator):
         return _popup(self, context, 470)
 
     def draw(self, context):
+        """Diálogo «Tu misión»: tema, número de misiones y minutos, la ruta por partes, las herramientas que usará, cómo funciona y la píldora previa."""
         layout = self.layout
         practica = practicas.practica_activa(context)
         ruta = mision.ruta()
@@ -213,12 +226,15 @@ class AMATISTA_OT_aviso_herramienta(bpy.types.Operator):
     explicar: bpy.props.BoolProperty(default=False)
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Abre el diálogo de aviso de herramienta."""
         return _popup(self, context, 420)
 
     def draw(self, context):
+        """Diálogo «Detectamos que usaste …»: explica por qué la práctica desaconseja esa herramienta en este nivel."""
         layout = self.layout
         herramienta = _motor.MOTOR.tools.get(self.herramienta) if _motor.MOTOR.tools else None
         practica = practicas.practica_activa(context)
@@ -246,12 +262,15 @@ class AMATISTA_OT_bienvenida(bpy.types.Operator):
     bl_label = "Bienvenida a Amatista"
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Abre el diálogo de bienvenida."""
         return _popup(self, context, 420)
 
     def draw(self, context):
+        """Diálogo «Amatista ya está en tu Blender»: cómo funciona en 5 pasos (plataforma, botón Amatista, menú, tarjeta, avance en vivo) y «Vincular»."""
         layout = self.layout
         cabecera = layout.row()
         cabecera.scale_y = 1.6
@@ -285,14 +304,17 @@ def botones_guia(layout, g, escala=1.35, con_pista=True):
 
 
 class AMATISTA_OT_explicar_paso(bpy.types.Operator):
+    """Botón «Así se hace este paso»: diálogo con el porqué, qué hacer y las teclas del paso actual."""
     bl_idname = "amatista.explicar_paso"
     bl_label = "Así se hace este paso"
     bl_description = "Explica el paso actual: por qué importa, qué hacer y con qué teclas"
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Evalúa si no hay guía, cuenta la ayuda «explicar» y abre el diálogo."""
         if guia.guia_actual() is None:
             practicas.evaluar(context)
         if guia.guia_actual() is None:
@@ -301,6 +323,7 @@ class AMATISTA_OT_explicar_paso(bpy.types.Operator):
         return _popup(self, context, 460)
 
     def draw(self, context):
+        """Contenido: título del paso, retroalimentación, porqué, micro pasos con teclas y botón «Hazlo conmigo» si aplica."""
         layout = self.layout
         g = guia.guia_actual()
         if g is None:
@@ -327,19 +350,23 @@ class AMATISTA_OT_explicar_paso(bpy.types.Operator):
 
 
 class AMATISTA_OT_ofrecer_ayuda(bpy.types.Operator):
+    """Diálogo «¿Te ayudo?»: opciones de ayuda cuando el acompañante detecta que el alumno está atascado."""
     bl_idname = "amatista.ofrecer_ayuda"
     bl_label = "¿Te ayudo?"
     bl_description = "Opciones de ayuda para el paso actual"
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Abre el diálogo si hay guía para el paso actual."""
         if guia.guia_actual() is None:
             return {"CANCELLED"}
         return _popup(self, context, 420)
 
     def draw(self, context):
+        """Contenido: «¿Te ayudo con este paso?» con Hazlo conmigo, «Explícame qué hacer», «Muéstrame dónde», «Dame una pista» o seguir a su manera."""
         layout = self.layout
         g = guia.guia_actual()
         if g is None:

@@ -15,6 +15,13 @@ from .base import result
 
 
 def molde(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``taller.molde``: comprueba que las piezas del molde del Taller estén llenas (modo molde) o la figura reconocida (modo libre).
+
+    El detalle por pieza va en ``details["molde"]`` para que el add-on pinte el molde.
+
+    Raises:
+        ValueError: si faltan las piezas o el modo no es molde/libre.
+    """
     from ..taller.molde import revisar_molde
 
     piezas = target.params.get("parts") or []

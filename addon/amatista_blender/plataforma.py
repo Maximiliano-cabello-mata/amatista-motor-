@@ -28,6 +28,7 @@ LECCION = {}
 
 
 def _vacia():
+    """Lección vacía: curso, lección, título, clase, número/total, módulo y cuándo llegó."""
     return {"curso": "", "leccion": "", "titulo": "", "clase": "", "numero": 0, "total": 0, "modulo": "", "en": 0.0}
 
 
@@ -35,14 +36,17 @@ LECCION.update(_vacia())
 
 
 def reiniciar():
+    """Olvida la lección que tenía abierta la plataforma."""
     LECCION.update(_vacia())
 
 
 def _texto(valor, largo):
+    """Texto limpio recortado a ``largo`` caracteres."""
     return str(valor or "").strip()[:largo]
 
 
 def _entero(valor):
+    """Entero acotado a 0..99 (0 si no es válido)."""
     try:
         return max(0, min(99, int(valor)))
     except (TypeError, ValueError):
@@ -71,6 +75,7 @@ def viva(ahora=None):
 
 
 def actual(ahora=None):
+    """Copia de la lección abierta en la plataforma si el dato sigue vivo, o None."""
     return dict(LECCION) if viva(ahora) else None
 
 

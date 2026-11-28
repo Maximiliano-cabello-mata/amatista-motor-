@@ -74,6 +74,7 @@ def caja_mundo(obj):
 
 
 def caja_desde(minimo, maximo):
+    """Las 8 esquinas de una caja desde sus esquinas mínima y máxima."""
     return [
         Vector((x, y, z))
         for x in (minimo[0], maximo[0])
@@ -83,6 +84,7 @@ def caja_desde(minimo, maximo):
 
 
 def _shader_lineas():
+    """Shader de líneas gruesas (POLYLINE) configurado para la región actual."""
     try:
         shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
         region = bpy.context.region
@@ -94,6 +96,7 @@ def _shader_lineas():
 
 
 def _lineas(shader, puntos, color):
+    """Dibuja segmentos de líneas con un color."""
     if not puntos:
         return
     batch = batch_for_shader(shader, "LINES", {"pos": puntos})
@@ -102,6 +105,7 @@ def _lineas(shader, puntos, color):
 
 
 def _relleno(puntos, indices, color):
+    """Dibuja triángulos rellenos con un color."""
     shader = gpu.shader.from_builtin("UNIFORM_COLOR")
     batch = batch_for_shader(shader, "TRIS", {"pos": puntos}, indices=indices)
     shader.uniform_float("color", color)
@@ -109,15 +113,18 @@ def _relleno(puntos, indices, color):
 
 
 def _aristas(esquinas):
+    """Las aristas de una caja como pares de puntos para dibujar."""
     return [esquinas[i] for arista in ARISTAS_CAJA for i in arista]
 
 
 def _objeto(nombre):
+    """Objeto visible con ese nombre, o None."""
     obj = bpy.data.objects.get(nombre)
     return obj if obj is not None and obj.visible_get() else None
 
 
 def dibujar_escena():
+    """Callback POST_VIEW: dibuja en la escena los resaltados de la guía (contornos verdes/naranjas), cajas fantasma, planos, reglas y flechas."""
     g = _activo()
     if g is None:
         return
@@ -186,6 +193,7 @@ def _regla(lineas, d):
 
 
 def _flecha(lineas, d):
+    """Añade a ``lineas`` una flecha sobre el objeto indicando hacia dónde moverlo (arriba, abajo, hacia dentro)."""
     obj = _objeto(d.get("object", ""))
     if obj is None:
         return
@@ -210,6 +218,7 @@ def _flecha(lineas, d):
 
 
 def _pastilla(x, y, texto, color, escala):
+    """Dibuja una etiqueta redondeada con texto en coordenadas de pantalla."""
     tam = int(11 * escala)
     blf.size(0, tam)
     ancho, alto = blf.dimensions(0, texto)[0] + 14 * escala, tam + 10 * escala
@@ -228,6 +237,7 @@ def _pastilla(x, y, texto, color, escala):
 
 
 def dibujar_etiquetas():
+    """Callback POST_PIXEL: dibuja junto a cada objeto resaltado su etiqueta («✓ Cubierta», «Aplica la escala»…)."""
     g = _activo()
     if g is None:
         return
@@ -258,6 +268,7 @@ def dibujar_etiquetas():
 
 
 def _ancla(senal):
+    """Punto 3D donde anclar la etiqueta de una ayuda visual (cajas fantasma, plano, regla, flecha)."""
     d = senal.data
     if senal.kind == "ghosts" and d.get("boxes"):
         caja = d["boxes"][0]

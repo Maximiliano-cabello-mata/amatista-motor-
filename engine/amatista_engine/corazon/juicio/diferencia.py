@@ -18,6 +18,7 @@ EJES = "XYZ"
 
 @dataclass(frozen=True)
 class Ajuste:
+    """Qué lado de una pieza no cuadra: tipo (TAMANO o GIRADA), eje y medidas actual/esperada en metros."""
     tipo: str  # TAMANO o GIRADA
     eje: str  # «X», «Y» o «Z»: el lado que no cuadra
     actual: float  # metros, en la escena del alumno
@@ -26,6 +27,7 @@ class Ajuste:
 
 @dataclass(frozen=True)
 class EstadoPieza:
+    """Estado de una pieza esperada: BIEN, FALTA, TAMANO o GIRADA, con el objeto del alumno que la representa."""
     grupo: str
     esperada: str  # nombre de la pieza del ejemplo
     estado: str  # BIEN, FALTA, TAMANO o GIRADA
@@ -35,6 +37,7 @@ class EstadoPieza:
 
 @dataclass(frozen=True)
 class Diferencia:
+    """Comparación completa de la escena con el plano: estado por pieza, escala de la figura, si está girada y piezas que sobran."""
     plano: Plano
     piezas: Tuple[EstadoPieza, ...]
     escala: float  # tamaño de la figura del alumno / tamaño del ejemplo
@@ -43,29 +46,36 @@ class Diferencia:
 
     @property
     def total(self) -> int:
+        """Número de piezas que espera el plano."""
         return len(self.piezas)
 
     @property
     def bien(self) -> int:
+        """Cuántas piezas esperadas están bien."""
         return sum(1 for p in self.piezas if p.estado == BIEN)
 
     def con_estado(self, estado: str) -> Tuple[EstadoPieza, ...]:
+        """Piezas con ese estado (BIEN, FALTA, TAMANO, GIRADA)."""
         return tuple(p for p in self.piezas if p.estado == estado)
 
     def faltan(self, grupo: str) -> int:
+        """Cuántas piezas faltan de un grupo."""
         return sum(1 for p in self.piezas if p.grupo == grupo and p.estado == FALTA)
 
 
 def _medidas(obj) -> Tuple[float, float, float]:
+    """Medidas del objeto en el mundo (caja envolvente), nunca negativas."""
     minimo, maximo = obj.caja()
     return tuple(max(0.0, maximo[i] - minimo[i]) for i in range(3))
 
 
 def _orientar(medidas: Sequence[float], girada: bool) -> Tuple[float, float, float]:
+    """Intercambia X e Y si la figura del alumno está girada un cuarto de vuelta."""
     return (medidas[1], medidas[0], medidas[2]) if girada else tuple(medidas)
 
 
 def _fuera(actual: float, esperado: float, tolerancia: float) -> bool:
+    """True si la medida real se sale de la esperada más allá de la tolerancia relativa (los planos no cuentan)."""
     if esperado <= 1e-6:  # un plano: sin grosor que comparar
         return False
     razon = actual / esperado
@@ -73,6 +83,7 @@ def _fuera(actual: float, esperado: float, tolerancia: float) -> bool:
 
 
 def _error(medidas: Sequence[float], esperadas: Sequence[float], escala: float) -> float:
+    """Error relativo acumulado entre medidas y esperadas (escaladas); sirve para elegir el objeto más parecido."""
     return sum(abs(a - e * escala) / (e * escala) for a, e in zip(medidas, esperadas) if e > 1e-6)
 
 
@@ -122,6 +133,7 @@ def _figura_girada(grupos: Dict[str, List], plano: Plano, escala: float) -> bool
 
 
 def _juzgar(obj, esperada: PiezaEsperada, escala: float, girada: bool, tolerancia: float) -> Tuple[str, Optional[Ajuste]]:
+    """Juzga un objeto frente a su pieza esperada: BIEN, TAMANO (un lado mal) o GIRADA (medidas bien en otros ejes), con el ajuste."""
     reales = _medidas(obj)
     medidas = _orientar(reales, girada)
     quiere = tuple(m * escala for m in esperada.medidas)
@@ -145,6 +157,7 @@ def comparar(plano: Plano, escena, reporte=None, tolerancia: Optional[float] = N
     girada = _figura_girada(grupos, plano, escala)
 
     def cercania(esperada: PiezaEsperada):
+        """Función de orden: qué tan lejos está un objeto de la pieza esperada (para emparejar objetos y piezas)."""
         return lambda o: _error(_orientar(_medidas(o), girada), esperada.medidas, escala)
 
     # Primera vuelta: cada pieza del ejemplo con el objeto de su grupo que mejor le queda.

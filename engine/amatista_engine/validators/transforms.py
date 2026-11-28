@@ -8,6 +8,11 @@ from .base import axis, describe, in_range, number, result, select, selector, te
 
 
 def _seleccion_obligatoria(target: TargetDefinition, scene: SceneState):
+    """Selector del objetivo y los objetos que cumple.
+
+    Raises:
+        ValueError: si el objetivo no indica role ni name.
+    """
     sel = selector(target)
     if not sel:
         raise ValueError(f"{target.validator} requiere params.role o params.name")
@@ -27,6 +32,7 @@ def _rango(target, valores, etiqueta, unidad=""):
 
 
 def dimension_range(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``dimension.range``: la medida de cada objeto seleccionado en el eje pedido está entre min y max."""
     sel, objetos = _seleccion_obligatoria(target, scene)
     eje, indice = axis(target)
     que = describe(sel)
@@ -51,6 +57,7 @@ def dimension_range(target: TargetDefinition, scene: SceneState) -> ValidationRe
 
 
 def object_position(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``object.position``: la coordenada de cada objeto seleccionado en el eje pedido está entre min y max."""
     sel, objetos = _seleccion_obligatoria(target, scene)
     eje, indice = axis(target)
     que = describe(sel)
@@ -90,6 +97,7 @@ def object_rotation(target: TargetDefinition, scene: SceneState) -> ValidationRe
 
 
 def scale_applied(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``transform.scale_applied``: la escala de los objetos es 1 (aplicada con Ctrl+A › Escala) dentro de la tolerancia."""
     sel = selector(target)
     objetos = select(scene, sel)
     tolerancia = number(target, "tolerance", 0.0001)

@@ -21,6 +21,7 @@ def desbloqueados(targets: Iterable[TargetDefinition], results: Mapping[str, Val
     memoria: dict = {}
 
     def libre(tid: str, camino: frozenset = frozenset()) -> bool:
+        """True si todos los requisitos del objetivo están cumplidos y a su vez libres (memoizado; requisitos desconocidos o ciclos no bloquean)."""
         if tid in memoria:
             return memoria[tid]
         objetivo = por_id.get(tid)
@@ -59,6 +60,10 @@ def calculate_progress(
     targets: Iterable[TargetDefinition],
     results: Mapping[str, ValidationResult],
 ) -> float:
+    """Progreso de 0 a 100 ponderado por el peso de los objetivos obligatorios cumplidos y desbloqueados.
+
+    Un objetivo cumplido cuyos requisitos no se cumplen no suma.
+    """
     targets = tuple(targets)
     obligatorios = tuple(t for t in targets if not t.optional)
     total_weight = sum(max(0.0, target.weight) for target in obligatorios)

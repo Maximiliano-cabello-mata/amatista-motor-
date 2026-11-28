@@ -23,6 +23,7 @@ on:
       - ".github/workflows/instaladores.yml"
   workflow_dispatch:
 
+# [REVISION-SEGURIDAD] contents: write aplica a TODOS los jobs y a cualquier push en cualquier rama; bastaría write solo en el job que publica la Release.
 permissions:
   contents: write
 
@@ -104,6 +105,7 @@ jobs:
             [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\firma.pfx", [Convert]::FromBase64String($env:PFX))
             $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1).FullName
             $parametros += "/DFirmar"
+                        # [REVISION-SEGURIDAD] la clave del .pfx va en la línea de comandos de signtool (visible en la lista de procesos del runner) y, si ISCC falla, el 'exit' de abajo salta el Remove-Item del .pfx (runner efímero: riesgo bajo).
             $parametros += "/Sfirma=`"$signtool`" sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 /f `"$env:RUNNER_TEMP\firma.pfx`" /p `"$env:PFX_CLAVE`" `$f"
           }
           & $iscc @parametros addon\herramientas\instalador\windows\amatista.iss

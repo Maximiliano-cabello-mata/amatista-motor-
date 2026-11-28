@@ -37,6 +37,7 @@ CRUDAS = {h["id"]: h for h in CRUDO["habilidades"]}
 
 
 def _taller_de(hid):
+    """Taller del catálogo que contiene la habilidad."""
     return next(t for t in CATALOGO.talleres if hid in t.habilidades)
 
 
@@ -79,6 +80,7 @@ def _inicio(datos):
 
 
 def _solucion(datos, piezas):
+    """Escena de la solución de un caso (desde sus pasos o sus piezas)."""
     if "solucion" in datos:
         return escena_desde_pasos(datos["solucion"])
     e = Escena()
@@ -89,10 +91,12 @@ def _solucion(datos, piezas):
 
 @pytest.fixture(scope="module")
 def motor():
+    """Fixture: motor por defecto."""
     return create_default_engine()
 
 
 def test_nueve_talleres_uno_por_modulo_del_plan():
+    """Comprueba que hay 9 talleres, uno por módulo del plan, con su proyecto."""
     plan = load_curriculum(json.loads(CURSOS.read_text(encoding="utf-8")))
     modulos = [(c.id, m.number, m.practice, m.taller) for c in plan.courses for m in c.modules]
     assert len(CATALOGO.talleres) == len(modulos) == 9
@@ -103,11 +107,13 @@ def test_nueve_talleres_uno_por_modulo_del_plan():
 
 
 def test_cada_habilidad_esta_en_un_solo_taller():
+    """Comprueba que cada habilidad está exactamente en un taller."""
     vistas = [h for t in CATALOGO.talleres for h in t.habilidades]
     assert sorted(vistas) == sorted(CATALOGO.habilidades), "una habilidad sin taller o en dos talleres"
 
 
 def test_los_repasos_vienen_de_talleres_anteriores():
+    """Comprueba que los repasos de un taller vienen de talleres anteriores."""
     orden = [t.id for t in CATALOGO.talleres]
     for t in CATALOGO.talleres:
         for hid in t.repasa:
@@ -115,6 +121,7 @@ def test_los_repasos_vienen_de_talleres_anteriores():
 
 
 def test_cada_leccion_de_la_plataforma_tiene_su_taller():
+    """Comprueba que cada taller tiene su lección en la plataforma y viceversa."""
     talleres = {t.id: t for t in CATALOGO.talleres}
     vistos = set()
     # Contrato con la web: las lecciones viven en su repositorio.
@@ -135,6 +142,7 @@ def test_cada_leccion_de_la_plataforma_tiene_su_taller():
 
 @pytest.mark.parametrize("hid", sorted(CATALOGO.habilidades))
 def test_la_demostracion_cabe_en_24_segundos(hid):
+    """Comprueba que cada demostración cabe en la duración máxima."""
     h = CATALOGO.habilidad(hid)
     linea = linea_de_tiempo(h.demo, h.titulo)
     assert linea.pasos and linea.duracion <= MAXIMO
@@ -142,6 +150,7 @@ def test_la_demostracion_cabe_en_24_segundos(hid):
 
 @pytest.mark.parametrize("nombre,actividad,datos", CASOS, ids=[c[0] for c in CASOS])
 def test_la_solucion_se_logra_y_el_inicio_no(nombre, actividad, datos, motor):
+    """Comprueba que la práctica generada compila, la solución aprueba y el inicio no."""
     assert actividad is not None, nombre
     practica_datos = practica_de_actividad(CATALOGO, actividad)
     assert practica_datos is not None, nombre

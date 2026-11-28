@@ -36,15 +36,18 @@ NIVEL_SILENCIOSO = "silencioso"
 
 
 def nivel():
+    """Nivel de acompañamiento elegido en preferencias (silencioso, acompañado…)."""
     p = ajustes.prefs()
     return p.acompanamiento if p else NIVEL_ACOMPANADO
 
 
 def guia_actual():
+    """Guía (Guidance) del paso actual calculada en la última evaluación, o None."""
     return ESTADO["guia"]
 
 
 def reiniciar():
+    """Reinicia la guía, el acompañante, los avisos y los contadores de ayuda (y la misión)."""
     from . import mision
 
     mision.reiniciar()
@@ -53,6 +56,7 @@ def reiniciar():
 
 
 def _companion(practica_id):
+    """Acompañante del motor para la práctica (se recrea al cambiar de práctica, con los umbrales de preferencias)."""
     if ESTADO["practica"] != practica_id or ESTADO["companion"] is None:
         p = ajustes.prefs()
         ESTADO["companion"] = _motor.guia.Companion(
@@ -73,6 +77,7 @@ def avisar(titulo, texto="", tono="animo"):
 
 
 def avisos_vigentes():
+    """Avisos flotantes que aún no caducaron (purga los vencidos)."""
     ahora = time.time()
     ESTADO["avisos"] = [a for a in ESTADO["avisos"] if a["hasta"] > ahora]
     return ESTADO["avisos"]
@@ -86,11 +91,13 @@ def _animar():
 
 
 def unregister():
+    """Detiene la animación de los avisos."""
     if bpy.app.timers.is_registered(_paso_animacion):
         bpy.app.timers.unregister(_paso_animacion)
 
 
 def _paso_animacion():
+    """Temporizador: redibuja mientras haya avisos vigentes (animación de entrada/salida)."""
     from . import practicas
 
     practicas.redibujar()
@@ -160,6 +167,7 @@ def _ventana_3d(context):
 def seleccionar(context, nombres):
     # Solo lo que está en la capa de vista: un objeto en una colección excluida (o de otra
     # escena) no se puede seleccionar y Blender lanza RuntimeError.
+    """Selecciona en la vista los objetos indicados que estén en la capa de vista y deja activo el primero; devuelve los seleccionados."""
     visibles = context.view_layer.objects
     objetos = [visibles[n] for n in nombres if n in visibles]
     if not objetos:
@@ -185,6 +193,7 @@ def seleccionar(context, nombres):
 
 
 def encuadrar(context):
+    """Encuadra la selección en la vista 3D (view_selected) si hay una vista disponible."""
     area, region = _ventana_3d(context)
     if area is None or bpy.app.background:
         return
@@ -211,6 +220,7 @@ def registrar_ayuda(context, target_id, tipo, nivel_pista):
 
 
 def _restriccion(eje):
+    """Restricción de ejes para operadores de transformación (solo el eje dado)."""
     return tuple(e == eje for e in "xyz")
 
 
@@ -349,6 +359,7 @@ def abrir_pestana(context, pestana):
 
 
 def _activo(context, nombres):
+    """Selecciona los objetos dados y devuelve el primero (o el activo si no hay)."""
     objetos = seleccionar(context, nombres) if nombres else []
     return objetos[0] if objetos else context.active_object
 
@@ -481,6 +492,7 @@ def _accion_v3(context, accion, interactivo):
 
 
 def _num(valor):
+    """Número con hasta 2 decimales sin ceros sobrantes («» si es None)."""
     if valor is None:
         return ""
     texto = f"{valor:.2f}".rstrip("0").rstrip(".")

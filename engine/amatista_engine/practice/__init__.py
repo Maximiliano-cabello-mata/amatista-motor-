@@ -1,3 +1,4 @@
+"""API pública de prácticas: leer/escribir (loader), compilar (compiler), esquemas y plantillas."""
 from .compiler import CompileResult, compile_practice
 from .loader import dump_practice, dumps_practice, load_practice, parse_practice
 from .schema import SUPPORTED_SCHEMA, SUPPORTED_SCHEMAS

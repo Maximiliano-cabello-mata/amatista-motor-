@@ -6,6 +6,7 @@
 
 Sale con código 1 si algo falla. No necesita red: el servidor no se usa.
 """
+# [REVISION-MUERTO] imports sin uso en este archivo: importlib, re, Diseno, dibujar_todo, _limpiar, _escena_nueva, _inicio_de_blender (verificado con AST/grep).
 import importlib
 import json
 import re
@@ -52,6 +53,7 @@ from suites_blender.suite_motor import (
 )
 from suites_blender.suite_taller import (
     probar_taller,
+    # [REVISION-BUG] probar_talleres_nuevos se importa pero NUNCA se llama en main(): la suite de los módulos 2-9 dejó de correr desde el commit 7182918 (modularización). Agregar probar_talleres_nuevos(contexto) a la lista.
     probar_talleres_nuevos,
     probar_recorrido,
 )
@@ -64,6 +66,7 @@ from suites_blender.suite_integracion import (
 )
 
 def main():
+    """Suite completa dentro de Blender: registra el add-on desde cero y comprueba alumno, autor, motor y taller; imprime cada revisión."""
     print(f"Blender {bpy.app.version_string}")
     bpy.ops.wm.read_factory_settings(use_empty=True)
 

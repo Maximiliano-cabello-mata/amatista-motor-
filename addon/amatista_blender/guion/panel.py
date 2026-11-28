@@ -25,12 +25,14 @@ ICONO = {"hecho": "CHECKMARK", "actual": "PLAY", "pendiente": "DOT"}
 
 
 def _g():
+    """Módulo del guion (import diferido para evitar ciclos)."""
     from .. import guion
 
     return guion
 
 
 def _habilidad_para(herramienta):
+    """Habilidad del catálogo del taller asociada a una herramienta (para la demo «Mírame»), o None."""
     try:
         from ..taller import datos
 
@@ -53,9 +55,11 @@ class AMATISTA_PT_guion(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        """Visible cuando el guion paso a paso está activo en la escena."""
         return _g().activo(context.scene)
 
     def draw(self, context):
+        """Panel del guion: el paso que toca (qué hacer, dónde está la herramienta, la señal), botones de pista/Mírame/abrir y la lista de pasos; durante la demo, «Mira»."""
         g = _g()
         v = g.vista()
         layout = self.layout
@@ -134,6 +138,7 @@ class AMATISTA_PT_guion(bpy.types.Panel):
         self._lista(layout, v)
 
     def _lista(self, layout, v):
+        """Lista de pasos del guion con el estado de cada uno (hecho, actual, pendiente)."""
         if not v["pasos"]:
             return
         col = layout.column(align=True)
@@ -153,6 +158,7 @@ class AMATISTA_OT_guion_pista(bpy.types.Operator):
     nivel: bpy.props.IntProperty(default=0, min=0, max=3)
 
     def execute(self, context):
+        """Pide la pista del nivel indicado para el paso actual; avisa si no hay paso pendiente."""
         p = _g().pedir_pista(context, self.nivel)
         if p is None:
             self.report({"INFO"}, "No hay un paso pendiente.")
@@ -167,6 +173,7 @@ class AMATISTA_OT_guion_senal_otra_vez(bpy.types.Operator):
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
+        """Botón «otra vez»: repite la señal del paso (p. ej. volver a elegir la herramienta); avisa si no hay nada que señalar."""
         if _g().repetir_senal() is None:
             self.report({"INFO"}, "No hay nada que señalar en este paso.")
         return {"FINISHED"}
@@ -180,6 +187,7 @@ class AMATISTA_OT_guion_abrir(bpy.types.Operator):
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
+        """Abre la ventana de la herramienta del paso (p. ej. Guardar como, con un nombre «mi_….blend» sugerido); si no puede, remite al atajo de la pista."""
         g = _g()
         paso = g.paso_actual()
         if paso is None:
@@ -204,6 +212,7 @@ class AMATISTA_OT_guion_mirame(bpy.types.Operator):
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
+        """Botón «Mírame»: reproduce la demostración de la habilidad del paso actual en la vista 3D."""
         from ..taller import demo, sesion
 
         g = _g()
@@ -225,11 +234,13 @@ CLASES = (AMATISTA_PT_guion, AMATISTA_OT_guion_pista, AMATISTA_OT_guion_senal_ot
 
 
 def register():
+    """Registra las clases del panel del guion."""
     for clase in CLASES:
         bpy.utils.register_class(clase)
 
 
 def unregister():
+    """Desregistra las clases del panel del guion (ignora las que no estaban)."""
     for clase in reversed(CLASES):
         try:
             bpy.utils.unregister_class(clase)

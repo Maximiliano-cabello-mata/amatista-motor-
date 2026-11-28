@@ -23,6 +23,7 @@ RAMAS = RAIZ / "practices" / "ramas"
 
 
 def _ramas(_args):
+    """Subcomando «ramas»: lista las ramas resueltas y sus problemas; 1 si hay problemas."""
     todas = ramas.cargar_ramas(RAMAS)
     for r in todas.values():
         f = ramas.resolver(r, todas)
@@ -34,6 +35,7 @@ def _ramas(_args):
 
 
 def _perfiles(_args):
+    """Subcomando «perfiles»: lista los perfiles de interfaz y las herramientas que no saben ubicar."""
     for p in perfiles.todos().values():
         faltan = p.faltan()
         print(f"{p.software:8} {p.estado:9} {len(p.lugares):3} lugares" + (f"  faltan: {', '.join(faltan)}" if faltan else ""))
@@ -41,6 +43,7 @@ def _perfiles(_args):
 
 
 def _extensiones(_args):
+    """Subcomando «extensiones»: lista las extensiones incluidas y a qué puntos aportan."""
     for ext_id in extensiones.disponibles():
         e = extensiones.crear(ext_id)
         print(f"{e.id:24} {e.version:6} {', '.join(sorted(e.aporta))}: {e.descripcion}")
@@ -48,6 +51,7 @@ def _extensiones(_args):
 
 
 def _turno(args):
+    """Subcomando «turno»: simula un turno del corazón para una práctica y rama con el adaptador simulado e imprime el JSON."""
     todas = ramas.cargar_ramas(RAMAS)
     rama = todas[args.rama]
     practica = load_practice(args.practica)
@@ -60,6 +64,7 @@ def _turno(args):
 
 
 def main(argv=None):
+    """CLI de herramientas del Corazón para desarrolladores del motor (sin Blender)."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="orden", required=True)
     sub.add_parser("ramas").set_defaults(f=_ramas)

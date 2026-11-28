@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+# [REVISION-MUERTO] ``Sequence`` sin uso; tampoco se usan ExampleDefinition, ReferenceModel ni ReferencePart importados abajo.
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from ..errors import InvalidPracticeError
@@ -52,6 +53,7 @@ from .schema import (
     SUPPORTED_SCHEMAS,
     VISUALES,
 )
+# [REVISION-MUERTO] re-exportaciones de compatibilidad tras partir el módulo: _dump_objetivo, _dump_pildora, _dump_referencia, dumps_practice (aquí), CON_NIVEL, FIGURAS, INYECTADOS_EJEMPLO, OBJETIVO_EJEMPLO, PESO_EJEMPLO, _aspectos_validos, _etiquetas, _inyectados, _vector y aspectos_de no se importan desde loader en ningún archivo del repo (solo dump_practice y pieza_como_dict, que sí se usan vía loader). Decidir si se conservan por la API externa.
 from .dumper import (
     _dump_objetivo,
     _dump_pildora,
@@ -82,12 +84,19 @@ class _Errores:
     """Acumula errores de estructura y sintaxis al leer una práctica JSON."""
 
     def __init__(self) -> None:
+        """Empieza sin errores acumulados."""
         self.lista: List[str] = []
 
     def add(self, mensaje: str) -> None:
+        """Anota un error de la práctica para mostrárselo al autor junto con los demás (no corta la lectura)."""
         self.lista.append(mensaje)
 
     def texto(self, data: Dict[str, Any], key: str, donde: str = "", obligatorio: bool = True) -> str:
+        """Lee ``data[key]`` como texto recortado; anota un error si falta, no es texto o es demasiado largo.
+
+        ``donde`` es el prefijo de la ruta en el JSON para el mensaje (p. ej. «targets[0].»).
+        Si no es obligatorio y falta, devuelve «».
+        """
         valor = data.get(key)
         if valor is None and not obligatorio:
             return ""
@@ -99,6 +108,7 @@ class _Errores:
         return valor.strip()
 
     def lista_ids(self, valor: Any, donde: str) -> tuple:
+        """Lee una lista de ids válidos (PATRON_ID); anota un error y devuelve () si no lo es."""
         if valor is None:
             return ()
         if not isinstance(valor, list) or not all(isinstance(x, str) and PATRON_ID.match(x) for x in valor):
@@ -108,6 +118,10 @@ class _Errores:
 
 
 def _parse_item_pista(pista: Any, nivel: int, donde: str, e: _Errores) -> Optional[Hint]:
+    """Convierte una pista del JSON («texto» o {level, text}) en Hint; ``nivel`` es su posición (1..n) por defecto.
+
+    Anota un error y devuelve None si la pista está mal formada.
+    """
     if isinstance(pista, str) and pista.strip():
         return Hint(level=nivel, text=pista.strip())
     if isinstance(pista, dict) and isinstance(pista.get("text"), str) and pista["text"].strip():
@@ -121,6 +135,10 @@ def _parse_item_pista(pista: Any, nivel: int, donde: str, e: _Errores) -> Option
 
 
 def _pistas(raw: Any, donde: str, e: _Errores) -> tuple:
+    """Lee la lista de pistas de un objetivo y la devuelve ordenada por nivel.
+
+    Anota errores si no es lista, supera MAX_PISTAS o repite niveles.
+    """
     if raw is None:
         return ()
     if not isinstance(raw, list):
@@ -140,6 +158,10 @@ def _pistas(raw: Any, donde: str, e: _Errores) -> tuple:
 
 
 def _parse_paso_guia(paso: Any, donde: str, e: _Errores) -> Optional[GuideStepDefinition]:
+    """Convierte un micro paso de la guía («texto» o {text, keys}) en GuideStepDefinition; None si es inválido.
+
+    Las teclas son las que la tarjeta guía muestra al alumno («S», «Z», «Enter»), hasta MAX_TECLAS.
+    """
     if isinstance(paso, str) and paso.strip():
         return GuideStepDefinition(paso.strip())
     if not (isinstance(paso, dict) and isinstance(paso.get("text"), str) and paso["text"].strip()):
@@ -205,6 +227,13 @@ def _roles(raw: Any, e: _Errores) -> tuple:
 
 
 def _objetivo(raw: Any, index: int, e: _Errores, ids: set, lista: str = "targets") -> Optional[TargetDefinition]:
+    """Valida y construye un objetivo (o vigilante, si ``lista`` = «guards») desde el JSON.
+
+    Comprueba id único y con formato válido, validador, params (admite el atajo
+    de poner los parámetros al nivel del objetivo), peso, requisitos, pistas,
+    mensajes, guía, arreglo y etapa. Añade el id a ``ids``. Los errores se anotan en ``e``;
+    devuelve None si el objetivo no es un objeto.
+    """
     donde = f"{lista}[{index}]."
     if not isinstance(raw, dict):
         e.add(f"{lista}[{index}] debe ser un objeto")
@@ -258,6 +287,10 @@ def _objetivo(raw: Any, index: int, e: _Errores, ids: set, lista: str = "targets
 
 
 def _arreglo(raw: Any, donde: str, e: _Errores) -> Optional[FixDefinition]:
+    """Lee el arreglo «Hazlo conmigo» de un vigilante («accion» o {action, label}); None si no hay.
+
+    La acción debe estar en ARREGLOS; si no, anota un error.
+    """
     if raw is None:
         return None
     if isinstance(raw, str):
@@ -269,6 +302,7 @@ def _arreglo(raw: Any, donde: str, e: _Errores) -> Optional[FixDefinition]:
 
 
 def _disparo(raw: Any, donde: str, e: _Errores) -> PillTrigger:
+    """Lee cuándo se muestra una píldora (start, target, guard, mode, tool) y valida los campos que exige cada caso."""
     if raw is None:
         return PillTrigger()
     if isinstance(raw, str):
@@ -292,6 +326,10 @@ def _disparo(raw: Any, donde: str, e: _Errores) -> PillTrigger:
 
 
 def _pregunta(raw: Any, donde: str, e: _Errores) -> Optional[PillCheck]:
+    """Lee la pregunta de repaso de una píldora: enunciado, de 2 a 4 opciones y el índice de la respuesta correcta.
+
+    Anota un error y devuelve None si algo no cuadra.
+    """
     if raw is None:
         return None
     opciones = raw.get("options") if isinstance(raw, dict) else None
@@ -312,6 +350,7 @@ def _pregunta(raw: Any, donde: str, e: _Errores) -> Optional[PillCheck]:
 
 
 def _parse_item_pildora(p: Any, i: int, e: _Errores, ids: set) -> Optional[PillDefinition]:
+    """Valida y construye una píldora de teoría (id único, texto corto, teclas, visual, disparo, pregunta)."""
     donde = f"pills[{i}]."
     if not isinstance(p, dict):
         e.add(f"pills[{i}] debe ser un objeto")
@@ -350,6 +389,7 @@ def _parse_item_pildora(p: Any, i: int, e: _Errores, ids: set) -> Optional[PillD
 
 
 def _pildoras(raw: Any, e: _Errores) -> tuple:
+    """Lee la lista «pills» de la práctica (hasta MAX_PILDORAS) y devuelve las válidas."""
     if raw is None:
         return ()
     if not isinstance(raw, list):
@@ -366,6 +406,7 @@ def _pildoras(raw: Any, e: _Errores) -> tuple:
 
 
 def _lugar(raw: Any, e: _Errores) -> CoursePlace:
+    """Lee el lugar de la práctica en el curso {id, module, lesson, next}; vacío si no se indica."""
     if raw is None:
         return CoursePlace()
     if not isinstance(raw, dict):
@@ -384,6 +425,7 @@ def _lugar(raw: Any, e: _Errores) -> CoursePlace:
 
 
 def _inicio(raw: Any, e: _Errores) -> StarterDefinition:
+    """Lee cómo empieza la escena del alumno (starter): mantenerla, vaciarla, construir algo o partir de otra práctica."""
     if raw is None:
         return StarterDefinition()
     if not isinstance(raw, dict) or raw.get("scene", "keep") not in ESCENAS_INICIALES:
@@ -400,6 +442,12 @@ def _inicio(raw: Any, e: _Errores) -> StarterDefinition:
 def _validar_encabezado(
     data: Dict[str, Any], e: _Errores
 ) -> tuple[str, str, str, int, int, Optional[int]]:
+    """Valida la cabecera de la práctica y devuelve (schema, id, título, nivel, versión, minutos estimados).
+
+    Raises:
+        InvalidPracticeError: si el schema no está soportado (no tiene sentido seguir leyendo).
+    Los demás problemas se anotan en ``e``; también avisa si se usan campos de la v2 con schema v1.
+    """
     schema = e.texto(data, "schema")
     if schema and schema not in SUPPORTED_SCHEMAS:
         raise InvalidPracticeError(
@@ -436,6 +484,7 @@ def _validar_encabezado(
 
 
 def _validar_herramientas(data: Dict[str, Any], e: _Errores) -> tuple[Optional[str], Dict[str, Any]]:
+    """Lee la versión mínima de Blender («blender.min») y el bloque «tools» {allowed, warn}; devuelve ambos."""
     blender = data.get("blender") or {}
     blender_min = None
     if not isinstance(blender, dict):
@@ -454,6 +503,7 @@ def _validar_herramientas(data: Dict[str, Any], e: _Errores) -> tuple[Optional[s
 
 
 def _validar_targets(raw_targets: Any, e: _Errores) -> List[TargetDefinition]:
+    """Lee y valida la lista de objetivos (al menos uno, como mucho MAX_OBJETIVOS, pesos que sumen > 0)."""
     targets = []
     if not isinstance(raw_targets, list) or not raw_targets:
         e.add("'targets' debe contener al menos un objetivo")
@@ -473,6 +523,7 @@ def _validar_targets(raw_targets: Any, e: _Errores) -> List[TargetDefinition]:
 
 
 def _validar_vigilantes(crudos_v: Any, targets: List[TargetDefinition], e: _Errores) -> List[TargetDefinition]:
+    """Lee los vigilantes («guards»); sus ids no pueden repetir los de los objetivos."""
     if crudos_v is None:
         return []
     if not isinstance(crudos_v, list) or len(crudos_v) > MAX_VIGILANTES:
@@ -489,6 +540,7 @@ def _validar_vigilantes(crudos_v: Any, targets: List[TargetDefinition], e: _Erro
 
 
 def _validar_repaso(repaso: Any, e: _Errores) -> tuple:
+    """Lee «review»: lista de píldoras de prácticas anteriores con formato «practica#pildora» para el repaso espaciado."""
     if repaso is None:
         return ()
     if (
@@ -513,6 +565,15 @@ def parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
 
 
 def _parse_practice(data: Dict[str, Any]) -> PracticeDefinition:
+    """Convierte el JSON de una práctica en PracticeDefinition, juntando todos los errores antes de fallar.
+
+    Valida cabecera, herramientas, objetivos, vigilantes, repaso, referencia,
+    roles, ejemplo resuelto y píldoras, y resuelve los objetivos que dependen del
+    modelo de referencia o del ejemplo.
+
+    Raises:
+        InvalidPracticeError: con la lista completa de errores si hay alguno.
+    """
     if not isinstance(data, dict):
         raise InvalidPracticeError("La práctica debe ser un objeto JSON")
     e = _Errores()

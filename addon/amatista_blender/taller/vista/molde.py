@@ -39,6 +39,7 @@ _CACHE = {"clave": None, "formas": []}
 
 
 def _cubo():
+    """Vértices, triángulos y aristas de un cubo unitario centrado (para dibujar piezas del molde)."""
     v = [Vector((x, y, z)) for x in (-0.5, 0.5) for y in (-0.5, 0.5) for z in (-0.5, 0.5)]
     caras = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)]
     tris = [t for a, b, c, d in caras for t in ((a, b, c), (a, c, d))]
@@ -66,6 +67,7 @@ def _cilindro(arriba=0.5):
 
 
 def _esfera():
+    """Vértices, triángulos y aristas de una esfera unitaria de baja resolución."""
     v, tris, aristas = [], [], []
     filas, cols = 10, LADOS
     for r in range(filas + 1):
@@ -86,6 +88,7 @@ def _esfera():
 
 
 def _plano():
+    """Vértices, triángulos y aristas de un plano unitario."""
     v = [Vector((x, y, 0.0)) for x in (-0.5, 0.5) for y in (-0.5, 0.5)]
     return v, [(0, 1, 3), (0, 3, 2)], [(0, 1), (1, 3), (3, 2), (2, 0)]
 
@@ -97,6 +100,7 @@ FORMAS = {
 
 
 def matriz(pieza):
+    """Matriz de la pieza del molde: posición × giro (grados) × medidas."""
     medidas = [max(0.001, float(v)) for v in (pieza.get("size") or (2, 2, 2))]
     giro = Euler([math.radians(float(g)) for g in (pieza.get("rotation") or (0, 0, 0))], "XYZ")
     loc = Vector([float(v) for v in (pieza.get("location") or (0, 0, 0))])
@@ -131,6 +135,7 @@ def huella(pieza):
 
 
 def _formas(piezas, marca):
+    """Formas de las piezas (huella marcada o puntos), cacheadas mientras no cambie la lista de piezas."""
     clave = (id(piezas), len(piezas), marca)
     if _CACHE["clave"] != clave:
         _CACHE["formas"] = [huella(p) if marca else puntos(p) for p in piezas]
@@ -139,10 +144,12 @@ def _formas(piezas, marca):
 
 
 def _pulso():
+    """Valor 0..1 que oscila en el tiempo para el pulso de la pieza que toca."""
     return 0.5 + 0.5 * math.sin(time.time() * 3.2)
 
 
 def _shader_lineas():
+    """Shader de líneas gruesas configurado para la región actual."""
     try:
         shader = gpu.shader.from_builtin("POLYLINE_UNIFORM_COLOR")
         region = bpy.context.region

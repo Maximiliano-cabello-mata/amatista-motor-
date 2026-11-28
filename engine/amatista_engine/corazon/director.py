@@ -36,10 +36,22 @@ NOMBRE_EN_TEXTO = re.compile(r"«([^»]{1,63})»")
 
 
 class Director:
+    """El corazón: decide, momento a momento, qué ve el alumno en el paso actual.
+
+    Lleva el guion de la práctica, el avance, el historial de uso de herramientas
+    (andamio: cuánta ayuda dar) y la señal en curso (elegir herramienta, abrir
+    menú…). Se alimenta con ``observar``/``evento`` y produce ``turno``.
+    """
     def __init__(self, practica, perfil: Perfil, capacidades: Capacidades, *, guion: Optional[Guion] = None,
                  extensiones: Optional[Extensiones] = None, historial: Optional[andamiaje.Historial] = None,
                  umbrales: Optional[andamiaje.Umbrales] = None, senal_sola: bool = True, idioma: str = "",
                  ahora: float = 0.0) -> None:
+        """Prepara el director para una práctica en un programa concreto (perfil + capacidades).
+
+        ``guion`` se deduce de la práctica si no se da; ``extensiones`` añaden
+        comportamientos; ``historial`` y ``umbrales`` fijan el andamio; ``senal_sola``
+        permite proponer señales sin que el alumno las pida.
+        """
         self.practica = practica
         self.perfil = perfil
         self.capacidades = capacidades
@@ -69,9 +81,11 @@ class Director:
 
     @property
     def practica_id(self) -> str:
+        """Id de la práctica que dirige."""
         return self.guion.practica_id
 
     def paso_actual(self) -> Optional[Paso]:
+        """Paso del guion en el que está el alumno, o None si no hay avance o ya terminó."""
         if self.avance is None or not self.avance.actual:
             return None
         return self.guion.paso(self.avance.actual)
@@ -83,6 +97,7 @@ class Director:
                 "nivel_pista": self.nivel_pista, "capacidades": self.capacidades, "perfil": self.perfil}
 
     def escalon(self, herramienta: str, ahora: float = 0.0) -> str:
+        """Escalón de ayuda para una herramienta según el historial (o el que imponga una extensión «andamio»)."""
         base = andamiaje.escalon(self.historial.uso(herramienta), ahora, self.umbrales)
         otro = self.extensiones.primera("andamio", herramienta, base, self.historial, self.contexto(ahora))
         return otro if otro in andamiaje.ESCALONES else base
@@ -134,6 +149,7 @@ class Director:
         return self.turno(ahora)
 
     def _cambiar_de_paso(self, actual: str, ahora: float) -> None:
+        """Al pasar a otro paso: descarta la señal y la pista anteriores y, si el andamio lo permite, propone la señal del paso nuevo."""
         self.senal = None  # la del paso anterior quedó cumplida: no se arrastra
         self.pista, self.nivel_pista = None, 0
         self._paso_id = actual
@@ -145,6 +161,7 @@ class Director:
             self._proponer(p, a_pedido=False, ahora=ahora)
 
     def _proponer(self, p: Paso, *, a_pedido: bool, ahora: float) -> Optional[Senal]:
+        """Elige la señal adecuada para el paso (o la que proponga una extensión) y la deja como señal en curso."""
         lugar = self.perfil.lugar(p.herramienta)
         s = senales.elegir(lugar, self.perfil, self.capacidades, a_pedido=a_pedido, primitiva=p.primitiva,
                            idioma=self.idioma, automatica=not a_pedido)
@@ -164,6 +181,7 @@ class Director:
         return None
 
     def ejecutada(self, resultado: ResultadoSenal, ahora: float) -> None:
+        """Registra el resultado de ejecutar la señal en curso y notifica el evento SENAL_HECHA."""
         if self.senal is None:
             return
         self.senal = senales.tras_ejecutar(self.senal, resultado, ahora)
@@ -171,6 +189,7 @@ class Director:
                                                    "motivo": resultado.motivo}))
 
     def revisar_senal(self, sigue: bool, ahora: float) -> None:
+        """Actualiza la señal en curso según si su efecto sigue visible en el programa (``sigue``)."""
         self.senal = senales.revisar(self.senal, sigue, ahora)
 
     def repetir_senal(self, ahora: float) -> Optional[Senal]:
@@ -192,6 +211,7 @@ class Director:
                 if isinstance(x, Pista)]
 
     def _titulos(self, ahora: float) -> List[str]:
+        """Títulos de las ayudas disponibles: qué falta, dónde, cómo y las que añadan las extensiones."""
         return [TITULOS[QUE_FALTA], TITULOS[DONDE], TITULOS[COMO]] + [x.titulo for x in self._extras(ahora)]
 
     def pedir_pista(self, ahora: float, nivel: int = 0) -> Optional[Pista]:
@@ -240,6 +260,7 @@ class Director:
         self.notificar(ev)
 
     def notificar(self, ev: Evento) -> None:
+        """Pasa un evento (con el turno actual) a las extensiones «observadores», si hay alguna."""
         if not self.extensiones.de("observadores"):
             return
         t = self.turno(ev.momento) if getattr(self, "avance", None) is not None else None
@@ -273,6 +294,11 @@ class Director:
     # --- El turno ------------------------------------------------------------------------------
 
     def turno(self, ahora: float = 0.0) -> Turno:
+        """Lo que el alumno ve ahora: paso, qué hacer, dónde está la herramienta, señal, pistas y lista de pasos.
+
+        Si no hay práctica o ya terminó, devuelve el turno correspondiente. Las
+        extensiones «turno» pueden modificarlo.
+        """
         av = self.avance
         if av is None:
             return Turno(practica_id=self.practica_id, modo=SIN_PRACTICA, titulo=self.guion.titulo,

@@ -14,6 +14,7 @@ RAIZ = ADDON.parent
 
 
 def _cargar_modulo():
+    """Carga temas.py del add-on sin bpy (importlib desde su archivo)."""
     spec = importlib.util.spec_from_file_location("amatista_temas", ADDON / "amatista_blender" / "temas.py")
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -26,6 +27,7 @@ JSON = json.loads((RAIZ / "practices" / "blender" / "temas.json").read_text(enco
 
 @pytest.fixture(autouse=True)
 def _limpio():
+    """Fixture: recarga los temas y reinicia el contador de mensajes antes de cada prueba."""
     temas.cargar(recargar=True)
     temas.ESTADO["extra"] = 0
     yield
@@ -33,16 +35,19 @@ def _limpio():
 
 
 def test_en_el_repositorio_lee_practices_blender():
+    """Comprueba que en el repositorio los temas se leen de practices/blender/temas.json."""
     assert temas.ruta_temas() == RAIZ / "practices" / "blender" / "temas.json"
     assert temas.cargar()["temas"].keys() == JSON["temas"].keys()
 
 
 def test_paquete_construido_lee_practicas_temas(tmp_path):
+    """Comprueba que en el paquete construido se lee temas.json de su carpeta."""
     (tmp_path / "temas.json").write_text(json.dumps(JSON), encoding="utf-8")
     assert temas.ruta_temas(tmp_path) == tmp_path / "temas.json"
 
 
 def test_tema_del_tren_es_el_taller():
+    """Comprueba el tema, mascota y jefe de la práctica del tren."""
     t = temas.tema_de_practica("blender.bp.m1.tren")
     assert t["id"] == "taller"
     assert t["nombre"] == "El taller de juguetes"
@@ -53,27 +58,32 @@ def test_tema_del_tren_es_el_taller():
 
 @pytest.mark.parametrize("prefijo, esperado", sorted(JSON["practicas"].items()))
 def test_cada_prefijo_lleva_a_su_tema(prefijo, esperado):
+    """Comprueba que cada prefijo de práctica lleva a su tema."""
     assert temas.tema_de_practica(prefijo + ".lo-que-sea")["id"] == esperado
 
 
 def test_prefijo_exacto_y_no_parcial():
     # «blender.bp.m10» no es del módulo 1.
+    """Comprueba que el prefijo debe coincidir completo (m10 no es m1)."""
     assert temas.id_tema("blender.bp.m10.algo") == temas.TEMA_POR_DEFECTO
     assert temas.id_tema("blender.bp.m1") == "taller"
 
 
 def test_modulo_de_la_plataforma():
+    """Comprueba que los ids de módulo de la plataforma también tienen tema."""
     assert temas.id_tema("mod_bpi_002") == "cine"
 
 
 @pytest.mark.parametrize("pid", ["blender.n1.mesa", "", None, "otra.cosa"])
 def test_sin_tema_usa_el_cristal(pid):
+    """Comprueba que sin tema se usa el tema por defecto «cristal»."""
     t = temas.tema_de_practica(pid)
     assert t["id"] == "cristal"
     assert t["mascota"]["nombre"] == "Ami"
 
 
 def test_sin_archivo_hay_respaldo(tmp_path):
+    """Comprueba que sin temas.json hay un tema de respaldo."""
     temas.cargar(tmp_path / "no-existe.json", recargar=True)
     t = temas.tema_de_practica("blender.bp.m1.tren")
     assert t["id"] == "cristal" and t["colores"]["acento"].startswith("#")
@@ -81,6 +91,7 @@ def test_sin_archivo_hay_respaldo(tmp_path):
 
 
 def test_cada_tema_tiene_lo_necesario_y_su_mascota_en_pixeles():
+    """Comprueba que cada tema tiene colores válidos, mascota, jefe y dibujo en píxeles."""
     for tid in JSON["temas"]:
         t = temas.tema(tid)
         for clave in ("acento", "suave", "cielo", "suelo"):
@@ -92,6 +103,7 @@ def test_cada_tema_tiene_lo_necesario_y_su_mascota_en_pixeles():
 
 
 def test_colores():
+    """Comprueba la conversión de colores hex a RGBA lineal y la mezcla."""
     assert temas.color_rgba("#FF0000") == (1.0, 0.0, 0.0, 1.0)
     assert temas.color_rgba("#F00", 0.5) == (1.0, 0.0, 0.0, 0.5)
     r, g, b, a = temas.color_rgba("#808080", lineal=True)
@@ -101,6 +113,7 @@ def test_colores():
 
 
 def test_mensajes_de_la_mascota_dan_la_vuelta():
+    """Comprueba el orden de los mensajes de la mascota (hola, consejo, charla, dato)."""
     t = temas.tema("taller")
     lista = temas.mensajes_mascota(t)
     m = t["mascota"]
@@ -113,6 +126,7 @@ def test_mensajes_de_la_mascota_dan_la_vuelta():
 
 
 def test_indice_cambia_cada_periodo_y_se_adelanta():
+    """Comprueba que el índice de mensaje cambia cada periodo y se puede adelantar."""
     assert temas.indice_actual(0) == temas.indice_actual(11.9)
     assert temas.indice_actual(12.0) == temas.indice_actual(0) + 1
     temas.siguiente_mensaje()
@@ -120,5 +134,6 @@ def test_indice_cambia_cada_periodo_y_se_adelanta():
 
 
 def test_voz_de_la_mascota():
+    """Comprueba que la voz antepone el nombre de la mascota."""
     assert temas.voz(temas.tema("taller"), "Listo.") == "Tuerca: Listo."
     assert temas.voz({}, "Listo.") == "Listo."

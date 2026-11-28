@@ -28,6 +28,7 @@
 #endif
 
 [Setup]
+; [REVISION-BUG] (menor) el AppId no es un GUID válido (contiene 'AMATISTA3D01', no hexadecimal); Inno lo acepta como texto, pero no debe cambiarse nunca o Windows verá otra app.
 AppId={{6F3D2A9C-4B7E-4F1A-9C2D-AMATISTA3D01}
 AppName=Amatista para Blender
 AppVersion={#Version}

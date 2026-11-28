@@ -27,6 +27,7 @@ USADA_EN = "amatista_practica_en"
 
 
 def _sesion():
+    """Módulo de sesión del taller (import diferido)."""
     from .taller import sesion
 
     return sesion
@@ -79,6 +80,7 @@ def hace_falta(context=None):
 
 
 def texto_boton():
+    """Texto del botón «Volver a …» con el nombre del destino si es corto; si no, «Volver a mi práctica»."""
     _sc, nombre = destino()
     return f"Volver a {nombre}" if nombre and len(nombre) <= 28 else "Volver a mi práctica"
 
@@ -122,6 +124,7 @@ class AMATISTA_OT_volver(bpy.types.Operator):
     bl_label = "Volver a Amatista"
 
     def execute(self, context):
+        """Botón «Volver a mi práctica»: lleva al alumno de vuelta a la escena de su práctica o taller y lo informa."""
         self.report({"INFO"}, volver(context))
         return {"FINISHED"}
 
@@ -130,10 +133,12 @@ CLASES = (AMATISTA_OT_volver,)
 
 
 def register():
+    """Registra los operadores de navegación."""
     for clase in CLASES:
         bpy.utils.register_class(clase)
 
 
 def unregister():
+    """Desregistra los operadores de navegación."""
     for clase in reversed(CLASES):
         bpy.utils.unregister_class(clase)

@@ -42,6 +42,7 @@ _cargador = import_module(_motor.engine.__name__ + ".practice.loader")
 
 
 def es_ejemplo(sc):
+    """True si la escena es la del ejemplo resuelto."""
     return bool(sc is not None and sc.get(EJEMPLO))
 
 
@@ -51,6 +52,7 @@ def _nombre(nombre):
 
 
 def _sin_prefijo(nombre):
+    """Nombre sin el prefijo de los objetos del ejemplo."""
     return nombre[len(PREFIJO):] if isinstance(nombre, str) and nombre.startswith(PREFIJO) else nombre
 
 
@@ -73,6 +75,7 @@ def capturar(sc):
 
 
 def _partes(practica):
+    """Piezas comparables del modelo de referencia de la práctica como dicts ([] si no tiene)."""
     referencia = getattr(practica, "reference", None)
     return [_cargador.pieza_como_dict(p) for p in referencia.compared] if referencia is not None else []
 
@@ -110,6 +113,7 @@ def _agregar_primitiva(bm, primitiva, medidas, matriz, segmentos=0):
 
 
 def _matriz(ubicacion, giro_grados):
+    """Matriz de transformación desde ubicación y giro en grados."""
     return Matrix.Translation(Vector(ubicacion)) @ Euler(tuple(math.radians(g) for g in giro_grados)).to_matrix().to_4x4()
 
 
@@ -161,10 +165,12 @@ def _malla(nombre, piezas, mitad="", vertices=0):
 
 
 def _entrada(nodo, *nombres):
+    """Primer input del nodo que exista entre ``nombres`` (cambian entre versiones de Blender)."""
     return next((nodo.inputs[n] for n in nombres if n in nodo.inputs), None)
 
 
 def _material(nombre, color=(0.8, 0.8, 0.8, 1.0), metal=0.0, rugosidad=0.5, transmision=0.0, alfa=1.0):
+    """Crea un material Principled con color, metálico, rugosidad, transmisión y alfa."""
     mat = bpy.data.materials.new(nombre)
     mat.use_nodes = True
     mat.diffuse_color = tuple(color)
@@ -179,6 +185,7 @@ def _material(nombre, color=(0.8, 0.8, 0.8, 1.0), metal=0.0, rugosidad=0.5, tran
 
 
 def _color_hex(texto):
+    """Color «#rrggbb» a RGBA lineal; None si no es válido."""
     texto = (texto or "").lstrip("#")
     if len(texto) != 6:
         return None
@@ -197,6 +204,7 @@ def _nombres_del_modelo(partes):
     usados = {}
 
     def nombre(base):
+        """Nombre único al estilo Blender («base», «base.001»…)."""
         n = usados.get(base, 0)
         usados[base] = n + 1
         return base if n == 0 else f"{base}.{n:03d}"
@@ -281,11 +289,13 @@ def _pintar_piezas(obj, pintadas):
 
 
 def _mirar(objeto, hacia):
+    """Orienta un objeto (cámara/luz) para que mire en la dirección dada."""
     if hacia:
         objeto.rotation_euler = Vector(hacia).to_track_quat("-Z", "Y").to_euler()
 
 
 def _armar(sc, practica):
+    """Construye en la escena ``sc`` el ejemplo resuelto: piezas, modificadores, materiales, luces, cámara y animación de la escena esperada."""
     pasos = list(practica.example.steps)
     partes = _partes(practica)
     esperada = _ejemplo.escena_esperada(pasos, partes)
@@ -389,6 +399,7 @@ def _armar(sc, practica):
 
 
 def _ventana(context):
+    """Ventana del contexto o la primera abierta."""
     ventana = getattr(context, "window", None) or getattr(bpy.context, "window", None)
     if ventana is None and bpy.context.window_manager.windows:
         ventana = bpy.context.window_manager.windows[0]
@@ -428,6 +439,7 @@ def ver_ejemplo(context):
 
 
 def volver(context):
+    """Vuelve de la escena del ejemplo a la de la práctica; devuelve el mensaje o None si no se estaba en el ejemplo."""
     sc = practicas.escena(context)
     if not es_ejemplo(sc):
         return None

@@ -80,10 +80,12 @@ class Senal:
 
     @property
     def suave(self) -> bool:
+        """True si la señal solo informa o resalta (no cambia nada en la escena del alumno)."""
         return self.tipo in SUAVES
 
     @property
     def duradera(self) -> bool:
+        """True si su efecto permanece en el programa y se puede comprobar después (p. ej. herramienta elegida, panel abierto)."""
         return self.tipo in DURADERAS
 
 
@@ -97,6 +99,7 @@ class ResultadoSenal:
 
 @dataclass(frozen=True)
 class EstadoSenal:
+    """Una señal y en qué punto de su vida está (propuesta, hecha, mostrada, perdida, cumplida, fallida) desde ``desde``."""
     senal: Senal
     estado: str = PROPUESTA
     desde: float = 0.0
@@ -115,6 +118,7 @@ class EstadoSenal:
 
     @property
     def se_puede_repetir(self) -> bool:
+        """True si tiene sentido ofrecer «otra vez» (se perdió, solo se mostró o falló, y no es un simple «decir»)."""
         return self.estado in (PERDIDA, MOSTRADA, FALLIDA) and self.senal.tipo != DECIR
 
 
@@ -137,6 +141,7 @@ TIPOS_EVENTO = (CAMBIO_ESCENA, GUARDADO, DESHACER, HERRAMIENTA, PISTA_PEDIDA, SE
 
 @dataclass(frozen=True)
 class Evento:
+    """Algo que pasó en el programa o en el corazón (tipo, momento y datos) y que se notifica a los observadores."""
     tipo: str
     momento: float = 0.0
     datos: Dict[str, Any] = field(default_factory=dict)
@@ -177,6 +182,7 @@ class Turno:
     contrato: str = CONTRATO
 
     def como_dict(self) -> Dict[str, Any]:
+        """El turno como dict JSON para el add-on o la web: incluye el estado de la señal y si se puede repetir."""
         datos = asdict(self)
         datos["senal"] = None if self.senal is None else {
             "tipo": self.senal.senal.tipo, "estado": self.senal.estado, "texto": self.senal.texto,

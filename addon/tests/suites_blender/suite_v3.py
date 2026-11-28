@@ -1,4 +1,5 @@
 # Pruebas de motor v3, temas, motor 3.4/3.5, escenas por pr?ctica y ejemplo.
+# [REVISION-MUERTO] imports sin uso: re, cubo, _armar, _abrir_actividad, _elegir, _tren_del_alumno, _aldea_del_alumno, _motor_foto, ARCHIVO_V2.
 import re
 import importlib
 import json
@@ -174,9 +175,11 @@ def probar_temas(contexto):
     sc.world.color = (0.1, 0.2, 0.3)
 
     def cielo(tema_id):
+        """Color de cielo (lineal) del tema."""
         return temas.color_rgba(temas.tema(tema_id)["colores"]["cielo"], lineal=True)[:3]
 
     def igual(a, b):
+        """True si dos colores son iguales con tolerancia."""
         return all(abs(x - y) < 1e-4 for x, y in zip(a, b))
 
     _limpiar()
@@ -322,6 +325,7 @@ def probar_motor_35(contexto):
         bpy.data.objects.remove(obj)
 
     def malla(nombre, piezas):
+        """Vértices y aristas de las piezas como una malla."""
         verts, aristas = [], []
         for p in piezas:
             puntos, lineas = silueta.malla_de_pieza(p.primitive, p.size, p.location, p.rotation, p.segments)

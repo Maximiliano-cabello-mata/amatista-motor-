@@ -59,11 +59,13 @@ TREN = PRACTICAS / "principiante/m1-tren/practica.json"
 
 @pytest.fixture(scope="module")
 def catalogo():
+    """Fixture: el catálogo de habilidades del repositorio."""
     return leer_catalogo(CATALOGO)
 
 
 @pytest.fixture(scope="module")
 def motor():
+    """Fixture: el motor con los validadores incluidos."""
     return create_default_engine()
 
 
@@ -82,6 +84,7 @@ def escena_de(piezas, mover=None):
 
 
 def test_el_catalogo_carga_con_el_taller_del_modulo_1(catalogo):
+    """Comprueba que el catálogo carga el taller del módulo 1 con su proyecto y el orden de habilidades."""
     taller = catalogo.taller(TALLER)
     assert taller is not None and taller.proyecto == "blender.bp.m1.tren"
     assert catalogo.taller_de_modulo("blender_principiante", 1).id == TALLER
@@ -92,6 +95,7 @@ def test_el_catalogo_carga_con_el_taller_del_modulo_1(catalogo):
 
 
 def test_el_catalogo_rechaza_frases_largas_y_ciclos():
+    """Comprueba que el catálogo rechaza frases demasiado largas y requisitos en ciclo."""
     base = json.loads(CATALOGO.read_text(encoding="utf-8"))
     largo = json.loads(json.dumps(base))
     largo["habilidades"][0]["que"] = " ".join(["un"] * 30)
@@ -107,6 +111,7 @@ def test_el_catalogo_rechaza_frases_largas_y_ciclos():
 
 
 def test_dos_aciertos_con_molde_llevan_a_hacerlo_solo(catalogo):
+    """Comprueba que dos o tres aciertos con molde llevan a la fase «sola»."""
     h = catalogo.habilidad("bl-escalar-eje")
     d = None
     fases = []
@@ -118,6 +123,7 @@ def test_dos_aciertos_con_molde_llevan_a_hacerlo_solo(catalogo):
 
 
 def test_acertar_con_las_teclas_a_la_vista_no_prueba_que_sepa(catalogo):
+    """Comprueba que un acierto con ayuda (teclas, demo, pista) sube menos el dominio que uno sin ayuda."""
     h = catalogo.habilidad("bl-mover")
     sin_ayuda = registrar_intento(None, h.bkt, True, 0, AHORA)
     con_teclas = registrar_intento(None, h.bkt, True, COMO, AHORA)
@@ -129,6 +135,7 @@ def test_acertar_con_las_teclas_a_la_vista_no_prueba_que_sepa(catalogo):
 
 
 def test_lo_que_no_se_practica_se_olvida(catalogo):
+    """Comprueba que el dominio decae con el tiempo sin práctica (olvido)."""
     h = catalogo.habilidad("bl-rotar")
     d = None
     for i in range(6):
@@ -139,6 +146,7 @@ def test_lo_que_no_se_practica_se_olvida(catalogo):
 
 
 def test_las_cajas_de_repaso(catalogo):
+    """Comprueba las cajas de Leitner: avanzan al acertar y vuelven a la 1 al fallar."""
     h = catalogo.habilidad("bl-mover")
     d = None
     t = AHORA
@@ -153,6 +161,7 @@ def test_las_cajas_de_repaso(catalogo):
 
 
 def test_camino_rapido_dos_pruebas_sin_ayuda(catalogo):
+    """Comprueba que dos pruebas sin ayuda bastan para dominar la habilidad."""
     h = catalogo.habilidad("bl-escalar-eje")
     d = registrar_intento(None, h.bkt, True, 0, AHORA, tipo="prueba")
     assert d.p < 0.9
@@ -161,6 +170,7 @@ def test_camino_rapido_dos_pruebas_sin_ayuda(catalogo):
 
 
 def test_el_estado_guardado_ignora_lo_que_no_entiende():
+    """Comprueba que el estado guardado ignora claves y tipos desconocidos."""
     estado = estado_desde_dict({"bl-mover": {"p": 0.5, "intentos": 2, "basura": 1}, "x": "no", 3: {}})
     assert list(estado) == ["bl-mover"] and estado["bl-mover"].intentos == 2
     assert estado_desde_dict(None) == {}
@@ -170,6 +180,7 @@ def test_el_estado_guardado_ignora_lo_que_no_entiende():
 
 
 def test_un_alumno_nuevo_empieza_mirando_la_primera_habilidad(catalogo):
+    """Comprueba que un alumno nuevo empieza con «Mira» de la primera habilidad."""
     plan = planear(catalogo, TALLER, {}, AHORA)
     assert plan.actual.tipo == MIRA and plan.actual.habilidad == "bl-agregar-primitivas"
     assert plan.puede_probar and not plan.proyecto_abierto
@@ -178,6 +189,7 @@ def test_un_alumno_nuevo_empieza_mirando_la_primera_habilidad(catalogo):
 
 
 def test_despues_de_mirar_viene_hazlo_conmigo_y_luego_hazlo_tu(catalogo):
+    """Comprueba la secuencia Mira → Hazlo conmigo (con molde) → Hazlo tú."""
     h = catalogo.habilidad("bl-agregar-primitivas")
     estado = {h.id: marcar_demo(None, h.bkt)}
     plan = planear(catalogo, TALLER, estado, AHORA)
@@ -200,6 +212,7 @@ def test_despues_de_mirar_viene_hazlo_conmigo_y_luego_hazlo_tu(catalogo):
 
 
 def test_con_todas_listas_se_abre_el_proyecto_y_despues_el_reto(catalogo):
+    """Comprueba que con todas las habilidades listas se abre el proyecto y luego el reto."""
     taller = catalogo.taller(TALLER)
     solas = {hid: replace(registrar_intento(None, catalogo.habilidad(hid).bkt, True, 0, AHORA, molde=True), p=0.8)
              for hid in taller.habilidades}
@@ -218,11 +231,13 @@ def test_con_todas_listas_se_abre_el_proyecto_y_despues_el_reto(catalogo):
 
 
 def test_el_alumno_elige_que_practicar(catalogo):
+    """Comprueba que la habilidad elegida por el alumno pasa a ser la actual."""
     plan = planear(catalogo, TALLER, {}, AHORA, elegida="bl-rotar")
     assert plan.actual.habilidad == "bl-rotar"
 
 
 def test_las_actividades_se_vuelven_a_armar_por_su_id(catalogo):
+    """Comprueba que cada actividad se reconstruye a partir de su id."""
     plan = planear(catalogo, TALLER, {}, AHORA)
     for a in (plan.actual,) + plan.siguientes:
         assert actividad_por_id(catalogo, TALLER, a.id).id == a.id
@@ -232,6 +247,7 @@ def test_las_actividades_se_vuelven_a_armar_por_su_id(catalogo):
 
 
 def test_repasos_vencidos_no_bloquean(catalogo):
+    """Comprueba que los repasos vencidos se ofrecen aparte sin bloquear la actividad."""
     h = catalogo.habilidad("bl-mover")
     d = replace(registrar_intento(None, h.bkt, True, 0, AHORA), p=0.97, caja=1, proximo=AHORA + DIA)
     plan = planear(catalogo, TALLER, {h.id: d}, AHORA + 2 * DIA)
@@ -245,6 +261,7 @@ def test_repasos_vencidos_no_bloquean(catalogo):
 
 
 def _compilar(datos):
+    """Compila la práctica generada y exige que no tenga errores."""
     practica = parse_practice(datos)
     resultado = compile_practice(practica)
     assert resultado.ok, resultado.errors
@@ -252,6 +269,7 @@ def _compilar(datos):
 
 
 def test_la_variacion_se_revisa_con_el_molde(catalogo, motor):
+    """Comprueba que la práctica de una variación usa taller.molde y se completa con las piezas."""
     a = actividad_por_id(catalogo, TALLER, "conmigo:bl-escalar-eje:tabla")
     datos = practica_de_actividad(catalogo, a)
     assert datos["id"] == "taller.bl-escalar-eje.tabla.conmigo"
@@ -262,6 +280,7 @@ def test_la_variacion_se_revisa_con_el_molde(catalogo, motor):
 
 
 def test_arreglar_la_escena_no_pasa_al_empezar(catalogo, motor):
+    """Comprueba que la escena inicial de «arreglar» no aprueba y la solución sí."""
     a = actividad_por_id(catalogo, TALLER, "tu:bl-mover:baja")
     assert a.inicio and a.modo == "molde" and a.dibujo == "marca"
     practica = _compilar(practica_de_actividad(catalogo, a))
@@ -270,6 +289,7 @@ def test_arreglar_la_escena_no_pasa_al_empezar(catalogo, motor):
 
 
 def test_guardar_se_revisa_con_sus_objetivos(catalogo):
+    """Comprueba que la habilidad de guardar se revisa con file.named y file.saved."""
     a = actividad_por_id(catalogo, TALLER, "conmigo:bl-guardar-archivo:nombre")
     datos = practica_de_actividad(catalogo, a)
     assert [t["validator"] for t in datos["targets"]] == ["file.named", "file.saved"]
@@ -277,12 +297,14 @@ def test_guardar_se_revisa_con_sus_objetivos(catalogo):
 
 
 def test_la_prueba_rapida_es_un_reto_sin_ayuda(catalogo):
+    """Comprueba que la prueba rápida es libre, sin teclas ni molde."""
     a = actividad_de_prueba(catalogo, TALLER, "bl-escalar-eje")
     assert a.tipo == "prueba" and a.modo == "libre" and a.teclas == "ocultas" and not a.molde
     _compilar(practica_de_actividad(catalogo, a))
 
 
 def test_mira_y_proyecto_no_generan_practica(catalogo):
+    """Comprueba que «Mira» y el proyecto no generan práctica al vuelo."""
     assert practica_de_actividad(catalogo, actividad_por_id(catalogo, TALLER, "mira:bl-mover")) is None
     assert practica_de_actividad(catalogo, actividad_por_id(catalogo, TALLER, f"proyecto:{TALLER}")) is None
 
@@ -296,6 +318,7 @@ RUEDA = {"primitive": "cylinder", "size": [0.8, 0.8, 0.2], "location": [0, 0.7, 
 
 
 def test_el_molde_dice_que_falta_sin_numeros():
+    """Comprueba que el molde indica la pieza que falta sin dar números."""
     r = revisar_molde([CUERPO, CHIMENEA], escena_de([CUERPO]))
     assert [p.estado for p in r.piezas] == [LLENA, VACIA]
     assert r.pieza_actual.nombre == "Chimenea" and "cilindro" in r.pieza_actual.mensaje
@@ -304,6 +327,7 @@ def test_el_molde_dice_que_falta_sin_numeros():
 
 
 def test_el_molde_reconoce_la_forma_equivocada():
+    """Comprueba que el molde detecta una primitiva equivocada."""
     cubo = dict(CHIMENEA, primitive="cube")
     r = revisar_molde([CUERPO, CHIMENEA], escena_de([CUERPO, cubo]))
     chimenea = r.piezas[1]
@@ -311,6 +335,7 @@ def test_el_molde_reconoce_la_forma_equivocada():
 
 
 def test_el_molde_ve_la_rueda_acostada_y_la_que_flota():
+    """Comprueba que el molde detecta piezas mal giradas o flotando."""
     acostada = dict(RUEDA, rotation=[0, 0, 0], location=[0, 0.7, 0.1])
     r = revisar_molde([RUEDA], escena_de([acostada]))
     assert r.piezas[0].motivo == "giro" and "de pie" in r.piezas[0].mensaje
@@ -319,12 +344,14 @@ def test_el_molde_ve_la_rueda_acostada_y_la_que_flota():
 
 
 def test_una_chimenea_bajita_no_es_un_giro():
+    """Comprueba que una pieza con una medida corta se reporta como tamaño, no como giro."""
     bajita = dict(CHIMENEA, size=[0.4, 0.4, 0.25], location=[1, 0, 1.125])
     r = revisar_molde([CUERPO, CHIMENEA], escena_de([CUERPO, bajita]))
     assert r.piezas[1].motivo == "tamano" and "altura" in r.piezas[1].mensaje
 
 
 def test_en_libre_la_figura_se_acomoda_donde_este():
+    """Comprueba que en modo libre la figura desplazada se acepta y en molde no."""
     piezas = [CUERPO, CHIMENEA]
     corrida = escena_de(piezas, mover={0: (5, 3, 0), 1: (5, 3, 0)})
     assert not revisar_molde(piezas, corrida, "molde").completa
@@ -332,12 +359,14 @@ def test_en_libre_la_figura_se_acomoda_donde_este():
 
 
 def test_los_niveles_altos_piden_mas_exactitud():
+    """Comprueba que la tolerancia del molde disminuye en niveles altos."""
     larga = dict(CUERPO, size=[3.6, 1.2, 1])
     assert revisar_molde([CUERPO], escena_de([larga]), nivel=1).completa
     assert not revisar_molde([CUERPO], escena_de([larga]), nivel=5).completa
 
 
 def test_el_proyecto_del_tren_tiene_molde_y_libre(motor):
+    """Comprueba que el proyecto del tren se completa en molde y en libre."""
     tren = parse_practice(json.loads(TREN.read_text(encoding="utf-8")))
     exacta = Escena().referencia(tren.reference.parts).construir()
     r = revisar_proyecto(tren, exacta)
@@ -351,6 +380,7 @@ def test_el_proyecto_del_tren_tiene_molde_y_libre(motor):
 
 
 def test_la_escalera_tiene_freno_antes_de_las_teclas(catalogo):
+    """Comprueba que la escalera de pistas frena antes de mostrar las teclas."""
     h = catalogo.habilidad("bl-mover")
     e = escalera_para(ACOMPANADA, AHORA)
     e, nivel, _ = pedir_pista(e, AHORA + 1)
@@ -368,6 +398,7 @@ def test_la_escalera_tiene_freno_antes_de_las_teclas(catalogo):
 
 
 def test_una_habilidad_nueva_no_tiene_freno_y_una_sola_tiene_techo():
+    """Comprueba que habilidades nuevas no tienen freno y las de fase «sola» o retos tienen techo de ayuda."""
     e = escalera_para(NUEVA, AHORA)
     for esperado in (QUE, CON_QUE, COMO):
         e, nivel, _ = pedir_pista(e, AHORA + 1)
@@ -383,6 +414,7 @@ def test_una_habilidad_nueva_no_tiene_freno_y_una_sola_tiene_techo():
 
 
 def test_atascado_ofrece_la_siguiente_pista():
+    """Comprueba cuándo se considera atascado al alumno para ofrecerle la siguiente pista."""
     e = escalera_para(ACOMPANADA, AHORA)
     assert not atascado(e, AHORA + 30)
     assert atascado(e, AHORA + 95)
@@ -394,6 +426,7 @@ def test_atascado_ofrece_la_siguiente_pista():
 
 
 def test_la_pista_que_habla_del_modelo():
+    """Comprueba que la pista «qué falta» nombra la pieza del modelo sin teclas."""
     r = revisar_molde([CUERPO, CHIMENEA], escena_de([CUERPO]))
     p = pista_para(QUE, None, r.pieza_actual)
     assert "Chimenea" in p.texto and not p.teclas
@@ -403,6 +436,7 @@ def test_la_pista_que_habla_del_modelo():
 
 
 def test_cada_demostracion_dura_poco_y_muestra_teclas(catalogo):
+    """Comprueba que las demos duran como máximo MAXIMO y muestran sus teclas."""
     for h in catalogo.habilidades.values():
         linea = linea_de_tiempo(h.demo, h.titulo)
         assert 0 < linea.duracion <= MAXIMO, h.id
@@ -413,6 +447,7 @@ def test_cada_demostracion_dura_poco_y_muestra_teclas(catalogo):
 
 
 def test_una_demostracion_larga_se_acelera():
+    """Comprueba que una demo muy larga se comprime a la duración máxima."""
     pasos = [{"mover": {"objeto": "Caja", "eje": "x", "a": [i, 0, 0]}} for i in range(30)]
     linea = linea_de_tiempo(pasos)
     assert linea.duracion == pytest.approx(MAXIMO) and len(linea.pasos) == 30
@@ -422,6 +457,7 @@ def test_una_demostracion_larga_se_acelera():
 
 
 def test_el_validador_del_molde_esta_registrado(motor):
+    """Comprueba que taller.molde está registrado y aprueba/rechaza correctamente."""
     funcion = motor.registry.get("taller.molde")
     assert funcion is not None
     params = {"parts": [CUERPO], "mode": "molde", "level": 1}
@@ -435,5 +471,6 @@ def test_el_validador_del_molde_esta_registrado(motor):
 
 
 def test_parametros_bkt_por_defecto():
+    """Comprueba que los parámetros BKT por defecto están en rangos razonables."""
     p = ParametrosBKT()
     assert 0 < p.L0 < 0.3 and 0 < p.G < 0.5 and 0 < p.S < 0.5

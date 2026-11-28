@@ -43,6 +43,7 @@ def result(
     message: str,
     details: Optional[Dict[str, Any]] = None,
 ) -> ValidationResult:
+    """Construye el ValidationResult de un objetivo (copia id y validador del objetivo)."""
     return ValidationResult(
         target_id=target.id,
         validator=target.validator,
@@ -53,6 +54,11 @@ def result(
 
 
 def text(target: TargetDefinition, name: str, required: bool = False) -> str:
+    """Parámetro de texto del objetivo, recortado; «» si falta.
+
+    Raises:
+        ValueError: si ``required`` y el parámetro falta o está vacío.
+    """
     valor = str(target.params.get(name, "") or "").strip()
     if required and not valor:
         raise ValueError(f"{target.validator} requiere params.{name}")
@@ -60,6 +66,11 @@ def text(target: TargetDefinition, name: str, required: bool = False) -> str:
 
 
 def number(target: TargetDefinition, name: str, default: float) -> float:
+    """Parámetro numérico del objetivo como float (``default`` si falta).
+
+    Raises:
+        ValueError: si el valor no se puede convertir en número.
+    """
     valor = target.params.get(name, default)
     try:
         return float(valor)
@@ -68,6 +79,11 @@ def number(target: TargetDefinition, name: str, default: float) -> float:
 
 
 def axis(target: TargetDefinition, default: str = "z") -> Tuple[str, int]:
+    """Eje pedido en params.axis como («x»|«y»|«z», índice 0..2).
+
+    Raises:
+        ValueError: si el eje no es válido.
+    """
     eje = str(target.params.get("axis", default)).lower()
     if eje not in EJES:
         raise ValueError(f"{target.validator} requiere axis x, y o z")
@@ -75,6 +91,7 @@ def axis(target: TargetDefinition, default: str = "z") -> Tuple[str, int]:
 
 
 def selector(target: TargetDefinition) -> Dict[str, str]:
+    """Selector de objetos del objetivo: solo las claves de SELECTORES (role, name, type, primitive…) que tienen valor."""
     return {clave: text(target, clave) for clave in SELECTORES if text(target, clave)}
 
 
@@ -100,12 +117,15 @@ def describe(sel: Dict[str, str], practice_label=None) -> str:
 
 
 def primitiva(nombre: str) -> str:
+    """Nombre canónico de primitiva de Blender a partir de alias en español o inglés («cubo» → «cube»)."""
     clave = str(nombre or "").strip().lower()
     return PRIMITIVAS.get(clave, clave)
 
 
 def select(scene: SceneState, sel: Dict[str, str]) -> Tuple[SceneObject, ...]:
+    """Objetos de la escena que cumplen todas las condiciones del selector (rol, nombre, prefijo, tipo, etiqueta, colección, primitiva)."""
     def coincide(obj: SceneObject) -> bool:
+        """True si el objeto cumple cada clave presente en el selector."""
         if "role" in sel and sel["role"] not in obj.roles:
             return False
         if "name" in sel and obj.name != sel["name"]:
@@ -141,6 +161,7 @@ def count_rule(target: TargetDefinition, default_min: Optional[int] = None) -> T
 
 
 def count_ok(found: int, minimo: Optional[int], maximo: Optional[int]) -> bool:
+    """True si ``found`` está entre ``minimo`` y ``maximo`` (None = sin límite)."""
     return (minimo is None or found >= minimo) and (maximo is None or found <= maximo)
 
 
@@ -196,4 +217,5 @@ def count_message(found: int, minimo: Optional[int], maximo: Optional[int], que:
 
 
 def in_range(value: float, minimo: float, maximo: float) -> bool:
+    """True si ``value`` está en el intervalo cerrado [minimo, maximo]."""
     return minimo <= value <= maximo

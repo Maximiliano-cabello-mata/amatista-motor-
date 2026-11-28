@@ -26,6 +26,7 @@ ICONO_CATEGORIA = {
 
 
 def icono(herramienta):
+    """Icono de Blender para una herramienta según su categoría (cámara aparte)."""
     if herramienta.id.startswith("camera"):
         return "CAMERA_DATA"
     return ICONO_CATEGORIA.get(herramienta.category, "TOOL_SETTINGS")
@@ -51,6 +52,7 @@ def actuales(practica, reporte=None):
 
 
 def dibujar(layout, context, practica, reporte):
+    """Bloque «Tus herramientas»: estado del modo enfocado (Ver todo/Enfocar) y las herramientas de la práctica con «Usar» y «¿Cómo se usa?»."""
     todas, del_paso = actuales(practica, reporte)
     cabecera = layout.row(align=True)
     if enfoque.activo():
@@ -108,6 +110,7 @@ def usar(context, herramienta):
         bpy.ops.object.mode_set(mode="EDIT")
 
     def en_vista(funcion, *args, **kwargs):
+        """Ejecuta la función con el contexto de la vista 3D (si se encontró) para que el operador funcione desde el panel."""
         if area is not None:
             with context.temp_override(window=ventana, area=area, region=region):
                 return funcion(*args, **kwargs)
@@ -142,6 +145,7 @@ def usar(context, herramienta):
 
 
 class AMATISTA_OT_usar_herramienta(bpy.types.Operator):
+    """Botón «Usar»: arranca la herramienta de Blender como si el alumno pulsara su tecla."""
     bl_idname = "amatista.usar_herramienta"
     bl_label = "Usar"
     bl_description = "Arranca la herramienta como si pulsaras su tecla"
@@ -150,6 +154,7 @@ class AMATISTA_OT_usar_herramienta(bpy.types.Operator):
     herramienta: bpy.props.StringProperty()
 
     def execute(self, context):
+        """Arranca la herramienta en la vista 3D y muestra el aviso si hay; si falla, explica el motivo."""
         herramienta = _motor.MOTOR.tools.get(self.herramienta)
         if herramienta is None:
             return {"CANCELLED"}
@@ -168,6 +173,7 @@ class AMATISTA_OT_usar_herramienta(bpy.types.Operator):
 
 
 class AMATISTA_OT_herramienta_ayuda(bpy.types.Operator):
+    """Botón «¿Cómo se usa?»: diálogo con los pasos de la herramienta y su error típico."""
     bl_idname = "amatista.herramienta_ayuda"
     bl_label = "¿Cómo se usa?"
     bl_description = "Explica paso a paso cómo se usa esta herramienta y el error típico"
@@ -175,9 +181,11 @@ class AMATISTA_OT_herramienta_ayuda(bpy.types.Operator):
     herramienta: bpy.props.StringProperty()
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Cuenta la ayuda «explicar», anota el recorrido y abre el diálogo."""
         if _motor.MOTOR.tools.get(self.herramienta) is None:
             return {"CANCELLED"}
         guia.ESTADO["ayudas"]["explicar"] += 1
@@ -187,6 +195,7 @@ class AMATISTA_OT_herramienta_ayuda(bpy.types.Operator):
         return context.window_manager.invoke_popup(self, width=420)
 
     def draw(self, context):
+        """Contenido: nombre y atajo, descripción, cómo se usa paso a paso, error típico y botón «Usar»."""
         layout = self.layout
         herramienta = _motor.MOTOR.tools.get(self.herramienta)
         if herramienta is None:
@@ -211,11 +220,13 @@ class AMATISTA_OT_herramienta_ayuda(bpy.types.Operator):
 
 
 class AMATISTA_OT_ver_todo(bpy.types.Operator):
+    """Botón «Ver todo Blender»: sale del modo enfocado y muestra todos los menús y la barra de herramientas."""
     bl_idname = "amatista.ver_todo"
     bl_label = "Ver todo Blender"
     bl_description = "Muestra Blender completo: todos los menús y la barra de herramientas"
 
     def execute(self, context):
+        """Desactiva el enfoque para la práctica, avisa al enlace y explica cómo volver."""
         practica = practicas.practica_activa(context)
         enfoque.ver_todo(practica.id if practica else "")
         recorrido.anotar("enfoque")
@@ -226,11 +237,13 @@ class AMATISTA_OT_ver_todo(bpy.types.Operator):
 
 
 class AMATISTA_OT_enfocar(bpy.types.Operator):
+    """Botón «Enfocar Blender»: esconde lo que la práctica no usa y deja a mano solo sus herramientas."""
     bl_idname = "amatista.enfocar"
     bl_label = "Enfocar Blender"
     bl_description = "Esconde lo que la práctica no usa y deja a mano solo sus herramientas"
 
     def execute(self, context):
+        """Activa el enfoque para la práctica abierta, avisa al enlace y redibuja."""
         enfoque.ESTADO["rechazado"] = ""
         enfoque.activar(practicas.practica_activa(context))
         recorrido.anotar("enfoque")

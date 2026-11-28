@@ -56,6 +56,7 @@ ESTADO = {
 
 
 def activo():
+    """True si el recorrido «Conoce Amatista Motor» está en curso."""
     return ESTADO["activo"]
 
 
@@ -85,6 +86,7 @@ def pendiente():
 
 
 def _marcar_hecho(rid):
+    """Guarda en las preferencias que el alumno terminó ese recorrido (y, si es el primero, que ya hizo el recorrido inicial)."""
     p = ajustes.prefs()
     if p is None:
         return
@@ -96,18 +98,22 @@ def _marcar_hecho(rid):
 
 
 def pasos():
+    """Pasos del recorrido en curso."""
     return recorrido_pasos.pasos_de(ESTADO["rid"])
 
 
 def paso_actual():
+    """Paso del recorrido que se está mostrando."""
     return pasos()[ESTADO["indice"]]
 
 
 def paso_hecho():
+    """True si el alumno ya hizo lo que pide el paso actual."""
     return paso_actual()["id"] in ESTADO["hechas"]
 
 
 def puede_seguir():
+    """True si el botón «Siguiente» está habilitado en el paso actual."""
     return recorrido_pasos.puede_seguir(ESTADO["rid"], ESTADO["indice"], ESTADO["hechas"])
 
 
@@ -128,6 +134,7 @@ def anotar(clave):
 
 
 def _ventana(context):
+    """Ventana de Blender del contexto (o la primera disponible)."""
     ventana = getattr(context, "window", None) or getattr(bpy.context, "window", None)
     if ventana is None and bpy.context.window_manager.windows:
         ventana = bpy.context.window_manager.windows[0]
@@ -135,6 +142,7 @@ def _ventana(context):
 
 
 def _a_modo_objeto():
+    """Vuelve a Modo Objeto si el objeto activo está en otro modo."""
     obj = getattr(bpy.context, "active_object", None)
     if obj is not None and getattr(obj, "mode", "OBJECT") != "OBJECT":
         try:
@@ -144,6 +152,7 @@ def _a_modo_objeto():
 
 
 def _cubo(sc):
+    """Cubo de práctica del recorrido (el objeto con la marca), o None."""
     return next((o for o in sc.objects if o.get(MARCA)), None)
 
 
@@ -183,6 +192,7 @@ def preparar_escena(context):
 
 
 def _volver_a_la_escena_previa(context):
+    """Devuelve la ventana a la escena donde estaba el alumno antes del recorrido."""
     previa = bpy.data.scenes.get(ESTADO["escena_previa"] or "")
     ESTADO["escena_previa"] = ""
     ventana = _ventana(context)
@@ -195,6 +205,7 @@ def _volver_a_la_escena_previa(context):
 
 
 def _vistas_3d():
+    """Recorre todas las áreas de vista 3D de todas las ventanas."""
     wm = getattr(bpy.context, "window_manager", None)
     for ventana in getattr(wm, "windows", ()) or ():
         for area in ventana.screen.areas:
@@ -203,23 +214,28 @@ def _vistas_3d():
 
 
 def _barra_abierta(context):
+    """True si el alumno abrió la barra lateral (N) en alguna vista 3D."""
     return any(area.spaces.active.show_region_ui for area in _vistas_3d())
 
 
 def _cuenta(context):
+    """True si hay una cuenta de Amatista vinculada."""
     p = ajustes.prefs()
     return bool(p and p.token)
 
 
 def _rotaciones():
+    """Rotación de cada vista 3D (para detectar que el alumno orbitó)."""
     return {str(area.as_pointer()): area.spaces.active.region_3d.view_rotation.copy() for area in _vistas_3d()}
 
 
 def _distancias():
+    """Distancia de cada vista 3D (para detectar que el alumno acercó o alejó)."""
     return {str(area.as_pointer()): float(area.spaces.active.region_3d.view_distance) for area in _vistas_3d()}
 
 
 def _orbito(context):
+    """True si el alumno giró la vista más de ORBITA_MINIMA desde el inicio del paso."""
     base = ESTADO["base_vista"]
     for clave, rotacion in _rotaciones().items():
         antes = base.get(clave)
@@ -229,6 +245,7 @@ def _orbito(context):
 
 
 def _acerco(context):
+    """True si el alumno cambió el zoom más de ACERCAMIENTO_MINIMO."""
     base = ESTADO["base_vista"]
     for clave, distancia in _distancias().items():
         antes = base.get(clave)
@@ -238,15 +255,18 @@ def _acerco(context):
 
 
 def _sc(context):
+    """Escena del contexto o la actual."""
     return getattr(context, "scene", None) or bpy.context.scene
 
 
 def _cubo_de(context):
+    """Cubo del recorrido en la escena del contexto."""
     sc = _sc(context)
     return _cubo(sc) if sc is not None else None
 
 
 def _eligio(context):
+    """True si el alumno seleccionó el cubo y es el objeto activo."""
     sc = _sc(context)
     cubo = _cubo(sc) if sc is not None else None
     if cubo is None:
@@ -256,11 +276,13 @@ def _eligio(context):
 
 
 def _movio(context):
+    """True si el alumno movió el cubo más de MOVIMIENTO_MINIMO."""
     cubo, base = _cubo_de(context), ESTADO["base_cubo"]
     return cubo is not None and base is not None and (cubo.location - base).length > MOVIMIENTO_MINIMO
 
 
 def _giro(context):
+    """True si el alumno giró el cubo más de GIRO_MINIMO."""
     cubo, base = _cubo_de(context), ESTADO["base_cubo"]
     if cubo is None or base is None:
         return False
@@ -268,6 +290,7 @@ def _giro(context):
 
 
 def _escalo(context):
+    """True si el alumno escaló el cubo más de ESCALA_MINIMA en algún eje."""
     cubo, base = _cubo_de(context), ESTADO["base_cubo"]
     if cubo is None or base is None:
         return False
@@ -330,6 +353,7 @@ def comprobar(context=None):
 
 
 def _cambio():
+    """Adelanta el latido del enlace y redibuja los paneles tras un cambio del recorrido."""
     from . import enlace, practicas
 
     enlace.latir_pronto()
@@ -374,6 +398,7 @@ def ir(context, paso):
 
 
 def terminar(context=None):
+    """Termina el recorrido: lo marca hecho, vuelve a la escena previa y ofrece el siguiente pendiente; devuelve el mensaje."""
     context = context or bpy.context
     rid = ESTADO["rid"]
     _marcar_hecho(rid)
@@ -389,6 +414,7 @@ def terminar(context=None):
 
 
 def salir(context=None):
+    """Sale del recorrido sin marcarlo hecho y vuelve a la escena previa; devuelve el mensaje para el alumno."""
     context = context or bpy.context
     ESTADO.update(activo=False, avanzar_en=0.0)
     _volver_a_la_escena_previa(context)
@@ -437,6 +463,7 @@ def orden(context, accion, rid=None):
 
 
 def _vigilar():
+    """Temporizador del recorrido: comprueba el paso y avanza solo tras unos segundos cuando se cumple; se detiene al terminar."""
     if not ESTADO["activo"]:
         return None
     try:
@@ -454,6 +481,7 @@ def _vigilar():
 
 
 class AMATISTA_OT_recorrido(bpy.types.Operator):
+    """Botón «Conoce Amatista Motor»: empieza, avanza, retrocede, sale, termina u omite las prácticas guiadas del add-on."""
     bl_idname = "amatista.recorrido"
     bl_label = "Conoce Amatista Motor"
     bl_description = "Tres prácticas cortas que explican todas las herramientas del add-on"
@@ -466,6 +494,7 @@ class AMATISTA_OT_recorrido(bpy.types.Operator):
     recorrido: bpy.props.StringProperty(description="pestana · vista · taller (vacío: la que sigue)")
 
     def execute(self, context):
+        """Ejecuta la ``accion`` pedida (empezar, siguiente, anterior, salir, terminar, omitir, taller) y muestra su mensaje."""
         if self.accion == "omitir":
             omitir()
             return {"FINISHED"}
@@ -592,6 +621,7 @@ CLASES = (AMATISTA_OT_recorrido,)
 
 
 def unregister():
+    """Detiene el temporizador del recorrido y lo marca inactivo."""
     if bpy.app.timers.is_registered(_vigilar):
         bpy.app.timers.unregister(_vigilar)
     ESTADO.update(activo=False)

@@ -45,6 +45,7 @@ LARGOS = {"para_que": 200, "analogia": 160, "donde": 160, "error": 200, "cuando"
 
 @dataclass(frozen=True)
 class Zona:
+    """Zona de la interfaz de Blender (barra de herramientas, cabecera, panel lateral…) que la ficha ilumina y explica."""
     id: str
     nombre: str
     ingles: str = ""
@@ -55,6 +56,7 @@ class Zona:
 
 @dataclass(frozen=True)
 class Ficha:
+    """Ficha de una herramienta para novatos: nombre (y en inglés), teclas, zona, dónde está, para qué sirve, analogía, cómo y error típico."""
     id: str
     nombre: str
     ingles: str = ""
@@ -70,16 +72,20 @@ class Ficha:
 
     @property
     def tecla(self) -> str:
+        """Atajo principal de la herramienta («» si no tiene)."""
         return self.teclas[0] if self.teclas else ""
 
     def a_dict(self) -> Dict[str, Any]:
+        """La ficha como dict JSON para el panel de ayuda del add-on."""
         return {"id": self.id, "nombre": self.nombre, "ingles": self.ingles, "teclas": list(self.teclas),
                 "zona": self.zona, "donde": self.donde, "para_que": self.para_que, "analogia": self.analogia,
                 "como": list(self.como), "error": self.error, "cuando": self.cuando}
 
 
 class Fichas:
+    """Colección de fichas y zonas, con índice por nombre de herramienta/operador de Blender."""
     def __init__(self, fichas: Iterable[Ficha] = (), zonas: Iterable[Zona] = ()) -> None:
+        """Indexa fichas y zonas por id y los nombres de Blender de cada ficha (el primero que aparece gana)."""
         self._fichas: Dict[str, Ficha] = {f.id: f for f in fichas}
         self._zonas: Dict[str, Zona] = {z.id: z for z in zonas}
         self._blender: Dict[str, str] = {}
@@ -88,24 +94,31 @@ class Fichas:
                 self._blender.setdefault(nombre, f.id)
 
     def __len__(self) -> int:
+        """Número de fichas."""
         return len(self._fichas)
 
     def __contains__(self, ficha_id: object) -> bool:
+        """Permite ``"mover" in fichas``."""
         return ficha_id in self._fichas
 
     def ids(self) -> List[str]:
+        """Ids de las fichas en orden de carga."""
         return list(self._fichas)
 
     def ficha(self, ficha_id: str) -> Optional[Ficha]:
+        """Ficha por id, o None."""
         return self._fichas.get(ficha_id or "")
 
     def zona(self, zona_id: str) -> Optional[Zona]:
+        """Zona por id, o None."""
         return self._zonas.get(zona_id or "")
 
     def zonas(self) -> List[Zona]:
+        """Todas las zonas."""
         return list(self._zonas.values())
 
     def zona_de(self, ficha_id: str) -> Optional[Zona]:
+        """Zona donde está la herramienta de una ficha, o None."""
         f = self.ficha(ficha_id)
         return self.zona(f.zona) if f is not None else None
 
@@ -133,12 +146,14 @@ class Fichas:
 
 
 def _textos(valor: Any) -> Tuple[str, ...]:
+    """Lista JSON de textos limpios (ignora vacíos y tipos raros); () si no es lista."""
     if not isinstance(valor, (list, tuple)):
         return ()
     return tuple(str(v).strip() for v in valor if isinstance(v, (str, int)) and str(v).strip())
 
 
 def _texto(crudo: Mapping[str, Any], clave: str) -> str:
+    """Texto limpio de ``crudo[clave]``; «» si no es texto ni número."""
     valor = crudo.get(clave, "")
     return str(valor).strip() if isinstance(valor, (str, int, float)) else ""
 

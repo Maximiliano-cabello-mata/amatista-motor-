@@ -25,11 +25,13 @@ MAX_MATERIALES = 64
 
 
 def _caja(vertices):
+    """Esquinas mínima y máxima de una lista de vértices."""
     xs, ys, zs = zip(*vertices)
     return (min(xs), min(ys), min(zs)), (max(xs), max(ys), max(zs))
 
 
 def _como_caja(vertices):
+    """Sustituye una malla por su caja (8 vértices, 12 triángulos) cuando es demasiado pesada."""
     (x0, y0, z0), (x1, y1, z1) = _caja(vertices)
     puntos = [(x, y, z) for x in (x0, x1) for y in (y0, y1) for z in (z0, z1)]
     caras = [(0, 1, 3), (0, 3, 2), (4, 6, 7), (4, 7, 5), (0, 4, 5), (0, 5, 1),
@@ -38,6 +40,7 @@ def _como_caja(vertices):
 
 
 def _redondo(valores, decimales=4):
+    """Lista de números redondeados a ``decimales``."""
     return [round(float(v), decimales) for v in valores]
 
 
@@ -75,6 +78,7 @@ def armar(objetos, materiales=(), blender=""):
     escala = max(x1 - x0, y1 - y0, z1 - z0) / 2 or 1.0
 
     def cuantizar(punto):
+        """Cuantiza un punto relativo al centro a enteros en ±COORDENADA (comprime el modelo de la entrega)."""
         return [max(-COORDENADA, min(COORDENADA, round((punto[i] - centro[i]) / escala * COORDENADA))) for i in range(3)]
 
     salida = []
@@ -116,4 +120,5 @@ def empaquetar(datos):
 
 
 def desempaquetar(paquete):
+    """Decodifica un modelo ligero empaquetado (base64 + zlib + JSON)."""
     return json.loads(zlib.decompress(base64.b64decode(paquete)).decode("utf-8"))

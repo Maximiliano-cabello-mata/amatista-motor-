@@ -30,6 +30,7 @@ POR_LUGAR = {BARRA: ELEGIR_HERRAMIENTA, MENU: ABRIR_MENU, PESTANA: ABRIR_PANEL, 
 
 
 def _hecho(lugar: Lugar, tipo: str) -> str:
+    """Texto para el alumno cuando la señal ya se hizo («Te dejé elegida…», «Te abrí el menú…»)."""
     if tipo == ELEGIR_HERRAMIENTA:
         return f"Te dejé elegida «{lugar.nombre}»: es el botón resaltado {lugar.lugar}."
     if tipo == ABRIR_MENU:
@@ -42,6 +43,7 @@ def _hecho(lugar: Lugar, tipo: str) -> str:
 
 
 def _perdida(lugar: Lugar, tipo: str) -> str:
+    """Texto cuando el efecto de la señal se perdió (eligió otra herramienta o cerró el panel) y dónde volver a encontrarlo."""
     if tipo == ELEGIR_HERRAMIENTA:
         return (f"Ahora tienes otra herramienta elegida. «{lugar.nombre}» sigue {lugar.lugar}"
                 + (f" (atajo: {lugar.atajo})" if lugar.atajo else "") + ".")
@@ -83,6 +85,7 @@ def seleccionar(objetos: Sequence[str], capacidades: Capacidades, texto_base: st
 
 
 def iniciar(senal: Senal, ahora: float) -> EstadoSenal:
+    """Estado inicial de una señal recién propuesta."""
     return EstadoSenal(senal, PROPUESTA, ahora)
 
 
@@ -105,6 +108,7 @@ def revisar(estado: Optional[EstadoSenal], sigue: bool, ahora: float) -> Optiona
 
 
 def cumplir(estado: Optional[EstadoSenal], ahora: float) -> Optional[EstadoSenal]:
+    """Marca la señal como cumplida (el alumno ya hizo lo que pedía); None se queda en None."""
     if estado is None:
         return None
     return replace(estado, estado=CUMPLIDA, desde=ahora)

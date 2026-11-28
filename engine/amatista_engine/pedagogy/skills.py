@@ -35,6 +35,7 @@ def evidence(
     hints: Optional[Mapping[str, int]] = None,
     corrections: int = 0,
 ) -> Dict[str, object]:
+    """Evidencia de aprendizaje de la práctica (progreso, objetivos, pistas usadas, correcciones, habilidades) para guardarla o enviarla."""
     hints = dict(hints or {})
     return {
         "practice": practice.id,

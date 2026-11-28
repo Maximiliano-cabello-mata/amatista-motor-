@@ -19,6 +19,7 @@ MOTOR = create_default_engine()
 
 
 def _partes(practica):
+    """Piezas comparables de la referencia como dicts."""
     return [pieza_como_dict(p) for p in practica.reference.compared] if practica.reference else []
 
 
@@ -36,10 +37,12 @@ def practica_simple(pasos, check=None, nivel=2):
 
 
 def revisar(practica, escena):
+    """Resultado del último objetivo (el ejemplo) al evaluar la escena."""
     return MOTOR.evaluate(practica, escena).result(practica.targets[-1].id)
 
 
 def lista(resultado):
+    """Lista de revisión del resultado indexada por texto."""
     return {i["texto"]: i for i in resultado.details["checklist"]}
 
 
@@ -60,6 +63,7 @@ def test_el_ejemplo_completa_su_practica(ruta):
 
 @pytest.mark.parametrize("ruta", PRACTICAS, ids=lambda r: f"{r.parent.parent.name}/{r.parent.name}")
 def test_una_escena_vacia_no_coincide(ruta):
+    """Comprueba que una escena vacía no coincide con el ejemplo y cada pendiente trae consejo."""
     practica = load_practice(ruta)
     r = revisar(practica, Escena().construir())
     assert not r.passed and r.details["checklist"]
@@ -68,6 +72,7 @@ def test_una_escena_vacia_no_coincide(ruta):
 
 @pytest.mark.parametrize("ruta", PRACTICAS, ids=lambda r: f"{r.parent.parent.name}/{r.parent.name}")
 def test_el_ejemplo_se_lee_como_instrucciones(ruta):
+    """Comprueba que cada paso del ejemplo se describe como una frase completa."""
     practica = load_practice(ruta)
     textos = describir(practica.example.steps, _partes(practica))
     assert len(textos) == len(practica.example.steps)
@@ -75,6 +80,7 @@ def test_el_ejemplo_se_lee_como_instrucciones(ruta):
 
 
 def test_el_objetivo_del_ejemplo_no_se_exporta_y_vuelve_igual():
+    """Comprueba que el objetivo automático del ejemplo no se exporta y la práctica vuelve igual."""
     practica = load_practice(PRACTICAS[0])
     datos = dump_practice(practica)
     assert "ejemplo" not in [t["id"] for t in datos["targets"]]
@@ -85,6 +91,7 @@ def test_el_objetivo_del_ejemplo_no_se_exporta_y_vuelve_igual():
 
 
 def test_un_paso_del_autor_revisa_un_aspecto():
+    """Comprueba que un objetivo del autor con example.matches revisa solo su aspecto."""
     datos = dump_practice(practica_simple([{"esfera": {"nombre": "Bola"}},
                                            {"material": {"objeto": "Bola", "nombre": "Oro", "metal": 1}}]))
     datos["targets"].append({"id": "metal", "title": "Pinta de metal", "validator": "example.matches",
@@ -98,6 +105,7 @@ def test_un_paso_del_autor_revisa_un_aspecto():
 
 
 def test_ejemplos_mal_escritos():
+    """Comprueba los errores de carga de ejemplos mal escritos."""
     with pytest.raises(InvalidPracticeError, match="paso desconocido"):
         practica_simple([{"volar": {}}])
     with pytest.raises(InvalidPracticeError, match="example.check"):
@@ -109,6 +117,7 @@ def test_ejemplos_mal_escritos():
 
 
 def test_aspectos_segun_lo_que_tiene_el_ejemplo():
+    """Comprueba qué aspectos se revisan según lo que contiene el ejemplo."""
     pasos = [{"cubo": {"nombre": "Caja", "vertices": 20}}, {"modificador": {"objeto": "Caja", "tipo": "BEVEL"}},
              {"luz": {"tipo": "AREA"}}, {"camara": {}}, {"motor": "CYCLES"}, {"renders": 1},
              {"guardado": {"archivo": "mi_caja.blend"}}]
@@ -122,6 +131,7 @@ def test_aspectos_segun_lo_que_tiene_el_ejemplo():
 
 
 def test_materiales_metal_vidrio_y_que_se_distingan():
+    """Comprueba la revisión de materiales metálicos y de vidrio con su consejo."""
     practica = practica_simple([
         {"cubo": {"nombre": "Nave"}},
         {"material": {"objeto": "Nave", "nombre": "Casco", "metal": 1, "rugosidad": 0.2}},
@@ -140,6 +150,7 @@ def test_materiales_metal_vidrio_y_que_se_distingan():
 
 
 def test_un_material_no_sirve_para_dos():
+    """Comprueba que un mismo material del alumno no cuenta para dos materiales del ejemplo."""
     practica = practica_simple([
         {"cubo": {"nombre": "A"}}, {"material": {"objeto": "A", "nombre": "Uno", "color": [1, 0, 0]}},
         {"material": {"objeto": "A", "nombre": "Dos", "color": [0, 0, 1]}},
@@ -149,6 +160,7 @@ def test_un_material_no_sirve_para_dos():
 
 
 def test_animacion_claves_y_recorrido():
+    """Comprueba la revisión de la animación (claves y recorrido suficientes)."""
     practica = practica_simple([
         {"esfera": {"nombre": "Pelota", "loc": [0, 0, 4]}},
         {"animar": {"objeto": "Pelota", "propiedad": "location", "eje": "z", "claves": [[1, 4], [12, 0], [24, 4]]}},
@@ -163,6 +175,7 @@ def test_animacion_claves_y_recorrido():
 
 
 def test_luces_el_tipo_es_sugerencia_en_los_primeros_niveles():
+    """Comprueba que el tipo de luz es solo un detalle en niveles bajos y obligatorio en el 3."""
     pasos = [{"cubo": {}}, {"luz": {"tipo": "AREA"}}, {"luz": {"tipo": "SPOT", "nombre": "Foco"}}]
     con_puntuales = Escena().cubo().luz("L1", "POINT").luz("L2", "POINT").construir()
     facil = revisar(practica_simple(pasos, ["luces"], nivel=2), con_puntuales)
@@ -172,6 +185,7 @@ def test_luces_el_tipo_es_sugerencia_en_los_primeros_niveles():
 
 
 def test_camara_que_mira_al_modelo():
+    """Comprueba que la cámara debe mirar hacia el modelo."""
     practica = practica_simple([{"cubo": {}}, {"camara": {"loc": [0, -8, 2]}}], check=["camara"])
     de_espaldas = Escena().cubo().camara(loc=(0, -8, 2), mira_a=(0, -20, 2)).construir()
     r = revisar(practica, de_espaldas)
@@ -180,6 +194,7 @@ def test_camara_que_mira_al_modelo():
 
 
 def test_modificadores_espejo_y_niveles():
+    """Comprueba la revisión de modificadores espejo y subdivisión con sus niveles."""
     practica = practica_simple([{"cubo": {"nombre": "N"}}, {"modificador": {"objeto": "N", "tipo": "MIRROR"}},
                                 {"modificador": {"objeto": "N", "tipo": "SUBSURF", "niveles": 2}}],
                                check=["modificadores"])
@@ -192,6 +207,7 @@ def test_modificadores_espejo_y_niveles():
 
 
 def test_colecciones_con_nombre_libre_hasta_el_nivel_3():
+    """Comprueba que el nombre de colección es libre hasta el nivel 3 y obligatorio en el 4."""
     pasos = [{"cubo": {"nombre": "A"}}, {"cubo": {"nombre": "B"}},
              {"coleccion": {"nombre": "Casas", "objetos": ["A", "B"]}}]
     otra = Escena().cubo("A", coleccion="Pueblo").cubo("B", coleccion="Pueblo").construir()
@@ -200,6 +216,7 @@ def test_colecciones_con_nombre_libre_hasta_el_nivel_3():
 
 
 def test_archivo_lleva_la_palabra_del_ejemplo():
+    """Comprueba que el nombre del archivo debe contener la palabra clave del ejemplo."""
     practica = practica_simple([{"cubo": {}}, {"guardado": {"archivo": "mi_tren.blend"}}], check=["archivo"])
     assert revisar(practica, Escena().cubo().guardado("/casa/tren_rojo.blend").construir()).passed
     r = revisar(practica, Escena().cubo().guardado("casa.blend").construir())
@@ -207,6 +224,7 @@ def test_archivo_lleva_la_palabra_del_ejemplo():
 
 
 def test_malla_modelada_y_media_nave():
+    """Comprueba la revisión de malla modelada y modelado de media pieza."""
     practica = practica_simple([{"cubo": {"nombre": "N", "vertices": 30, "mitad": "x-"}}], check=["malla"])
     r = revisar(practica, Escena().cubo("N").construir())
     assert {i["texto"]: i["ok"] for i in r.details["checklist"]} == {
@@ -215,6 +233,7 @@ def test_malla_modelada_y_media_nave():
 
 
 def test_la_figura_sin_modelo_usa_las_mallas_del_ejemplo():
+    """Comprueba que sin modelo de referencia la figura se compara con las mallas del ejemplo."""
     pasos = [{"cubo": {"nombre": "Mesa", "dims": [2, 1, 0.1], "loc": [0, 0, 1]}},
              {"cilindro": {"nombre": "Pata", "dims": [0.1, 0.1, 1], "loc": [0.9, 0.4, 0.5]}},
              {"cilindro": {"nombre": "Pata.001", "dims": [0.1, 0.1, 1], "loc": [-0.9, -0.4, 0.5]}}]
@@ -229,6 +248,7 @@ def test_la_figura_sin_modelo_usa_las_mallas_del_ejemplo():
 
 
 def test_el_instructor_guia_con_el_primer_punto_pendiente():
+    """Comprueba que la guía del ejemplo empieza por el primer punto pendiente."""
     practica = practica_simple([{"cubo": {"nombre": "Caja"}}, {"modificador": {"objeto": "Caja", "tipo": "BEVEL"}},
                                 {"guardado": {"archivo": "mi_caja.blend"}}], check=["modificadores", "archivo"])
     # Motor 7: con objetivos propios el ejemplo orienta sin trabar; aquí la malla es opcional y el ejemplo manda.
@@ -243,6 +263,7 @@ def test_el_instructor_guia_con_el_primer_punto_pendiente():
 
 
 def test_la_espada_hecha_a_mano_coincide_y_sin_guarda_no(tmp_path):
+    """Comprueba que la espada correcta coincide y sin guarda no."""
     practica = load_practice(next(r for r in PRACTICAS if r.parent.name == "m2-espada"))
     piezas = practica.reference.parts
     hecha = Escena().referencia(piezas, variacion=0.15, semilla=4, vertices=60).guardado("espada.blend").construir()
@@ -253,6 +274,7 @@ def test_la_espada_hecha_a_mano_coincide_y_sin_guarda_no(tmp_path):
 
 
 def test_copiar_el_ejemplo_no_cambia_la_practica():
+    """Comprueba que revisar el ejemplo no modifica los pasos de la práctica."""
     practica = load_practice(PRACTICAS[0])
     antes = copy.deepcopy(practica.example.steps)
     escena_esperada(practica.example.steps, _partes(practica))
@@ -260,6 +282,7 @@ def test_copiar_el_ejemplo_no_cambia_la_practica():
 
 
 def test_ejemplo_no_aprueba_silueta_omitida():
+    """Comprueba que el ejemplo no aprueba si falta la silueta de la malla."""
     from dataclasses import replace
 
     ruta = next(p for p in PRACTICAS if p.parent.name == 'm2-espada')
@@ -275,6 +298,7 @@ def test_ejemplo_no_aprueba_silueta_omitida():
 
 
 def _base(**extra):
+    """Práctica mínima de prueba con cambios opcionales."""
     datos = {"schema": "amatista.practice/2", "id": "prueba.auditoria", "title": "Prueba", "level": 2,
              "targets": [{"id": "malla", "title": "Una malla", "validator": "object.exists",
                           "params": {"type": "MESH"}, "weight": 10}],
@@ -298,12 +322,14 @@ def _base(**extra):
     ({"example": {"steps": [{"cubo": {}}], "check": ["luces"]}}, "no tiene «luces»"),
 ])
 def test_el_cargador_solo_lanza_errores_de_practica(cambio, texto):
+    """Comprueba que entradas malformadas dan InvalidPracticeError con el mensaje esperado."""
     with pytest.raises(InvalidPracticeError) as error:
         parse_practice(_base(**cambio))
     assert any(texto in e for e in error.value.errors), error.value.errors
 
 
 def test_aspects_de_un_example_matches_se_validan():
+    """Comprueba que los «aspects» de example.matches se validan al cargar."""
     objetivo = {"id": "solo-luz", "title": "Luz", "validator": "example.matches", "params": {"aspects": ["luz"]},
                 "weight": 5}
     with pytest.raises(InvalidPracticeError, match="solo-luz.params.aspects"):
@@ -314,6 +340,7 @@ def test_aspects_de_un_example_matches_se_validan():
 
 
 def test_example_matches_sin_aspectos_no_aprueba():
+    """Comprueba que example.matches sin aspectos que revisar no aprueba."""
     from amatista_engine.models import TargetDefinition
     from amatista_engine.validators.example import matches
 
@@ -324,6 +351,7 @@ def test_example_matches_sin_aspectos_no_aprueba():
 
 
 def test_la_camara_debe_ser_la_activa():
+    """Comprueba que la cámara del alumno debe ser la activa."""
     practica = practica_simple([{"cubo": {}}, {"camara": {"loc": [0, -8, 2], "mira_a": [0, 0, 0]}}], check=["camara"])
     inactiva = Escena().cubo().camara("Cam", loc=(0, -8, 2), mira_a=(0, 0, 0), activa=False).construir()
     r = revisar(practica, inactiva)
@@ -333,6 +361,7 @@ def test_la_camara_debe_ser_la_activa():
 
 
 def test_con_40_objetivos_el_ejemplo_igual_se_agrega():
+    """Comprueba que el objetivo del ejemplo se añade aunque haya 40 objetivos y no se exporta."""
     objetivos = [{"id": f"t{i}", "title": "T", "validator": "object.exists", "params": {"type": "MESH"},
                   "weight": 1} for i in range(40)]
     practica = parse_practice(_base(targets=objetivos))
@@ -345,6 +374,7 @@ def test_con_40_objetivos_el_ejemplo_igual_se_agrega():
 
 
 def test_dump_conserva_lo_que_escribio_el_autor():
+    """Comprueba que el dump conserva los params escritos por el autor en example.matches."""
     propio = {"id": "luces", "title": "Mis luces", "validator": "example.matches",
               "params": {"aspects": ["archivo"], "level": 4, "title": "Mi archivo"}, "weight": 5}
     practica = parse_practice(_base(targets=_base()["targets"] + [propio]))
@@ -355,6 +385,7 @@ def test_dump_conserva_lo_que_escribio_el_autor():
 
 
 def test_el_archivo_del_ejemplo_y_file_named_coinciden():
+    """Comprueba que el compilador exige coherencia entre el archivo del ejemplo y file.named."""
     from amatista_engine.practice import compile_practice
 
     guardar = {"id": "guardar", "title": "Guarda", "validator": "file.named", "params": {"contains": "caja"},
@@ -366,6 +397,7 @@ def test_el_archivo_del_ejemplo_y_file_named_coinciden():
 
 
 def test_describir_usa_nombres_de_rol_y_menciona_las_caras():
+    """Comprueba que las descripciones usan nombres de rol, caras y modificadores."""
     partes = [{"primitive": "cylinder", "role": "rueda"}, {"primitive": "cube", "role": "vagon", "name": "Vagón"}]
     texto = describir([{"referencia": {}}], partes, {"rueda": "Rueda"})[0]
     assert "Rueda" in texto and "Vagón" in texto and "rueda," not in texto

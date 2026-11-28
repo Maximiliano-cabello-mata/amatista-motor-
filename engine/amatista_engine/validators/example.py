@@ -17,6 +17,15 @@ from .base import number, result, text
 
 
 def matches(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``example.matches``: compara la escena del alumno con la que produce el ejemplo resuelto.
+
+    Reconstruye la escena esperada a partir de ``params.steps`` (y las piezas de
+    referencia), la revisa por aspectos (figura, materiales…) con la exigencia del
+    nivel y devuelve el primer pendiente con su consejo y la lista de revisión en ``details``.
+
+    Raises:
+        ValueError: si faltan los pasos del ejemplo o «aspects» no es una lista de textos.
+    """
     pasos = target.params.get("steps")
     if not isinstance(pasos, list) or not pasos:
         raise ValueError("example.matches necesita los pasos del ejemplo («example» en la práctica)")

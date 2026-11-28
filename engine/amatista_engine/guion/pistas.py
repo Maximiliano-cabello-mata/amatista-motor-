@@ -24,6 +24,7 @@ TITULOS = {QUE_FALTA: "¿Qué falta?", DONDE: "¿Dónde está?", COMO: "¿Cómo 
 
 @dataclass(frozen=True)
 class Pista:
+    """Pista del paso actual: nivel (1..3), título, texto y herramienta/teclas que señala."""
     nivel: int
     titulo: str
     texto: str

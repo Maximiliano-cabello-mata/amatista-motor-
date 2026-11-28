@@ -36,6 +36,7 @@ NOMBRE_PRIMITIVA = {"cube": "cubo", "cylinder": "cilindro", "sphere": "esfera", 
 
 
 def _rotar(punto, rot_rad):
+    """Rota un punto con ángulos de Euler XYZ en radianes (orden X, luego Y, luego Z, como Blender)."""
     a, b, c = rot_rad
     x, y, z = punto
     y, z = y * math.cos(a) - z * math.sin(a), y * math.sin(a) + z * math.cos(a)
@@ -56,19 +57,23 @@ def caja_de_pieza(pieza: Dict[str, Any]) -> Tuple[Tuple[float, ...], Tuple[float
 
 
 class _Caja:
+    """Caja alineada a los ejes reducida a centro y medidas, con el nombre del objeto del alumno (si lo hay)."""
     __slots__ = ("centro", "medidas", "nombre")
 
     def __init__(self, minimo, maximo, nombre=""):
+        """Crea la caja a partir de sus esquinas mínima y máxima (medidas negativas se recortan a 0)."""
         self.centro = tuple((a + b) / 2 for a, b in zip(minimo, maximo))
         self.medidas = tuple(max(0.0, b - a) for a, b in zip(minimo, maximo))
         self.nombre = nombre
 
     @property
     def volumen(self) -> float:
+        """Volumen de la caja con un margen EPSILON por eje (así una pieza plana no tiene volumen 0)."""
         return (self.medidas[0] + EPSILON) * (self.medidas[1] + EPSILON) * (self.medidas[2] + EPSILON)
 
 
 def _union(cajas: Sequence[_Caja]) -> Tuple[Tuple[float, ...], Tuple[float, ...]]:
+    """Esquinas (mínima, máxima) de la caja que envuelve a todas las cajas dadas."""
     minimo = tuple(min(c.centro[i] - c.medidas[i] / 2 for c in cajas) for i in range(3))
     maximo = tuple(max(c.centro[i] + c.medidas[i] / 2 for c in cajas) for i in range(3))
     return minimo, maximo
@@ -79,6 +84,10 @@ ORIENTACIONES = [(giro, espejo) for giro in range(4) for espejo in (False, True)
 
 
 def _orientar(caja: _Caja, giro: int, espejo: bool) -> _Caja:
+    """Copia de la caja girada ``giro`` × 90° sobre Z y, si ``espejo``, reflejada en X.
+
+    Permite comparar con el modelo aunque el alumno haya construido la figura girada o en espejo.
+    """
     x, y, z = caja.centro
     dx, dy, dz = caja.medidas
     if espejo:
@@ -146,6 +155,7 @@ def comparar(grupos_alumno: Dict[str, List[_Caja]], grupos_modelo: Dict[str, Lis
     tol_pos = tolerancia * 0.25  # 0.35 → cada pieza puede correrse ~9 % del largo de la figura sin perder puntos
 
     def relativa(caja: _Caja, centro, largo) -> _Caja:
+        """Caja expresada relativa a la figura: centrada en ``centro`` y dividida por su ``largo`` (invariante a escala)."""
         nueva = _Caja((0, 0, 0), (0, 0, 0), caja.nombre)
         nueva.centro = tuple((caja.centro[i] - centro[i]) / largo for i in range(3))
         nueva.medidas = tuple(m / largo for m in caja.medidas)
@@ -219,10 +229,12 @@ EJES_TEXTO = {0: ("más larga", "más corta"), 1: ("más ancha", "más angosta")
 
 
 def _nombre_grupo(grupo: str, etiquetas: Dict[str, str]) -> str:
+    """Nombre del grupo para el alumno: la etiqueta del rol o, si es una primitiva, su nombre en español."""
     return etiquetas.get(grupo) or NOMBRE_PRIMITIVA.get(grupo, grupo)
 
 
 def _quien(peor: Dict[str, Any], nombre: str) -> str:
+    """Cómo nombrar en el mensaje la pieza peor puntuada: «Una pieza «X»», «X» o «objeto» (X)."""
     objeto = peor.get("objeto") or ""
     if not objeto or objeto.split(".")[0].lower() == nombre.lower():
         return f"Una pieza «{nombre}»" if objeto else f"«{nombre}»"
@@ -230,6 +242,11 @@ def _quien(peor: Dict[str, Any], nombre: str) -> str:
 
 
 def mensaje_de(peor: Optional[Dict[str, Any]], etiquetas: Dict[str, str]) -> str:
+    """Mensaje para el alumno a partir del peor problema de la comparación con la referencia.
+
+    Cubre figura vacía, roles sin asignar, piezas que faltan o sobran, medidas,
+    posición y proporciones; None/vacío significa que la figura se parece al modelo.
+    """
     if not peor:
         return "Tu figura se parece al modelo de referencia."
     tipo = peor["tipo"]
@@ -271,10 +288,12 @@ def mensaje_de(peor: Optional[Dict[str, Any]], etiquetas: Dict[str, str]) -> str
 
 
 def _grupo(pieza: Dict[str, Any]) -> str:
+    """Grupo de comparación de una pieza: su ``group`` explícito, su rol o su primitiva canónica."""
     return str(pieza.get("group") or pieza.get("role") or primitiva(pieza.get("primitive", "")))
 
 
 def _cajas_modelo(partes: List[Dict[str, Any]]) -> Dict[str, List[_Caja]]:
+    """Cajas del modelo de referencia por grupo; las piezas con el mismo ``join`` se unen en una caja (un objeto del alumno)."""
     grupos: Dict[str, List[_Caja]] = {}
     unidas: Dict[Tuple[str, str], List[_Caja]] = {}
     for pieza in partes:
@@ -291,6 +310,7 @@ def _cajas_modelo(partes: List[Dict[str, Any]]) -> Dict[str, List[_Caja]]:
 
 
 def _cajas_alumno(scene: SceneState, grupos: Sequence[str], roles_modelo: set) -> Dict[str, List[_Caja]]:
+    """Cajas de los objetos del alumno por grupo: por rol si el grupo es un rol del modelo, si no por primitiva."""
     salida: Dict[str, List[_Caja]] = {}
     for grupo in grupos:
         if grupo in roles_modelo:

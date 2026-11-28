@@ -7,6 +7,7 @@ from .vista import tarjeta
 
 
 def _avisar(texto):
+    """Muestra el texto en la tarjeta del taller (si hay)."""
     if texto:
         sesion.avisar(texto)
 
@@ -81,9 +82,11 @@ class AMATISTA_OT_taller_boton(bpy.types.Operator):
     indice: bpy.props.IntProperty(default=0, min=0)
 
     def invoke(self, context, event):
+        """Ejecuta directamente (el clic llega desde el gizmo de la tarjeta)."""
         return self.execute(context)
 
     def execute(self, context):
+        """Ejecuta la acción del botón de la tarjeta pulsado; si está bloqueado, anima a intentarlo un poco más."""
         accion, activo = tarjeta.accion_de(context.region, self.indice)
         if accion is None:
             return {"CANCELLED"}
@@ -110,6 +113,7 @@ class AMATISTA_OT_taller_accion(bpy.types.Operator):
 
     @classmethod
     def description(cls, context, properties):
+        """Tooltip dinámico según la acción (continuar, pausa, seguir, pista, mírame…)."""
         return {
             "continuar": "Sigue con lo que toca en el taller",
             "pausa": "Pausa la actividad (tu trabajo queda como está)",
@@ -121,6 +125,7 @@ class AMATISTA_OT_taller_accion(bpy.types.Operator):
         }.get(properties.accion, "Amatista Taller")
 
     def execute(self, context):
+        """Ejecuta la acción del taller y muestra su mensaje; un error se avisa sin romper Blender."""
         try:
             _avisar(ejecutar(context, self.accion))
         except Exception as error:  # noqa: BLE001
@@ -143,6 +148,7 @@ class AMATISTA_OT_taller_abrir(bpy.types.Operator):
     repasar: bpy.props.BoolProperty(description="«Recuérdalo»: un minuto con esta habilidad")
 
     def execute(self, context):
+        """Abre el taller o la actividad que toca; si la plataforma lleva la ruta, devuelve al alumno a la plataforma."""
         if sesion.manda_la_plataforma() and not sesion.activa():
             # Motor 6: el alumno no elige módulos en Blender; la plataforma abre lo que toca.
             texto = sesion.volver_a_la_plataforma()
@@ -174,6 +180,7 @@ class AMATISTA_OT_taller_sincronizar(bpy.types.Operator):
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
+        """Envía el avance del taller a la plataforma; sin cuenta, explica que queda guardado en esta computadora."""
         from .. import recorrido
 
         recorrido.anotar("guardar")

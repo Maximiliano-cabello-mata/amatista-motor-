@@ -22,10 +22,12 @@ class AmatistaEngine:
     """
 
     def __init__(self, registry: ValidatorRegistry, tools: Optional[ToolRegistry] = None) -> None:
+        """Crea el motor con el registro de validadores y, opcionalmente, el de herramientas (para avisar de herramientas no permitidas)."""
         self.registry = registry
         self.tools = tools
 
     def _validar(self, target, scene: SceneState, practice: Optional[PracticeDefinition] = None) -> ValidationResult:
+        """Valida un objetivo con medidas «amables» según el nivel y reemplaza ids de rol por su etiqueta en el mensaje."""
         if practice is not None:
             # Motor 4: medidas amables; la forma tiene que tener sentido, los decimales no estorban.
             from .ruta.medidas import ajustar
@@ -46,6 +48,7 @@ class AmatistaEngine:
         return ValidationResult(resultado.target_id, resultado.validator, resultado.passed, mensaje, resultado.details)
 
     def _validar_crudo(self, target, scene: SceneState) -> ValidationResult:
+        """Corre el validador registrado (o devuelve passed=None si no existe o falla) y aplica el mensaje propio del autor."""
         validator = self.registry.get(target.validator)
         if validator is None:
             return ValidationResult(
@@ -89,6 +92,7 @@ class AmatistaEngine:
         return inferir_roles(partes, scene.objects) if partes else {}
 
     def evaluate(self, practice: PracticeDefinition, scene: SceneState) -> EvaluationReport:
+        """Evalúa todos los objetivos y vigilantes de la práctica sobre la escena y arma el EvaluationReport (progreso, pasos, herramientas, pausa)."""
         # Motor 3.4: el alumno ya no tiene que poner roles; el motor reconoce cada pieza por su forma.
         deducidos = self.infer_roles(practice, scene)
         if deducidos:
@@ -141,6 +145,7 @@ class AmatistaEngine:
 
         return construir_ruta(practice, report, guidance, self.tools, hints, previous)
 
+    # Nota: ``usados`` es solo un alias de report.tools_used.
     def pills(self, practice: PracticeDefinition, scene: SceneState, report: EvaluationReport, seen=()):
         """Píldoras de teoría que tocan ahora (motor v3)."""
         from .pedagogy.pills import pills_for
@@ -148,6 +153,7 @@ class AmatistaEngine:
         usados = report.tools_used
         return pills_for(practice, scene, report, seen=seen, tools_used=usados)
 
+    # [REVISION-MUERTO] evaluate_target no se llama en amatista-motor, amatista-api ni el monorepo (grep 2026-11-27): el depurador usa otra ruta. Decidir si se conserva como API pública.
     def evaluate_target(self, practice: PracticeDefinition, scene: SceneState, target_id: str) -> ValidationResult:
         """Solo un objetivo (el depurador del modo desarrollador)."""
         target = practice.target(target_id) or practice.guard(target_id)

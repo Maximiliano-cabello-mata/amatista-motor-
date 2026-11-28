@@ -1,3 +1,4 @@
+# [REVISION-BUG] (menor) ``import math`` quedó antes de la cabecera del módulo; además el módulo no tiene docstring (solo el comentario de abajo).
 import math
 # Utilidades y entorno com?n para pruebas dentro de Blender.
 import sys
@@ -14,12 +15,14 @@ ARCHIVO_V2 = ADDON.parent / "practices" / "archivo" / "v2"
 FALLAS = []
 
 def revisar(condicion, mensaje):
+    """Imprime ✓/✗ con el mensaje y anota el fallo para el resumen de la suite."""
     print(("  ✓ " if condicion else "  ✗ ") + mensaje)
     if not condicion:
         FALLAS.append(mensaje)
 
 
 def cubo(nombre, ubicacion, escala):
+    """Agrega un cubo en Blender en la ubicación y lo devuelve."""
     bpy.ops.mesh.primitive_cube_add(size=1, location=ubicacion)
     obj = bpy.context.active_object
     obj.name = nombre
@@ -31,24 +34,31 @@ class Diseno:
     """Layout falso: acepta cualquier llamada, para ejecutar los draw() sin interfaz."""
 
     def __getattr__(self, nombre):
+        """Cualquier atributo devuelve el mismo objeto (layout falso para dibujar sin interfaz)."""
         return self
 
     def __call__(self, *args, **kwargs):
+        """Cualquier llamada devuelve el mismo objeto."""
         return self
 
     def __setattr__(self, nombre, valor):
+        """Ignora asignaciones."""
         pass
 
     def __enter__(self):
+        """Permite usarlo como gestor de contexto."""
         return self
 
     def __exit__(self, *args):
+        """No suprime excepciones."""
         return False
 
     def __iter__(self):
+        """Se desempaqueta como par (para ``a, b = layout.split()``)."""
         return iter((self, self))
 
     def __bool__(self):
+        """Siempre verdadero."""
         return True
 
 
@@ -94,10 +104,12 @@ def dibujar_vista_3d(contexto):
     try:
         guia.avisar("¡Listo! Prueba", "Un aviso de prueba que ocupa dos líneas en la tarjeta.", "logrado")
         class ContextoFalso:
+            """Contexto que delega en el real (para llamar callbacks de dibujo en background)."""
             region = SimpleNamespace(width=800, height=600)
             region_data = object()
 
             def __getattr__(self, nombre):
+                """Delega el atributo en el contexto real."""
                 return getattr(contexto, nombre)
 
         bpy_falso = SimpleNamespace(context=ContextoFalso(), data=bpy.data, types=bpy.types, app=bpy.app)
@@ -121,6 +133,7 @@ class _Envoltura:
     """Se hace pasar por el panel/operador: layout falso y propiedades por defecto."""
 
     def __init__(self, clase, revelada):
+        """Envuelve una clase de operador con la pista revelada para llamar a sus métodos sin registrar."""
         self.__dict__["_clase"] = clase
         self.__dict__["revelada"] = revelada
         self.__dict__["layout"] = Diseno()
@@ -130,6 +143,7 @@ class _Envoltura:
         self.__dict__["pildora"] = ""
 
     def __getattr__(self, nombre):
+        """Devuelve atributos de la clase; los métodos quedan ligados a la envoltura."""
         valor = getattr(self._clase, nombre, None)
         if callable(valor):
             return lambda *a, **k: valor(self, *a, **k)
@@ -137,6 +151,7 @@ class _Envoltura:
 
 
 def _limpiar():
+    """Borra todos los objetos de Blender."""
     for obj in list(bpy.data.objects):
         bpy.data.objects.remove(obj)
 
@@ -174,6 +189,7 @@ def _armar(contexto, piezas):
 
 
 def _abrir_actividad(contexto, taller_id, actividad_id):
+    """Abre una actividad del taller y devuelve el mensaje."""
     from amatista_blender.taller import sesion
 
     texto = sesion.abrir(contexto, taller_id, actividad_id)
@@ -184,6 +200,7 @@ def _abrir_actividad(contexto, taller_id, actividad_id):
 
 
 def _elegir(contexto, obj):
+    """Deja seleccionado y activo solo el objeto dado."""
     for o in contexto.scene.objects:
         o.select_set(False)
     obj.select_set(True)
@@ -213,6 +230,7 @@ def _tren_del_alumno(contexto, eje_largo=0):
     piezas = []
 
     def agregar(tipo, escala, lugar, giro=(0, 0, 0)):
+        """Agrega una primitiva como el alumno y la devuelve."""
         getattr(bpy.ops.mesh, f"primitive_{tipo}_add")()
         obj = contexto.active_object
         obj.scale, obj.location, obj.rotation_euler = escala, lugar, giro
@@ -230,6 +248,7 @@ def _tren_del_alumno(contexto, eje_largo=0):
 
 
 def _motor_foto(contexto, extras):
+    """Foto de la escena tal como la evalúa el add-on."""
     from amatista_blender import practicas
 
     for obj in list(contexto.scene.objects):

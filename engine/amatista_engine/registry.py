@@ -34,6 +34,11 @@ class ParamSpec:
 
 @dataclass(frozen=True)
 class ValidatorSpec:
+    """Ficha de un validador registrado: función, textos para el autor, categoría, parámetros y eventos que lo disparan.
+
+    ``watch`` son los eventos de Blender que obligan a reevaluarlo y ``selects``
+    indica si el validador elige objetos (lo usa la ayuda para resaltarlos).
+    """
     id: str
     function: ValidatorFunction
     label: str = ""
@@ -45,6 +50,7 @@ class ValidatorSpec:
     selects: bool = False
 
     def param(self, name: str) -> Optional[ParamSpec]:
+        """Ficha del parámetro con ese nombre, o None si el validador no lo declara."""
         return next((p for p in self.params if p.name == name), None)
 
 
@@ -66,6 +72,11 @@ class ValidatorRegistry:
         watch: Iterable[str] = EVENTOS,
         selects: bool = False,
     ) -> None:
+        """Registra un validador nuevo bajo ``validator_id`` con su ficha descriptiva.
+
+        Raises:
+            ValueError: si el id está vacío o ya estaba registrado.
+        """
         if not validator_id:
             raise ValueError("validator_id no puede estar vacío")
         if validator_id in self._specs:
@@ -82,17 +93,22 @@ class ValidatorRegistry:
         )
 
     def get(self, validator_id: str) -> Optional[ValidatorFunction]:
+        """Función del validador con ese id, o None si no está registrado."""
         spec = self._specs.get(validator_id)
         return spec.function if spec else None
 
     def spec(self, validator_id: str) -> Optional[ValidatorSpec]:
+        """Ficha completa (ValidatorSpec) del validador, o None si no existe."""
         return self._specs.get(validator_id)
 
     def specs(self) -> Tuple[ValidatorSpec, ...]:
+        """Todas las fichas registradas, ordenadas por id (las usa el catálogo para autores y la API)."""
         return tuple(self._specs[i] for i in sorted(self._specs))
 
     def ids(self) -> Iterable[str]:
+        """Ids de todos los validadores registrados, en orden alfabético."""
         return tuple(sorted(self._specs))
 
     def __contains__(self, validator_id: str) -> bool:
+        """Permite ``"mesh.vertices" in registro`` para saber si un validador existe."""
         return validator_id in self._specs

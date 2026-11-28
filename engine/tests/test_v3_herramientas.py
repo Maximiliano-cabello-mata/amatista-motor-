@@ -13,6 +13,7 @@ from amatista_engine.testing import Escena, escena_desde_pasos
 
 @pytest.mark.parametrize("plantilla", sorted(PLANTILLAS))
 def test_cada_plantilla_compila(plantilla):
+    """Comprueba que cada plantilla de práctica compila y trae casos de prueba."""
     motor = create_default_engine()
     datos = nueva_practica(f"prueba.{plantilla}", plantilla, "Prueba", "blender_principiante", 1)
     resultado = compile_practice(datos, motor.registry, motor.tools)
@@ -21,6 +22,7 @@ def test_cada_plantilla_compila(plantilla):
 
 
 def test_cli_nueva_revisar_y_probar(tmp_path, capsys):
+    """Comprueba los comandos nueva, revisar y probar de la CLI."""
     carpeta = tmp_path / "mi-practica"
     assert main(["nueva", "prueba.cli", "--plantilla", "modelado", "--carpeta", str(carpeta)]) == 0
     assert (carpeta / "practica.json").exists() and (carpeta / "pruebas.json").exists()
@@ -30,6 +32,7 @@ def test_cli_nueva_revisar_y_probar(tmp_path, capsys):
 
 
 def test_cli_probar_detecta_un_caso_falso(tmp_path):
+    """Comprueba que «probar» falla con un caso de prueba falso."""
     carpeta = tmp_path / "p"
     main(["nueva", "prueba.falla", "--plantilla", "vacia", "--carpeta", str(carpeta)])
     pruebas = json.loads((carpeta / "pruebas.json").read_text(encoding="utf-8"))
@@ -39,6 +42,7 @@ def test_cli_probar_detecta_un_caso_falso(tmp_path):
 
 
 def test_cli_validadores_markdown(tmp_path):
+    """Comprueba que «validadores --md» escribe el catálogo en Markdown."""
     destino = tmp_path / "v.md"
     assert main(["validadores", "--md", str(destino)]) == 0
     texto = destino.read_text(encoding="utf-8")
@@ -46,11 +50,13 @@ def test_cli_validadores_markdown(tmp_path):
 
 
 def test_pasos_desconocidos_avisan():
+    """Comprueba que un paso de escena desconocido da error."""
     with pytest.raises(ValueError, match="paso desconocido"):
         escena_desde_pasos([{"cubito": {}}])
 
 
 def test_foto_v3_ida_y_vuelta():
+    """Comprueba el ida y vuelta de la foto con datos del motor v3."""
     escena = (
         Escena().cubo("Nave", rol="nave", mitad="x-", encimados=2)
         .modificador("Nave", "MIRROR").modificador("Nave", "SUBSURF", niveles=2)
@@ -75,6 +81,7 @@ def test_foto_v3_ida_y_vuelta():
 
 @pytest.mark.parametrize("plantilla", sorted(PLANTILLAS))
 def test_cada_plantilla_nace_con_ejemplo_y_caso_solucion(plantilla, tmp_path, capsys):
+    """Comprueba que cada plantilla trae ejemplo y caso solución que pasa la revisión."""
     carpeta = tmp_path / plantilla
     assert main(["nueva", f"prueba.{plantilla}", "--plantilla", plantilla, "--carpeta", str(carpeta)]) == 0
     datos = json.loads((carpeta / "practica.json").read_text(encoding="utf-8"))
@@ -86,6 +93,7 @@ def test_cada_plantilla_nace_con_ejemplo_y_caso_solucion(plantilla, tmp_path, ca
 
 
 def test_cli_probar_reporta_una_escena_rota_sin_traceback(tmp_path, capsys):
+    """Comprueba que «probar» reporta escenas rotas sin traceback."""
     carpeta = tmp_path / "p"
     main(["nueva", "prueba.rota", "--plantilla", "vacia", "--carpeta", str(carpeta)])
     pruebas = json.loads((carpeta / "pruebas.json").read_text(encoding="utf-8"))
@@ -98,6 +106,7 @@ def test_cli_probar_reporta_una_escena_rota_sin_traceback(tmp_path, capsys):
 
 
 def test_singular_y_mensajes_de_cantidad():
+    """Comprueba el singular en español y los mensajes de cantidad."""
     from amatista_engine.validators.base import count_message, singular
 
     assert singular("luces") == "luz" and singular("luces de área") == "luz de área"
@@ -108,6 +117,7 @@ def test_singular_y_mensajes_de_cantidad():
 
 
 def test_proporcion_por_encima_del_maximo():
+    """Comprueba que shape.proportion falla por encima del máximo."""
     from amatista_engine.models import TargetDefinition
     from amatista_engine.validators.shape import proportion
 
@@ -117,6 +127,7 @@ def test_proporcion_por_encima_del_maximo():
 
 
 def test_parametros_registrados_coinciden_con_lo_que_leen():
+    """Comprueba que los parámetros registrados coinciden con los que leen los validadores."""
     motor = create_default_engine()
     below = {p.name: p for p in motor.registry.spec("spatial.below").params}
     assert not below["reference_role"].required and "reference" in below and "inside" in below
@@ -131,12 +142,14 @@ def test_parametros_registrados_coinciden_con_lo_que_leen():
 
 
 def test_parametros_con_tipo_incorrecto_no_compilan():
+    """Comprueba que params con tipo incorrecto no compilan."""
     datos = nueva_practica("prueba.tipos", "vacia", "Prueba", "blender_principiante", 1)
     datos["targets"][0]["params"] = {"type": "MESH", "min": [1]}
     assert any("«min» debe ser un número entero" in e for e in compile_practice(datos).errors)
 
 
 def test_scene_mode():
+    """Comprueba el validador scene.mode."""
     from amatista_engine.models import TargetDefinition
     from amatista_engine.validators.scene import scene_mode
 

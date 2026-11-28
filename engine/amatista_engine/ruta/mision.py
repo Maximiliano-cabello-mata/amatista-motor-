@@ -43,6 +43,7 @@ MAX_PASOS = 3
 
 @dataclass(frozen=True)
 class Mision:
+    """Una misión de la ruta (un objetivo): número, título, qué hacer, parte y estado (hecha/actual/siguiente/adelantada)."""
     id: str
     numero: int
     titulo: str
@@ -60,6 +61,7 @@ class Mision:
 
 @dataclass(frozen=True)
 class Parte:
+    """Parte de la ruta («Arma las piezas»…) y el rango de misiones que la forman."""
     titulo: str
     desde: int  # número de su primera misión
     hasta: int  # número de su última misión
@@ -67,6 +69,7 @@ class Parte:
 
 @dataclass(frozen=True)
 class Ruta:
+    """La práctica como misiones en fila: misiones, partes, cuál es la actual, cuántas hechas y si está completa."""
     practica_id: str
     titulo: str
     misiones: Tuple[Mision, ...]
@@ -81,24 +84,29 @@ class Ruta:
 
     @property
     def total(self) -> int:
+        """Número de misiones."""
         return len(self.misiones)
 
     @property
     def mision(self) -> Optional[Mision]:
+        """Misión actual, o None."""
         return self.misiones[self.actual] if self.actual is not None else None
 
     @property
     def parte_actual(self) -> Optional[Parte]:
+        """Parte de la misión actual, o None."""
         m = self.mision
         return self.partes[m.parte] if m is not None else None
 
     def siguientes(self, cuantas: int = 2) -> Tuple[Mision, ...]:
+        """Las próximas misiones en estado «siguiente» (hasta ``cuantas``) para mostrar lo que viene."""
         if self.actual is None:
             return ()
         return tuple(m for m in self.misiones[self.actual + 1:] if m.estado == SIGUIENTE)[:cuantas]
 
 
 def _pasos_de(target: TargetDefinition) -> Tuple[GuideInstruction, ...]:
+    """Micro pasos escritos por el autor en la guía del objetivo (hasta MAX_PASOS)."""
     if target.guide is not None and target.guide.steps:
         return tuple(GuideInstruction(p.text, tuple(p.keys)) for p in target.guide.steps[:MAX_PASOS])
     return ()
@@ -110,6 +118,7 @@ SOLO_POR_TECLA = {"view.navigate"}
 
 
 def _herramientas(tools, practica: PracticeDefinition, pasos: Sequence[GuideInstruction], texto: str) -> Tuple[str, ...]:
+    """Herramientas que se iluminan en la misión: las de sus teclas y su texto, en el orden de la práctica."""
     if tools is None:
         return ()
     por_tecla = [t.id for t in tools.for_step(practica, [p.keys for p in pasos], "")]

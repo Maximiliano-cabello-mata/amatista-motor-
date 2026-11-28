@@ -24,15 +24,18 @@ RUEDAS = [(0.65, 0.7), (1.85, 0.7), (0.65, -0.7), (1.85, -0.7), (-1.65, 0.7), (-
 
 @pytest.fixture(scope="module")
 def motor():
+    """Fixture: motor por defecto."""
     return amatista_engine.create_default_engine()
 
 
 @pytest.fixture(scope="module")
 def tren():
+    """Fixture: la práctica del tren."""
     return parse_practice(json.loads((TREN / "practica.json").read_text(encoding="utf-8")))
 
 
 def vagones() -> Escena:
+    """Escena con los dos vagones del tren."""
     e = Escena()
     e.cubo("Cube", dims=[2.2, 1.2, 1.1], loc=[1.25, 0, 0.9])
     e.cubo("Cube.001", dims=[2.0, 1.2, 1.0], loc=[-1.15, 0, 0.85])
@@ -40,6 +43,7 @@ def vagones() -> Escena:
 
 
 def rueda(e: Escena, i: int, grosor: float = 0.2, **kw) -> Escena:
+    """Añade la rueda ``i`` (con grosor y giro opcionales)."""
     x, y = RUEDAS[i]
     opciones = {"dims": [0.7, 0.7, grosor], "loc": [x, y, 0.35], "rot": [90, 0, 0]}
     opciones.update(kw)
@@ -47,6 +51,7 @@ def rueda(e: Escena, i: int, grosor: float = 0.2, **kw) -> Escena:
 
 
 def test_el_progreso_sube_con_cada_rueda(motor, tren):
+    """Comprueba que el progreso sube con cada rueda añadida."""
     e = vagones()
     anterior = motor.evaluate(tren, e.construir()).progress
     for i in range(8):
@@ -57,6 +62,7 @@ def test_el_progreso_sube_con_cada_rueda(motor, tren):
 
 
 def test_la_octava_rueda_acostada_no_hace_retroceder(motor, tren):
+    """Comprueba que una rueda acostada no hace retroceder progreso ni pasos."""
     e = vagones()
     for i in range(7):
         rueda(e, i)
@@ -71,6 +77,7 @@ def test_la_octava_rueda_acostada_no_hace_retroceder(motor, tren):
 
 
 def test_un_paso_no_se_marca_hecho_antes_que_su_requisito(motor, tren):
+    """Comprueba que un paso cumplido no se marca hecho si su requisito falta."""
     e = vagones()
     rueda(e, 0)
     reporte = motor.evaluate(tren, e.construir())
@@ -81,6 +88,7 @@ def test_un_paso_no_se_marca_hecho_antes_que_su_requisito(motor, tren):
 
 
 def test_una_rueda_gruesa_sigue_siendo_rueda(motor, tren):
+    """Comprueba que ruedas gruesas se siguen deduciendo como ruedas."""
     e = vagones()
     for i in range(8):
         rueda(e, i, grosor=0.45)
@@ -89,12 +97,14 @@ def test_una_rueda_gruesa_sigue_siendo_rueda(motor, tren):
 
 
 def test_la_chimenea_sigue_siendo_chimenea(motor, tren):
+    """Comprueba que la chimenea se deduce como tal."""
     e = vagones()
     e.cilindro("Cylinder", dims=[0.4, 0.4, 0.7], loc=[1.9, 0, 1.8])
     assert dict(motor.evaluate(tren, e.construir()).inferred_roles)["Cylinder"] == "chimenea"
 
 
 def test_el_mensaje_de_forma_trae_medidas(motor, tren):
+    """Comprueba que el mensaje de rueda gruesa o acostada trae medidas."""
     e = vagones()
     for i in range(8):
         rueda(e, i, grosor=0.45)
@@ -112,6 +122,7 @@ def test_el_mensaje_de_forma_trae_medidas(motor, tren):
 
 def test_vagones_hundidos_no_se_culpa_a_las_ruedas(motor, tren):
     # Siguiendo las pistas al pie de la letra: cubos en el origen (medio hundidos) y ruedas en el suelo.
+    """Comprueba que con vagones hundidos el mensaje señala el vagón, no las ruedas."""
     e = Escena()
     e.cubo("Cube", dims=[3.2, 2, 2], loc=[0, 0, 0])
     e.cubo("Cube.001", dims=[3.2, 2, 2], loc=[3.4, 0, 0])
@@ -125,14 +136,17 @@ def test_vagones_hundidos_no_se_culpa_a_las_ruedas(motor, tren):
 
 
 def _objetivo(tid, requires=(), weight=10.0):
+    """Objetivo mínimo con peso y requisitos."""
     return TargetDefinition(id=tid, validator="x", params={}, weight=weight, requires=tuple(requires))
 
 
 def _resultado(tid, passed, **detalles):
+    """Resultado de validación mínimo con detalles."""
     return ValidationResult(target_id=tid, validator="x", passed=passed, message="", details=detalles)
 
 
 def test_un_objetivo_no_suma_si_su_requisito_no_esta_cumplido():
+    """Comprueba que un objetivo no suma progreso si su requisito no se cumple."""
     objetivos = (_objetivo("a"), _objetivo("b", ["a"]), _objetivo("c", ["b"]))
     resultados = {"a": _resultado("a", False), "b": _resultado("b", True), "c": _resultado("c", True)}
     assert desbloqueados(objetivos, resultados) == {"a"}
@@ -142,6 +156,7 @@ def test_un_objetivo_no_suma_si_su_requisito_no_esta_cumplido():
 
 
 def test_avance_parcial_solo_en_conteos_incompletos():
+    """Comprueba el avance parcial en conteos incompletos (no en exceso ni aprobados)."""
     assert avance_parcial(_resultado("a", False, found=4, expected={"min": 8, "max": None})) == 0.5
     assert avance_parcial(_resultado("a", False, found=3, expected=4)) == 0.75
     assert avance_parcial(_resultado("a", False, found=9, expected={"min": 8, "max": 8})) == 0.0  # de más
@@ -160,6 +175,7 @@ CONOCIDOS = {
 
 
 def test_auditoria_de_todas_las_practicas(motor):
+    """Comprueba que la auditoría de prácticas encuentra exactamente los tropiezos conocidos."""
     encontrados = set()
     detalle = []
     for carpeta in auditar.carpetas(()):

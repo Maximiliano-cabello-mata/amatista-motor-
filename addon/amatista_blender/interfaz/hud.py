@@ -104,6 +104,7 @@ def _rectangulo(shader, x, y, ancho, alto, color, corte=0.0):
 
 
 def _arco(cx, cy, radio, desde, hasta, pasos=4):
+    """Puntos de un arco de circunferencia (grados ``desde``→``hasta``) para dibujar esquinas redondeadas de la tarjeta."""
     return [(cx + radio * math.cos(math.radians(desde + (hasta - desde) * i / pasos)),
              cy + radio * math.sin(math.radians(desde + (hasta - desde) * i / pasos))) for i in range(pasos + 1)]
 
@@ -204,10 +205,12 @@ def idioma_interfaz(contexto=None):
 
 
 def actualizar_idioma(contexto=None):
+    """Fija en el motor el idioma de los menús según la interfaz de Blender (para mostrar rutas como las ve el alumno)."""
     return _motor.terminos.fijar_idioma(idioma_interfaz(contexto))
 
 
 def _texto(x, y, texto, tam, color):
+    """Dibuja texto en la vista 3D con blf (traduce las rutas de menú al idioma de Blender)."""
     texto = _motor.terminos.menus(texto)
     fuente = 0
     blf.size(fuente, tam)
@@ -217,12 +220,14 @@ def _texto(x, y, texto, tam, color):
 
 
 def _ancho(texto, tam):
+    """Ancho en píxeles del texto con ese tamaño de fuente (tras traducir rutas de menú)."""
     texto = _motor.terminos.menus(texto)
     blf.size(0, tam)
     return blf.dimensions(0, texto)[0]
 
 
 def _recortar(texto, tam, ancho_max):
+    """Recorta el texto con «…» para que quepa en ``ancho_max`` píxeles."""
     texto = _motor.terminos.menus(texto)
     if _ancho(texto, tam) <= ancho_max:
         return texto
@@ -284,6 +289,7 @@ def _ancho_teclas(teclas, tam_chico, escala):
 def _alto_instruccion(paso, tam, ancho_texto, escala=1.0, tam_chico=10):
     # Mismo ancho que al dibujar: antes se suponían 120 px de teclas y con tres
     # teclas el texto partía en más líneas de las calculadas y se salía de la tarjeta.
+    """Alto que ocupa un micro paso en la tarjeta (texto partido en líneas junto a sus teclas)."""
     libre = ancho_texto - _ancho_teclas(paso.keys, tam_chico, escala)
     lineas = max(1, len(_partir(paso.text, tam, libre, 2)))
     return tam + 9 * escala + (lineas - 1) * (tam + 5 * escala)
@@ -343,10 +349,12 @@ def _dibujar_avisos(shader, x, y, ancho, escala, pal=None):
 
 
 def _con_alfa(color, alfa):
+    """Color con la transparencia multiplicada por ``alfa`` (para animaciones de entrada/salida)."""
     return (color[0], color[1], color[2], color[3] * alfa)
 
 
 def _punto(shader, cx, cy, radio, color, pasos=14):
+    """Dibuja un círculo relleno con el shader de GPU (puntos de estado de la tarjeta)."""
     puntos = [(cx, cy)] + [(cx + radio * math.cos(2 * math.pi * i / pasos), cy + radio * math.sin(2 * math.pi * i / pasos))
                            for i in range(pasos + 1)]
     batch = batch_for_shader(shader, "TRIS", {"pos": puntos}, indices=[(0, i, i + 1) for i in range(1, pasos + 1)])
@@ -355,6 +363,7 @@ def _punto(shader, cx, cy, radio, color, pasos=14):
 
 
 def _anillo(shader, cx, cy, radio, grosor, color, pasos=18):
+    """Dibuja un anillo (círculo hueco) con el shader de GPU."""
     puntos, indices = [], []
     for i in range(pasos + 1):
         ang = 2 * math.pi * i / pasos
@@ -390,10 +399,12 @@ def _tecla_mision(shader, x, y, texto, tam, escala, estado, pulso, acento, alfa)
 
 
 def _alto_paso(paso, tam, ancho_texto, escala, tam_chico):
+    """Alto de un paso de la tarjeta (mismo cálculo que ``_alto_instruccion``)."""
     return _alto_instruccion(paso, tam, ancho_texto, escala, tam_chico)
 
 
 def _nombre_corto(herramienta):
+    """Nombre de la herramienta sin el atajo entre paréntesis."""
     return herramienta.name.split(" (")[0]
 
 
@@ -634,6 +645,11 @@ def del_taller(escena):
 
 
 def dibujar():
+    """Callback de dibujo de la vista 3D: pinta la tarjeta de la misión que ve el alumno sobre su escena.
+
+    Muestra misión actual, parte, qué hacer con sus teclas, herramientas, avisos,
+    pausa y logro, con su animación; no hace nada si el alumno desactivó el HUD.
+    """
     p = ajustes.prefs()
     if p is not None and not p.mostrar_hud:
         return
@@ -793,11 +809,13 @@ def dibujar():
 
 
 def _resumen_pistas():
+    """«sin pistas» o «n pista(s)» usadas en la práctica."""
     usadas = sum(practicas.pistas().values())
     return "sin pistas" if not usadas else f"{usadas} pista{'s' if usadas != 1 else ''}"
 
 
 def _pie(ruta, m):
+    """Pie de la tarjeta: cómo seguir (siguiente práctica, «Muéstrame cómo» si está atascado) o el estado de sincronización."""
     if ruta.completada:
         return "N › Amatista: siguiente práctica"
     g = guia.guia_actual()
@@ -813,6 +831,7 @@ def _pie(ruta, m):
 
 
 def activar(encendido=True):
+    """Enciende o apaga el dibujo de la tarjeta en la vista 3D (registra/quita el draw handler; nada sin GPU o en background)."""
     from . import visor3d
 
     if gpu is None or bpy.app.background:
@@ -833,10 +852,12 @@ def activar(encendido=True):
 
 
 def register():
+    """Fija el idioma y enciende la tarjeta según la preferencia «mostrar HUD»."""
     actualizar_idioma()
     p = ajustes.prefs()
     activar(p.mostrar_hud if p else True)
 
 
 def unregister():
+    """Apaga la tarjeta de la vista 3D."""
     activar(False)

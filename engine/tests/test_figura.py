@@ -23,16 +23,19 @@ TREN = PRACTICAS / "principiante/m1-tren/practica.json"
 
 @pytest.fixture(scope="module")
 def tren():
+    """Fixture: la práctica del tren."""
     return parse_practice(json.loads(TREN.read_text(encoding="utf-8")))
 
 
 def evaluar(tren, piezas, **kw):
+    """Arma la figura con las piezas y ejecuta figure.resembles."""
     motor = create_default_engine()
     funcion = motor.registry.get("figure.resembles")
     return funcion(tren.target("figura"), Escena().referencia(piezas, **kw).construir())
 
 
 def test_la_practica_lleva_las_piezas_del_modelo(tren):
+    """Comprueba que la figura del tren hereda piezas, tolerancia y etiquetas de la referencia."""
     params = tren.target("figura").params
     assert len(params["parts"]) == 11  # el suelo solo decora la imagen
     assert params["tolerance"] == 0.35 and params["labels"]["rueda"] == "Rueda"
@@ -45,24 +48,29 @@ def test_la_practica_lleva_las_piezas_del_modelo(tren):
 
 @pytest.mark.parametrize("semilla", range(1, 9))
 def test_medidas_a_mano_pasan(tren, semilla):
+    """Comprueba que medidas imprecisas aprueban."""
     assert evaluar(tren, tren.reference.parts, variacion=0.25, semilla=semilla).passed
 
 
 @pytest.mark.parametrize("escala,giro", [(1, 0), (2, 90), (0.6, 180), (1.4, 270)])
 def test_mas_grande_mas_chica_o_girada_pasa(tren, escala, giro):
+    """Comprueba que la figura escalada o girada aprueba."""
     assert evaluar(tren, tren.reference.parts, escala=escala, giro=giro).passed
 
 
 def test_demasiado_grande_pide_escalar(tren):
+    """Comprueba que una figura demasiado grande pide reducirla."""
     r = evaluar(tren, tren.reference.parts, escala=4)
     assert not r.passed and "redúcela" in r.message
 
 
 def _cambiar(piezas, rol, **cambios):
+    """Copia de las piezas con cambios en las de un rol."""
     return [replace(p, **cambios(p) if callable(cambios) else cambios) if p.role == rol else p for p in piezas]
 
 
 def test_figuras_sin_sentido_no_pasan(tren):
+    """Comprueba que figuras sin sentido no aprueban y dan su mensaje."""
     P = tren.reference.parts
     techo = [replace(p, location=(p.location[0], p.location[1], 1.8)) if p.role == "rueda" else p for p in P]
     acostadas = [replace(p, rotation=(0, 0, 0)) if p.role == "rueda" else p for p in P]
@@ -84,6 +92,7 @@ def test_figuras_sin_sentido_no_pasan(tren):
 
 
 def test_falta_un_tipo_de_pieza_o_los_roles(tren):
+    """Comprueba los mensajes de pieza faltante y roles sin asignar."""
     r = evaluar(tren, tren.reference.parts, sin=["chimenea"])
     assert not r.passed and "Falta «Chimenea»" in r.message
     r = evaluar(tren, tren.reference.parts, roles=False)
@@ -91,6 +100,7 @@ def test_falta_un_tipo_de_pieza_o_los_roles(tren):
 
 
 def test_menos_ruedas_que_el_modelo(tren):
+    """Comprueba que menos ruedas que el modelo no aprueba."""
     ruedas = [p for p in tren.reference.parts if p.role == "rueda"]
     cuatro = [p for p in tren.reference.parts if p.role != "rueda"] + ruedas[:4]
     r = evaluar(tren, cuatro)
@@ -98,6 +108,7 @@ def test_menos_ruedas_que_el_modelo(tren):
 
 
 def test_la_referencia_se_revisa_al_compilar():
+    """Comprueba que la referencia se valida al compilar."""
     motor = create_default_engine()
     datos = json.loads(TREN.read_text(encoding="utf-8"))
     datos["reference"]["parts"][0]["primitive"] = "tetera"
@@ -111,6 +122,7 @@ def test_la_referencia_se_revisa_al_compilar():
 
 
 def test_medida_aproximada():
+    """Comprueba el validador dimension.approx."""
     motor = create_default_engine()
     funcion = motor.registry.get("dimension.approx")
     escena = Escena().esfera("Bola", dims=(2.3, 2.3, 2.3), loc=(0, 0, 1.15)).construir()

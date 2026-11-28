@@ -18,11 +18,13 @@ CARPETAS = sorted(p.parent for p in PRACTICAS.rglob("practica.json"))
 
 
 def _leer(ruta: Path):
+    """Lee un JSON de disco."""
     return json.loads(ruta.read_text(encoding="utf-8"))
 
 
 def test_hay_nueve_proyectos_del_plan():
     # Cada módulo intercala teoría y Blender: su taller (habilidades.json) y el proyecto que lo cierra.
+    """Comprueba que hay 9 proyectos y coinciden con el plan."""
     assert len(CARPETAS) == 9
     ids = {_leer(c / "practica.json")["id"] for c in CARPETAS}
     assert ids == set(load_curriculum(_leer(CURSOS)).practices())
@@ -30,6 +32,7 @@ def test_hay_nueve_proyectos_del_plan():
 
 @pytest.mark.parametrize("carpeta", CARPETAS, ids=lambda c: c.name)
 def test_practica_compila_sin_errores_ni_avisos(carpeta):
+    """Comprueba que cada práctica del plan compila sin errores ni avisos y trae píldoras."""
     motor = create_default_engine()
     resultado = compile_practice(_leer(carpeta / "practica.json"), motor.registry, motor.tools)
     assert resultado.ok, resultado.errors
@@ -39,6 +42,7 @@ def test_practica_compila_sin_errores_ni_avisos(carpeta):
 
 @pytest.mark.parametrize("carpeta", CARPETAS, ids=lambda c: c.name)
 def test_casos_de_prueba(carpeta):
+    """Comprueba que los casos de prueba de cada práctica se cumplen (incluida la solución)."""
     motor = create_default_engine()
     practica = compile_practice(_leer(carpeta / "practica.json"), motor.registry, motor.tools).practice
     casos = _leer(carpeta / "pruebas.json")["casos"]
@@ -48,6 +52,7 @@ def test_casos_de_prueba(carpeta):
 
 
 def test_cursos_json_coincide_con_las_practicas():
+    """Comprueba la coherencia de cursos.json (dificultades y estados)."""
     plan = load_curriculum(_leer(CURSOS))
     assert revisar_plan(plan) == []
     assert [c.difficulty for c in plan.courses] == ["principiante", "principiante_intermedio", "intermedio", "avanzado"]
@@ -55,6 +60,7 @@ def test_cursos_json_coincide_con_las_practicas():
 
 
 def test_repasos_apuntan_a_pildoras_con_pregunta_de_practicas_anteriores():
+    """Comprueba que los repasos apuntan a píldoras existentes de prácticas anteriores."""
     motor = create_default_engine()
     practicas = {}
     for c in CARPETAS:
@@ -69,6 +75,7 @@ def test_repasos_apuntan_a_pildoras_con_pregunta_de_practicas_anteriores():
 
 
 def test_cada_modulo_tiene_taller_y_proyecto():
+    """Comprueba que cada módulo tiene taller y proyecto."""
     plan = load_curriculum(_leer(CURSOS))
     for curso in plan.courses:
         for modulo in curso.modules:

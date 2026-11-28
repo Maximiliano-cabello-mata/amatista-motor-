@@ -14,6 +14,7 @@ spec.loader.exec_module(protocolo)
 
 
 def test_cada_direccion_pide_su_orden():
+    """Comprueba la orden que corresponde a cada dirección amatista://."""
     assert protocolo.orden_de_url("amatista://abrir") == {"tipo": "abrir", "datos": {}}
     assert protocolo.orden_de_url("amatista://") == {"tipo": "abrir", "datos": {}}
     assert protocolo.orden_de_url("amatista://practica/blender.n1.mesa") == {
@@ -30,6 +31,7 @@ def test_cada_direccion_pide_su_orden():
 
 def test_tolera_lo_que_agregan_navegadores_y_sistemas():
     # Windows y algunos navegadores agregan una barra final o cambian mayúsculas del esquema.
+    """Comprueba la tolerancia a mayúsculas, barras y espacios en el enlace."""
     assert protocolo.orden_de_url("AMATISTA://practica/blender.n1.mesa/")["datos"] == {"practica_id": "blender.n1.mesa"}
     assert protocolo.orden_de_url("amatista:practica/blender.n1.mesa")["tipo"] == "abrir_practica"
     assert protocolo.orden_de_url(" amatista://isla/ ")["tipo"] == "isla"
@@ -37,6 +39,7 @@ def test_tolera_lo_que_agregan_navegadores_y_sistemas():
 
 def test_nunca_acepta_rutas_ni_codigo():
     # Cualquier página puede pedir un amatista://: solo se eligen actividades con un id simple.
+    """Comprueba que el enlace rechaza rutas, código y órdenes desconocidas."""
     for url in ("amatista://practica/../../etc/passwd", "amatista://practica/%2E%2E%2Fsecreto",
                 "amatista://practica/a b", "amatista://practica/" + "x" * 200, "amatista://borrar/todo",
                 "https://ejemplo.com/practica/x", "", None, "amatista://practica/"):
@@ -48,6 +51,7 @@ def test_nunca_acepta_rutas_ni_codigo():
 
 
 def test_lee_la_direccion_de_los_argumentos_de_blender():
+    """Comprueba la lectura del enlace tras «--» en los argumentos de Blender."""
     assert protocolo.url_de_argumentos(["blender", "--", "--amatista", "amatista://isla"]) == "amatista://isla"
     assert protocolo.url_de_argumentos(["blender", "--", "--amatista=amatista://isla"]) == "amatista://isla"
     assert protocolo.url_de_argumentos(["blender", "--", "amatista://isla"]) == "amatista://isla"
@@ -57,6 +61,7 @@ def test_lee_la_direccion_de_los_argumentos_de_blender():
 
 
 def test_linux_registra_el_esquema_con_la_ruta_de_blender(tmp_path, monkeypatch):
+    """Comprueba el .desktop que registra amatista:// en Linux."""
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
     monkeypatch.setattr(protocolo.subprocess, "run", lambda *a, **k: None)
     texto = protocolo._registrar_linux("/opt/blender 4.2/blender")
@@ -68,12 +73,14 @@ def test_linux_registra_el_esquema_con_la_ruta_de_blender(tmp_path, monkeypatch)
 
 
 def test_flatpak_y_snap_se_abren_desde_fuera_de_su_caja():
+    """Comprueba el comando para Blender de Flatpak y Snap."""
     assert protocolo.comando_linux("/app/blender/blender", {"FLATPAK_ID": "org.blender.Blender"}) == \
         "flatpak run org.blender.Blender --app-template amatista -- --amatista %u"
     assert protocolo.comando_linux("/snap/blender/5/blender", {"SNAP": "/snap/blender/5"}).startswith("/snap/bin/blender ")
 
 
 def test_el_guion_de_macos_pasa_la_direccion_entre_comillas():
+    """Comprueba que el AppleScript de macOS escapa ruta y dirección."""
     guion = protocolo.guion_mac('/Applications/Blender "4.2".app/Contents/MacOS/Blender')
     assert "on open location direccion" in guion
     assert 'quoted form of direccion' in guion
@@ -81,4 +88,5 @@ def test_el_guion_de_macos_pasa_la_direccion_entre_comillas():
 
 
 def test_registrar_nunca_lanza():
+    """Comprueba que registrar sin binario devuelve error sin lanzar."""
     assert protocolo.registrar("") == (False, "No sé dónde está Blender.")

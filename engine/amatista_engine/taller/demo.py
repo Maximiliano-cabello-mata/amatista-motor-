@@ -46,6 +46,7 @@ MAXIMO = 24.0  # una demostración nunca pasa de esto: se acelera
 
 @dataclass(frozen=True)
 class PasoDemo:
+    """Un paso de la demostración «Mira»: acción, datos, segundo de inicio, duración, teclas que se muestran y texto."""
     accion: str
     datos: Dict[str, Any]
     inicio: float  # s desde que empieza la demostración
@@ -55,11 +56,13 @@ class PasoDemo:
 
     @property
     def fin(self) -> float:
+        """Segundo en que termina el paso."""
         return self.inicio + self.duracion
 
 
 @dataclass(frozen=True)
 class LineaDeTiempo:
+    """La demostración completa como línea de tiempo de pasos, con duración total, título y teclas usadas."""
     pasos: Tuple[PasoDemo, ...] = ()
     duracion: float = 0.0
     titulo: str = ""
@@ -70,6 +73,7 @@ class LineaDeTiempo:
         return next((p for p in self.pasos if p.inicio <= t < p.fin + PAUSA), None)
 
     def a_dict(self) -> Dict[str, Any]:
+        """La línea de tiempo como dict JSON (tiempos redondeados) para que el add-on la reproduzca."""
         return {
             "titulo": self.titulo,
             "duracion": round(self.duracion, 2),
@@ -79,6 +83,7 @@ class LineaDeTiempo:
 
 
 def _teclas(accion: str, datos: Dict[str, Any]) -> Tuple[str, ...]:
+    """Teclas que se muestran para una acción de la demo (p. ej. mover en X → «G», «X»; vistas → tecla del numérico)."""
     base, _, _ = ACCIONES[accion]
     if accion == "vista":
         return VISTAS.get(str(datos.get("tipo") or "frente"), ())
@@ -141,14 +146,17 @@ BASE = (2.0, 2.0, 2.0)  # lo que mide una primitiva recién agregada
 
 
 def _distinto(a: Sequence[float], b: Sequence[float], tol: float) -> List[int]:
+    """Ejes (0..2) en que dos vectores difieren más que ``tol``."""
     return [i for i in range(3) if abs(float(a[i]) - float(b[i])) > tol]
 
 
 def _eje_unico(ejes: List[int]) -> Dict[str, str]:
+    """{"eje": «x»|«y»|«z»} si solo cambia un eje; vacío si cambian varios."""
     return {"eje": "xyz"[ejes[0]]} if len(ejes) == 1 else {}
 
 
 def _vec(valor: Any, defecto: Sequence[float]) -> List[float]:
+    """Vector de 3 floats desde el JSON; ``defecto`` si no es válido."""
     try:
         v = [float(x) for x in valor]
         return v if len(v) == 3 else list(defecto)

@@ -19,6 +19,7 @@ EJE_LADO = {0: "a lo largo", 1: "a lo ancho"}
 
 
 def _pieza(nombre: str, grupo: str, etiquetas: Dict[str, str]) -> str:
+    """Cómo nombrar una pieza en el mensaje: «nombre» o «nombre» (rol) si el nombre no coincide con el rol."""
     rol = _nombre_grupo(grupo, etiquetas)
     if not nombre or nombre.split(".")[0].lower() == rol.lower():
         return f"«{nombre or rol}»"
@@ -26,6 +27,7 @@ def _pieza(nombre: str, grupo: str, etiquetas: Dict[str, str]) -> str:
 
 
 def mensaje_relacion(relacion, detalle: Dict[str, Any], etiquetas: Dict[str, str]) -> str:
+    """Mensaje para el alumno cuando falla una relación entre piezas del modelo (en el suelo, encima, toca…)."""
     objeto = detalle.get("objeto", "")
     if relacion.tipo == SUELO:
         if detalle.get("hundida"):
@@ -88,6 +90,15 @@ def lista_de_revision(r, partes, scene: SceneState, etiquetas: Dict[str, str], f
 
 
 def recognize(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``figure.recognize``: el motor reconoce la figura del alumno por la forma, sin que asigne roles.
+
+    Compara la escena con las piezas de referencia (``params.parts``) con el
+    perfil de exigencia del nivel y aprueba si el puntaje supera ``min_score``.
+    Devuelve puntaje, forma, relaciones, roles deducidos y el peor problema en ``details``.
+
+    Raises:
+        ValueError: si faltan las piezas del modelo.
+    """
     partes = target.params.get("parts")
     if not isinstance(partes, list) or not partes:
         raise ValueError("figure.recognize necesita las piezas del modelo («reference» en la práctica)")

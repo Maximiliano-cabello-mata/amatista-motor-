@@ -40,6 +40,7 @@ ULTIMO = {"op": None, "herramienta": None, "listo": False}
 
 
 def ruta_fichas(carpeta=None):
+    """Ruta del fichas.json del paquete (en la carpeta o en blender/), o None."""
     carpeta = Path(carpeta) if carpeta is not None else temas.carpeta_paquete()
     for candidata in (carpeta / "fichas.json", carpeta / "blender" / "fichas.json"):
         if candidata.is_file():
@@ -62,6 +63,7 @@ def fichas(recargar=False):
 
 
 def ficha(ficha_id):
+    """Ficha de herramienta por id, o None."""
     return fichas().ficha(ficha_id)
 
 
@@ -69,28 +71,33 @@ def ficha(ficha_id):
 
 
 def _avance():
+    """Avance del alumno en el taller (dict persistente)."""
     from .taller import datos
 
     return datos.avance()
 
 
 def vistas():
+    """Veces que el alumno vio cada ficha {id: n}."""
     valor = _avance().get("fichas")
     return valor if isinstance(valor, dict) else {}
 
 
 def conocidas():
+    """Fichas que el alumno marcó como «ya la conozco»."""
     valor = _avance().get("conocidas")
     return set(valor) if isinstance(valor, list) else set()
 
 
 def _guardar():
+    """Guarda el avance del alumno en disco."""
     from .taller import datos
 
     datos.guardar()
 
 
 def marcar_vista(ficha_id):
+    """Suma una vista a la ficha y guarda el avance."""
     if not ficha_id:
         return
     avance = _avance()
@@ -101,6 +108,7 @@ def marcar_vista(ficha_id):
 
 
 def marcar_conocida(ficha_id):
+    """Marca la ficha como conocida (no se vuelve a presentar sola) y guarda."""
     if not ficha_id:
         return
     avance = _avance()
@@ -111,6 +119,7 @@ def marcar_conocida(ficha_id):
 
 
 def _fase(habilidad_id):
+    """Fase de dominio del alumno en una habilidad (nueva si no hay catálogo o datos)."""
     from .taller import datos
 
     try:
@@ -163,6 +172,7 @@ def visible():
 
 
 def modo():
+    """Modo de la ficha visible (presentar, curioso, consulta) o «» si no hay ficha abierta."""
     return ESTADO["modo"] if ESTADO["ficha"] else ""
 
 
@@ -181,6 +191,7 @@ def mostrar(ids, modo_ficha=CONSULTA):
 
 
 def _iluminar(ficha_id):
+    """Ilumina en la interfaz de Blender la zona/botón de la herramienta de la ficha durante un rato."""
     from .taller.vista import brillo
 
     f = ficha(ficha_id)
@@ -203,6 +214,7 @@ def como():
 
 
 def cerrar(marcar=True):
+    """Cierra la ficha visible (por defecto la marca vista), vacía la cola y apaga el brillo."""
     from .taller.vista import brillo
 
     fid = ESTADO["ficha"]
@@ -257,6 +269,7 @@ def botones():
 
 
 def chip():
+    """Etiqueta superior de la tarjeta: «HERRAMIENTA NUEVA · n de N», «¿QUÉ ES ESTO?» o «FICHA»."""
     if ESTADO["modo"] == PRESENTAR:
         numero = f" · {ESTADO['numero']} de {ESTADO['de']}" if ESTADO["de"] > 1 else ""
         return f"HERRAMIENTA NUEVA{numero}"
@@ -269,6 +282,7 @@ def chip():
 
 
 def curioso_encendido():
+    """True si el modo curioso (fichas al usar una herramienta por primera vez) está activo según preferencia y fase del alumno."""
     p = ajustes.prefs()
     modo_pref = getattr(p, "modo_curioso", "auto") if p is not None else "auto"
     if modo_pref == "nunca":
@@ -284,6 +298,7 @@ def curioso_encendido():
 
 
 def _modo_objeto(ventana):
+    """Modo del objeto activo en la ventana («OBJECT», «EDIT»…)."""
     try:
         objeto = ventana.view_layer.objects.active
     except AttributeError:
@@ -355,6 +370,7 @@ def revisar_curioso():
 
 
 def _vigilante():
+    """Temporizador: revisa si mostrar una ficha curiosa y cierra la que caducó; se repite cada REVISAR_CADA."""
     try:
         if bpy.app.background:
             return REVISAR_CADA
@@ -367,6 +383,7 @@ def _vigilante():
 
 
 def _redibujar():
+    """Redibuja las vistas 3D."""
     if bpy.app.background:
         return
     for ventana in getattr(bpy.context.window_manager, "windows", ()) or ():
@@ -385,6 +402,7 @@ class AMATISTA_OT_ficha(bpy.types.Operator):
     herramienta: bpy.props.StringProperty(name="Herramienta", default="")
 
     def execute(self, context):
+        """Muestra la ficha de la herramienta pedida en modo consulta; avisa si todavía no tiene ficha."""
         if not mostrar([self.herramienta], CONSULTA):
             self.report({"WARNING"}, "Esa herramienta todavía no tiene ficha.")
             return {"CANCELLED"}
@@ -395,6 +413,7 @@ CLASES = (AMATISTA_OT_ficha,)
 
 
 def register():
+    """Registra los operadores de fichas y el temporizador vigilante."""
     for clase in CLASES:
         bpy.utils.register_class(clase)
     ULTIMO.update(op=None, herramienta=None, listo=False)
@@ -403,6 +422,7 @@ def register():
 
 
 def unregister():
+    """Quita el temporizador, cierra la ficha y desregistra los operadores."""
     if bpy.app.timers.is_registered(_vigilante):
         bpy.app.timers.unregister(_vigilante)
     ESTADO.update(ficha="", cola=[], modo="", abierta=False, desde=0.0, hasta=0.0, numero=0, de=0)

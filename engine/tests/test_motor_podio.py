@@ -14,6 +14,7 @@ practica = load_practice(REPO / "practices/archivo/v2/podio.json")
 
 def escena():
     # Valores de referencia independientes de los rangos del JSON.
+    """Escena del podio correcto y guardado."""
     return SceneState("4.2", "mi_podio.blend", True, (
         SceneObject("A", "MESH", roles=("centro",), dimensions=(1, 1, 1.5), location=(0, 0, .75)),
         SceneObject("B", "MESH", roles=("izquierda",), dimensions=(1, 1, 1), location=(-1.1, 0, .5)),
@@ -21,6 +22,7 @@ def escena():
     ))
 
 def test_referencia_completa_y_escena_vacia():
+    """Comprueba que el podio correcto se completa y la escena vacía no."""
     assert motor.evaluate(practica, escena()).completed
     assert motor.evaluate(practica, escena()).progress == 100
     assert not motor.evaluate(practica, SceneState("4.2", "", False)).completed
@@ -33,6 +35,7 @@ def test_referencia_completa_y_escena_vacia():
     (1, {"roles": ("centro",)}, "izquierda"),
 ])
 def test_errores_reales_no_completan(indice, cambios, objetivo):
+    """Comprueba que errores reales en el podio impiden completar."""
     original = escena()
     objetos = list(original.objects)
     objetos[indice] = replace(objetos[indice], **cambios)
@@ -41,12 +44,14 @@ def test_errores_reales_no_completan(indice, cambios, objetivo):
     assert reporte.result(objetivo).passed is False
 
 def test_no_acepta_entrega_con_cambios_sin_guardar():
+    """Comprueba que con cambios sin guardar no se completa."""
     reporte = motor.evaluate(practica, replace(escena(), file_saved=False))
     assert not reporte.completed
     assert reporte.result("guardar").passed is False
 
 def test_enlace_y_pasos_del_modulo_coinciden_con_la_practica():
     # Contrato con la web: la lección que enlaza esta práctica vive en su repositorio.
+    """Comprueba que la lección del módulo 3 de la plataforma coincide con la práctica."""
     import vecinos
     lecciones = vecinos.requerir("frontend") / "src/data/modulos/archivo/blender-modulo-3.json"
     modulo = json.loads(lecciones.read_text(encoding="utf-8"))["module"]

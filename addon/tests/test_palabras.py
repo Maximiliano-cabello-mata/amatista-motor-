@@ -16,6 +16,7 @@ from amatista_engine import terminos  # noqa: E402
 
 
 def _cargar(nombre, paquete):
+    """Carga un módulo del add-on dentro de un paquete falso."""
     spec = importlib.util.spec_from_file_location(f"{paquete.__name__}.{nombre}", ADDON / "amatista_blender" / f"{nombre}.py")
     modulo = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = modulo
@@ -35,6 +36,7 @@ JSON = json.loads((RAIZ / "practices" / "blender" / "palabras.json").read_text(e
 
 
 def test_el_glosario_es_corto_simple_y_sin_repetidos():
+    """Comprueba que el glosario es corto, sin repetidos y con textos breves."""
     lista = JSON["palabras"]
     assert 10 <= len(lista) <= 25
     assert len({p["id"] for p in lista}) == len(lista)
@@ -44,10 +46,12 @@ def test_el_glosario_es_corto_simple_y_sin_repetidos():
 
 
 def test_el_add_on_lo_encuentra_en_el_repositorio():
+    """Comprueba que el add-on encuentra el glosario del repositorio."""
     assert [p["id"] for p in palabras.cargar(recargar=True)] == [p["id"] for p in JSON["palabras"]]
 
 
 def test_con_blender_en_ingles_muestra_el_nombre_de_sus_menus():
+    """Comprueba títulos y detalles del glosario en español e inglés."""
     malla = next(p for p in JSON["palabras"] if p["id"] == "malla")
     assert palabras.titulo(malla, "es") == "Malla"
     assert palabras.titulo(malla, "en") == "Malla · Mesh"

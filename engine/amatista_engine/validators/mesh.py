@@ -7,6 +7,10 @@ from .base import count_message, count_ok, count_rule, describe, result, select,
 
 
 def _contar_geometria(target: TargetDefinition, scene: SceneState, campo: str, nombre: str) -> ValidationResult:
+    """Común a vertex_count y face_count: comprueba que cada malla seleccionada tenga una cantidad válida de ``campo``.
+
+    Falla si no hay mallas o alguna está fuera del rango; ``details.failed`` lista objeto y valor.
+    """
     sel = selector(target)
     objetos = [o for o in select(scene, sel) if o.object_type == "MESH"]
     minimo, maximo = count_rule(target, default_min=1)
@@ -29,10 +33,12 @@ def _contar_geometria(target: TargetDefinition, scene: SceneState, campo: str, n
 
 
 def vertex_count(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``mesh.vertex_count``: número de vértices de las mallas seleccionadas dentro del rango pedido."""
     return _contar_geometria(target, scene, "vertices", "vértices")
 
 
 def face_count(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``mesh.face_count``: número de caras de las mallas seleccionadas dentro del rango pedido."""
     return _contar_geometria(target, scene, "faces", "caras")
 
 
@@ -62,6 +68,7 @@ def material_exists(target: TargetDefinition, scene: SceneState) -> ValidationRe
     que = describe(sel)
 
     def tiene(obj) -> bool:
+        """True si el objeto tiene materiales y, si se pidió nombre, alguno lo contiene (sin distinguir mayúsculas)."""
         if not obj.materials:
             return False
         return not nombre or any(nombre.lower() in m.lower() for m in obj.materials)

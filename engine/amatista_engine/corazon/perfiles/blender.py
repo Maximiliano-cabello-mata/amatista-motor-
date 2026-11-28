@@ -12,11 +12,13 @@ from ..contrato import Lugar
 
 
 def _lugar(d) -> Lugar:
+    """Convierte una entrada de la tabla ``guion/donde.py`` en un Lugar del perfil."""
     return Lugar(herramienta=d.herramienta, nombre=d.nombre, lugar=d.lugar, tipo=d.tipo, ruta=d.ruta,
                  atajo=d.atajo, objetivo=d.objetivo, modo=d.modo)
 
 
 def _traducir(texto: str, idioma: str = "") -> str:
+    """Adapta las rutas de menú al idioma de la interfaz de Blender (ver terminos.menus)."""
     return terminos.menus(texto, idioma or None)
 
 

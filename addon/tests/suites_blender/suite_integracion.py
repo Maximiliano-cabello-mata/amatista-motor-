@@ -1,4 +1,5 @@
 # Pruebas de auditor?a, idioma, integraci?n, coraz?n y entrega al servidor.
+# [REVISION-MUERTO] imports sin uso: json, math, tempfile, Path, dibujar_todo, dibujar_vista_3d, _inicio_de_blender, _armar, _abrir_actividad, _elegir, _motor_foto, ARCHIVO_V2.
 import importlib
 import traceback
 import json

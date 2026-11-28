@@ -14,10 +14,12 @@ import construir  # noqa: E402
 
 
 def _zip(datos):
+    """Abre un zip en memoria."""
     return zipfile.ZipFile(io.BytesIO(datos))
 
 
 def test_extension_trae_manifiesto_motor_y_practicas():
+    """Comprueba que la extensión trae manifiesto, add-on, motor y catálogo."""
     nombres = _zip(construir.construir_extension()).namelist()
     assert "blender_manifest.toml" in nombres
     assert "__init__.py" in nombres
@@ -35,16 +37,19 @@ def test_extension_trae_manifiesto_motor_y_practicas():
 
 def test_extension_trae_el_texto_de_la_licencia():
     # El manifiesto declara SPDX:GPL-3.0-or-later: la GPL pide entregar su texto con la extensión.
+    """Comprueba que la extensión trae la licencia GPL-3.0."""
     assert "SPDX:GPL-3.0-or-later" in construir.leer_manifiesto()["license"]
     texto = _zip(construir.construir_extension()).read("LICENSE").decode("utf-8")
     assert "GNU GENERAL PUBLIC LICENSE" in texto and "Version 3, 29 June 2007" in texto
 
 
 def test_mismo_codigo_mismo_zip():
+    """Comprueba que la construcción es reproducible."""
     assert construir.construir_extension() == construir.construir_extension()
 
 
 def test_config_con_direcciones_y_vinculo():
+    """Comprueba el config.json con direcciones normalizadas y vínculo."""
     datos = construir.construir_extension(
         servidor="https://api.amatista.cl/", plataforma="https://amatista.cl",
         vinculo={"id": "v1", "secreto": "s3", "otro": "no"},
@@ -58,6 +63,7 @@ def test_config_con_direcciones_y_vinculo():
 
 @pytest.mark.parametrize("sistema", construir.SISTEMAS)
 def test_paquete_por_sistema(sistema):
+    """Comprueba el contenido del paquete con instalador de cada sistema."""
     zf = _zip(construir.construir_paquete(sistema))
     lanzador, permisos = construir.LANZADORES[sistema]
     nombres = zf.namelist()
@@ -75,11 +81,13 @@ def test_paquete_por_sistema(sistema):
 
 
 def test_sistema_desconocido():
+    """Comprueba que un sistema desconocido da ValueError."""
     with pytest.raises(ValueError):
         construir.construir_paquete("amiga")
 
 
 def test_indice_de_repositorio():
+    """Comprueba el índice de repositorio de extensiones."""
     datos = construir.construir_extension()
     indice = construir.indice_repositorio(datos, "https://x/amatista.zip")
     entrada = indice["data"][0]
@@ -93,6 +101,7 @@ def test_indice_de_repositorio():
 
 
 def test_manifiesto_y_bl_info_coinciden():
+    """Comprueba que la versión del manifiesto coincide con bl_info."""
     texto = (construir.ADDON / "__init__.py").read_text(encoding="utf-8")
     version = tuple(int(n) for n in construir.VERSION.split("."))
     assert f'"version": {version}' in texto

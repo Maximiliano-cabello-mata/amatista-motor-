@@ -37,6 +37,7 @@ ESTADO = {"director": None, "practica_id": "", "guion": None, "adaptador": None,
 
 
 def _carpeta_ramas():
+    """Carpeta de ramas: dentro del paquete del add-on o, desde el repositorio, practices/ramas."""
     paquete = Path(__file__).resolve().parents[1] / "ramas"  # dentro del .zip
     if paquete.is_dir():
         return paquete
@@ -44,6 +45,7 @@ def _carpeta_ramas():
 
 
 def _rama():
+    """Rama configurada (RAMA) y todas las ramas; si no se pueden leer, lo avisa en consola."""
     try:
         todas = ramas.cargar_ramas(_carpeta_ramas())
         if RAMA in todas:
@@ -55,14 +57,17 @@ def _rama():
 
 
 def activo():
+    """True si hay un director del corazón activo para la práctica abierta."""
     return ESTADO["director"] is not None
 
 
 def director():
+    """Director del corazón activo (o None)."""
     return ESTADO["director"]
 
 
 def programa():
+    """Adaptador de Blender para el corazón (se crea la primera vez)."""
     if ESTADO["adaptador"] is None:
         from .adaptador import AdaptadorBlender
 
@@ -74,16 +79,19 @@ def programa():
 
 
 def _cuenta():
+    """Id de la cuenta vinculada («» sin cuenta)."""
     p = ajustes.prefs()
     return (getattr(p, "cuenta_id", "") or "") if p and getattr(p, "token", "") else ""
 
 
 def _ruta_historial(cuenta):
+    """Archivo del historial del andamio por cuenta (id anonimizado con SHA-1) en la carpeta de usuario."""
     nombre = "local" if not cuenta else hashlib.sha1(cuenta.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
     return ajustes.carpeta_usuario() / f"corazon_andamio_{nombre}.json"
 
 
 def historial():
+    """Historial de uso de herramientas de la cuenta actual (lo carga de disco si cambió de cuenta; vacío para administradores)."""
     cuenta = _cuenta()
     if ESTADO["historial"] is not None and ESTADO["cuenta"] == cuenta:
         return ESTADO["historial"]
@@ -98,6 +106,7 @@ def historial():
 
 
 def guardar_historial():
+    """Guarda el historial del andamio en disco (nada en modo sin progreso/administrador); los errores van a consola."""
     h = ESTADO["historial"]
     if h is None or ajustes.sin_progreso():
         return  # administrador: nada se guarda en este equipo
@@ -135,6 +144,7 @@ def al_evaluar(practica, guion, reporte, escena=None):
 
 
 def turno():
+    """Turno actual del corazón (lo que ve el alumno), o None."""
     d = ESTADO["director"]
     return d.turno(time.time()) if d is not None else None
 
@@ -151,6 +161,7 @@ def pedir_pista(nivel=0):
 
 
 def repetir_senal():
+    """Botón «otra vez»: vuelve a ejecutar la señal del paso y devuelve el turno resultante."""
     d = ESTADO["director"]
     if d is None:
         return None
@@ -160,6 +171,7 @@ def repetir_senal():
 
 
 def evento(tipo, **datos):
+    """Notifica al director un evento del programa (guardado, deshacer…)."""
     d = ESTADO["director"]
     if d is not None:
         d.evento(contrato.Evento(tipo, time.time(), datos))
@@ -175,11 +187,13 @@ def olvidar():
 
 
 def _huella(t):
+    """Firma (tipo, herramienta, estado) de la señal del turno para detectar cambios."""
     s = t.senal if t is not None else None
     return None if s is None else (s.senal.tipo, s.senal.herramienta, s.estado)
 
 
 def _vigilar():
+    """Temporizador: comprueba si la señal sigue visible en Blender y actualiza el turno si cambió."""
     d = ESTADO["director"]
     if d is None:
         return None
@@ -199,6 +213,7 @@ def _vigilar():
 
 
 def _vigilar_encendido(encendido):
+    """Enciende o apaga el temporizador de vigilancia (no en background: allí las pruebas llaman a ciclo)."""
     if bpy.app.background:
         return  # sin ventana nadie cambia de herramienta: las pruebas llaman a ciclo directamente
     registrado = bpy.app.timers.is_registered(_vigilar)
@@ -209,6 +224,7 @@ def _vigilar_encendido(encendido):
 
 
 def unregister():
+    """Olvida el director y vacía adaptador e historial."""
     olvidar()
     ESTADO.update(adaptador=None, historial=None, cuenta=None)
 

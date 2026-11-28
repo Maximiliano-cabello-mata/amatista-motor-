@@ -22,14 +22,20 @@ FONDO, LINEA, TEXTO, SUAVE = "#0f2747", "#cfe3ff", "#eaf3ff", "#5b7fb0"
 
 
 def _caja(p: ReferencePart):
+    """Caja envolvente (mín, máx) de una pieza de referencia, teniendo en cuenta su rotación."""
     return caja_de_pieza({"size": p.size, "location": p.location, "rotation": p.rotation})
 
 
 def _numero(valor: float) -> str:
+    """Formatea una medida para el plano: un decimal sin ceros sobrantes por debajo de 10, entero a partir de 10."""
     return f"{valor:.1f}".rstrip("0").rstrip(".") if valor < 10 else f"{valor:.0f}"
 
 
 def _figura(p: ReferencePart, x0, y0, x1, y1, eje_h: int, eje_v: int, color: str, extra: str) -> str:
+    """Dibuja una pieza en el plano SVG como elipse, triángulo o rectángulo (redondeado si es cilíndrica).
+
+    ``eje_h``/``eje_v`` son los ejes del mundo que corresponden a la horizontal y vertical de la vista.
+    """
     ancho, alto = x1 - x0, y1 - y0
     girada = any(abs(a) > 1 for a in p.rotation)
     if p.primitive in ("sphere", "icosphere"):
@@ -121,6 +127,7 @@ def plano_svg(referencia: ReferenceModel, titulo: str = "", etiquetas: Dict[str,
 
 
 def medidas_generales(referencia: ReferenceModel) -> Tuple[float, float, float]:
+    """Ancho, fondo y alto totales (X, Y, Z) del modelo de referencia, sin contar planos ni piezas no comparadas."""
     piezas = [p for p in referencia.parts if p.compare and p.primitive != "plane"]
     cajas = [_caja(p) for p in piezas]
     if not cajas:

@@ -25,6 +25,7 @@ NIVELES = {1: "Desde cero", 2: "Básico", 3: "Consolidación", 4: "Intermedio", 
 
 
 def cargar_iconos():
+    """Carga una sola vez los iconos PNG propios de Amatista en una colección de previews de Blender."""
     global _ICONOS
     if _ICONOS is not None:
         return
@@ -34,6 +35,7 @@ def cargar_iconos():
 
 
 def liberar_iconos():
+    """Libera las colecciones de iconos e imágenes (al desregistrar)."""
     global _ICONOS, _IMAGENES
     if _ICONOS is not None:
         bpy.utils.previews.remove(_ICONOS)
@@ -125,6 +127,7 @@ def barra(layout, factor, texto=""):
 
 
 def anillo(layout, factor, texto=""):
+    """Anillo de progreso (Blender 4.0+); en versiones sin él, el porcentaje como texto."""
     try:
         layout.progress(factor=max(0.0, min(1.0, factor)), type="RING", text=texto)
     except (AttributeError, TypeError):
@@ -132,6 +135,7 @@ def anillo(layout, factor, texto=""):
 
 
 def chip(layout, texto, icon="NONE", icono_propio=None, activo=False):
+    """Etiqueta pequeña alineada a la izquierda, con icono propio o de Blender, atenuada si no está activa."""
     sub = layout.row(align=True)
     sub.alignment = "LEFT"
     sub.active = activo
@@ -143,10 +147,12 @@ def chip(layout, texto, icon="NONE", icono_propio=None, activo=False):
 
 
 def separador(layout, factor=0.6):
+    """Espacio vertical entre bloques."""
     layout.separator(factor=factor)
 
 
 def boton_principal(layout, operador, texto, icon="NONE", icono_propio=None, escala=1.5, **propiedades):
+    """Botón grande (escala vertical) para la acción principal; asigna ``propiedades`` al operador y lo devuelve."""
     fila = layout.row()
     fila.scale_y = escala
     if icono_propio:
@@ -227,4 +233,5 @@ TONOS = {
 
 
 def nivel_texto(nivel):
+    """«Nivel n · nombre del nivel»."""
     return f"Nivel {nivel} · {NIVELES.get(int(nivel or 1), '')}"

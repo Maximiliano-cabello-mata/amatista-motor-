@@ -53,25 +53,30 @@ PROPIEDAD = {"location": "Ubicación", "rotation_euler": "Rotación", "scale": "
 
 @dataclass
 class Aspecto:
+    """Un aspecto de la revisión (figura, malla, materiales, luces…) con sus puntos a comprobar."""
     id: str
     items: List[Dict[str, Any]] = field(default_factory=list)
     ok: Optional[bool] = None  # None: lo decide la lista (todos bien)
 
     @property
     def nombre(self) -> str:
+        """Nombre del aspecto para el alumno."""
         return ASPECTOS.get(self.id, self.id)
 
     @property
     def aprobado(self) -> bool:
+        """True si el aspecto está bien: lo fija ``ok`` o, si es None, que todos sus puntos estén bien."""
         return self.ok if self.ok is not None else all(i["ok"] for i in self.items)
 
     def punto(self, texto: str, ok: bool, consejo: str = "", estado: str = "") -> None:
+        """Añade un punto a la lista de revisión: texto, si está bien, consejo (solo si falta o es «Detalle») y estado."""
         self.items.append({"texto": texto, "ok": bool(ok), "estado": estado or ("Bien" if ok else "Falta"),
                            "consejo": "" if ok and estado != "Detalle" else consejo, "aspecto": self.nombre})
 
 
 @dataclass
 class RevisionEjemplo:
+    """Revisión completa contra el ejemplo resuelto: lista de aspectos y su resultado."""
     aspectos: List[Aspecto]
 
     @property
@@ -81,15 +86,18 @@ class RevisionEjemplo:
 
     @property
     def lista(self) -> List[Dict[str, Any]]:
+        """Todos los puntos de todos los aspectos, en orden (la lista de comprobación que ve el alumno)."""
         return [i for a in self.aspectos for i in a.items]
 
     @property
     def puntaje(self) -> float:
+        """Fracción de puntos bien (1.0 si no hay puntos)."""
         items = self.lista
         return sum(1 for i in items if i["ok"]) / len(items) if items else 1.0
 
     @property
     def pendientes(self) -> List[Dict[str, Any]]:
+        """Puntos que faltan de los aspectos no aprobados (o el aspecto entero si no tiene puntos concretos)."""
         return [i for a in self.aspectos if not a.aprobado for i in a.items if not i["ok"]] or [
             {"texto": a.nombre, "ok": False, "estado": "Revisar", "consejo": "", "aspecto": a.nombre}
             for a in self.aspectos if not a.aprobado]
@@ -99,6 +107,7 @@ class RevisionEjemplo:
 
 
 def _mallas(scene: SceneState) -> List[SceneObject]:
+    """Mallas de la escena."""
     return [o for o in scene.objects if o.object_type == "MESH"]
 
 
@@ -116,6 +125,7 @@ def _pareja(objeto: SceneObject, candidatos: Sequence[SceneObject]) -> Optional[
 
 
 def _nombre_obj(objeto: SceneObject) -> str:
+    """Nombre del objeto sin el sufijo de Blender («Cube.001» → «Cube»)."""
     return objeto.name.split(".")[0]
 
 
@@ -134,6 +144,7 @@ def _partes_de(esperada: SceneState) -> List[Dict[str, Any]]:
 
 def _figura(esperada: SceneState, alumno: SceneState, perfil: Perfil, partes: Sequence[Dict[str, Any]],
             flexibles: Sequence[str], etiquetas: Dict[str, str], titulo: str) -> Aspecto:
+    """Aspecto «figura»: la forma del alumno frente al ejemplo (por silueta si es una sola malla unida, si no por piezas)."""
     from ..validators.recognize import lista_de_revision as lista_figura
 
     a = Aspecto("figura")
@@ -189,6 +200,7 @@ def _figura(esperada: SceneState, alumno: SceneState, perfil: Perfil, partes: Se
 
 
 def _malla(esperada: SceneState, alumno: SceneState) -> Aspecto:
+    """Aspecto «malla»: si el ejemplo modela en Modo Edición o solo una mitad (espejo), comprueba que el alumno también."""
     a = Aspecto("malla")
     mallas = _mallas(alumno)
     for o in _mallas(esperada):
@@ -212,6 +224,7 @@ def _malla(esperada: SceneState, alumno: SceneState) -> Aspecto:
 
 
 def _modificadores(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
+    """Aspecto «modificadores»: que el alumno tenga los modificadores del ejemplo encendidos y configurados (todos en nivel ≥ 4)."""
     a = Aspecto("modificadores")
     pedidos: Dict[str, List[Tuple[SceneObject, Any]]] = {}
     for o in _mallas(esperada):
@@ -224,6 +237,7 @@ def _modificadores(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspe
         objeto, mod = lista[0]
 
         def cumple(m) -> bool:
+            """True si el modificador del alumno es del tipo pedido, está encendido y cubre ejes/niveles del ejemplo."""
             if m.type != tipo or not m.enabled:
                 return False
             if tipo == "MIRROR" and not all(t or not e for e, t in zip(mod.axes, m.axes)):
@@ -252,6 +266,7 @@ def _modificadores(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspe
 
 
 def _rasgos(m: MaterialInfo) -> List[str]:
+    """Rasgos visibles de un material: metálico, vidrio, pulido o rugoso."""
     rasgos = []
     if m.metallic >= 0.5:
         rasgos.append("metálico")
@@ -265,10 +280,12 @@ def _rasgos(m: MaterialInfo) -> List[str]:
 
 
 def _distancia(a: Sequence[float], b: Sequence[float]) -> float:
+    """Distancia euclídea entre dos colores RGB (ignora alfa)."""
     return math.sqrt(sum((x - y) ** 2 for x, y in zip(a[:3], b[:3])))
 
 
 def _material_cumple(esperado: MaterialInfo, m: MaterialInfo, nivel: int) -> bool:
+    """True si el material del alumno tiene los mismos rasgos que el del ejemplo (y valores cercanos en nivel ≥ 4)."""
     if (esperado.metallic >= 0.5) != (m.metallic >= 0.5):
         return False
     vidrio = lambda x: x.transmission >= 0.5 or x.alpha < 0.6  # noqa: E731
@@ -287,6 +304,7 @@ def _material_cumple(esperado: MaterialInfo, m: MaterialInfo, nivel: int) -> boo
 
 
 def _consejo_material(m: MaterialInfo, objeto: str, nivel: int) -> str:
+    """Consejo concreto para imitar un material (subir Metálico, Transmisión, ajustar Rugosidad, color base)."""
     pasos = []
     if m.metallic >= 0.5:
         pasos.append("sube Metálico a 1")
@@ -303,6 +321,7 @@ def _consejo_material(m: MaterialInfo, objeto: str, nivel: int) -> str:
 
 
 def _materiales(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
+    """Aspecto «materiales»: cada material del ejemplo tiene un parecido entre los materiales del alumno."""
     a = Aspecto("materiales")
     pedidos: List[Tuple[SceneObject, MaterialInfo]] = []
     vistos = set()
@@ -349,6 +368,7 @@ def _aspectos_distintos(materiales: Sequence[MaterialInfo]) -> int:
 
 
 def _colecciones(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
+    """Aspecto «colecciones»: el alumno organizó los objetos en las colecciones propias del ejemplo."""
     a = Aspecto("colecciones")
     pedidas: Dict[str, int] = {}
     for o in esperada.objects:
@@ -378,6 +398,7 @@ def _colecciones(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspect
 
 
 def _luces(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
+    """Aspecto «luces»: el alumno tiene al menos las luces de cada tipo que usa el ejemplo."""
     a = Aspecto("luces")
     pedidas: Dict[str, int] = {}
     for o in esperada.objects:
@@ -406,6 +427,7 @@ def _luces(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
 
 
 def _camara(esperada: SceneState, alumno: SceneState) -> Aspecto:
+    """Aspecto «cámara»: hay una cámara activa que mira hacia la figura como en el ejemplo."""
     from ..validators.lighting import forward_from_euler
 
     a = Aspecto("camara")
@@ -438,6 +460,7 @@ def _camara(esperada: SceneState, alumno: SceneState) -> Aspecto:
 
 
 def _animacion(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
+    """Aspecto «animación»: cada canal animado del ejemplo tiene un equivalente en el alumno con suficientes claves y recorrido."""
     a = Aspecto("animacion")
     for o in esperada.objects:
         for canal in o.animation:
@@ -472,6 +495,7 @@ def _animacion(esperada: SceneState, alumno: SceneState, nivel: int) -> Aspecto:
 
 
 def _render(esperada: SceneState, alumno: SceneState, pide: Dict[str, Any]) -> Aspecto:
+    """Aspecto «render»: motor de render pedido y, si el ejemplo hace render, al menos un F12."""
     a = Aspecto("render")
     motor = pide.get("motor")
     if motor:
@@ -491,6 +515,7 @@ def palabra_archivo(archivo: str) -> str:
 
 
 def _archivo(alumno: SceneState, pide: Dict[str, Any]) -> Aspecto:
+    """Aspecto «archivo»: el .blend está guardado con un nombre que contiene la palabra clave del ejemplo."""
     a = Aspecto("archivo")
     archivo = pide.get("archivo")
     if not archivo:
@@ -531,6 +556,11 @@ def revisar_ejemplo(esperada: SceneState, alumno: SceneState, perfil: Perfil, ni
                     pide: Optional[Dict[str, Any]] = None, aspectos: Optional[Sequence[str]] = None,
                     partes: Sequence[Dict[str, Any]] = (), flexibles: Sequence[str] = (),
                     etiquetas: Optional[Dict[str, str]] = None, titulo: str = "") -> RevisionEjemplo:
+    """Revisa la escena del alumno contra la escena esperada del ejemplo, aspecto por aspecto.
+
+    ``aspectos`` limita qué se revisa (por defecto, los que tiene el ejemplo); la
+    exigencia depende de ``perfil`` y ``nivel``. Lo usa el validador example.matches.
+    """
     pide = pide or {}
     elegidos = [a for a in (aspectos or aspectos_del_ejemplo(esperada, pide)) if a in ASPECTOS]
     salida = []

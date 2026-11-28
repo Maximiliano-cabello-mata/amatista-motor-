@@ -128,6 +128,7 @@ CLASES = (
 
 
 def _primer_arranque():
+    """Temporizador del primer arranque: retoma la cuenta y, si el alumno no vio la bienvenida, la muestra."""
     cuenta.al_iniciar()
     if bpy.app.background:
         return None
@@ -141,9 +142,11 @@ def _primer_arranque():
 
 
 def register():
+    """Registra el add-on completo: saneamiento, propiedades, iconos, clases y submódulos (prácticas, HUD, taller, guion…)."""
     saneamiento.antes_de_registrar()  # motor 6: sin restos de cargas anteriores ni de otras copias
     estado.register()
     estilo.cargar_iconos()
+    ajustes.migrar_token()  # antes de las clases: un token viejo en claro en userpref.blend pasa al almacén cifrado
     for clase in CLASES:
         bpy.utils.register_class(clase)
     taller.register()  # después de los paneles: su panel cuelga de AMATISTA_PT_principal
@@ -160,6 +163,7 @@ def register():
 
 
 def unregister():
+    """Desregistra todo en orden inverso, restaurando el mundo de las escenas; nunca falla."""
     if bpy.app.timers.is_registered(_primer_arranque):
         bpy.app.timers.unregister(_primer_arranque)
     try:

@@ -41,6 +41,7 @@ def _ejemplo(titulo: str, pasos: List[Dict[str, Any]], archivo: str = "mi_practi
 
 
 def _pildora(pid: str, titulo: str, texto: str, **extra) -> Dict[str, Any]:
+    """Atajo para escribir una píldora de plantilla que se muestra al empezar la práctica."""
     return {"id": pid, "title": titulo, "text": texto, "trigger": {"on": "start"}, **extra}
 
 
@@ -198,6 +199,10 @@ PLANTILLAS: Dict[str, Dict[str, Any]] = {
 
 
 def nueva_practica(practica_id: str, plantilla: str, titulo: str, curso: str, modulo: int) -> Dict[str, Any]:
+    """JSON de una práctica nueva a partir de una plantilla, con textos «CAMBIA» que el autor debe rellenar.
+
+    Lo usa ``practicas.py nueva``; añade cabecera, Blender 4.2 mínimo y el lugar en el curso.
+    """
     base = copy.deepcopy(PLANTILLAS[plantilla])
     datos: Dict[str, Any] = {
         "schema": SCHEMA_V2,
@@ -217,6 +222,7 @@ def nueva_practica(practica_id: str, plantilla: str, titulo: str, curso: str, mo
 
 
 def nuevas_pruebas(practica_id: str, plantilla: str) -> Dict[str, Any]:
+    """Archivo de pruebas inicial para la práctica nueva: escena vacía, escena de inicio y, si hay ejemplo, la solución."""
     primer = PLANTILLAS[plantilla]["targets"][0]["id"]
     casos: List[Dict[str, Any]] = [
         {"nombre": "Escena vacía", "construir": [], "espera": {"completada": False, "actual": primer}},

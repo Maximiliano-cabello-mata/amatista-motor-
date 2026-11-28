@@ -19,6 +19,11 @@ MAX_OPCIONES = 6
 
 
 def opciones(target: TargetDefinition) -> List[Dict[str, Any]]:
+    """Lista validada de opciones de ``logic.any`` (2..MAX_OPCIONES dicts con validator y params).
+
+    Raises:
+        ValueError: si el formato no es válido o se intenta anidar logic.any.
+    """
     crudas = target.params.get("options")
     if not isinstance(crudas, list) or not 2 <= len(crudas) <= MAX_OPCIONES:
         raise ValueError(f"logic.any necesita «options» con 2 a {MAX_OPCIONES} opciones")
@@ -32,7 +37,13 @@ def opciones(target: TargetDefinition) -> List[Dict[str, Any]]:
 
 
 def make_any(registry):
+    """Crea el validador ``logic.any`` ligado a ``registry`` (necesita consultar los demás validadores)."""
     def any_of(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+        """Pasa si cumple alguna de las opciones (se detiene en la primera); si ninguna, devuelve el mensaje de la primera.
+
+        Raises:
+            ValueError: si una opción usa un validador que no existe.
+        """
         resultados = []
         for opcion in opciones(target):
             funcion = registry.get(opcion["validator"])

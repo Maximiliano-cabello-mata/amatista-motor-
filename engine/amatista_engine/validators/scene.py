@@ -6,6 +6,7 @@ from .base import count_message, count_ok, count_rule, result, text
 
 
 def file_saved(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``file.saved``: pasa si el .blend está guardado y sin cambios pendientes."""
     if scene.file_saved:
         mensaje = "El archivo está guardado."
     elif scene.file_path:
@@ -42,6 +43,7 @@ def scene_mode(target: TargetDefinition, scene: SceneState) -> ValidationResult:
 
 
 def collection_contains(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``collection.contains``: cuántos objetos (opcionalmente con un rol) hay en la colección pedida."""
     coleccion = text(target, "collection", required=True)
     rol = text(target, "role")
     minimo, maximo = count_rule(target, default_min=1)
@@ -59,6 +61,11 @@ TIPOS_LUZ = {"POINT": "luces puntuales", "SUN": "soles", "SPOT": "focos", "AREA"
 
 
 def _por_tipo(target: TargetDefinition, scene: SceneState, tipo: str, nombre: str) -> ValidationResult:
+    """Común a camera.exists y light.exists: cuenta objetos de un tipo de Blender (y, para luces, de un light_type).
+
+    Raises:
+        ValueError: si light_type no es POINT, SUN, SPOT o AREA.
+    """
     minimo, maximo = count_rule(target, default_min=1)
     objetos = [o for o in scene.objects if o.object_type == tipo]
     tipo_luz = str(target.params.get("light_type", "") or "").upper()
@@ -76,8 +83,10 @@ def _por_tipo(target: TargetDefinition, scene: SceneState, tipo: str, nombre: st
 
 
 def camera_exists(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``scene.camera_exists``: hay entre min y max cámaras en la escena."""
     return _por_tipo(target, scene, "CAMERA", "cámaras")
 
 
 def light_exists(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``scene.light_exists``: hay entre min y max luces (del tipo pedido si se da light_type)."""
     return _por_tipo(target, scene, "LIGHT", "luces")
