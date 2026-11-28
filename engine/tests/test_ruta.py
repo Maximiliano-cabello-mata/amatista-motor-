@@ -29,21 +29,25 @@ TREN = PRACTICAS / "principiante/m1-tren/practica.json"
 
 @pytest.fixture(scope="module")
 def tren():
+    """Fixture: la práctica del tren."""
     return parse_practice(json.loads(TREN.read_text(encoding="utf-8")))
 
 
 @pytest.fixture(scope="module")
 def motor():
+    """Fixture: motor por defecto."""
     return create_default_engine()
 
 
 def _ruta(motor, practica, escena, **extra):
+    """Evalúa la escena y construye la ruta de misiones; devuelve (ruta, reporte)."""
     reporte = motor.evaluate(practica, escena)
     guia = motor.guide(practica, escena, reporte)
     return motor.route(practica, reporte, guia, **extra), reporte
 
 
 def todas_las_practicas():
+    """Rutas de todos los practica.json del repositorio."""
     return sorted(PRACTICAS.glob("*/*/practica.json"))
 
 
@@ -51,6 +55,7 @@ def todas_las_practicas():
 
 
 def test_escena_vacia_una_sola_mision_actual(motor, tren):
+    """Comprueba que con escena vacía hay una sola misión actual y el resto siguientes."""
     ruta, reporte = _ruta(motor, tren, Escena().construir())
     assert ruta.actual == 0 and ruta.mision.id == "vagones"
     assert [m.estado for m in ruta.misiones].count(ACTUAL) == 1
@@ -61,6 +66,7 @@ def test_escena_vacia_una_sola_mision_actual(motor, tren):
 
 
 def test_partes_automaticas_sin_stage(motor):
+    """Comprueba que sin «stage» las partes se deducen por validador."""
     practica = parse_practice({
         "schema": "amatista.practice/2", "id": "prueba.partes", "title": "Partes", "level": 1,
         "targets": [
@@ -80,11 +86,13 @@ def test_partes_automaticas_sin_stage(motor):
 
 
 def test_los_opcionales_no_son_misiones(motor, tren):
+    """Comprueba que los objetivos opcionales no aparecen como misiones."""
     ruta, _ = _ruta(motor, tren, Escena().construir())
     assert "guardado" not in [m.id for m in ruta.misiones]
 
 
 def test_partes_con_nombre_y_en_orden(motor, tren):
+    """Comprueba los títulos y el orden de las partes del tren."""
     ruta, _ = _ruta(motor, tren, Escena().construir())
     titulos = [p.titulo for p in ruta.partes]
     assert titulos == ["La locomotora y el vagón", "Las ruedas", "Arma el tren", "Revisa y guarda"]
@@ -95,6 +103,7 @@ def test_partes_con_nombre_y_en_orden(motor, tren):
 
 
 def test_herramientas_de_la_mision_iluminadas(motor, tren):
+    """Comprueba que las herramientas de la misión son de la práctica."""
     ruta, _ = _ruta(motor, tren, Escena().construir())
     assert "object.add" in ruta.mision.herramientas, ruta.mision.herramientas
     # El cinturón de herramientas tiene las de la práctica, primero las de la ruta.
@@ -103,6 +112,7 @@ def test_herramientas_de_la_mision_iluminadas(motor, tren):
 
 
 def test_avanza_y_celebra(motor, tren):
+    """Comprueba que al cumplir una misión se marca hecha, avanza y celebra."""
     vacia = Escena().construir()
     antes, _ = _ruta(motor, tren, vacia)
     dos = Escena().malla("cube", dims=(2.2, 1.2, 1.1), loc=(1.2, 0, 0.6)).malla(
@@ -116,6 +126,7 @@ def test_avanza_y_celebra(motor, tren):
 
 
 def test_lo_hecho_antes_queda_adelantado(motor):
+    """Comprueba que lo cumplido antes de tiempo queda «adelantado» con su mensaje."""
     practica = parse_practice({
         "schema": "amatista.practice/2", "id": "prueba.ruta", "title": "Ruta", "level": 1,
         "targets": [
@@ -136,6 +147,7 @@ def test_lo_hecho_antes_queda_adelantado(motor):
 
 
 def test_practica_completa(motor):
+    """Comprueba la ruta de una práctica completada."""
     practica = parse_practice({
         "schema": "amatista.practice/2", "id": "prueba.fin", "title": "Fin", "level": 1,
         "targets": [{"id": "cubo", "validator": "object.count", "params": {"primitive": "cube", "min": 1}}],
@@ -145,6 +157,7 @@ def test_practica_completa(motor):
 
 
 def test_ruta_a_dict_es_json(motor, tren):
+    """Comprueba que la ruta se serializa a JSON."""
     ruta, _ = _ruta(motor, tren, Escena().construir())
     datos = json.loads(json.dumps(ruta_a_dict(ruta)))
     assert datos["actual"]["numero"] == 1 and datos["total"] == ruta.total
@@ -169,10 +182,12 @@ def test_toda_practica_tiene_ruta_clara(motor, ruta_json):
 
 
 def test_holgura_por_nivel():
+    """Comprueba que la holgura de medidas baja con el nivel."""
     assert holgura(1) > holgura(2) > holgura(3) > holgura(4) == holgura(5) == 1.0
 
 
 def test_tolerancias_se_aflojan_sin_perder_sentido():
+    """Comprueba que las tolerancias se aflojan en niveles bajos sin perder el sentido."""
     p = ajustar_parametros("spatial.grounded", {"role": "rueda", "tolerance": 0.15}, 1)
     assert 0.15 < p["tolerance"] <= 0.25
     assert ajustar_parametros("spatial.grounded", {"role": "rueda"}, 1)["tolerance"] == 0.1
@@ -184,6 +199,7 @@ def test_tolerancias_se_aflojan_sin_perder_sentido():
 
 
 def test_niveles_altos_y_exact_no_cambian():
+    """Comprueba que niveles altos y objetivos «exact» no se ajustan."""
     params = {"tolerance": 0.05}
     assert ajustar_parametros("spatial.grounded", params, 4) is params
     exacto = {"tolerance": 0.05, "exact": True}
@@ -193,6 +209,7 @@ def test_niveles_altos_y_exact_no_cambian():
 
 
 def test_logic_any_afloja_sus_opciones(tren):
+    """Comprueba que logic.any afloja sus opciones sin modificar la práctica original."""
     t = ajustar(tren.target("vagones-largos"), 1)
     assert all(o["params"]["min_ratio"] < 1.3 for o in t.params["options"])
     assert tren.target("vagones-largos").params["options"][0]["params"]["min_ratio"] == 1.3, "el original no cambia"
@@ -212,6 +229,7 @@ def test_rueda_casi_en_el_suelo_cuenta_en_nivel_1(motor, tren):
 
 
 def test_frase_amable_sin_numeros(motor, tren):
+    """Comprueba la frase amable sin números en niveles bajos y vacía en los altos."""
     t = tren.target("ruedas-al-suelo")
     lejos = Escena().malla("cylinder", dims=(0.7, 0.2, 0.7), loc=(0, 0.7, 1.2), rol="rueda").construir()
     r = motor._validar(t, lejos, tren)
@@ -221,10 +239,12 @@ def test_frase_amable_sin_numeros(motor, tren):
 
 
 def test_logros_varian():
+    """Comprueba que las frases de logro no se repiten en siete misiones."""
     assert len({logro(n) for n in range(1, 8)}) == 7
 
 
 def test_stage_se_exporta(tren):
+    """Comprueba que «stage» se lee y se exporta."""
     datos = json.loads(TREN.read_text(encoding="utf-8"))
     datos["targets"][0]["stage"] = "Las piezas"
     practica = parse_practice(datos)

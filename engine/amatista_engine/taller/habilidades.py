@@ -101,6 +101,7 @@ class Reto:
 
 @dataclass(frozen=True)
 class Habilidad:
+    """Una habilidad del catálogo (formato amatista.skill/1): qué es, teclas, herramientas, requisitos, variaciones, demo y parámetros BKT."""
     id: str
     titulo: str
     que: str  # qué es y para qué sirve, en una frase
@@ -136,20 +137,25 @@ class Taller:
 
 @dataclass(frozen=True)
 class Catalogo:
+    """Catálogo de habilidades y talleres de una ruta, cargado desde JSON."""
     ruta: str
     habilidades: Dict[str, Habilidad]
     talleres: Tuple[Taller, ...]
 
     def habilidad(self, habilidad_id: str) -> Optional[Habilidad]:
+        """Habilidad por id, o None."""
         return self.habilidades.get(habilidad_id)
 
     def taller(self, taller_id: str) -> Optional[Taller]:
+        """Taller por id, o None."""
         return next((t for t in self.talleres if t.id == taller_id), None)
 
     def taller_de_modulo(self, curso: str, modulo: int) -> Optional[Taller]:
+        """Taller asociado a un módulo de un curso, o None."""
         return next((t for t in self.talleres if t.curso == curso and t.modulo == int(modulo or 0)), None)
 
     def taller_de_proyecto(self, practica_id: str) -> Optional[Taller]:
+        """Taller cuyo proyecto es esa práctica, o None."""
         return next((t for t in self.talleres if t.proyecto and t.proyecto == practica_id), None)
 
     def anteriores(self, taller_id: str) -> Tuple[Taller, ...]:
@@ -180,13 +186,17 @@ class Catalogo:
 
 
 class _Errores:
+    """Acumulador de errores del catálogo con ayudantes de lectura (textos, ids, longitud de frases)."""
     def __init__(self) -> None:
+        """Empieza sin errores."""
         self.lista: List[str] = []
 
     def add(self, texto: str) -> None:
+        """Anota un error del catálogo."""
         self.lista.append(texto)
 
     def texto(self, datos: Dict[str, Any], clave: str, donde: str, obligatorio: bool = True, maximo: int = 400) -> str:
+        """Lee un texto obligatorio (u opcional) de hasta ``maximo`` caracteres; anota error si no lo es."""
         valor = datos.get(clave, "")
         if valor in (None, "") and not obligatorio:
             return ""
@@ -198,6 +208,7 @@ class _Errores:
         return valor.strip()
 
     def ids(self, valor: Any, donde: str) -> Tuple[str, ...]:
+        """Lee una lista de ids válidos; anota error y devuelve () si no lo es."""
         if valor in (None, []):
             return ()
         if not isinstance(valor, list) or not all(isinstance(x, str) and PATRON_ID.match(x) for x in valor):
@@ -206,11 +217,13 @@ class _Errores:
         return tuple(valor)
 
     def frase(self, texto: str, donde: str) -> None:
+        """Anota error si una frase de tarjeta supera MAX_PALABRAS (regla 5: textos cortos para el alumno)."""
         if texto and len(texto.split()) > MAX_PALABRAS:
             self.add(f"{donde}: tiene {len(texto.split())} palabras; una tarjeta admite {MAX_PALABRAS} (regla 5)")
 
 
 def _numeros(valor: Any, donde: str, e: _Errores, positivos: bool = False) -> Tuple[float, float, float]:
+    """Lee un vector de 3 números (``positivos`` prohíbe negativos, para medidas); anota error si no es válido."""
     if not isinstance(valor, list) or len(valor) != 3 or not all(
         isinstance(x, (int, float)) and not isinstance(x, bool) for x in valor
     ):
@@ -266,6 +279,7 @@ def _objetivos(valor: Any, donde: str, e: _Errores) -> Tuple[Dict[str, Any], ...
 
 
 def _inicio(valor: Any, donde: str, e: _Errores) -> Dict[str, Any]:
+    """Lee el bloque «inicio» de la escena de una variación o reto (como el starter de una práctica)."""
     if valor in (None, {}):
         return {}
     if not isinstance(valor, dict):
@@ -275,6 +289,7 @@ def _inicio(valor: Any, donde: str, e: _Errores) -> Dict[str, Any]:
 
 
 def _minutos(valor: Any, donde: str, e: _Errores, defecto: int) -> int:
+    """Lee los minutos estimados (entero 1..30); ``defecto`` si falta o es inválido."""
     if valor is None:
         return defecto
     if isinstance(valor, bool) or not isinstance(valor, int) or not 1 <= valor <= 30:
@@ -284,6 +299,7 @@ def _minutos(valor: Any, donde: str, e: _Errores, defecto: int) -> int:
 
 
 def _variacion(crudo: Any, donde: str, e: _Errores) -> Optional[Variacion]:
+    """Lee una variación de habilidad: id, qué pide, molde, objetivos, inicio y minutos; None si es inválida."""
     if not isinstance(crudo, dict):
         e.add(f"{donde} debe ser un objeto")
         return None
@@ -314,6 +330,7 @@ def _variacion(crudo: Any, donde: str, e: _Errores) -> Optional[Variacion]:
 
 
 def _reto(crudo: Any, donde: str, e: _Errores, defecto_id: str) -> Optional[Reto]:
+    """Lee el reto (o repaso) de un taller/habilidad; None si no hay. Usa ``defecto_id`` si no trae id."""
     if crudo in (None, {}):
         return None
     if not isinstance(crudo, dict):
@@ -345,6 +362,7 @@ def _reto(crudo: Any, donde: str, e: _Errores, defecto_id: str) -> Optional[Reto
 
 
 def _demo(crudo: Any, donde: str, e: _Errores) -> Tuple[Dict[str, Any], ...]:
+    """Lee los pasos de la demostración «Mira» (hasta 20, una acción por paso)."""
     pasos = (crudo or {}).get("pasos") if isinstance(crudo, dict) else crudo
     if pasos in (None, []):
         return ()
@@ -363,6 +381,7 @@ def _demo(crudo: Any, donde: str, e: _Errores) -> Tuple[Dict[str, Any], ...]:
 
 
 def _bkt(crudo: Any, donde: str, e: _Errores) -> ParametrosBKT:
+    """Lee los parámetros BKT de la habilidad (L0, T, G, S, olvido) dentro de sus rangos permitidos; por defecto ParametrosBKT()."""
     if crudo in (None, {}):
         return ParametrosBKT()
     if not isinstance(crudo, dict):
@@ -380,6 +399,7 @@ def _bkt(crudo: Any, donde: str, e: _Errores) -> ParametrosBKT:
 
 
 def _habilidad(crudo: Any, i: int, e: _Errores) -> Optional[Habilidad]:
+    """Lee y valida una habilidad del catálogo; None si no es un objeto o su id no es válido."""
     donde = f"habilidades[{i}]"
     if not isinstance(crudo, dict):
         e.add(f"{donde} debe ser un objeto")
@@ -439,6 +459,7 @@ def _habilidad(crudo: Any, i: int, e: _Errores) -> Optional[Habilidad]:
 
 
 def _taller(crudo: Any, i: int, e: _Errores) -> Optional[Taller]:
+    """Lee y valida un taller (módulo 1..20, habilidades, proyecto, reto, isla…); None si es inválido."""
     donde = f"talleres[{i}]"
     if not isinstance(crudo, dict):
         e.add(f"{donde} debe ser un objeto")
@@ -489,9 +510,11 @@ def _taller(crudo: Any, i: int, e: _Errores) -> Optional[Taller]:
 
 
 def _sin_ciclos(habilidades: Dict[str, Habilidad], e: _Errores) -> None:
+    """Anota un error por cada ciclo en los «requiere» entre habilidades (búsqueda en profundidad)."""
     estado: Dict[str, int] = {}
 
     def visitar(hid: str, camino: List[str]) -> None:
+        """Visita una habilidad y sus requisitos marcando en curso (1) / terminada (2) para detectar ciclos."""
         if estado.get(hid) == 2:
             return
         if estado.get(hid) == 1:
@@ -547,6 +570,11 @@ def cargar_catalogo(datos: Dict[str, Any]) -> Catalogo:
 
 
 def leer_catalogo(ruta: Union[str, Path]) -> Catalogo:
+    """Lee y valida el catálogo de habilidades desde un archivo JSON.
+
+    Raises:
+        ErrorCatalogo: si no se puede leer o el contenido no es válido.
+    """
     try:
         datos = json.loads(Path(ruta).read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:

@@ -22,6 +22,7 @@ PRIORIDAD = {"guard": 0, "target": 1, "mode": 2, "tool": 3, "selection": 4, "sta
 
 
 def _toca(p: PillDefinition, scene: SceneState, report: EvaluationReport, tools_used) -> bool:
+    """True si el disparo de la píldora se cumple ahora (inicio, objetivo actual, vigilante, modo, selección, herramienta…)."""
     t = p.trigger
     if t.on == "start":
         return not report.completed
@@ -47,6 +48,7 @@ def pills_for(
     seen: Iterable[str] = (),
     tools_used: Iterable[str] = (),
 ) -> Tuple[PillDefinition, ...]:
+    """Píldoras de teoría que conviene mostrar ahora (no vistas y cuyo disparo se cumple), ordenadas por prioridad del disparo."""
     vistas = set(seen)
     usados = set(tools_used)
     tocan = [
@@ -58,6 +60,7 @@ def pills_for(
 
 
 def pill_to_dict(p: PillDefinition) -> dict:
+    """La píldora como dict JSON para el add-on (incluye la pregunta de repaso si tiene)."""
     return {
         "id": p.id,
         "title": p.title,

@@ -32,6 +32,12 @@ TRANSFORMACION = ("OBJECT_TRANSFORM", "OBJECT_ADDED", "ROLE_CHANGED")
 
 
 def register_builtin_validators(registry: ValidatorRegistry) -> None:
+    """Registra en ``registry`` todos los validadores incluidos en el motor con su ficha.
+
+    Cada registro declara etiqueta, categoría, descripción para autores, parámetros,
+    eventos de Blender que obligan a reevaluar (``watch``) y si usa selector.
+    Es lo que llama ``bootstrap`` al crear el motor; modifica el registro in situ.
+    """
     r = registry.register
     # --- Objetos y roles ---
     r(

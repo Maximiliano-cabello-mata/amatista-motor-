@@ -23,6 +23,7 @@ Estado = Dict[str, Dict[str, float]]
 
 
 def item_id(practice_id: str, pill_id: str) -> str:
+    """Id del elemento de repaso: «practica#pildora»."""
     return f"{practice_id}#{pill_id}"
 
 
@@ -52,4 +53,5 @@ def due(state: Estado, now: float, items: Iterable[str] = ()) -> List[str]:
 
 
 def mastered(state: Estado) -> List[str]:
+    """Elementos de repaso que ya están en la caja máxima de Leitner (dominados)."""
     return sorted(i for i, v in state.items() if int(v.get("box", 1)) >= CAJA_MAXIMA)

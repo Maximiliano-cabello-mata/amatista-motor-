@@ -74,26 +74,42 @@ def distance(result: Optional[ValidationResult]) -> Optional[float]:
 
 
 class Companion:
+    """El acompañante: compara evaluaciones sucesivas y decide qué intervenciones mostrar al alumno.
+
+    Avisa de pasos logrados, retrocesos, pausas por vigilantes, paso nuevo,
+    mejoras y ofrece ayuda cuando el alumno lleva ``help_after_tries`` intentos o
+    ``help_after_seconds`` en el mismo paso. Su estado es un dict serializable
+    (el add-on lo guarda entre evaluaciones).
+    """
     def __init__(
         self,
         help_after_tries: int = 4,
         help_after_seconds: float = 120.0,
         state: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """Configura los umbrales de «atasco» y reutiliza ``state`` si se pasa (para continuar una sesión)."""
         self.help_after_tries = help_after_tries
         self.help_after_seconds = help_after_seconds
         self.state: Dict[str, Any] = state if state is not None else {}
 
+    # [REVISION-MUERTO] reset() no tiene llamadas en el repo (grep).
     def reset(self) -> None:
+        """Olvida todo lo observado (p. ej. al reiniciar la práctica)."""
         self.state.clear()
 
     def _iniciar_paso(self, target_id: Optional[str], now: float, report: EvaluationReport) -> None:
+        """Empieza a cronometrar un paso nuevo: guarda el id, la hora, reinicia intentos y la mejor distancia a la meta."""
         self.state["current"] = target_id
         self.state["since"] = now
         self.state["tries"] = 0
         self.state["best"] = distance(report.result(target_id)) if target_id else None
 
     def observe(self, practice: PracticeDefinition, report: EvaluationReport, now: float) -> List[Intervention]:
+        """Compara el reporte con lo observado antes y devuelve las intervenciones nuevas (en orden).
+
+        En la primera observación no felicita por lo que ya estaba hecho. Modifica
+        ``self.state``. ``now`` es la hora en segundos (inyectable para pruebas).
+        """
         s = self.state
         primera = "passed" not in s
         aprobados_antes = set(s.get("passed", []))
@@ -104,6 +120,7 @@ class Companion:
         salida: List[Intervention] = []
 
         def titulo(tid: Optional[str]) -> str:
+            """Título del objetivo (o su id) para los textos de la intervención."""
             t = practice.target(tid) if tid else None
             return (t.title or t.id) if t else ""
 

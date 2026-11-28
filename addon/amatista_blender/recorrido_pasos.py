@@ -315,14 +315,17 @@ def valido(rid):
 
 
 def pasos_de(rid):
+    """Pasos del recorrido (id validado)."""
     return RECORRIDOS[valido(rid)]["pasos"]
 
 
 def total(rid):
+    """Número de pasos del recorrido."""
     return len(pasos_de(rid))
 
 
 def ultimo(rid):
+    """Índice del último paso."""
     return total(rid) - 1
 
 
@@ -352,6 +355,7 @@ def leer_hechos(texto):
 
 
 def escribir_hechos(hechos):
+    """Recorridos hechos como texto separado por comas, en el orden oficial (se guarda en preferencias)."""
     return ",".join(rid for rid in ORDEN if rid in set(hechos))
 
 

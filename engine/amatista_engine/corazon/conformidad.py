@@ -17,6 +17,12 @@ from .senales import POR_LUGAR
 
 
 def revisar_adaptador(adaptador: Adaptador, *, probar_senales: bool = True) -> List[str]:
+    """Revisa si un adaptador cumple el contrato amatista.corazon/1 y devuelve la lista de problemas (vacía = cumple).
+
+    Comprueba capacidades, que pueda «decir», que solo anuncie señales conocidas,
+    que tenga perfil y, si ``probar_senales``, que ejecutar/comprobar no lancen
+    excepciones. Puede ejecutar señales reales en el programa.
+    """
     problemas: List[str] = []
     try:
         cap = adaptador.capacidades()

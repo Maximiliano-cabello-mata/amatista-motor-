@@ -38,6 +38,7 @@ from ..models import SceneObject, SceneState
 from ..validators.base import primitiva
 from ..validators.figure import (
     EPSILON,
+    # [REVISION-MUERTO] ORIENTACIONES se importa pero no se usa en este módulo.
     ORIENTACIONES,
     _Caja,
     _cajas_modelo,
@@ -99,6 +100,7 @@ CONOCIDAS = {"cube", "cylinder", "sphere", "cone", "torus", "plane", "circle", "
 
 
 def _familia(nombre: str) -> str:
+    """Familia de forma de una primitiva (las parecidas cuentan igual)."""
     base = primitiva(nombre)
     return PARECIDAS.get(base, base)
 
@@ -110,6 +112,7 @@ def _forma(medidas: Sequence[float]) -> Tuple[float, float, float]:
 
 
 def _error_forma(a: Sequence[float], b: Sequence[float]) -> float:
+    """Error de forma entre dos medidas normalizadas (máxima diferencia logarítmica)."""
     return max(abs(math.log(x / y)) for x, y in zip(_forma(a), _forma(b)))
 
 
@@ -134,6 +137,7 @@ def _error_reconocer(medidas: Sequence[float], prototipo: Sequence[float]) -> fl
 
 @dataclass(frozen=True)
 class _Prototipo:
+    """Pieza tipo del modelo para deducir roles: grupo, familia, medidas y tamaño relativo a la figura."""
     grupo: str
     familia: str
     medidas: Tuple[float, float, float]
@@ -160,11 +164,13 @@ def _prototipos(partes: Sequence[Dict[str, Any]]) -> List[_Prototipo]:
 
 
 def _medidas(obj: SceneObject) -> Tuple[float, float, float]:
+    """Medidas del objeto en el mundo (caja envolvente)."""
     minimo, maximo = obj.caja()
     return tuple(max(0.0, maximo[i] - minimo[i]) for i in range(3))
 
 
 def _mallas(scene: SceneState) -> List[SceneObject]:
+    """Mallas de la escena."""
     return [o for o in scene.objects if o.object_type == "MESH"]
 
 
@@ -232,6 +238,7 @@ CRITICAS = (SUELO, ENCIMA, LADOS, FLOTA)
 
 @dataclass(frozen=True)
 class Relacion:
+    """Relación entre piezas del modelo que debe cumplir el alumno (en el suelo, encima, toca, alineadas…)."""
     tipo: str
     grupo: str
     indice: int = -1  # pieza del modelo dentro de su grupo
@@ -241,10 +248,12 @@ class Relacion:
 
 
 def _min(c: _Caja, i: int) -> float:
+    """Coordenada mínima de la caja en el eje ``i``."""
     return c.centro[i] - c.medidas[i] / 2
 
 
 def _max(c: _Caja, i: int) -> float:
+    """Coordenada máxima de la caja en el eje ``i``."""
     return c.centro[i] + c.medidas[i] / 2
 
 
@@ -308,6 +317,7 @@ def relaciones_del_modelo(modelo: Dict[str, List[_Caja]]) -> List[Relacion]:
 
 
 def _alinear(grupos_alumno: Dict[str, List[_Caja]], giro: int, espejo: bool):
+    """Cajas del alumno giradas/espejadas y expresadas relativas a la figura, para compararlas con el modelo."""
     orientadas = {g: [_orientar(c, giro, espejo) for c in cajas] for g, cajas in grupos_alumno.items() if cajas}
     return _relativas(orientadas) if orientadas else ({}, 1.0)
 
@@ -431,6 +441,7 @@ def agrupar(scene: SceneState, partes: Sequence[Dict[str, Any]], usar_roles: boo
 
 @dataclass
 class Reconocimiento:
+    """Resultado del reconocimiento: puntaje total, forma, relaciones, peor problema, fallas, orientación y roles deducidos."""
     puntaje: float  # 0..1, ya con las relaciones
     forma: float  # parecido de piezas y proporciones
     relaciones: float  # parte de las relaciones cumplidas
@@ -443,11 +454,17 @@ class Reconocimiento:
 
     @property
     def criticas(self) -> List[Tuple[float, Relacion, Dict[str, Any]]]:
+        """Fallas de relaciones críticas (las que impiden aprobar aunque el puntaje sea alto)."""
         return [f for f in self.fallas if f[1].tipo in CRITICAS]
 
 
 def reconocer(scene: SceneState, partes: Sequence[Dict[str, Any]], perfil: Perfil, flexibles: Sequence[str] = (),
               usar_roles: bool = True, tolerancia: Optional[float] = None) -> Reconocimiento:
+    """Reconoce la figura del alumno frente a las piezas del modelo con el perfil de exigencia.
+
+    Agrupa los objetos (por rol o deduciéndolos por la forma), compara forma y
+    proporciones, revisa relaciones y combina ambos puntajes según el perfil.
+    """
     modelo = _cajas_modelo(list(partes))
     grupos, extras, deducidos = agrupar(scene, partes, usar_roles)
     tol = perfil.tolerancia if tolerancia is None else tolerancia

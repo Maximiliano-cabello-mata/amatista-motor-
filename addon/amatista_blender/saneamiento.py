@@ -48,6 +48,7 @@ def paquete():
 
 
 def version_propia():
+    """Versión (mayor, menor, parche) de esta copia del add-on."""
     from . import ajustes
 
     return tuple(int(x) for x in ajustes.VERSION_ADDON.split(".")[:3])
@@ -63,6 +64,7 @@ def es_amatista(nombre, info=None):
 
 
 def _version_de(info):
+    """Versión de un add-on a partir de su bl_info; (0, 0, 0) si no se puede leer."""
     try:
         return tuple(int(x) for x in tuple((info or {}).get("version") or (0, 0, 0))[:3])
     except (TypeError, ValueError):
@@ -147,6 +149,7 @@ def quitar_huerfanas():
 
 
 def _encendida(nombre):
+    """True si el add-on con ese nombre de módulo está activado en Blender."""
     try:
         import addon_utils
 
@@ -159,6 +162,7 @@ def _encendida(nombre):
 
 
 def _dibujos():
+    """Lista compartida (driver_namespace) de draw handlers registrados por cualquier copia de Amatista, para poder limpiarlos."""
     return bpy.app.driver_namespace.setdefault(CLAVE_DIBUJOS, [])
 
 
@@ -170,6 +174,7 @@ def agregar_dibujo(espacio, funcion, argumentos, region, tipo):
 
 
 def quitar_dibujo(espacio, manejador, region):
+    """Quita un draw handler de la vista y de la lista compartida (ignora si ya no estaba)."""
     try:
         espacio.draw_handler_remove(manejador, region)
     except (ValueError, RuntimeError):
@@ -196,15 +201,18 @@ def quitar_dibujos_anteriores():
 
 
 def tomar():
+    """Marca esta copia del add-on como la dueña (la única que dibuja y actúa)."""
     bpy.app.driver_namespace[CLAVE_DUENA] = paquete()
 
 
 def soltar():
+    """Deja de ser la dueña si lo era."""
     if bpy.app.driver_namespace.get(CLAVE_DUENA) == paquete():
         del bpy.app.driver_namespace[CLAVE_DUENA]
 
 
 def soy_duena():
+    """True si no hay dueña o es esta copia."""
     duena = bpy.app.driver_namespace.get(CLAVE_DUENA)
     return duena is None or duena == paquete()
 
@@ -250,11 +258,13 @@ def _revisar_copias():
 
 
 def despues_de_registrar():
+    """Programa la revisión de otras copias de Amatista justo después de registrar el add-on."""
     if not bpy.app.timers.is_registered(_revisar_copias):
         bpy.app.timers.register(_revisar_copias, first_interval=0.2)
 
 
 def al_desregistrar():
+    """Cancela la revisión de copias y suelta la propiedad."""
     if bpy.app.timers.is_registered(_revisar_copias):
         bpy.app.timers.unregister(_revisar_copias)
     soltar()

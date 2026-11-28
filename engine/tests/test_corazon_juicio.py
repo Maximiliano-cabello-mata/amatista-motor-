@@ -16,25 +16,30 @@ TREN = RAIZ / "practices" / "blender" / "principiante" / "m1-tren"
 
 
 def leer(carpeta: Path):
+    """Carga una práctica desde su carpeta."""
     return parse_practice(json.loads((carpeta / "practica.json").read_text(encoding="utf-8")))
 
 
 @pytest.fixture(scope="module")
 def motor():
+    """Fixture: motor por defecto."""
     return amatista_engine.create_default_engine()
 
 
 @pytest.fixture(scope="module")
 def tren():
+    """Fixture: la práctica del tren."""
     return leer(TREN)
 
 
 def juicio_de(motor, practica, escena: Escena):
+    """Juicio del corazón para la escena de prueba."""
     estado = escena.construir()
     return juzgar(practica, estado, motor.evaluate(practica, estado))
 
 
 def test_escena_vacia_pide_la_primera_pieza_con_medidas(motor, tren):
+    """Comprueba que una escena vacía pide la primera pieza con sus medidas."""
     j = juicio_de(motor, tren, Escena())
     assert j.avance == (0, 11)
     assert j.decision.accion == AGREGAR and j.decision.grupo == "vagon"
@@ -43,6 +48,7 @@ def test_escena_vacia_pide_la_primera_pieza_con_medidas(motor, tren):
 
 def test_las_medidas_se_piden_en_la_escala_del_alumno(motor, tren):
     # Una locomotora al doble de tamaño: la rueda «debería medir» el doble que en el ejemplo.
+    """Comprueba que las medidas pedidas se adaptan a la escala del alumno."""
     e = Escena()
     e.cubo("Cube", dims=[4.4, 2.4, 2.2], loc=[2.5, 0, 1.8])
     e.cubo("Cube.001", dims=[4.0, 2.4, 2.0], loc=[-2.3, 0, 1.7])
@@ -54,6 +60,7 @@ def test_las_medidas_se_piden_en_la_escala_del_alumno(motor, tren):
 
 
 def test_distingue_girar_de_escalar(motor, tren):
+    """Comprueba que una pieza con medidas en otros ejes se pide girar, no escalar."""
     e = Escena()
     e.cubo("Cube", dims=[2.2, 1.2, 1.1], loc=[1.25, 0, 0.9])
     e.cubo("Cube.001", dims=[2.0, 1.2, 1.0], loc=[-1.15, 0, 0.85])
@@ -66,6 +73,7 @@ def test_distingue_girar_de_escalar(motor, tren):
 
 def test_corrige_lo_que_existe_antes_de_pedir_mas(motor, tren):
     # Una rueda mal hecha y faltan siete: primero se arregla esa, para no duplicar el error.
+    """Comprueba que primero se corrige lo existente antes de pedir piezas nuevas."""
     e = Escena()
     e.cubo("Cube", dims=[2.2, 1.2, 1.1], loc=[1.25, 0, 0.9])
     e.cubo("Cube.001", dims=[2.0, 1.2, 1.0], loc=[-1.15, 0, 0.85])
@@ -76,6 +84,7 @@ def test_corrige_lo_que_existe_antes_de_pedir_mas(motor, tren):
 
 
 def test_cuenta_lo_que_llevas(motor, tren):
+    """Comprueba que al pedir piezas se cuenta cuántas lleva el alumno."""
     e = Escena().referencia(tren.reference.parts, sin=("chimenea",), roles=False)
     for nombre in [o.name for o in e._objetos if o.primitive == "cylinder"][:3]:
         e.quitar(nombre)
@@ -86,6 +95,7 @@ def test_cuenta_lo_que_llevas(motor, tren):
 
 
 def test_con_las_piezas_bien_cede_la_palabra_al_motor(motor, tren):
+    """Comprueba que con todas las piezas bien el juicio cede al mensaje del motor."""
     e = Escena().referencia(tren.reference.parts, roles=False)
     estado = e.construir()
     reporte = motor.evaluate(tren, estado)
@@ -95,12 +105,14 @@ def test_con_las_piezas_bien_cede_la_palabra_al_motor(motor, tren):
 
 
 def test_figura_girada_un_cuarto_de_vuelta(motor, tren):
+    """Comprueba que una figura girada 90° se reconoce completa."""
     j = juicio_de(motor, tren, Escena().referencia(tren.reference.parts, roles=False, giro=90))
     assert j.diferencia.girada is True
     assert j.avance == (11, 11)
 
 
 def test_las_piezas_unidas_no_se_juzgan_aqui():
+    """Comprueba que prácticas de piezas unidas (espada) no tienen plano."""
     espada = leer(RAIZ / "practices" / "blender" / "principiante" / "m2-espada")
     assert juicio.plano_de(espada) is None
     assert juzgar(espada, Escena().construir()) is None
@@ -140,6 +152,7 @@ def test_armando_pieza_por_pieza_solo_pide_agregar(motor, carpeta):
 
 
 def _director_real(tren):
+    """Director con el perfil real de Blender y un adaptador simulado."""
     from amatista_engine.corazon import perfiles
     from amatista_engine.corazon.director import Director
     from amatista_engine.corazon.simulado import AdaptadorSimulado
@@ -149,11 +162,13 @@ def _director_real(tren):
 
 
 def _turno(motor, tren, director, adaptador, escena: Escena, ahora: float = 1.0):
+    """Ciclo del director con la evaluación real de la escena."""
     estado = escena.construir()
     return director.ciclo(adaptador, motor.evaluate(tren, estado), ahora, escena=estado)
 
 
 def test_el_turno_trae_la_correccion_de_una_pieza_con_medidas(motor, tren):
+    """Comprueba que el turno incluye la corrección de una pieza con medidas."""
     director, adaptador = _director_real(tren)
     e = Escena()
     e.cubo("Cube", dims=[2.2, 1.2, 1.1], loc=[1.25, 0, 0.9])
@@ -169,6 +184,7 @@ def test_el_turno_trae_la_correccion_de_una_pieza_con_medidas(motor, tren):
 def test_el_turno_no_pide_agregar_piezas_eso_lo_dice_el_paso(motor, tren):
     # Dos vagones bien y nada más: el juicio «agregaría» la chimenea, pero el paso del guion
     # pide las ruedas. El turno no repite ni contradice al paso: la revisión queda vacía.
+    """Comprueba que el turno no pide agregar piezas (eso lo dice el paso)."""
     director, adaptador = _director_real(tren)
     e = Escena()
     e.cubo("Cube", dims=[2.2, 1.2, 1.1], loc=[1.25, 0, 0.9])
@@ -180,6 +196,7 @@ def test_el_turno_no_pide_agregar_piezas_eso_lo_dice_el_paso(motor, tren):
 
 
 def test_sin_escena_el_turno_es_el_de_siempre(motor, tren):
+    """Comprueba que sin escena el turno no trae revisión."""
     director, adaptador = _director_real(tren)
     estado = Escena().construir()
     t = director.ciclo(adaptador, motor.evaluate(tren, estado), 1.0)
@@ -187,9 +204,11 @@ def test_sin_escena_el_turno_es_el_de_siempre(motor, tren):
 
 
 def test_un_fallo_del_juicio_no_rompe_el_turno(motor, tren, monkeypatch):
+    """Comprueba que un fallo del juicio no rompe el turno."""
     from amatista_engine.corazon import juicio as modulo
 
     def romper(*_a, **_k):
+        """Sustituto que siempre falla."""
         raise RuntimeError("fallo a propósito")
 
     monkeypatch.setattr(modulo, "juzgar", romper)
@@ -201,6 +220,7 @@ def test_un_fallo_del_juicio_no_rompe_el_turno(motor, tren, monkeypatch):
 
 
 def test_practica_de_una_sola_malla_no_trae_revision(motor):
+    """Comprueba que prácticas de una sola malla no traen revisión por piezas."""
     from amatista_engine.corazon import perfiles
     from amatista_engine.corazon.director import Director
     from amatista_engine.corazon.simulado import AdaptadorSimulado
@@ -216,6 +236,7 @@ def test_practica_de_una_sola_malla_no_trae_revision(motor):
 def test_una_pieza_irreconocible_no_falta_hay_que_corregirla(motor, tren):
     # Encontrado dentro de Blender: una rueda al triple de grosor ya no se reconoce como rueda.
     # No hay que decir «te falta una rueda» teniendo ocho cilindros: hay que decir cuál corregir.
+    """Comprueba que una pieza deformada se pide corregir en vez de darla por faltante."""
     e = Escena().referencia(tren.reference.parts, roles=False)
     ruedas = [o.name for o in e._objetos if o.primitive == "cylinder" and o.dimensions[2] < 0.3]
     gorda = ruedas[0]

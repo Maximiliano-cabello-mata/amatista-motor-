@@ -83,10 +83,12 @@ CARPETA_PAQUETE = NOMBRE_COMPLETO
 
 
 def nombre_extension(version: str = VERSION) -> str:
+    """Nombre del zip de la extensión para la versión."""
     return f"amatista-{version}.zip"
 
 
 def _archivos(carpeta: Path):
+    """Archivos del add-on a empaquetar (sin cachés ni carpetas ignoradas) con su ruta relativa."""
     for ruta in sorted(carpeta.rglob("*")):
         relativa = ruta.relative_to(carpeta)
         if ruta.is_file() and not (IGNORAR & set(relativa.parts)) and ruta.suffix != ".pyc":
@@ -94,6 +96,7 @@ def _archivos(carpeta: Path):
 
 
 def _agregar(zf: zipfile.ZipFile, nombre: str, contenido: bytes, permisos: int = 0o644, comprimir: bool = True) -> None:
+    """Añade un archivo al zip con fecha fija (build reproducible) y permisos Unix."""
     info = zipfile.ZipInfo(nombre, date_time=FECHA_FIJA)
     info.compress_type = zipfile.ZIP_DEFLATED if comprimir else zipfile.ZIP_STORED
     info.external_attr = (0o100000 | permisos) << 16
@@ -102,6 +105,7 @@ def _agregar(zf: zipfile.ZipFile, nombre: str, contenido: bytes, permisos: int =
 
 
 def configuracion(servidor: str, plataforma: str, canal: str = "estable", vinculo: dict | None = None) -> dict:
+    """config.json del paquete: servidor, plataforma, canal y, si se da, el vínculo para canjear al instalar."""
     config = {"servidor": servidor.rstrip("/"), "plataforma": plataforma.rstrip("/"), "canal": canal}
     if vinculo:
         config["vinculo"] = {"id": vinculo["id"], "secreto": vinculo["secreto"]}
@@ -142,6 +146,7 @@ def _base_extension(_huella: tuple) -> bytes:
     with zipfile.ZipFile(salida, "w") as zf:
 
         def poner(nombre: str, contenido: bytes) -> None:
+            """Añade el archivo al zip y anota su SHA-256 para el manifiesto de integridad."""
             hashes[nombre] = hashlib.sha256(contenido).hexdigest()
             _agregar(zf, nombre, contenido)
 
@@ -197,11 +202,13 @@ def construir_extension(servidor: str = "http://localhost:8000", plataforma: str
 
 
 def leeme(sistema: str) -> str:
+    """LÉEME del instalador con nombre, versión y lanzador del sistema."""
     texto = (INSTALADOR / "LEEME.txt").read_text(encoding="utf-8")
     return texto.replace("{{NOMBRE}}", NOMBRE_COMPLETO.upper()).replace("{{VERSION}}", VERSION).replace("{{LANZADOR}}", LANZADORES[sistema][0])
 
 
 def _script_instalador(lanzador: str) -> bytes:
+    """Script lanzador del instalador con los saltos de línea correctos (CRLF para .bat, LF para el resto)."""
     script = (INSTALADOR / lanzador).read_bytes()
     if lanzador.endswith(".bat"):  # cmd.exe necesita CRLF
         return script.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
@@ -209,6 +216,7 @@ def _script_instalador(lanzador: str) -> bytes:
 
 
 def _texto_leeme(sistema: str) -> bytes:
+    """LÉEME en bytes (CRLF en Windows)."""
     texto = leeme(sistema)
     if sistema == "windows":
         texto = texto.replace("\n", "\r\n")
@@ -266,6 +274,7 @@ def indice_repositorio(extension: bytes, url_archivo: str) -> dict:
 
 
 def main(argv=None) -> int:
+    """CLI: arma la extensión .zip o, con --sistema, el paquete con instalador para ese sistema."""
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--sistema", choices=SISTEMAS, help="Arma el paquete con instalador para ese sistema")
     parser.add_argument("--servidor", default="http://localhost:8000", help="URL de la API de Amatista")

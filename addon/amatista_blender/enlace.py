@@ -108,6 +108,7 @@ def detalle_vivo(escena_pistas=None):
 
 
 def _datos():
+    """Datos del latido que se envían a la plataforma: versiones, enfoque, práctica/actividad en curso, progreso, ficha visible…"""
     from . import enfoque, practicas
 
     datos = {
@@ -210,6 +211,7 @@ def latir(forzar=False):
     enviado = ESTADO["hecha"]
 
     def listo(respuesta, error, estado):
+        """Al responder la API del enlace: ajusta el intervalo (más lento si no hay servidor), guarda el estado y cumple órdenes pendientes."""
         ESTADO["en_vuelo"] = False
         if error is not None or not isinstance(respuesta, dict):
             ESTADO["intervalo"] = LENTO if estado in (0, 404) else INTERVALO * 2
@@ -240,6 +242,7 @@ def latir_pronto():
 
 
 def _latir_ya():
+    """Temporizador: envía un latido inmediato (espera si hay uno en vuelo); los errores van a consola."""
     if ESTADO["en_vuelo"]:
         return 0.5  # el que va en camino no lleva lo último: se espera y se manda
     try:
@@ -273,6 +276,7 @@ def aplicar_ajustes(valores):
 
 
 def _terminada(orden_id):
+    """Marca una orden de la plataforma como cumplida (recuerda las últimas 20) y adelanta el latido."""
     ESTADO["hecha"] = orden_id
     ESTADO["cumplidas"] = (ESTADO["cumplidas"] + [orden_id])[-20:]
     latir_pronto()
@@ -328,6 +332,7 @@ def cumplir(orden):
         return True
     if tipo == "abrir_practica" and datos.get("practica_id"):
         def abierta(error):
+            """Al abrir la práctica pedida por la plataforma: avisa en consola si falló y marca la orden como cumplida."""
             if error:
                 print(f"[Amatista] La plataforma pidió abrir {datos['practica_id']}: {error}")
             _terminada(orden_id)
@@ -399,6 +404,7 @@ def _en_vista_3d(context, funcion):
 
 
 def _comprobar(context):
+    """Orden remota «comprobar»: evalúa la escena y devuelve el progreso en texto."""
     from . import practicas
 
     reporte = practicas.evaluar(context, "manual")
@@ -406,6 +412,7 @@ def _comprobar(context):
 
 
 def _pista(context):
+    """Orden remota «pista»: revela la siguiente pista y devuelve su texto (o que no quedan)."""
     from . import practicas
 
     revelada = practicas.pedir_pista(context)
@@ -415,6 +422,7 @@ def _pista(context):
 
 
 def _hazlo_conmigo(context):
+    """Orden remota «Hazlo conmigo»: ejecuta la ayuda en la vista 3D si el paso la tiene."""
     from . import guia
 
     if guia.guia_actual() is None or guia.guia_actual().action is None:
@@ -424,18 +432,21 @@ def _hazlo_conmigo(context):
 
 
 def _guardar(context):
+    """Orden remota «guardar»: guarda el .blend de la práctica."""
     from . import practicas
 
     return practicas.guardar_practica(context)
 
 
 def _entregar(context):
+    """Orden remota «entregar»: entrega la práctica al profesor."""
     from . import entrega
 
     return entrega.entregar(context)
 
 
 def _reiniciar(context):
+    """Orden remota «empezar de nuevo»: reinicia la práctica."""
     from . import practicas
 
     return practicas.reiniciar(context)
@@ -446,6 +457,7 @@ MANEJO = {"comprobar": _comprobar, "pista": _pista, "hazlo_conmigo": _hazlo_conm
 
 
 def _latidor():
+    """Temporizador persistente: late cada segundo (si toca); el enlace nunca rompe Blender."""
     try:
         latir()
     except Exception as error:  # noqa: BLE001 - el enlace nunca rompe Blender
@@ -455,11 +467,13 @@ def _latidor():
 
 
 def register():
+    """Registra el temporizador del latido."""
     if not bpy.app.timers.is_registered(_latidor):
         bpy.app.timers.register(_latidor, first_interval=3.0, persistent=True)
 
 
 def unregister():
+    """Quita los temporizadores del enlace."""
     for temporizador in (_latidor, _latir_ya):
         if bpy.app.timers.is_registered(temporizador):
             bpy.app.timers.unregister(temporizador)

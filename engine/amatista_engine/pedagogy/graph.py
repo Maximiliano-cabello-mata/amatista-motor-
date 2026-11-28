@@ -26,6 +26,7 @@ def find_cycle(targets: Sequence[TargetDefinition]) -> Optional[List[str]]:
     pila: List[str] = []
 
     def visitar(nodo: str) -> Optional[List[str]]:
+        """Búsqueda en profundidad: devuelve el ciclo de requisitos encontrado desde ``nodo`` o None."""
         estado[nodo] = 1
         pila.append(nodo)
         for siguiente in requisitos.get(nodo, ()):

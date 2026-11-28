@@ -15,6 +15,7 @@ from .base import EJES, describe, number, result, select, selector, text
 
 
 def medidas_mundo(obj):
+    """Medidas reales del objeto en el mundo (ancho, fondo, alto de su caja, ya con rotación y escala)."""
     minimo, maximo = obj.caja()
     return tuple(maximo[i] - minimo[i] for i in range(3))
 

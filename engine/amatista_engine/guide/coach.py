@@ -52,12 +52,14 @@ PRIMITIVAS = {"cube": "Cubo", "cylinder": "Cilindro", "sphere": "Esfera UV", "ic
 
 @dataclass(frozen=True)
 class Contexto:
+    """Todo lo que necesita un entrenador para redactar la guía de un objetivo: práctica, objetivo, resultado y escena."""
     practice: PracticeDefinition
     target: TargetDefinition
     result: ValidationResult
     scene: SceneState
 
     def etiqueta(self, rol: Optional[str]) -> str:
+        """Texto del rol para el alumno («Cubierta»); «» si no hay rol."""
         return self.practice.role_label(rol) if rol else ""
 
     def que(self) -> str:
@@ -129,18 +131,22 @@ def delta_amable(valor: float, minimo: float, maximo: float) -> float:
 
 
 def _seleccionar(nombre: str) -> GuideInstruction:
+    """Micro paso estándar «Selecciona «nombre» con un clic» que inicia casi todas las guías."""
     return Paso(f"Selecciona «{nombre}» con un clic", ("Clic",))
 
 
 def _plural(n: int, singular: str, plural: Optional[str] = None) -> str:
+    """Elige singular o plural según ``n`` (por defecto añade «s»)."""
     return singular if n == 1 else (plural or singular + "s")
 
 
 def _bien(objetos: Sequence[SceneObject], etiqueta: str) -> Tuple[Highlight, ...]:
+    """Resaltados verdes «✓ etiqueta» para los objetos que ya cumplen el objetivo."""
     return tuple(Highlight(o.name, RESALTE_BIEN, f"✓ {etiqueta or o.name}") for o in objetos)
 
 
 def _sin_rol(scene: SceneState) -> List[SceneObject]:
+    """Mallas de la escena que todavía no tienen rol (candidatas a ser la pieza que falta)."""
     return [o for o in scene.objects if o.object_type == "MESH" and not o.roles]
 
 
@@ -184,6 +190,12 @@ def _esquinas_libres(ctx: Contexto, rol: str) -> Tuple[VisualCue, ...]:
 
 
 def coach_role_count(ctx: Contexto) -> Parcial:
+    """Entrenador de ``role.count``: guía al alumno cuando sobran o faltan piezas con un rol.
+
+    Si sobran, señala cuáles; si faltan, propone asignar el rol a mallas sin rol
+    (o, si el motor deduce roles por la forma, cómo modelar la pieza) y ofrece
+    «Hazlo conmigo» (asignar rol, añadir cubo o duplicar).
+    """
     d = ctx.result.details
     rol = d.get("role") or ctx.target.params.get("role")
     etiqueta = ctx.etiqueta(rol) or rol
@@ -270,10 +282,12 @@ def coach_role_count(ctx: Contexto) -> Parcial:
 
 
 def coach_role_exists(ctx: Contexto) -> Parcial:
+    """Entrenador de ``role.exists``: es un caso de role.count (al menos una pieza con el rol)."""
     return coach_role_count(ctx)
 
 
 def _fallo_principal(ctx: Contexto) -> Optional[Tuple[SceneObject, float]]:
+    """Primer objeto que falló el objetivo y su valor medido, o None si el resultado no lo indica."""
     fallos = ctx.result.details.get("failed") or []
     if not fallos:
         return None
@@ -285,6 +299,11 @@ def _fallo_principal(ctx: Contexto) -> Optional[Tuple[SceneObject, float]]:
 
 
 def coach_dimension(ctx: Contexto) -> Parcial:
+    """Entrenador de ``dimension.range``: dice cuánto escalar el objeto en el eje que falla.
+
+    Calcula un factor «amable» (redondeado) para llegar al rango, muestra una regla
+    en la vista 3D con la medida actual y el rango, y ofrece escalar conmigo.
+    """
     d = ctx.result.details
     eje = (d.get("axis") or ctx.target.params.get("axis") or "z").lower()
     minimo, maximo = float(d.get("min", float("-inf"))), float(d.get("max", float("inf")))
@@ -324,6 +343,7 @@ def coach_dimension(ctx: Contexto) -> Parcial:
 
 
 def coach_position(ctx: Contexto) -> Parcial:
+    """Entrenador de ``object.position``: dice cuánto mover el objeto en el eje que falla (G + eje + valor) y ofrece moverlo conmigo."""
     d = ctx.result.details
     eje = (d.get("axis") or "z").lower()
     minimo, maximo = float(d.get("min", float("-inf"))), float(d.get("max", float("inf")))
@@ -350,6 +370,7 @@ def coach_position(ctx: Contexto) -> Parcial:
 
 
 def coach_rotation(ctx: Contexto) -> Parcial:
+    """Entrenador de ``object.rotation``: dice cuántos grados girar en el eje (R + eje + valor) y ofrece girarlo conmigo."""
     d = ctx.result.details
     eje = (d.get("axis") or "z").lower()
     principal = _fallo_principal(ctx)
@@ -369,6 +390,11 @@ def coach_rotation(ctx: Contexto) -> Parcial:
 
 
 def coach_below(ctx: Contexto) -> Parcial:
+    """Entrenador de ``spatial.below``: ayuda a colocar piezas por debajo de la de referencia.
+
+    Dibuja un plano fantasma donde termina la referencia y flechas sobre las
+    piezas que hay que bajar, con el desplazamiento sugerido.
+    """
     d = ctx.result.details
     objetos = select(ctx.scene, selector(ctx.target))
     rol_ref = ctx.target.params.get("reference_role")
@@ -427,6 +453,7 @@ def coach_below(ctx: Contexto) -> Parcial:
 
 
 def coach_scale_applied(ctx: Contexto) -> Parcial:
+    """Entrenador de ``transform.scale_applied``: explica que la escala no está aplicada y guía con Ctrl+A › Escala."""
     sin = ctx.result.details.get("not_applied") or []
     if ctx.result.passed or not sin:
         return Parcial(ctx.result.message, TONO_LOGRADO if ctx.result.passed else TONO_ANIMO)
@@ -440,6 +467,7 @@ def coach_scale_applied(ctx: Contexto) -> Parcial:
 
 
 def coach_file_saved(ctx: Contexto) -> Parcial:
+    """Entrenador de ``file.saved``: Ctrl+S si el archivo ya tiene nombre; si no, Guardar como con un nombre reconocible."""
     if ctx.result.passed:
         return Parcial("Tu archivo está guardado.", TONO_LOGRADO)
     if ctx.scene.file_path:
@@ -459,6 +487,7 @@ def coach_file_saved(ctx: Contexto) -> Parcial:
 
 
 def coach_file_named(ctx: Contexto) -> Parcial:
+    """Entrenador de ``file.named``: pide guardar con un nombre que contenga el texto exigido."""
     contiene = ctx.result.details.get("contains", "")
     if ctx.result.passed:
         return Parcial(ctx.result.message, TONO_LOGRADO)
@@ -471,6 +500,7 @@ def coach_file_named(ctx: Contexto) -> Parcial:
 
 
 def coach_material(ctx: Contexto) -> Parcial:
+    """Entrenador de ``material.exists``: señala el objeto sin material y explica cómo crear uno en Propiedades › Material."""
     sin = ctx.result.details.get("missing") or []
     if ctx.result.passed or not sin:
         return Parcial(ctx.result.message, TONO_LOGRADO if ctx.result.passed else TONO_ANIMO)
@@ -488,6 +518,7 @@ def coach_material(ctx: Contexto) -> Parcial:
 
 
 def coach_modifier(ctx: Contexto) -> Parcial:
+    """Entrenador de ``modifier.exists``: señala el objeto sin el modificador y cómo añadirlo desde la llave azul."""
     d = ctx.result.details
     sin = d.get("missing") or []
     if ctx.result.passed or not sin:
@@ -533,6 +564,11 @@ def coach_logic_any(ctx: Contexto) -> Parcial:
 
 
 def coach_generico(ctx: Contexto) -> Parcial:
+    """Entrenador por defecto (validadores sin uno propio o si el específico falla).
+
+    Muestra el mensaje del validador, el consejo del autor y resalta hasta 4
+    objetos a revisar, con «Mostrarme dónde».
+    """
     d = ctx.result.details
     nombres = list(d.get("missing") or []) + [f.get("object") for f in d.get("failed") or [] if f.get("object")]
     return Parcial(
@@ -555,6 +591,12 @@ def guide_target(
     step_number: int = 0,
     step_total: int = 0,
 ) -> Guidance:
+    """Construye la guía completa (Guidance) que ve el alumno para el objetivo actual.
+
+    Elige el entrenador del validador (o el genérico si falla: una guía nunca
+    rompe la evaluación) y lo combina con lo que escribió el autor (why, micro
+    pasos, mensajes), el número de paso y el total.
+    """
     ctx = Contexto(practice, target, result, scene)
     entrenador = ENTRENADORES.get(target.validator, coach_generico)
     try:

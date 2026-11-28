@@ -10,6 +10,7 @@ No importa nada del motor: graph.py lo usa sin ciclos de importación.
 """
 from __future__ import annotations
 
+# [REVISION-MUERTO] ``Dict`` sin uso.
 from typing import Dict, Sequence, Tuple
 
 from ..models import TargetDefinition
@@ -30,6 +31,7 @@ PARTES: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
 
 
 def _validador_base(target: TargetDefinition) -> str:
+    """Validador que define la parte: para logic.any, el de su primera opción."""
     if target.validator == "logic.any":
         opciones = (target.params or {}).get("options") or []
         if opciones and isinstance(opciones[0], dict):
@@ -38,6 +40,7 @@ def _validador_base(target: TargetDefinition) -> str:
 
 
 def titulo_parte(target: TargetDefinition) -> str:
+    """Título de la parte de la ruta del objetivo: su ``stage`` si lo tiene o el que corresponde a su validador."""
     if getattr(target, "stage", ""):
         return target.stage
     validador = _validador_base(target)

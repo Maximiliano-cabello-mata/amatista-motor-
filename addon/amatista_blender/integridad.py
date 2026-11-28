@@ -29,6 +29,7 @@ _resultado = None
 
 
 def _archivos_actuales():
+    """Recorre los archivos del add-on instalado (sin cachés ni los que varían por instalación) para compararlos con el manifiesto."""
     for ruta in sorted(CARPETA.rglob("*")):
         if not ruta.is_file() or IGNORAR & set(ruta.relative_to(CARPETA).parts) or ruta.suffix == ".pyc":
             continue

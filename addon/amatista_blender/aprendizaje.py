@@ -32,10 +32,12 @@ ESTADO = {
 
 
 def _ruta_avance():
+    """Archivo avance.json del alumno en la carpeta de usuario."""
     return ajustes.carpeta_usuario() / "avance.json"
 
 
 def avance():
+    """Avance del alumno (completadas, píldoras vistas, repaso); para el administrador, uno en memoria que empieza de cero."""
     if ajustes.sin_progreso():
         if ESTADO.get("avance_admin") is None:  # motor 7: el administrador, de cero en cada arranque
             ESTADO["avance_admin"] = {"completadas": [], "pildoras_vistas": {}, "repaso": {}}
@@ -53,6 +55,7 @@ def avance():
 
 
 def guardar_avance():
+    """Guarda el avance en disco (no en modo sin progreso); los errores van a consola."""
     if ajustes.sin_progreso():
         return
     try:
@@ -62,6 +65,7 @@ def guardar_avance():
 
 
 def marcar_completada(practica_id):
+    """Marca la práctica como completada (desbloquea las siguientes del plan) y guarda."""
     datos = avance()
     if practica_id not in datos["completadas"]:
         datos["completadas"].append(practica_id)
@@ -84,6 +88,7 @@ def completadas():
 
 
 def _ruta_plan():
+    """Ruta del cursos.json del paquete, o None."""
     from . import practicas
 
     carpeta = practicas.carpeta_paquete()
@@ -94,6 +99,7 @@ def _ruta_plan():
 
 
 def plan():
+    """Plan de estudios cargado del paquete (cacheado); None si falta o está roto."""
     if ESTADO["plan"] is None:
         ruta = _ruta_plan()
         try:
@@ -117,6 +123,7 @@ def estados():
 
 
 def siguiente():
+    """Siguiente práctica disponible del plan para el alumno, o None."""
     p = plan()
     return curriculo.next_practice(p, completadas()) if p else None
 
@@ -140,6 +147,7 @@ def es_cierre(practica):
 
 
 def vistas(practica_id):
+    """Píldoras de la práctica que el alumno ya vio."""
     return set(avance()["pildoras_vistas"].get(practica_id, []))
 
 
@@ -156,6 +164,7 @@ def actualizar_pildoras(practica, foto, reporte):
 
 
 def pildora_principal():
+    """Píldora de teoría que toca mostrar ahora, o None."""
     return ESTADO["pildoras"][0] if ESTADO["pildoras"] else None
 
 
@@ -203,6 +212,7 @@ def repasos_pendientes(practica, ahora=None, catalogo=None):
 
 
 def responder(item, correcto, ahora=None):
+    """Registra la respuesta a una pregunta de repaso (caja de Leitner) y guarda."""
     datos = avance()
     if spaced is not None:
         datos["repaso"] = spaced.answer(datos["repaso"], item, bool(correcto), ahora or time.time())
@@ -210,8 +220,10 @@ def responder(item, correcto, ahora=None):
 
 
 def dominadas():
+    """Elementos de repaso ya dominados."""
     return spaced.mastered(avance()["repaso"]) if spaced is not None else []
 
 
 def reiniciar_sesion():
+    """Olvida las píldoras calculadas en esta sesión."""
     ESTADO.update(pildoras=(), nuevas=())

@@ -3,6 +3,7 @@ from amatista_engine import terminos
 
 
 def test_en_ingles_cada_paso_del_menu_dice_lo_que_ve_y_lo_que_significa():
+    """Comprueba la traducción de rutas de menú al inglés con el español entre paréntesis."""
     texto = "Agrega un cubo (Shift + A › Malla › Cubo)."
     assert terminos.menus(texto, "en") == "Agrega un cubo (Shift + A › Mesh (Malla) › Cube (Cubo))."
     assert terminos.menus("Archivo › Guardar como", "en") == "File (Archivo) › Save As (Guardar como)"
@@ -10,6 +11,7 @@ def test_en_ingles_cada_paso_del_menu_dice_lo_que_ve_y_lo_que_significa():
 
 
 def test_no_repite_ni_toca_lo_que_no_es_menu():
+    """Comprueba que no se traduce dos veces ni se toca lo que no es menú."""
     una = terminos.menus("Shift+A › Luz › Área", "en")
     assert terminos.menus(una, "en") == una
     assert terminos.menus("Material › Nuevo", "en") == "Material › New (Nuevo)"
@@ -18,6 +20,7 @@ def test_no_repite_ni_toca_lo_que_no_es_menu():
 
 
 def test_en_espanol_queda_igual_y_el_idioma_se_fija_una_vez():
+    """Comprueba que en español queda igual y la fijación del idioma."""
     assert terminos.menus("Archivo › Guardar", "es") == "Archivo › Guardar"
     try:
         assert terminos.fijar_idioma("en_US") == "en" and terminos.idioma() == "en"

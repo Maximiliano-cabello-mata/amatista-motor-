@@ -37,14 +37,17 @@ SIN_INTERNET = "El acceso a internet está desactivado en Blender (Preferencias 
 
 
 def en_linea_permitido():
+    """True si Blender permite el acceso a internet (bpy.app.online_access; True en versiones que no lo tienen)."""
     return bool(getattr(bpy.app, "online_access", True))
 
 
 def sistema():
+    """Sistema operativo y versión (máx. 60 caracteres) para informar al servidor."""
     return f"{platform.system()} {platform.release()}"[:60]
 
 
 def _cabeceras(con_token):
+    """Cabeceras HTTP comunes: versión, integridad/huella de la copia, licencia y, si se pide, el token Bearer."""
     cabeceras = {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -68,6 +71,7 @@ def _cabeceras(con_token):
 
 
 def _detalle(error):
+    """Mensaje legible de un HTTPError (campo «detail» de FastAPI) o su razón."""
     try:
         cuerpo = json.loads(error.read().decode("utf-8"))
         detalle = cuerpo.get("detail")
@@ -88,6 +92,7 @@ def pedir(metodo, ruta, al_terminar=None, datos=None, con_token=True, segundos=1
             al_terminar(None, SIN_INTERNET, 0)
         return
     url = ajustes.servidor() + ruta
+    # [REVISION-SEGURIDAD] se acepta http:// con cualquier host: el token Bearer viaja en claro si el servidor configurado no es HTTPS (el valor por defecto de ajustes.servidor() es http://localhost:8000). Exigir https salvo localhost/127.0.0.1.
     if not url.lower().startswith(("https://", "http://")):
         # Solo HTTP(S): una dirección file:// o rara en las preferencias no debe leerse.
         if al_terminar:
@@ -97,6 +102,7 @@ def pedir(metodo, ruta, al_terminar=None, datos=None, con_token=True, segundos=1
     cuerpo = json.dumps(datos).encode("utf-8") if datos is not None else None
 
     def trabajo():
+        """Hilo de trabajo: hace la petición HTTP con timeout y deja el resultado para entregarlo en el hilo principal de Blender."""
         global _activos
         try:
             peticion = urllib.request.Request(url, data=cuerpo, method=metodo, headers=cabeceras)
@@ -120,6 +126,7 @@ def pedir(metodo, ruta, al_terminar=None, datos=None, con_token=True, segundos=1
 
 
 def _entregar():
+    """Temporizador del hilo principal: entrega los resultados de la cola a sus callbacks; se re-agenda mientras haya peticiones activas."""
     while not _resultados.empty():
         al_terminar, respuesta, error, estado = _resultados.get()
         if al_terminar is None:
@@ -148,6 +155,7 @@ def esperar(segundos=10.0):
 
 
 def unregister():
+    """Quita el temporizador de entrega al desactivar el add-on."""
     if bpy.app.timers.is_registered(_entregar):
         bpy.app.timers.unregister(_entregar)
 
@@ -156,10 +164,12 @@ def unregister():
 
 
 def _archivo_cola():
+    """Ruta de pendientes.json en la carpeta de usuario del add-on."""
     return ajustes.carpeta_usuario() / "pendientes.json"
 
 
 def leer_cola():
+    """Lista de envíos pendientes ([] si no hay archivo o está corrupto)."""
     try:
         return json.loads(_archivo_cola().read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -167,18 +177,22 @@ def leer_cola():
 
 
 def _guardar_cola(elementos):
+    """Guarda en disco la cola de envíos pendientes (solo los últimos 50); los errores van a consola."""
     try:
+        # [REVISION-BUG] guarda solo los últimos 50: si hay más pendientes (p.ej. muchos días sin red o varias cuentas en un PC compartido) los más antiguos se pierden sin aviso.
         _archivo_cola().write_text(json.dumps(elementos[-50:], ensure_ascii=False), encoding="utf-8")
     except OSError as error:
         print(f"[Amatista] No se pudo guardar la cola: {error}")
 
 
 def _cuenta_actual():
+    """Id de la cuenta vinculada en las preferencias ("" si no hay)."""
     p = ajustes.prefs()
     return (getattr(p, "cuenta_id", "") or "") if p else ""
 
 
 def encolar(ruta, datos):
+    """Agrega un envío a la cola en disco, marcado con la cuenta actual."""
     elementos = leer_cola()
     elementos.append({"id": str(uuid.uuid4()), "ruta": ruta, "datos": datos, "cuenta": _cuenta_actual()})
     _guardar_cola(elementos)
@@ -207,6 +221,7 @@ def vaciar_cola(al_terminar=None):
     enviados = []
 
     def terminar():
+        """Al acabar de vaciar: quita de la cola los enviados, libera el candado y avisa cuántos salieron."""
         global _vaciando
         _vaciando = False
         _guardar_cola([e for e in leer_cola() if e["id"] not in enviados])
@@ -214,12 +229,14 @@ def vaciar_cola(al_terminar=None):
             al_terminar(len(enviados))
 
     def siguiente():
+        """Envía el siguiente elemento de la cola, uno a uno (en orden), hasta acabar o fallar."""
         if not restantes:
             terminar()
             return
         elemento = restantes.pop(0)
 
         def listo(respuesta, error, estado):
+            """Aceptado o rechazado para siempre (400/403/404/422) cuenta como enviado y sigue; un error reintentable detiene el vaciado."""
             if error is None or not es_reintentable(estado):  # 400, 403, 404, 422: reintentar no lo arregla
                 enviados.append(elemento["id"])
                 siguiente()

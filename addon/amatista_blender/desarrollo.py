@@ -8,16 +8,19 @@ from . import _motor, autor, estado, practicas
 
 
 def _error(operador, error):
+    """Muestra el error en la barra de estado de Blender y cancela el operador."""
     operador.report({"ERROR"}, str(error))
     return {"CANCELLED"}
 
 
 class AMATISTA_OT_autor_nuevo(bpy.types.Operator):
+    """Botón «Crear borrador» (modo autor): crea el JSON de una práctica nueva en el Editor de texto de Blender."""
     bl_idname = "amatista.autor_nuevo"
     bl_label = "Crear borrador"
     bl_description = "Crea el JSON de una práctica nueva en el Editor de texto"
 
     def execute(self, context):
+        """Crea el borrador con id, título, nivel, plantilla, curso y módulo del formulario y avisa qué completar."""
         a = context.scene.amatista_autor
         plantilla = "" if a.nueva_plantilla == estado.SIN_PLANTILLA else a.nueva_plantilla
         autor.nuevo_borrador(a.nuevo_id, a.nuevo_titulo, a.nuevo_nivel, plantilla, a.nuevo_curso, a.nuevo_modulo)
@@ -27,15 +30,18 @@ class AMATISTA_OT_autor_nuevo(bpy.types.Operator):
 
 
 class AMATISTA_OT_autor_desde_activa(bpy.types.Operator):
+    """Botón «Partir de la práctica abierta»: copia la práctica abierta como borrador editable."""
     bl_idname = "amatista.autor_desde_activa"
     bl_label = "Partir de la práctica abierta"
     bl_description = "Copia la práctica abierta como borrador para editarla"
 
     @classmethod
     def poll(cls, context):
+        """Solo disponible si hay una práctica abierta en la escena."""
         return bool(context.scene.amatista.practica_json)
 
     def execute(self, context):
+        """Escribe la práctica activa como borrador en el Editor de texto."""
         autor.borrador_desde_practica(json.loads(context.scene.amatista.practica_json))
         return {"FINISHED"}
 
@@ -47,6 +53,7 @@ class AMATISTA_OT_autor_importar(bpy.types.Operator, ImportHelper):
     filter_glob: bpy.props.StringProperty(default="*.json", options={"HIDDEN"})
 
     def execute(self, context):
+        """Lee el JSON elegido en el selector de archivos y lo convierte en borrador; muestra el error si no se puede leer."""
         try:
             with open(self.filepath, encoding="utf-8") as archivo:
                 autor.borrador_desde_practica(json.load(archivo))
@@ -62,11 +69,13 @@ class AMATISTA_OT_autor_exportar(bpy.types.Operator, ExportHelper):
     filter_glob: bpy.props.StringProperty(default="*.json", options={"HIDDEN"})
 
     def invoke(self, context, event):
+        """Propone como nombre de archivo el id del borrador y abre el selector de archivos de Blender."""
         datos = autor.leer_borrador() or {}
         self.filepath = (datos.get("id") or "practica").replace(".", "_") + ".json"
         return super().invoke(context, event)
 
     def execute(self, context):
+        """Escribe el borrador compilado en el archivo elegido (disco) y confirma la ruta."""
         try:
             autor.exportar(self.filepath)
         except (OSError, ValueError) as error:
@@ -76,11 +85,13 @@ class AMATISTA_OT_autor_exportar(bpy.types.Operator, ExportHelper):
 
 
 class AMATISTA_OT_autor_probar(bpy.types.Operator):
+    """Botón «Validar práctica»: compila el borrador y lo evalúa contra la escena actual (Live Validation)."""
     bl_idname = "amatista.autor_probar"
     bl_label = "Validar práctica"
     bl_description = "Compila el borrador y lo evalúa con la escena actual (Live Validation)"
 
     def execute(self, context):
+        """Compila y evalúa; informa cuántos avisos tiene y el progreso simulado, o el error de compilación."""
         try:
             resultado = autor.probar_borrador(context)
         except ValueError as error:
@@ -91,11 +102,13 @@ class AMATISTA_OT_autor_probar(bpy.types.Operator):
 
 
 class AMATISTA_OT_autor_vista_previa(bpy.types.Operator):
+    """Botón «Vista previa como alumno»: muestra el borrador tal como lo verá el alumno."""
     bl_idname = "amatista.autor_vista_previa"
     bl_label = "Vista previa como alumno"
     bl_description = "Muestra el borrador exactamente como lo verá un alumno"
 
     def execute(self, context):
+        """Compila el borrador y activa la vista previa (los paneles pasan a modo alumno)."""
         try:
             autor.probar_borrador(context)
         except ValueError as error:
@@ -105,11 +118,13 @@ class AMATISTA_OT_autor_vista_previa(bpy.types.Operator):
 
 
 class AMATISTA_OT_declarar_rol(bpy.types.Operator):
+    """Botón «Declarar rol»: añade un rol al catálogo del borrador para que el Tagger lo ofrezca."""
     bl_idname = "amatista.declarar_rol"
     bl_label = "Declarar rol"
     bl_description = "Agrega el rol al catálogo de la práctica para que el Tagger lo ofrezca"
 
     def execute(self, context):
+        """Valida el id, asegura el rol en el borrador y lo deja elegido en el panel de roles."""
         a = context.scene.amatista_autor
         if not a.nuevo_rol.strip():
             return _error(self, "Escribe el id del rol (por ejemplo «pata»).")
@@ -132,9 +147,11 @@ class AMATISTA_OT_agregar_etiqueta(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """Solo disponible con un objeto activo."""
         return context.active_object is not None
 
     def execute(self, context):
+        """Añade la etiqueta escrita a los objetos seleccionados y limpia el campo."""
         etiqueta = context.scene.amatista_autor.etiqueta
         for obj in context.selected_objects or [context.active_object]:
             _motor.tagger.add_tag(obj, etiqueta)
@@ -150,21 +167,25 @@ class AMATISTA_OT_quitar_etiqueta(bpy.types.Operator):
     etiqueta: bpy.props.StringProperty()
 
     def execute(self, context):
+        """Quita la etiqueta indicada del objeto activo."""
         if context.active_object:
             _motor.tagger.remove_tag(context.active_object, self.etiqueta)
         return {"FINISHED"}
 
 
 class AMATISTA_OT_autor_rango_desde_objeto(bpy.types.Operator):
+    """Botón «Usar sus medidas»: rellena mínimo y máximo del constructor con la medida del objeto activo (±25 %)."""
     bl_idname = "amatista.autor_rango_desde_objeto"
     bl_label = "Usar sus medidas"
     bl_description = "Llena mínimo y máximo del constructor con la medida del objeto activo (±25 %)"
 
     @classmethod
     def poll(cls, context):
+        """Solo disponible con un objeto activo."""
         return context.active_object is not None
 
     def execute(self, context):
+        """Toma la dimensión del objeto en el eje elegido, fija 75 %–125 % y, si el objeto tiene rol, lo usa en el constructor."""
         a = context.scene.amatista_autor
         indice = "xyz".index(a.obj_eje)
         valor = float(context.active_object.dimensions[indice])
@@ -184,6 +205,7 @@ class AMATISTA_OT_autor_agregar_objetivo(bpy.types.Operator):
     bl_label = "Agregar objetivo"
 
     def execute(self, context):
+        """Añade al borrador el objetivo armado en el constructor y vacía los campos del formulario."""
         try:
             objetivo = autor.agregar_objetivo(context.scene.amatista_autor)
         except ValueError as error:
@@ -204,9 +226,11 @@ class AMATISTA_OT_autor_quitar_objetivo(bpy.types.Operator):
     objetivo: bpy.props.StringProperty()
 
     def invoke(self, context, event):
+        """Pide confirmación antes de quitar el objetivo."""
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
+        """Quita el objetivo del borrador."""
         autor.quitar_objetivo(self.objetivo)
         return {"FINISHED"}
 
@@ -219,6 +243,7 @@ class AMATISTA_OT_autor_mover_objetivo(bpy.types.Operator):
     paso: bpy.props.IntProperty()
 
     def execute(self, context):
+        """Mueve el objetivo arriba o abajo en el borrador (``paso`` = -1/+1)."""
         autor.mover_objetivo(self.objetivo, self.paso)
         return {"FINISHED"}
 
@@ -228,6 +253,7 @@ class AMATISTA_OT_autor_agregar_pista(bpy.types.Operator):
     bl_label = "Agregar pista"
 
     def execute(self, context):
+        """Añade la pista escrita al objetivo elegido e informa su nivel."""
         a = context.scene.amatista_autor
         try:
             nivel = autor.agregar_pista(a.objetivo, a.pista)
@@ -246,19 +272,23 @@ class AMATISTA_OT_autor_quitar_pista(bpy.types.Operator):
     indice: bpy.props.IntProperty()
 
     def execute(self, context):
+        """Quita la pista ``indice`` del objetivo."""
         autor.quitar_pista(self.objetivo, self.indice)
         return {"FINISHED"}
 
 
 class AMATISTA_OT_autor_publicar(bpy.types.Operator):
+    """Botón «Subir a Amatista»: registra el borrador en la plataforma (queda en borrador con su versión)."""
     bl_idname = "amatista.autor_publicar"
     bl_label = "Subir a Amatista"
     bl_description = "Registra el borrador en Oracle (queda en borrador con su número de versión)"
 
     def execute(self, context):
+        """Envía el borrador a la API en segundo plano; el resultado se escribe en consola y en el estado de red del panel."""
         a = context.scene.amatista_autor
 
         def listo(respuesta, error):
+            """Guarda el error de red o informa id, versión y estado de la práctica registrada, y redibuja."""
             if error:
                 print(f"[Amatista] No se pudo subir la práctica: {error}")
                 practicas.ESTADO["red"] = error
@@ -276,6 +306,7 @@ class AMATISTA_OT_autor_publicar(bpy.types.Operator):
 
 
 class AMATISTA_OT_autor_verificacion(bpy.types.Operator):
+    """Botón «Registrar verificación»: anota en la matriz de compatibilidad el resultado de la lección en este Blender."""
     bl_idname = "amatista.autor_verificacion"
     bl_label = "Registrar verificación"
     bl_description = "Anota en la matriz de compatibilidad el resultado de esta lección en este Blender"
@@ -283,9 +314,11 @@ class AMATISTA_OT_autor_verificacion(bpy.types.Operator):
     resultado: bpy.props.StringProperty(default="verificada")
 
     def execute(self, context):
+        """Envía a la API curso, lección, resultado y nota de la verificación (red, en segundo plano)."""
         a = context.scene.amatista_autor
 
         def listo(respuesta, error):
+            """Informa en consola si la verificación quedó registrada."""
             print(f"[Amatista] {'Verificación registrada' if not error else error}")
 
         autor.registrar_verificacion(a.curso_id, a.leccion_id, self.resultado, a.nota, listo)
@@ -293,11 +326,13 @@ class AMATISTA_OT_autor_verificacion(bpy.types.Operator):
 
 
 class AMATISTA_OT_autor_agregar_pildora(bpy.types.Operator):
+    """Botón «Agregar píldora»: añade al borrador una idea de teoría con su disparo."""
     bl_idname = "amatista.autor_agregar_pildora"
     bl_label = "Agregar píldora"
     bl_description = "Agrega una idea de teoría que aparece en el momento elegido"
 
     def execute(self, context):
+        """Crea la píldora con título, texto, disparo, objetivo y teclas del formulario y limpia los campos."""
         a = context.scene.amatista_autor
         try:
             autor.agregar_pildora("", a.pil_titulo, a.pil_texto, a.pil_disparo, a.pil_objetivo, a.pil_teclas)
@@ -308,6 +343,7 @@ class AMATISTA_OT_autor_agregar_pildora(bpy.types.Operator):
 
 
 class AMATISTA_OT_autor_caso_prueba(bpy.types.Operator):
+    """Botón «Guardar caso de prueba»: guarda la foto de la escena y lo que dice el motor como caso de prueba sin código."""
     bl_idname = "amatista.autor_caso_prueba"
     bl_label = "Guardar caso de prueba"
     bl_description = (
@@ -316,6 +352,7 @@ class AMATISTA_OT_autor_caso_prueba(bpy.types.Operator):
     )
 
     def execute(self, context):
+        """Añade el caso a «amatista_pruebas.json» (Editor de texto) e informa si la práctica queda completada o en qué paso."""
         try:
             espera = autor.caso_de_prueba(context, context.scene.amatista_autor.caso_nombre)
         except ValueError as error:

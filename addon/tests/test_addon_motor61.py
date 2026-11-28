@@ -12,6 +12,7 @@ ADDON = RAIZ / "addon" / "amatista_blender"
 
 
 def _cargar(nombre, archivo):
+    """Carga un módulo del add-on desde su archivo."""
     spec = importlib.util.spec_from_file_location(nombre, ADDON / archivo)
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -22,10 +23,12 @@ plataforma = _cargar("amatista_plataforma_m61", "plataforma.py")
 
 
 def setup_function():
+    """Reinicia la lección de la plataforma antes de cada prueba."""
     plataforma.reiniciar()
 
 
 def test_blender_sabe_en_que_leccion_va_la_plataforma():
+    """Comprueba que Blender recibe y muestra la lección en curso de la plataforma."""
     assert plataforma.texto_corto() == "" and not plataforma.viva()
     cambio = plataforma.recibir({"curso": "blender_principiante", "leccion": "bp2_explora", "clase": "teoria",
                                  "titulo": "Extruir, cortar y limpiar", "numero": 3, "total": 5}, ahora=100.0)
@@ -38,6 +41,7 @@ def test_blender_sabe_en_que_leccion_va_la_plataforma():
 
 
 def test_la_plataforma_cerrada_se_olvida():
+    """Comprueba que la lección se olvida pasado VIVA sin noticias."""
     plataforma.recibir({"curso": "c", "leccion": "l", "titulo": "T"}, ahora=0.0)
     assert plataforma.viva(ahora=plataforma.VIVA - 1)
     assert not plataforma.viva(ahora=plataforma.VIVA + 1)
@@ -46,6 +50,7 @@ def test_la_plataforma_cerrada_se_olvida():
 
 
 def test_al_cumplir_la_etapa_blender_dice_a_donde_paso_la_leccion():
+    """Comprueba la frase al volver cuando la lección avanzó."""
     plataforma.recibir({"curso": "c", "leccion": "bp2_blender", "clase": "blender", "titulo": "Explora"}, ahora=0.0)
     assert "ya lo sabe" in plataforma.frase_al_volver("bp2_blender", ahora=1.0)  # todavía no avanzó
     plataforma.recibir({"curso": "c", "leccion": "bp2_explora", "clase": "teoria", "titulo": "Extruir"}, ahora=5.0)
@@ -54,6 +59,7 @@ def test_al_cumplir_la_etapa_blender_dice_a_donde_paso_la_leccion():
 
 
 def test_datos_raros_no_rompen_nada():
+    """Comprueba que datos raros de la plataforma se sanean."""
     assert not plataforma.recibir(None)
     assert not plataforma.recibir({"leccion": ""})
     plataforma.recibir({"leccion": "x" * 500, "clase": "inventada", "numero": "muchos", "total": 10 ** 9}, ahora=0.0)

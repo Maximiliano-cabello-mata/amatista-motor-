@@ -378,6 +378,7 @@ def indice_actual(ahora=None, periodo=PERIODO_MASCOTA):
 
 
 def siguiente_mensaje():
+    """Pasa al siguiente mensaje de la mascota del módulo."""
     ESTADO["extra"] += 1
 
 

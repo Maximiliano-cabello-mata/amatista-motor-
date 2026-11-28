@@ -33,6 +33,7 @@ NOMBRE_MODIFICADOR = MODIFICADORES  # uno solo para todo el motor (terminos.py)
 
 
 def _fallidos(ctx: Contexto):
+    """Nombres de los objetos que fallaron según el resultado (claves «failed», «object» y «missing»), sin repetir."""
     d = ctx.result.details
     nombres = [f.get("object") for f in d.get("failed") or [] if f.get("object")]
     for clave in ("object", "missing"):
@@ -43,10 +44,12 @@ def _fallidos(ctx: Contexto):
 
 
 def _corregir(nombres, texto):
+    """Resaltados naranjas «corregir» con ``texto`` para hasta 4 objetos."""
     return tuple(Highlight(n, RESALTE_CORREGIR, texto) for n in nombres[:4])
 
 
 def _ok(ctx: Contexto) -> Optional[Parcial]:
+    """Si el objetivo ya se cumple, la guía de logro con los objetos resaltados en verde; si no, None."""
     if ctx.result.passed:
         sel = selector(ctx.target)
         from ..validators.base import select
@@ -59,6 +62,7 @@ def _ok(ctx: Contexto) -> Optional[Parcial]:
 
 
 def coach_object_count(ctx: Contexto) -> Parcial:
+    """Entrenador de ``object.count``: indica qué objeto sobra (y borrarlo con X) o qué primitiva añadir (Shift+A)."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -96,6 +100,7 @@ def coach_object_count(ctx: Contexto) -> Parcial:
 
 
 def coach_thinnest(ctx: Contexto) -> Parcial:
+    """Entrenador de ``shape.thinnest_axis``: p. ej. si la pieza está «acostada como una moneda», guía a girarla 90°."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -125,6 +130,7 @@ def coach_thinnest(ctx: Contexto) -> Parcial:
 
 
 def coach_proportion(ctx: Contexto) -> Parcial:
+    """Entrenador de ``shape.proportion``: pide estirar la pieza en el eje indicado (S + eje) y ofrece hacerlo conmigo."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -144,6 +150,7 @@ def coach_proportion(ctx: Contexto) -> Parcial:
 
 
 def coach_grounded(ctx: Contexto) -> Parcial:
+    """Entrenador de ``spatial.grounded``: calcula cuánto subir o bajar la pieza para que apoye en el suelo (G Z valor)."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -165,6 +172,7 @@ def coach_grounded(ctx: Contexto) -> Parcial:
 
 
 def coach_touching(ctx: Contexto) -> Parcial:
+    """Entrenador de ``spatial.touching``: pide acercar la pieza hasta que toque a la otra, con una flecha en la vista."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -186,6 +194,7 @@ def coach_touching(ctx: Contexto) -> Parcial:
 
 
 def coach_no_duplicates(ctx: Contexto) -> Parcial:
+    """Entrenador de ``mesh.no_duplicates``: guía a Edición › Seleccionar todo › Fusionar por distancia."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -204,6 +213,7 @@ def coach_no_duplicates(ctx: Contexto) -> Parcial:
 
 
 def coach_one_side(ctx: Contexto) -> Parcial:
+    """Entrenador de ``mesh.one_side``: guía a borrar los vértices del otro lado del eje para modelar solo una mitad (espejo)."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -224,6 +234,7 @@ def coach_one_side(ctx: Contexto) -> Parcial:
 
 
 def coach_modifier_configured(ctx: Contexto) -> Parcial:
+    """Entrenador de ``modifier.configured``: según el motivo, guía a añadir el modificador, encenderlo o ajustar ejes/niveles."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -266,6 +277,7 @@ def coach_modifier_configured(ctx: Contexto) -> Parcial:
 
 
 def coach_material_distinct(ctx: Contexto) -> Parcial:
+    """Entrenador de ``material.distinct``: explica cómo dar a cada pieza su propio material."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -285,6 +297,7 @@ def coach_material_distinct(ctx: Contexto) -> Parcial:
 
 
 def coach_material_matches(ctx: Contexto) -> Parcial:
+    """Entrenador de ``material.matches``: lista qué deslizadores del material mover (Metálico, Rugosidad…) y hasta qué valor."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -302,6 +315,10 @@ def coach_material_matches(ctx: Contexto) -> Parcial:
 
 
 def coach_three_point(ctx: Contexto) -> Parcial:
+    """Entrenador de ``light.three_point``: guía a montar la iluminación de tres puntos (clave, relleno a mitad de potencia, contraluz).
+
+    Si no hay cámara, delega en ``coach_camera_active``.
+    """
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -325,6 +342,7 @@ def coach_three_point(ctx: Contexto) -> Parcial:
 
 
 def coach_camera_active(ctx: Contexto) -> Parcial:
+    """Entrenador de ``camera.active``: activar la cámara existente (Ctrl+Numpad 0) o añadir una nueva."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -339,6 +357,7 @@ def coach_camera_active(ctx: Contexto) -> Parcial:
 
 
 def coach_camera_frames(ctx: Contexto) -> Parcial:
+    """Entrenador de ``camera.frames``: guía a encuadrar el modelo alineando la cámara con la vista (Ctrl+Alt+0)."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -355,6 +374,7 @@ def coach_camera_frames(ctx: Contexto) -> Parcial:
 
 
 def coach_render_engine(ctx: Contexto) -> Parcial:
+    """Entrenador de ``render.engine``: dónde cambiar el motor de render y botón para usar el pedido (EEVEE/Cycles)."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -365,6 +385,7 @@ def coach_render_engine(ctx: Contexto) -> Parcial:
 
 
 def coach_render_done(ctx: Contexto) -> Parcial:
+    """Entrenador de ``render.done``: pide hacer el render final con F12 y guardar la imagen."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -377,6 +398,7 @@ def coach_render_done(ctx: Contexto) -> Parcial:
 
 
 def coach_keyframes(ctx: Contexto) -> Parcial:
+    """Entrenador de ``animation.keyframes``: guía a insertar fotogramas clave (I) de la propiedad pedida en la línea de tiempo."""
     hecho = _ok(ctx)
     if hecho:
         return hecho
@@ -402,6 +424,10 @@ def coach_keyframes(ctx: Contexto) -> Parcial:
 
 
 def coach_varies(ctx: Contexto) -> Parcial:
+    """Entrenador de ``animation.varies``: explica qué fotograma clave falta para la animación (bajada, subida, rebote…).
+
+    Si el problema es que faltan claves, delega en ``coach_keyframes``.
+    """
     hecho = _ok(ctx)
     if hecho:
         return hecho

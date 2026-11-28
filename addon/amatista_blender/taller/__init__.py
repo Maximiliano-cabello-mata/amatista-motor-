@@ -24,6 +24,7 @@ CLASES = operadores.CLASES + panel.CLASES + vista.CLASES
 
 
 def register():
+    """Registra las clases del taller, la sesión y su dibujo en la vista 3D."""
     for clase in CLASES:
         bpy.utils.register_class(clase)
     sesion.register()
@@ -31,6 +32,7 @@ def register():
 
 
 def unregister():
+    """Desregistra vista, sesión, demo, datos y clases del taller."""
     vista.unregister()
     sesion.unregister()
     demo.unregister()

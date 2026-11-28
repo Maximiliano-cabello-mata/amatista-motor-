@@ -23,14 +23,17 @@ practica = load_practice(MESA)
 
 
 def escena(*objetos, guardada=False, ruta=""):
+    """Escena de prueba con los objetos dados."""
     return SceneState("5.1.1", ruta, guardada, tuple(objetos))
 
 
 def cubo(nombre="Cube", roles=(), alto=2.0):
+    """Cubo de prueba con roles y alto."""
     return SceneObject(nombre, "MESH", roles=roles, location=(0, 0, alto / 2), dimensions=(2, 2, alto))
 
 
 def test_numeros_redondos():
+    """Comprueba que los valores amables (objetivo, factor, delta) son redondos."""
     assert objetivo_amable(0.05, 0.3) in (0.1, 0.15, 0.2, 0.25)
     assert factor_amable(2, 0.05, 0.3) == 0.1
     assert factor_amable(2, 0.4, 1.2) == 0.5
@@ -39,6 +42,7 @@ def test_numeros_redondos():
 
 
 def test_sin_roles_propone_el_cubo_como_cubierta():
+    """Comprueba que sin roles la guía propone el cubo como cubierta."""
     g = motor.guide(practica, escena(cubo()))
     assert g.target_id == "cubierta" and g.step_number == 1 and g.step_total == 6
     assert "ningún objeto es «Cubierta»" in g.feedback
@@ -50,12 +54,14 @@ def test_sin_roles_propone_el_cubo_como_cubierta():
 
 
 def test_escena_vacia_propone_agregar_un_cubo():
+    """Comprueba que en escena vacía la guía propone agregar un cubo (Shift+A)."""
     g = motor.guide(practica, escena())
     assert g.action.kind == "add_cube"
     assert g.instructions[0].keys == ("Shift", "A")
 
 
 def test_cubierta_gruesa_da_teclas_y_numero_exacto():
+    """Comprueba que una cubierta gruesa da teclas, factor exacto y regla."""
     g = motor.guide(practica, escena(cubo(roles=("cubierta",))))
     assert g.target_id == "grosor"
     assert [i.keys for i in g.instructions][1:] == [("S", "Z"), ("0.1", "Enter")]
@@ -66,6 +72,7 @@ def test_cubierta_gruesa_da_teclas_y_numero_exacto():
 
 
 def test_patas_que_faltan_se_dibujan_como_fantasmas():
+    """Comprueba que las patas que faltan se dibujan como fantasmas."""
     g = motor.guide(practica, escena(cubierta(), pata("P1", -0.9, -0.4)))
     assert g.target_id == "patas"
     assert "Llevas 1 de 4" in g.feedback and "faltan 3" in g.feedback
@@ -77,6 +84,7 @@ def test_patas_que_faltan_se_dibujan_como_fantasmas():
 
 
 def test_pata_que_atraviesa_dice_cuanto_bajarla():
+    """Comprueba que una pata que atraviesa indica cuánto bajarla."""
     base = mesa_completa().objects
     g = motor.guide(practica, escena(*base[:4], pata("P4", 0.9, 0.4, alto=1.0)))
     assert g.target_id == "debajo"
@@ -87,6 +95,7 @@ def test_pata_que_atraviesa_dice_cuanto_bajarla():
 
 
 def test_guardar_y_practica_completa():
+    """Comprueba la guía de guardar y la de práctica completada."""
     g = motor.guide(practica, escena(*mesa_completa().objects))
     assert g.target_id == "guardar" and g.action.kind == "save"
     fin = motor.guide(practica, mesa_completa())
@@ -95,6 +104,7 @@ def test_guardar_y_practica_completa():
 
 
 def test_pasos_del_autor_reemplazan_los_generados():
+    """Comprueba que los pasos del autor reemplazan los generados."""
     datos = dump_practice(practica)
     datos["targets"][1]["guide"] = {"why": "Porque sí.", "steps": ["Elige la tabla", {"text": "Aplana", "keys": ["S", "Z"]}]}
     propia = parse_practice(datos)
@@ -106,6 +116,7 @@ def test_pasos_del_autor_reemplazan_los_generados():
 
 
 def test_guia_viaja_en_json_y_se_conserva_al_exportar():
+    """Comprueba que la guía se serializa y se conserva al exportar."""
     assert compile_practice(dump_practice(practica)).ok
     assert dump_practice(practica)["targets"][0]["guide"]["why"].startswith("Amatista")
     datos = guidance_to_dict(motor.guide(practica, escena(cubo(roles=("cubierta",)))))
@@ -113,6 +124,7 @@ def test_guia_viaja_en_json_y_se_conserva_al_exportar():
 
 
 def test_guia_mal_escrita_explica_el_error():
+    """Comprueba que una guía mal escrita da un error claro."""
     datos = dump_practice(practica)
     datos["targets"][0]["guide"] = {"steps": [{"text": "x", "keys": "S"}]}
     resultado = compile_practice(datos)
@@ -120,6 +132,7 @@ def test_guia_mal_escrita_explica_el_error():
 
 
 def test_distancia_al_objetivo():
+    """Comprueba la distancia al objetivo usada por el acompañante."""
     r = motor.evaluate(practica, escena(cubo(roles=("cubierta",)))).result("grosor")
     assert round(distance(r), 2) == 1.7
     r = motor.evaluate(practica, escena(cubierta(), pata("P1", 0, 0))).result("patas")
@@ -127,6 +140,7 @@ def test_distancia_al_objetivo():
 
 
 def test_acompanante_celebra_avisa_y_ofrece_ayuda():
+    """Comprueba que el acompañante celebra, presenta pasos y ofrece ayuda."""
     c = Companion(help_after_tries=3)
     avisos = c.observe(practica, motor.evaluate(practica, escena(cubo())), now=0)
     assert [a.kind for a in avisos] == [NUEVO_PASO]  # al abrir: solo el primer paso
@@ -149,6 +163,7 @@ def test_acompanante_celebra_avisa_y_ofrece_ayuda():
 
 
 def test_acompanante_retroceso_y_final():
+    """Comprueba que el acompañante avisa del final y de retrocesos."""
     c = Companion()
     c.observe(practica, motor.evaluate(practica, escena(*mesa_completa().objects)), now=0)
     avisos = c.observe(practica, motor.evaluate(practica, mesa_completa()), now=1)
@@ -159,6 +174,7 @@ def test_acompanante_retroceso_y_final():
 
 
 def test_acompanante_por_tiempo():
+    """Comprueba que el acompañante ofrece ayuda tras el tiempo límite."""
     c = Companion(help_after_tries=99, help_after_seconds=60)
     e = escena(cubo(roles=("cubierta",)))
     c.observe(practica, motor.evaluate(practica, e), now=0)

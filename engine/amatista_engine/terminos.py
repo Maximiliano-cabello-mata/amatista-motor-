@@ -22,6 +22,10 @@ MODIFICADORES = {
 
 
 def nombre_modificador(tipo: str) -> str:
+    """Nombre legible del modificador para el alumno a partir del tipo de Blender (p. ej. «MIRROR» → su nombre en MODIFICADORES).
+
+    Si el tipo no está en la tabla, lo devuelve capitalizado.
+    """
     tipo = str(tipo or "").upper()
     return MODIFICADORES.get(tipo, tipo.capitalize())
 
@@ -67,10 +71,12 @@ def fijar_idioma(codigo: str | None) -> str:
 
 
 def idioma() -> str:
+    """Idioma activo para nombrar menús: «es» o «en» (lo fija ``fijar_idioma`` según la interfaz de Blender)."""
     return _IDIOMA["actual"]
 
 
 def _traducir(termino: str) -> str:
+    """Término de menú en inglés con el español entre paréntesis («Add (Añadir)»); si no cambia, lo deja igual."""
     ingles = MENUS[termino]
     return termino if ingles == termino else f"{ingles} ({termino})"
 

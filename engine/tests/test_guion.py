@@ -16,7 +16,9 @@ from amatista_engine.guion.pasos import DICE_QUE_HACER as VERBO
 
 
 class _Reporte:
+    """Reporte falso con los objetivos aprobados indicados."""
     def __init__(self, pasados, completo=False, mensajes=None):
+        """Crea un resultado por objetivo con mensajes opcionales."""
         mensajes = mensajes or {}
         self.results = tuple(ValidationResult(t, "x", t in pasados, mensajes.get(t, f"falta {t}")) for t in ALL)
         self.completed = completo
@@ -29,10 +31,12 @@ ALL = ()
 
 @pytest.fixture(scope="module")
 def tren():
+    """Fixture: la práctica del tren."""
     return load_practice(TREN)
 
 
 def test_el_tren_tiene_un_paso_por_objetivo_en_orden(tren):
+    """Comprueba que el guion del tren tiene un paso por objetivo en orden de requisitos."""
     g = guion.guion_de_practica(tren)
     ids = [p.id for p in g.pasos]
     assert ids[0] == "vagones" and ids[-1] == "guardar" and "guardado" not in ids  # opcional: no es un paso
@@ -43,6 +47,7 @@ def test_el_tren_tiene_un_paso_por_objetivo_en_orden(tren):
 
 
 def test_cada_paso_de_cada_proyecto_dice_que_hacer(tren):
+    """Comprueba que cada paso de cada proyecto empieza con un verbo y no promete brillos."""
     for ruta in PROYECTOS:
         g = guion.guion_de_practica(load_practice(ruta))
         assert g.pasos, ruta
@@ -52,6 +57,7 @@ def test_cada_paso_de_cada_proyecto_dice_que_hacer(tren):
 
 
 def test_cada_herramienta_de_un_paso_tiene_lugar_real():
+    """Comprueba que cada herramienta de los pasos tiene lugar en la tabla."""
     for ruta in PROYECTOS:
         for p in guion.guion_de_practica(load_practice(ruta)).pasos:
             if p.herramienta:
@@ -59,6 +65,7 @@ def test_cada_herramienta_de_un_paso_tiene_lugar_real():
 
 
 def test_ninguna_frase_de_lugar_dice_que_algo_brilla():
+    """Comprueba que ninguna frase de lugar promete brillos y que los lugares son correctos."""
     for d in donde.todas():
         texto = donde.frase(d, "es") + donde.frase(d, "en")
         assert not re.search(r"brilla|ilumina|resalta", texto, re.I), d.herramienta
@@ -68,6 +75,7 @@ def test_ninguna_frase_de_lugar_dice_que_algo_brilla():
 
 
 def test_avanza_por_el_resultado_en_cualquier_orden(tren):
+    """Comprueba que el avance sigue al resultado real aunque se haga en otro orden."""
     global ALL
     g = guion.guion_de_practica(tren)
     ALL = tuple(p.id for p in g.pasos)
@@ -93,6 +101,7 @@ def test_avanza_por_el_resultado_en_cualquier_orden(tren):
 
 
 def test_las_pistas_son_del_paso_que_toca(tren):
+    """Comprueba que las tres pistas son del paso actual."""
     g = guion.guion_de_practica(tren)
     a = guion.avanzar(g, _Reporte({"vagones"}, mensajes={"vagones-largos": "«Cube» mide en X 1.1 veces su ancho"}))
     assert guion.pista(g, a, guion.QUE_FALTA).texto.startswith("«Cube» mide")
@@ -102,6 +111,7 @@ def test_las_pistas_son_del_paso_que_toca(tren):
 
 
 def test_el_tren_real_avanza_con_el_motor(tren):
+    """Comprueba el avance del guion con el motor real."""
     from amatista_engine.testing import Escena
 
     motor = create_default_engine()
@@ -111,13 +121,16 @@ def test_el_tren_real_avanza_con_el_motor(tren):
 
 
 def test_el_tip_de_los_vagones_dice_lo_que_se_revisa(tren):
+    """Comprueba que el consejo de los vagones habla del ancho."""
     t = next(x for x in tren.targets if x.id == "vagones-largos")
     assert "ancho" in t.tip  # se compara el largo con el ancho, no con la altura
 
 
 def test_version():
+    """Comprueba que la versión del guion es 7.x."""
     assert guion.VERSION.startswith("7.")
 
 
 def test_todos_los_proyectos_se_cargan():
+    """Comprueba que se encuentran los 9 proyectos."""
     assert len(PROYECTOS) == 9 and all(isinstance(p, Path) for p in PROYECTOS)

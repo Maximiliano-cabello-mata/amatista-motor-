@@ -46,6 +46,7 @@ Silueta = Silhouette  # el mismo dato que viaja en la foto de la escena (models.
 
 
 def transversales(eje: int) -> Tuple[int, int]:
+    """Los dos ejes perpendiculares a ``eje``."""
     return tuple(i for i in range(3) if i != eje)  # type: ignore[return-value]
 
 
@@ -94,6 +95,7 @@ def silueta_de_malla(vertices: Sequence[Sequence[float]], aristas: Iterable[Sequ
 
 
 def _girar(punto, grados):
+    """Gira un punto con ángulos de Euler XYZ en grados."""
     x, y, z = punto
     rx, ry, rz = (math.radians(g) for g in grados)
     y, z = y * math.cos(rx) - z * math.sin(rx), y * math.sin(rx) + z * math.cos(rx)
@@ -110,6 +112,7 @@ def malla_de_pieza(primitiva: str, medidas, ubicacion=(0.0, 0.0, 0.0), giro=(0.0
     aristas: List[Tuple[int, int]] = []
 
     def anillo(z, rx, ry):
+        """Añade un anillo de ``n`` puntos a altura ``z`` (radios rx, ry) con sus aristas; devuelve el índice del primero."""
         base = len(puntos)
         for i in range(n):
             ang = 2 * math.pi * i / n
@@ -144,6 +147,7 @@ def malla_de_pieza(primitiva: str, medidas, ubicacion=(0.0, 0.0, 0.0), giro=(0.0
 
 
 def _campo(pieza, clave, defecto=None):
+    """Lee una clave de una pieza tanto si es dict como objeto."""
     return pieza.get(clave, defecto) if isinstance(pieza, dict) else getattr(pieza, clave, defecto)
 
 
@@ -167,6 +171,7 @@ def silueta_de_piezas(piezas: Sequence[Any], rebanadas: int = REBANADAS) -> Opti
 
 @dataclass(frozen=True)
 class Parte:
+    """Tramo de la silueta del modelo: nombre y fracción del largo que ocupa (desde/hasta) y su primitiva."""
     nombre: str
     desde: float  # fracción del largo (0 a 1)
     hasta: float
@@ -221,6 +226,7 @@ def _orientada(silueta: Silueta) -> Tuple[List[float], List[float], Tuple[int, i
 
 
 def _log(x: float, y: float) -> float:
+    """Logaritmo del cociente con margen EPS (compara anchos sin explotar en cero)."""
     return math.log((x + EPS) / (y + EPS))
 
 
@@ -260,6 +266,7 @@ def _repartir(ancho, grueso, muestras, partes: Sequence[Parte], escala: float = 
     lg = [math.log(g + EPS) for g in grueso]
 
     def costo(i: int, s: int, e: int) -> float:
+        """Costo de asignar las muestras s..e a la parte i: diferencia de ancho/grueso más penalización por largo."""
         largo = e - s
         m_a, m_g = muestras[i][largo]
         total = 0.0
@@ -293,12 +300,14 @@ def _repartir(ancho, grueso, muestras, partes: Sequence[Parte], escala: float = 
 
 
 def _media_log(valores: Sequence[float], modelo: Sequence[float], p: Parte, s: int, e: int) -> float:
+    """Diferencia logarítmica media entre los valores del alumno y la muestra del modelo en un tramo."""
     if e <= s:
         return 0.0
     return sum(_log(valores[j], _muestra(modelo, p.desde, p.hasta, (j - s + 0.5) / (e - s))) for j in range(s, e)) / (e - s)
 
 
 def _media(valores: Sequence[float]) -> float:
+    """Media aritmética (0 si no hay valores)."""
     return sum(valores) / len(valores) if valores else 0.0
 
 
@@ -313,6 +322,7 @@ def _afilado(valores: Sequence[float]) -> float:
 
 @dataclass
 class Revision:
+    """Resultado de comparar siluetas: puntaje, partes, problemas críticos/fuera de rango/detalles, si estaba invertida y ejes."""
     puntaje: float
     partes: List[Dict[str, Any]]
     criticas: List[Dict[str, Any]]
@@ -351,6 +361,11 @@ def _leer_partes(ancho, grueso, m_ancho, m_grueso, muestras, partes: Sequence[Pa
 
 def comparar_siluetas(alumno: Silueta, modelo: Silueta, partes: Sequence[Parte], exigencia: str = "proporcion"
                       ) -> Revision:
+    """Compara la silueta del alumno con la del modelo, tramo a tramo, con la holgura de la exigencia.
+
+    Reparte las muestras del alumno entre las partes del modelo, corrige la escala
+    si una parte desproporcionada distorsiona el resto y clasifica cada diferencia.
+    """
     holgura = HOLGURA.get(exigencia, 2.0)
     m_ancho, m_grueso, _ = _orientada(modelo)
     ancho, grueso, ejes = _orientada(alumno)
@@ -426,6 +441,7 @@ def comparar_siluetas(alumno: Silueta, modelo: Silueta, partes: Sequence[Parte],
 
 
 def _parte(nombre: str, inicio: bool = False) -> str:
+    """«la parte «nombre»» para los consejos (con mayúscula si va al inicio)."""
     return f"{'La' if inicio else 'la'} parte «{nombre}»"
 
 
@@ -464,6 +480,7 @@ def consejo_de_parte(r: Dict[str, Any], ejes: Dict[str, str]) -> Tuple[str, str]
 
 
 def consejo_detalle(d: Dict[str, Any], ejes: Dict[str, str]) -> Tuple[str, str]:
+    """Estado «Detalle» y consejo cuando una parte sobresale en el modelo y no en la malla del alumno (Ctrl+R y S)."""
     return "Detalle", (
         f"En el modelo {_parte(d['parte'])} sobresale un poco de «{d['vecina']}» y en tu malla no se nota: haz un "
         f"corte con Ctrl + R donde va y escala ese anillo un poco hacia afuera (S).")

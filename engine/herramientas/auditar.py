@@ -38,20 +38,24 @@ ORDENES = (1, 2, 3)  # semillas de los órdenes alternativos
 
 
 def _piezas(practica) -> List[Any]:
+    """Piezas comparables del modelo de referencia de la práctica ([] si no tiene)."""
     referencia = getattr(practica, "reference", None)
     return list(getattr(referencia, "compared", ()) or ()) if referencia else []
 
 
 def _grupo(pieza) -> str:
+    """Rol de la pieza («» si no tiene)."""
     return getattr(pieza, "role", "") or ""
 
 
 def _evaluar(motor, practica, piezas: Sequence[Any], roles: bool, **opciones):
+    """Arma la figura con esas piezas en una escena de prueba y la evalúa; devuelve (escena, reporte)."""
     escena = Escena().referencia(piezas, roles=roles, **opciones).construir()
     return escena, motor.evaluate(practica, escena)
 
 
 def _hechos(reporte) -> set:
+    """Ids de los objetivos completados en el reporte."""
     return {p.target_id for p in reporte.steps if p.status == "completado"}
 
 
@@ -99,6 +103,10 @@ def _roles(motor, practica, piezas: Sequence[Any], cuando: str, **opciones) -> L
 
 
 def auditar(ruta: Path, motor=None) -> Dict[str, Any]:
+    """Audita una carpeta de práctica: arma la figura de referencia en varios órdenes y variantes y anota los tropiezos.
+
+    Devuelve un informe con los hallazgos (lee practica.json de disco).
+    """
     motor = motor or amatista_engine.create_default_engine()
     practica = parse_practice(json.loads((ruta / "practica.json").read_text(encoding="utf-8")))
     piezas = _piezas(practica)
@@ -130,12 +138,14 @@ def auditar(ruta: Path, motor=None) -> Dict[str, Any]:
 
 
 def carpetas(argumentos: Sequence[str]) -> List[Path]:
+    """Carpetas de práctica a auditar: las pasadas o todas las de practices/blender."""
     if argumentos:
         return [Path(a) for a in argumentos]
     return sorted(p.parent for p in (RAIZ / "practices" / "blender").rglob("practica.json"))
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    """CLI de la auditoría; imprime el informe (texto o --json) y devuelve 1 si hay hallazgos."""
     analizador = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     analizador.add_argument("practicas", nargs="*", help="carpetas de práctica (por defecto, todas)")
     analizador.add_argument("--json", action="store_true", help="salida para una máquina")

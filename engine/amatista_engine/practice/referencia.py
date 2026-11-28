@@ -59,6 +59,7 @@ def aspectos_de(pasos: Sequence[Dict[str, Any]], partes: Sequence[Dict[str, Any]
 
 
 def _etiquetas(roles) -> Dict[str, str]:
+    """Mapa {id de rol: etiqueta} solo de los roles que tienen etiqueta."""
     return {r.id: r.label for r in roles or () if r.label}
 
 
@@ -99,6 +100,10 @@ def _vector(valor: Any, donde: str, e: Any, defecto=None, positivo: bool = False
 
 
 def _parse_piezas_referencia(crudas: Any, e: Any) -> List[ReferencePart]:
+    """Lee las piezas del modelo de referencia (1..MAX_PIEZAS): primitiva, medidas, posición, rotación, rol, color…
+
+    Las piezas inválidas se saltan y el problema se anota en ``e``.
+    """
     if not isinstance(crudas, list) or not crudas or len(crudas) > MAX_PIEZAS:
         e.add(f"'reference.parts' debe tener entre 1 y {MAX_PIEZAS} piezas")
         return []
@@ -143,6 +148,7 @@ def _parse_piezas_referencia(crudas: Any, e: Any) -> List[ReferencePart]:
 
 
 def _parse_flexibles(raw: Any, piezas: List[ReferencePart], e: Any) -> List[str]:
+    """Lee «reference.flexible»: roles o primitivas cuyo número de piezas puede variar; avisa si no existen."""
     flexibles = raw or []
     if not isinstance(flexibles, list) or not all(isinstance(g, str) for g in flexibles):
         e.add("'reference.flexible' debe ser una lista de roles o primitivas")
@@ -155,6 +161,7 @@ def _parse_flexibles(raw: Any, piezas: List[ReferencePart], e: Any) -> List[str]
 
 
 def _parse_luces(raw: Any, e: Any) -> List[Dict[str, Any]]:
+    """Lee las luces de la referencia (lista de {type, location, energy}); [] y error si el formato no es válido."""
     luces = raw or []
     if not isinstance(luces, list) or not all(isinstance(x, dict) for x in luces):
         e.add("'reference.lights' debe ser una lista de luces {type, location, energy}")

@@ -67,11 +67,13 @@ NOMBRE_EN_TEXTO = re.compile(r"«([^»]{1,63})»")
 
 
 def preferido():
+    """True si el alumno prefiere el guion paso a paso (preferencia del add-on; por defecto sí)."""
     p = ajustes.prefs()
     return p is None or getattr(p, "guion_paso_a_paso", True)
 
 
 def modo_alumno():
+    """Modo alumno según el taller o, sin taller, según la ventana y si es desarrollador."""
     try:
         from ..taller import sesion
 
@@ -82,6 +84,7 @@ def modo_alumno():
 
 
 def _escena(context=None):
+    """Escena del contexto."""
     context = context or bpy.context
     return getattr(context, "scene", None)
 
@@ -112,6 +115,7 @@ def sin_progreso():
 
 
 def _actividad():
+    """Actividad del taller en curso y el módulo de sesión; (None, None) si el taller no está disponible."""
     try:
         from ..taller import sesion
 
@@ -121,6 +125,7 @@ def _actividad():
 
 
 def _guion_para(practica):
+    """Guion de la práctica; si es la práctica generada por el taller, con las herramientas y textos de la habilidad actual."""
     a, sesion = _actividad()
     if a is not None and sesion is not None and sesion.SESION.get("practica") is practica:
         h = sesion.habilidad_actual()
@@ -166,22 +171,27 @@ def al_evaluar(context, practica, reporte, foto=None):
 
 
 def avisar(texto, segundos=5.0):
+    """Muestra un aviso en la banda del guion durante ``segundos``."""
     ESTADO.update(aviso=texto, aviso_hasta=time.time() + segundos)
 
 
 def aviso():
+    """Aviso vigente de la banda («» si caducó)."""
     return ESTADO["aviso"] if ESTADO["aviso_hasta"] > time.time() else ""
 
 
 def guion():
+    """Guion actual (o None)."""
     return ESTADO["guion"]
 
 
 def avance():
+    """Avance actual del guion (o None)."""
     return ESTADO["avance"]
 
 
 def paso_actual():
+    """Paso del guion que toca, o None si no hay guion o ya terminó."""
     g, a = ESTADO["guion"], ESTADO["avance"]
     if g is None or a is None or not a.actual:
         return None
@@ -189,6 +199,7 @@ def paso_actual():
 
 
 def completo():
+    """True si la actividad del taller está lograda o el guion completo."""
     a, sesion = _actividad()
     if sesion is not None and a is not None and sesion.estado() == sesion.LOGRADA:
         return True
@@ -197,6 +208,7 @@ def completo():
 
 
 def _idioma():
+    """Idioma de los menús de Blender según el motor («es» si no se puede saber)."""
     try:
         return _motor.terminos.idioma()
     except Exception:  # noqa: BLE001
@@ -219,6 +231,7 @@ def revisar_ya(context=None):
 
 
 def _revisar_si_calmo():
+    """Temporizador: cuando la escena lleva CALMA segundos sin cambios, revisa el avance; devuelve la espera restante o None."""
     if not ESTADO["sucio"]:
         return None
     espera = CALMA - (time.time() - ESTADO["ultimo_cambio"])
@@ -234,6 +247,7 @@ def _revisar_si_calmo():
 
 
 def _marcar_cambio():
+    """Marca la escena como cambiada y programa la revisión tras la calma."""
     ESTADO["sucio"], ESTADO["ultimo_cambio"] = True, time.time()
     if not bpy.app.timers.is_registered(_revisar_si_calmo):
         bpy.app.timers.register(_revisar_si_calmo, first_interval=CALMA)
@@ -241,6 +255,7 @@ def _marcar_cambio():
 
 @persistent
 def _al_cambiar(scene, depsgraph=None):
+    """Handler depsgraph: si el guion está activo y no hay demo en curso, avisa al corazón y marca cambio."""
     if not activo(scene):
         return
     try:
@@ -255,6 +270,7 @@ def _al_cambiar(scene, depsgraph=None):
 
 @persistent
 def _al_guardar(*_args):
+    """Handler save_post: avisa al corazón del guardado y revisa ya (guardar no pasa por el depsgraph)."""
     if activo():
         corazon.evento(corazon.contrato.GUARDADO)
         _marcar_cambio()  # guardar no pasa por el depsgraph: el paso «guarda tu tren» se ve en el momento
@@ -262,6 +278,7 @@ def _al_guardar(*_args):
 
 @persistent
 def _al_deshacer(*_args):
+    """Handler undo_post: avisa al corazón del deshacer y marca cambio."""
     if activo():
         corazon.evento(corazon.contrato.DESHACER)
         _marcar_cambio()
@@ -269,6 +286,7 @@ def _al_deshacer(*_args):
 
 @persistent
 def _al_abrir(*_args):
+    """Handler load_post: olvida el corazón y vacía el estado del guion."""
     corazon.olvidar()
     ESTADO.update(practica_id="", guion=None, avance=None, pista=None, nivel=0, paso_de_la_pista="", senal="",
                   aviso="")
@@ -370,6 +388,7 @@ def _del_corazon():
 
 
 def texto_pista():
+    """Título y texto de la pista actual; sin corazón, el texto puede ser el de la señal."""
     p = ESTADO["pista"]
     if p is None:
         return "", ""
@@ -430,6 +449,7 @@ def para_latido():
 
 
 def _redibujar():
+    """Redibuja vistas 3D y Propiedades."""
     if bpy.app.background:
         return
     wm = getattr(bpy.context, "window_manager", None)
@@ -451,6 +471,7 @@ _MANEJADORES = (
 
 
 def register():
+    """Registra el panel, los handlers y la banda del guion."""
     from . import banda, panel
 
     panel.register()
@@ -462,6 +483,7 @@ def register():
 
 
 def unregister():
+    """Apaga la banda y quita handlers y panel del guion."""
     from . import banda, panel
 
     banda.activar(False)

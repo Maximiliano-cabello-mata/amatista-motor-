@@ -78,6 +78,7 @@ PARECIDAS = {"icosphere": "sphere"}
 
 @dataclass(frozen=True)
 class PiezaRevisada:
+    """Una pieza del molde revisada: estado (llena/casi/equivocada/vacía), motivo, mensaje para el alumno y el objeto que la ocupa."""
     indice: int
     nombre: str
     primitiva: str
@@ -95,6 +96,7 @@ class PiezaRevisada:
 
 @dataclass(frozen=True)
 class RevisionMolde:
+    """Revisión del molde completo: piezas, modo (molde/libre), nivel, pieza actual, adornos y ajuste de giro/escala en modo libre."""
     piezas: Tuple[PiezaRevisada, ...]
     modo: str
     nivel: int
@@ -107,22 +109,27 @@ class RevisionMolde:
 
     @property
     def total(self) -> int:
+        """Número de piezas del molde."""
         return len(self.piezas)
 
     @property
     def llenas(self) -> int:
+        """Cuántas piezas están llenas."""
         return sum(1 for p in self.piezas if p.estado == LLENA)
 
     @property
     def completa(self) -> bool:
+        """True si todas las piezas están llenas y no hay demasiadas piezas de más."""
         return bool(self.piezas) and self.llenas == self.total and not self.revuelto
 
     @property
     def pieza_actual(self) -> Optional[PiezaRevisada]:
+        """La pieza que toca ahora, o None."""
         return self.piezas[self.actual] if self.actual is not None else None
 
     @property
     def mensaje(self) -> str:
+        """Frase para el alumno: borrar lo que sobra, la de la pieza actual o «Listo»."""
         if self.revuelto:
             return "Hay muchas piezas de más: borra las que sobran (X) y deja solo las del molde."
         p = self.pieza_actual
@@ -131,6 +138,7 @@ class RevisionMolde:
         return p.mensaje
 
     def a_dict(self) -> Dict[str, Any]:
+        """La revisión como dict JSON para que el add-on pinte el molde."""
         return {
             "modo": self.modo,
             "nivel": self.nivel,
@@ -156,6 +164,7 @@ class RevisionMolde:
 
 @dataclass
 class _Caja:
+    """Caja de una pieza (centro, medidas) con su familia de primitiva y el nombre del objeto."""
     centro: Tuple[float, float, float]
     medidas: Tuple[float, float, float]
     familia: str
@@ -163,25 +172,30 @@ class _Caja:
 
     @property
     def largo(self) -> float:
+        """Lado mayor de la caja (mínimo 0.01 para no dividir por cero)."""
         return max(self.medidas) or 0.01
 
     @property
     def base(self) -> float:
+        """Altura de la base de la caja (para saber si apoya)."""
         return self.centro[2] - self.medidas[2] / 2
 
 
 def _familia(nombre: str) -> str:
+    """Familia de forma de una primitiva (las parecidas, p. ej. esfera e icoesfera, cuentan como una)."""
     base = primitiva(nombre)
     return PARECIDAS.get(base, base)
 
 
 def _caja_modelo(pieza: Dict[str, Any]) -> _Caja:
+    """Caja y familia de una pieza del molde."""
     minimo, maximo = caja_de_pieza(pieza)
     return _Caja(tuple((a + b) / 2 for a, b in zip(minimo, maximo)), tuple(b - a for a, b in zip(minimo, maximo)),
                  _familia(pieza.get("primitive", "")))
 
 
 def _familia_de_objeto(obj: SceneObject) -> str:
+    """Familia del objeto del alumno; si la primitiva no es fiable, la deduce por la firma (vértices, caras)."""
     familia = _familia(obj.primitive)
     if familia in UN or obj.vertices is None:
         return familia
@@ -189,12 +203,14 @@ def _familia_de_objeto(obj: SceneObject) -> str:
 
 
 def _caja_alumno(obj: SceneObject) -> _Caja:
+    """Caja y familia de un objeto del alumno."""
     minimo, maximo = obj.caja()
     return _Caja(tuple((a + b) / 2 for a, b in zip(minimo, maximo)), tuple(max(0.0, b - a) for a, b in zip(minimo, maximo)),
                  _familia_de_objeto(obj), obj.name)
 
 
 def _union(cajas: Sequence[_Caja]) -> Tuple[Tuple[float, ...], Tuple[float, ...]]:
+    """Esquinas (mín, máx) de la caja que envuelve a todas."""
     minimo = tuple(min(c.centro[i] - c.medidas[i] / 2 for c in cajas) for i in range(3))
     maximo = tuple(max(c.centro[i] + c.medidas[i] / 2 for c in cajas) for i in range(3))
     return minimo, maximo
@@ -237,6 +253,7 @@ def _error_tamano(a: Sequence[float], b: Sequence[float], largo: float) -> Tuple
 
 
 def _error_tamano_sin_giro(a: Sequence[float], b: Sequence[float], largo: float) -> float:
+    """Error de tamaño comparando las medidas ordenadas (ignora la orientación), en escala logarítmica con margen."""
     eps = 0.06 * largo + 0.02
     return max(abs(math.log((x + eps) / (y + eps))) for x, y in zip(sorted(a), sorted(b)))
 
@@ -251,10 +268,12 @@ def _misma_forma(a: _Caja, m: _Caja, estricta: bool = False) -> bool:
 
 
 def _unidad(m: _Caja) -> float:
+    """Unidad de distancia tolerada para una pieza del molde (proporcional a su largo)."""
     return 0.35 * m.largo + 0.15
 
 
 def _error_lugar(a: _Caja, m: _Caja) -> float:
+    """Distancia entre centros en unidades de la pieza del molde."""
     return math.dist(a.centro, m.centro) / _unidad(m)
 
 
@@ -291,6 +310,7 @@ def _emparejar(alumno: Sequence[_Caja], modelo: Sequence[_Caja], tol_lugar: floa
 
 
 def _nombre(pieza: Dict[str, Any], indice: int, etiquetas: Dict[str, str]) -> str:
+    """Nombre de la pieza para el alumno: su name, la etiqueta del rol o el nombre de la primitiva."""
     if pieza.get("name"):
         return str(pieza["name"])
     rol = pieza.get("role") or ""
@@ -300,10 +320,12 @@ def _nombre(pieza: Dict[str, Any], indice: int, etiquetas: Dict[str, str]) -> st
 
 
 def _delgado(medidas: Sequence[float]) -> int:
+    """Eje (0..2) en que la pieza es más delgada."""
     return min(range(3), key=lambda i: medidas[i])
 
 
 def _frase_giro(nombre: str, alumno: Sequence[float], modelo: Sequence[float]) -> str:
+    """Frase sin números que explica cómo va orientada la pieza («va de pie, no acostada»…)."""
     a, m = _delgado(alumno), _delgado(modelo)
     if m != 2 and a == 2:
         return f"«{nombre}» va de pie, no acostada."
@@ -325,6 +347,7 @@ def _girada(alumno: Sequence[float], modelo: Sequence[float]) -> bool:
     alto apuntan igual (los dos de pie); solo cambia la altura.
     """
     def clave(d):
+        """Firma de orientación: eje más delgado y más largo cuando destacan claramente (×1.3), o None."""
         orden = sorted(range(3), key=lambda i: d[i])
         e = [d[i] + 0.01 for i in orden]
         return (orden[0] if e[1] / e[0] > 1.3 else None), (orden[2] if e[2] / e[1] > 1.3 else None)
@@ -346,6 +369,10 @@ def _eje_del_giro(alumno: Sequence[float], modelo: Sequence[float]) -> int:
 
 def _revisar_pieza(indice: int, pieza: Dict[str, Any], m: _Caja, a: Optional[_Caja], nivel: int, nombre: str,
                    modo: str, apoyada: bool) -> PiezaRevisada:
+    """Revisa una pieza del molde frente al objeto del alumno que la ocupa (o None) con las tolerancias del nivel.
+
+    Decide estado y motivo (falta, forma, giro, tamaño, lugar, flota) y redacta el mensaje.
+    """
     tol_tamano = math.log(TAMANO_POR_NIVEL[nivel])
     tol_lugar = LUGAR_POR_NIVEL[nivel]
     base = {
@@ -407,6 +434,7 @@ def _revisar_pieza(indice: int, pieza: Dict[str, Any], m: _Caja, a: Optional[_Ca
 
 
 def _mallas(scene: SceneState, ignorar: Sequence[str]) -> List[SceneObject]:
+    """Mallas del alumno que cuentan para el molde (sin las ignoradas ni las ayudas visuales de Amatista)."""
     return [o for o in scene.objects if o.object_type == "MESH" and o.name not in ignorar
             and not any(t == "amatista_ayuda" for t in o.tags)]
 

@@ -71,16 +71,19 @@ MODIFICADORES = {"BEVEL": "modifier.bevel", "MIRROR": "modifier.mirror", "ARRAY"
 
 
 def ruta():
+    """Ruta de misiones de la práctica abierta (o None)."""
     return ESTADO["ruta"]
 
 
 def reiniciar():
+    """Reinicia la misión, el logro, la animación y las herramientas usadas."""
     ESTADO.update(ruta=None, mision=None, practica=None, inicio=0.0, logro=None, pulso_hasta=0.0,
                   usadas=set(), herramienta_puesta=None)
     ESTADO["operadores"] = _punteros()
 
 
 def animaciones():
+    """True si el alumno no desactivó las animaciones."""
     p = ajustes.prefs()
     return p is None or getattr(p, "animaciones", True)
 
@@ -124,6 +127,7 @@ def actualizar(context, practica, reporte, guia_actual, pistas=None, motivo="cam
 
 
 def _punteros():
+    """Punteros de los operadores del historial de Blender (para detectar operaciones nuevas)."""
     try:
         return {op.as_pointer() for op in bpy.context.window_manager.operators}
     except (AttributeError, ReferenceError):
@@ -131,6 +135,7 @@ def _punteros():
 
 
 def _herramienta_de(op):
+    """Id de herramienta del catálogo que corresponde a un operador de Blender (agregar, modificador…)."""
     nombre = op.bl_idname
     if nombre.startswith("MESH_OT_primitive_") or nombre == "OBJECT_OT_add":
         return "object.add"
@@ -171,6 +176,7 @@ def marcar_usada(herramienta_id):
 
 
 def _teclas_de(herramienta_id):
+    """Teclas (en minúsculas) de una herramienta del catálogo."""
     registro = _motor.MOTOR.tools
     h = registro.get(herramienta_id) if registro is not None else None
     return {k.lower() for k in h.keys} if h is not None else set()
@@ -224,6 +230,7 @@ def estado_herramienta(herramienta_id):
 
 
 def _vista_3d(context):
+    """Primera (ventana, área, región) de vista 3D, o (None, None, None)."""
     for ventana in context.window_manager.windows:
         for area in ventana.screen.areas:
             if area.type == "VIEW_3D":
@@ -312,6 +319,7 @@ def pulso():
 
 
 def _en_curso():
+    """Intervalo del siguiente cuadro de animación (1/30 s) mientras dure la entrada o el logro; None si terminó."""
     ahora = time.time()
     if ESTADO["logro"] is not None and ahora < ESTADO["logro"]["hasta"]:
         return 1 / 30
@@ -323,6 +331,7 @@ def _en_curso():
 
 
 def _paso():
+    """Temporizador de animación de la misión: redibuja mientras haya animación."""
     from . import practicas
 
     try:
@@ -339,6 +348,7 @@ def _paso():
 
 
 def animar():
+    """Arranca la animación de la misión (si está permitida y hay interfaz)."""
     if bpy.app.background or not animaciones():
         return
     if not bpy.app.timers.is_registered(_paso):
@@ -346,6 +356,7 @@ def animar():
 
 
 def unregister():
+    """Detiene la animación y reinicia la misión."""
     if bpy.app.timers.is_registered(_paso):
         bpy.app.timers.unregister(_paso)
     reiniciar()

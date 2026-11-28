@@ -35,6 +35,7 @@ def _intactos():
 
 
 def vaciar(escena):
+    """Borra de la escena los objetos de la escena inicial de Blender que siguen intactos (cubo, luz, cámara por defecto)."""
     for obj in _intactos():
         if obj.name in escena.objects:
             bpy.data.objects.remove(obj, do_unlink=True)
@@ -42,6 +43,7 @@ def vaciar(escena):
 
 def _malla(escena, nombre, verts, caras, ubicacion=(0, 0, 0), rol=None, datos_nombre=None):
     # El nombre de los datos dice de qué primitiva salió (Sphere, Plane…): el motor lo usa.
+    """Crea un objeto malla con esos vértices y caras en la escena (con rol opcional y nombre de datos de su primitiva)."""
     datos = bpy.data.meshes.new(datos_nombre or nombre)
     datos.from_pydata(verts, [], caras)
     datos.update()
@@ -54,6 +56,7 @@ def _malla(escena, nombre, verts, caras, ubicacion=(0, 0, 0), rol=None, datos_no
 
 
 def _caja(ancho, largo, alto, z0=0.0):
+    """Vértices y caras de una caja de ancho × largo × alto apoyada en ``z0``."""
     x, y = ancho / 2, largo / 2
     verts = [(-x, -y, z0), (x, -y, z0), (x, y, z0), (-x, y, z0),
              (-x, -y, z0 + alto), (x, -y, z0 + alto), (x, y, z0 + alto), (-x, y, z0 + alto)]
@@ -62,11 +65,13 @@ def _caja(ancho, largo, alto, z0=0.0):
 
 
 def _piso(escena, tam=12.0):
+    """Crea el plano «Piso» de ``tam`` × ``tam``."""
     t = tam / 2
     return _malla(escena, "Piso", [(-t, -t, 0), (t, -t, 0), (t, t, 0), (-t, t, 0)], [(0, 1, 2, 3)], datos_nombre="Plane")
 
 
 def _esfera(escena, nombre, radio, ubicacion, segmentos=24, anillos=12):
+    """Crea una esfera UV de malla con radio, posición, segmentos y anillos."""
     verts = [(0, 0, radio)]
     for i in range(1, anillos):
         theta = math.pi * i / anillos
@@ -88,6 +93,7 @@ def _esfera(escena, nombre, radio, ubicacion, segmentos=24, anillos=12):
 
 
 def _camara(escena, ubicacion, mirar=(0, 0, 0.5)):
+    """Crea la cámara de la escena inicial mirando al punto dado."""
     datos = bpy.data.cameras.new("Camara")
     obj = bpy.data.objects.new("Camara", datos)
     obj.location = ubicacion
@@ -98,6 +104,7 @@ def _camara(escena, ubicacion, mirar=(0, 0, 0.5)):
 
 
 def _luz(escena, nombre, tipo, ubicacion, energia, mirar=(0, 0, 0.5)):
+    """Crea una luz del tipo y energía dados mirando al punto."""
     datos = bpy.data.lights.new(nombre, tipo)
     datos.energy = energia
     obj = bpy.data.objects.new(nombre, datos)
@@ -108,6 +115,7 @@ def _luz(escena, nombre, tipo, ubicacion, energia, mirar=(0, 0, 0.5)):
 
 
 def _mirar(obj, punto):
+    """Orienta el objeto para que su -Z apunte al punto."""
     from mathutils import Vector
 
     direccion = Vector(punto) - Vector(obj.location)
@@ -137,6 +145,7 @@ def estudio_foto(escena):
 
 
 def pelota_y_suelo(escena):
+    """Escena inicial de animación: piso, pelota en alto, cámara, sol y rango de fotogramas 1–48."""
     _piso(escena)
     pelota = _esfera(escena, "Pelota", 1.0, (0, 0, 4.0))
     _camara(escena, (0, -14, 3.5), (0, 0, 2))
@@ -183,6 +192,7 @@ _FONDOS_PREVIOS = {}  # puntero de la vista 3D → background_type anterior (sol
 
 
 def _vistas_3d():
+    """Recorre los espacios de vista 3D de todas las ventanas (nada en background)."""
     if bpy.app.background:
         return
     for ventana in bpy.context.window_manager.windows:
@@ -251,6 +261,7 @@ def restaurar_ambiente(escena):
 
 
 def restaurar_todo():
+    """Devuelve el mundo/ambiente original a todas las escenas (los errores van a consola)."""
     for escena in list(bpy.data.scenes):
         try:
             restaurar_ambiente(escena)

@@ -56,6 +56,7 @@ SALTOS_PARA_CAMBIAR = 2
 
 
 def _vacia():
+    """Estado inicial de la sesión del taller (sin actividad): actividad, práctica generada, estado, tiempos, escalera de pistas, revisión…"""
     return {
         "taller": "",
         "actividad": None,
@@ -99,18 +100,22 @@ RUTA = {"etapa": None, "leccion": "", "cumplida": False}
 
 
 def activa():
+    """True si hay una actividad del taller en curso."""
     return SESION["actividad"] is not None
 
 
 def actividad():
+    """Actividad del taller en curso (o None)."""
     return SESION["actividad"]
 
 
 def estado():
+    """Estado de la sesión: trabajando, mirando la demo, en pausa, lograda…"""
     return SESION["estado"]
 
 
 def modo_alumno():
+    """True si la interfaz está en modo alumno (o el usuario no es desarrollador); por defecto True si aún no hay window_manager."""
     wm = getattr(bpy.context, "window_manager", None)
     sesion = getattr(wm, "amatista", None) if wm is not None else None
     if sesion is None:
@@ -125,6 +130,7 @@ def manda_la_plataforma():
 
 
 def etapa():
+    """Etapa de la ruta que marcó la plataforma para la lección (exploración o práctica), o None."""
     return RUTA["etapa"]
 
 
@@ -185,6 +191,7 @@ def habilidad_actual():
 
 
 def pieza_actual():
+    """Pieza del molde que toca ahora según la última revisión, o None."""
     r = SESION["revision"]
     return r.pieza_actual if r is not None else None
 
@@ -209,16 +216,19 @@ def molde_visible():
 
 
 def avisar(texto, segundos=MENSAJE_DURA):
+    """Muestra un mensaje en la tarjeta del taller durante ``segundos`` y redibuja."""
     SESION["mensaje"] = texto
     SESION["mensaje_hasta"] = time.time() + segundos
     _redibujar()
 
 
 def mensaje():
+    """Mensaje vigente para la tarjeta («» si ya caducó)."""
     return SESION["mensaje"] if time.time() < SESION["mensaje_hasta"] else ""
 
 
 def segundos_trabajados():
+    """Tiempo efectivo en la actividad, descontando pausas (también la pausa en curso)."""
     if not SESION["inicio"]:
         return 0.0
     pausa = (time.time() - SESION["pausa_desde"]) if SESION["estado"] == PAUSA else 0.0
@@ -340,6 +350,11 @@ def _pasos_demo(h, a=None):
 
 
 def _practica_generada(a):
+    """Compila la práctica que el taller genera para la actividad; None en Mira/proyecto.
+
+    Raises:
+        ValueError: si la práctica generada no compila.
+    """
     datos_practica = taller.practica_de_actividad(datos.catalogo(), a)
     if datos_practica is None:
         return None
@@ -407,6 +422,7 @@ def despues_de_presentar(context=None):
 
 
 def _arrancar(context, a, sc):
+    """Arranca la actividad: en «Mira» reproduce la demostración; en el resto deja la escena lista para trabajar."""
     sc = sc or getattr(context, "scene", None) or bpy.context.scene
     if a.tipo == taller.MIRA:
         SESION["estado"] = MIRANDO
@@ -421,6 +437,7 @@ def _arrancar(context, a, sc):
 
 
 def _empezar_proyecto(context, a):
+    """Abre la práctica del proyecto del módulo (reutiliza la abierta si es la misma) y pasa a estado trabajando."""
     from .. import practicas
 
     SESION.update(proyecto=True, estado=TRABAJANDO)
@@ -430,6 +447,7 @@ def _empezar_proyecto(context, a):
         practicas.evaluar_pronto()
     else:
         def lista(error):
+            """Si falló la apertura del proyecto, se lo dice al alumno en la tarjeta."""
             if error:
                 avisar(f"No se pudo abrir el proyecto: {error}")
 
@@ -475,6 +493,7 @@ def al_abrir_practica(practica, origen="paquete"):
 
 
 def _apagar_brillo():
+    """Apaga el brillo de ayuda del molde en la vista 3D (sin vista, p. ej. en CI, no hace nada)."""
     try:
         from .vista import brillo
 
@@ -485,6 +504,7 @@ def _apagar_brillo():
 
 
 def _avanzo(llenas, cumplidos):
+    """Reacciona al avance del alumno: si llenó piezas u objetivos, baja la escalera de pistas y apaga brillos; si retrocedió, lo anota."""
     if llenas > SESION["llenas"] or cumplidos > SESION["cumplidos"]:
         SESION["escalera"] = ayudas.avance(SESION["escalera"], time.time())
         SESION["ofrecida"] = -1
@@ -630,6 +650,7 @@ def frase_logro():
 
 
 def siguiente(context=None):
+    """Botón «Siguiente»: vuelve a la plataforma si la lección vino de ahí; si no, abre la siguiente actividad del taller."""
     if SESION["volver"]:
         return volver_a_la_plataforma()
     a = SESION["actividad"]
@@ -638,6 +659,7 @@ def siguiente(context=None):
 
 
 def otra_vez(context=None):
+    """Botón «Otra vez»: repite la actividad actual (no aplica al proyecto); sin actividad, abre el taller."""
     a = SESION["actividad"]
     if a is None:
         return abrir(context)
@@ -695,6 +717,7 @@ def saltar(context=None):
 
 
 def pausar():
+    """Pausa la actividad (detiene la demo si estaba mirando) y guarda desde cuándo, para descontar el tiempo."""
     if SESION["estado"] in (TRABAJANDO, MIRANDO) and SESION["actividad"] is not None:
         if SESION["estado"] == MIRANDO:
             demo.detener(llamar=False)
@@ -705,6 +728,7 @@ def pausar():
 
 
 def seguir(context=None):
+    """Reanuda tras una pausa: acumula el tiempo pausado y vuelve a la demo o al trabajo."""
     if SESION["estado"] != PAUSA:
         return None
     SESION["pausado"] += time.time() - SESION["pausa_desde"]
@@ -788,12 +812,14 @@ def mirame(context=None):
 
 
 def _mirame_termino(_completa):
+    """Al terminar la demostración «Mírame» pedida como ayuda: baja la escalera de pistas y redibuja."""
     SESION["mirame"] = False
     SESION["escalera"] = ayudas.avance(SESION["escalera"], time.time()) if SESION["escalera"] else None
     _redibujar()
 
 
 def _demo_termino(completa):
+    """Al terminar la demo de una actividad «Mira»: la registra como lograda en el modelo del alumno y actualiza el plan."""
     a = SESION["actividad"]
     if a is None or a.tipo != taller.MIRA:
         return
@@ -804,6 +830,7 @@ def _demo_termino(completa):
 
 
 def repetir_demo(context=None):
+    """Vuelve a reproducir la demo («Mira») o, en otras actividades, la demostración de ayuda «Mírame»."""
     a = SESION["actividad"]
     if a is not None and a.tipo == taller.MIRA:
         return empezar(context, a)
@@ -821,6 +848,7 @@ def probar(context=None, taller_id="", habilidad_id=""):
 
 
 def repasar(context=None, taller_id="", habilidad_id=""):
+    """Empieza una actividad de repaso de una habilidad del taller; mensaje si la habilidad no está en el taller."""
     c = datos.catalogo()
     if c is None:
         return None
@@ -928,6 +956,7 @@ def detalle():
 
 
 def _ficha_vivo():
+    """Ficha de herramienta que se está presentando ahora (id y nombre recortados) para el latido del enlace; None si no hay."""
     from .. import fichas
 
     f = fichas.visible() if fichas.modo() == fichas.PRESENTAR else None
@@ -959,6 +988,7 @@ OBSERVADOS = (bpy.types.Object, bpy.types.Mesh, bpy.types.Material, bpy.types.Co
 
 
 def _redibujar():
+    """Redibuja la vista del taller (si existe la interfaz)."""
     try:
         from . import vista
 
@@ -968,6 +998,7 @@ def _redibujar():
 
 
 def _al_cambiar_estado():
+    """Redibuja y adelanta el latido del enlace con la plataforma; un fallo del enlace solo se escribe en consola."""
     _redibujar()
     try:
         enlace.latir_pronto()
@@ -977,6 +1008,7 @@ def _al_cambiar_estado():
 
 @persistent
 def _al_cambiar(scene, depsgraph=None):
+    """Handler depsgraph: si el alumno cambió objetos de la escena del taller (no la demo), marca la sesión para reevaluar."""
     if SESION["actividad"] is None or SESION["proyecto"] or not escena.es_del_taller(scene):
         return
     if demo.activa():
@@ -989,6 +1021,7 @@ def _al_cambiar(scene, depsgraph=None):
 
 @persistent
 def _al_deshacer(*_args):
+    """Handler undo_post: cuenta el Ctrl+Z en la escalera de pistas y el termómetro de ánimo y marca para reevaluar."""
     if SESION["escalera"] is not None and SESION["estado"] == TRABAJANDO:
         SESION["escalera"] = ayudas.deshizo(SESION["escalera"])
         acompanar.deshizo()
@@ -998,12 +1031,14 @@ def _al_deshacer(*_args):
 
 @persistent
 def _al_abrir(*_args):
+    """Handler load_post: detiene la demo y vacía la sesión y la ruta al abrir otro .blend."""
     demo.detener(llamar=False)
     SESION.update(_vacia())
     RUTA.update(etapa=None, leccion="", cumplida=False)
 
 
 def _vigilante():
+    """Temporizador persistente: reevalúa tras un rato de calma, actualiza la tarjeta y gestiona ayudas automáticas."""
     try:
         if SESION["sucio"] and time.time() - SESION["ultimo_cambio"] > CALMA:
             evaluar(bpy.context)
@@ -1033,6 +1068,7 @@ def _vigilante():
 
 
 def register():
+    """Registra los handlers (cambios, deshacer, abrir) y el temporizador vigilante del taller."""
     for lista, funcion in ((bpy.app.handlers.depsgraph_update_post, _al_cambiar),
                            (bpy.app.handlers.undo_post, _al_deshacer),
                            (bpy.app.handlers.load_post, _al_abrir)):
@@ -1043,6 +1079,7 @@ def register():
 
 
 def unregister():
+    """Detiene la demo y quita handlers y temporizador del taller."""
     demo.detener(llamar=False)
     for lista, funcion in ((bpy.app.handlers.depsgraph_update_post, _al_cambiar),
                            (bpy.app.handlers.undo_post, _al_deshacer),

@@ -12,6 +12,7 @@ RAIZ = Path(__file__).resolve().parents[2]
 
 
 def cargar(nombre, ruta):
+    """Carga un módulo desde su archivo."""
     spec = importlib.util.spec_from_file_location(nombre, ruta)
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -28,6 +29,7 @@ CARAS = [(0, 1, 3), (0, 3, 2), (4, 6, 7), (4, 7, 5), (0, 4, 5), (0, 5, 1),
 
 
 def test_cuantiza_alrededor_del_centro_y_el_servidor_lo_acepta():
+    """Comprueba la cuantización del modelo ligero y que el servidor lo acepta."""
     datos = addon.armar(
         [{"nombre": "Caja", "tipo": "MESH", "material": 0, "vertices": CUBO, "triangulos": CARAS, "p": (1, 1, 1)},
          {"nombre": "Sol", "tipo": "LIGHT", "p": (0, 0, 5)}],
@@ -46,6 +48,7 @@ def test_cuantiza_alrededor_del_centro_y_el_servidor_lo_acepta():
 
 
 def test_una_malla_enorme_viaja_como_su_caja():
+    """Comprueba que una malla enorme se resume como su caja."""
     enorme = [(i * 0.001, 0, 0) for i in range(3)] + CUBO
     tris = [(0, 1, 2)] * (addon.MAX_TRIANGULOS + 1)
     datos = addon.armar([{"nombre": "Escultura", "tipo": "MESH", "vertices": enorme, "triangulos": tris}])
@@ -55,6 +58,7 @@ def test_una_malla_enorme_viaja_como_su_caja():
 
 
 def test_material_desconocido_queda_sin_material():
+    """Comprueba que un índice de material inválido queda en -1."""
     datos = addon.armar([{"nombre": "X", "tipo": "MESH", "material": 7, "vertices": CUBO, "triangulos": CARAS}])
     assert datos["objetos"][0]["material"] == -1
     servidor.resumen_de(addon.empaquetar(datos))

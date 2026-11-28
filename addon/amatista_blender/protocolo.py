@@ -55,6 +55,7 @@ ETAPAS = ("exploracion", "practica")
 
 
 def _id(texto):
+    """Id de práctica/actividad limpio y validado de un enlace amatista:// («» si no es válido)."""
     texto = unquote(str(texto or "")).strip().strip("/")
     return texto if ID_VALIDO.match(texto) else ""
 
@@ -142,6 +143,7 @@ def comando_linux(binario, entorno=None):
 
 
 def texto_desktop(binario, entorno=None):
+    """Contenido del archivo .desktop de Linux que registra el esquema amatista:// para este Blender."""
     return "\n".join([
         "[Desktop Entry]",
         "Type=Application",
@@ -170,6 +172,7 @@ def guion_mac(binario):
 
 
 def _registrar_windows(binario):
+    """Registra el esquema amatista:// en el registro de Windows del usuario (HKCU) apuntando a este Blender."""
     import winreg  # solo existe en Windows
 
     comando = f'"{lanzador_de(binario)}" {" ".join(ARGS_PLANTILLA)} -- {ARGUMENTO} "%1"'
@@ -185,6 +188,7 @@ def _registrar_windows(binario):
 
 
 def _registrar_linux(binario, casa=None):
+    """Escribe el .desktop en ~/.local/share/applications y lo registra como manejador de amatista://."""
     casa = Path(casa or Path.home())
     carpeta = Path(os.environ.get("XDG_DATA_HOME") or casa / ".local" / "share") / "applications"
     carpeta.mkdir(parents=True, exist_ok=True)
@@ -200,6 +204,7 @@ def _registrar_linux(binario, casa=None):
 
 
 def _registrar_mac(binario, casa=None):
+    """Crea una app en ~/Applications que recibe los enlaces amatista:// y abre este Blender."""
     casa = Path(casa or Path.home())
     app = casa / "Applications" / NOMBRE_APP_MAC
     app.parent.mkdir(parents=True, exist_ok=True)
@@ -228,6 +233,7 @@ def _registrar_mac(binario, casa=None):
 
 
 def texto_desktop_lanzador(binario, icono="", entorno=None):
+    """Contenido del .desktop del lanzador «Blender Amatista» (contempla Flatpak y Snap)."""
     entorno = os.environ if entorno is None else entorno
     if entorno.get("FLATPAK_ID"):
         inicio = f"flatpak run {entorno['FLATPAK_ID']}"
@@ -250,6 +256,7 @@ def texto_desktop_lanzador(binario, icono="", entorno=None):
 
 
 def guion_lanzador_mac(binario):
+    """AppleScript que lanza Blender con la plantilla Amatista en segundo plano (macOS)."""
     ruta = str(binario).replace("\\", "\\\\").replace('"', '\\"')
     return f'do shell script quoted form of "{ruta}" & " {" ".join(ARGS_PLANTILLA)} > /dev/null 2>&1 &"\n'
 

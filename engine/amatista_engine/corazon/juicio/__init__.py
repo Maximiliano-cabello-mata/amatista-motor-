@@ -29,11 +29,13 @@ from typing import Optional, Tuple  # noqa: E402
 
 @dataclass(frozen=True)
 class Juicio:
+    """Resultado del juicio: la diferencia con el ejemplo y la decisión de qué decir."""
     diferencia: Diferencia
     decision: Decision
 
     @property
     def avance(self) -> Tuple[int, int]:
+        """Piezas bien y total, como (bien, total), para la barra de avance."""
         return self.diferencia.bien, self.diferencia.total
 
 

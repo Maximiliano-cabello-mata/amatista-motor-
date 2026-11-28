@@ -48,6 +48,7 @@ COMUNES = ("instalar_en_blender.py", "desinstalar_en_blender.py")
 
 
 def version() -> str:
+    """Versión del add-on que se empaqueta."""
     return construir.VERSION
 
 
@@ -85,6 +86,7 @@ def preparar(destino: Path = SALIDA / "comun", servidor: str = SERVIDOR, platafo
 
 
 def control_deb(tam_kb: int) -> str:
+    """Archivo DEBIAN/control del paquete .deb (paquete, versión, sección, arquitectura, dependencias, mantenedor, descripción)."""
     return "\n".join([
         f"Package: {PAQUETE_DEB}",
         f"Version: {version()}",
@@ -141,6 +143,11 @@ def armar_arbol_deb(comun: Path, raiz: Path) -> Path:
 
 
 def deb(comun: Path = SALIDA / "comun") -> Path:
+    """Construye el .deb de Linux con dpkg-deb a partir de la carpeta común (la prepara si falta).
+
+    Raises:
+        SystemExit: si dpkg-deb no está instalado.
+    """
     if not comun.is_dir():
         preparar(comun)
     if shutil.which("dpkg-deb") is None:
@@ -152,6 +159,7 @@ def deb(comun: Path = SALIDA / "comun") -> Path:
 
 
 def main(argv=None) -> int:
+    """CLI: «preparar» la carpeta común, construir el «deb» o mostrar la «version»."""
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("accion", choices=("preparar", "deb", "version"))
     parser.add_argument("--servidor", default=SERVIDOR)

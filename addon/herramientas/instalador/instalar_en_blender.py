@@ -33,6 +33,7 @@ OK, INCOMPATIBLE, ERROR = 0, 3, 4
 
 
 def terminar(codigo, resultado, mensaje):
+    """Imprime el mensaje y la línea AMATISTA_RESULTADO para el instalador y sale con ``codigo``."""
     print()
     print(mensaje)
     print(f"AMATISTA_RESULTADO={resultado}")
@@ -41,6 +42,7 @@ def terminar(codigo, resultado, mensaje):
 
 
 def buscar_zip():
+    """Zip del add-on a instalar: el pasado tras «--» o el amatista-*.zip más reciente junto al script."""
     argumentos = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if argumentos:
         return Path(argumentos[0]).expanduser().resolve()
@@ -49,6 +51,7 @@ def buscar_zip():
 
 
 def _protocolo():
+    """Carga el módulo protocolo.py de la extensión recién instalada (para registrar amatista://)."""
     carpeta = Path(bpy.utils.user_resource("EXTENSIONS", path="user_default")) / "amatista"
     spec = importlib.util.spec_from_file_location("amatista_protocolo", carpeta / "protocolo.py")
     modulo = importlib.util.module_from_spec(spec)
@@ -94,6 +97,7 @@ def apagar_copias_viejas():
 
 
 def main():
+    """Instala y activa la extensión en este Blender (exige 4.2+ y apaga copias viejas), registra amatista://, crea el lanzador, permite el acceso en línea y guarda preferencias."""
     version = bpy.app.version
     texto_version = ".".join(str(n) for n in version)
     print(f"Blender encontrado: {texto_version} (Python {sys.version.split()[0]})")

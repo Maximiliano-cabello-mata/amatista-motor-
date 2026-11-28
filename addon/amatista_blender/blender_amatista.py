@@ -36,11 +36,13 @@ ESTADO = {"plantilla": "", "lanzador": ""}
 
 
 def destino():
+    """Carpeta de la plantilla de aplicación Blender Amatista en los scripts del usuario."""
     base = bpy.utils.user_resource("SCRIPTS", path=os.path.join("startup", "bl_app_templates_user"), create=True)
     return Path(base) / protocolo.PLANTILLA
 
 
 def instalada():
+    """True si todos los archivos de la plantilla están instalados."""
     d = destino()
     return all((d / nombre).is_file() for nombre in ARCHIVOS)
 
@@ -67,6 +69,7 @@ def instalar_plantilla(forzar=False):
 
 
 def crear_lanzador():
+    """Crea el acceso directo «Blender Amatista» del sistema con el logo; devuelve (ok, texto)."""
     icono = Path(__file__).resolve().parent / "iconos" / "logo.png"
     ok, texto = protocolo.crear_lanzador(bpy.app.binary_path, str(icono) if icono.is_file() else "")
     ESTADO["lanzador"] = texto
@@ -74,6 +77,7 @@ def crear_lanzador():
 
 
 def en_plantilla():
+    """True si Blender arrancó con la plantilla Blender Amatista."""
     return getattr(bpy.context.preferences, "app_template", "") == protocolo.PLANTILLA
 
 
@@ -116,6 +120,7 @@ class AMATISTA_OT_blender_amatista(bpy.types.Operator):
     bl_label = "Instalar Blender Amatista"
 
     def execute(self, context):
+        """Instala (o reinstala) la plantilla y crea el lanzador; informa el resultado o el problema."""
         ok, texto = instalar_plantilla(forzar=True)
         if not ok:
             self.report({"WARNING"}, texto)
@@ -131,6 +136,7 @@ CLASES = (AMATISTA_OT_blender_amatista,)
 
 
 def _al_arrancar():
+    """Al arrancar: devuelve el tema si hace falta y, si la preferencia está activa, instala la plantilla (y el lanzador al cambiar de versión)."""
     try:
         devolver_tema()
         p = ajustes.prefs()
@@ -146,6 +152,7 @@ def _al_arrancar():
 
 
 def register():
+    """Registra las clases y programa la instalación de la plantilla (inmediata si no hay ventana, como en el instalador)."""
     for clase in CLASES:
         bpy.utils.register_class(clase)
     if bpy.app.background:
@@ -155,6 +162,7 @@ def register():
 
 
 def unregister():
+    """Cancela el arranque pendiente y desregistra las clases."""
     if bpy.app.timers.is_registered(_al_arrancar):
         bpy.app.timers.unregister(_al_arrancar)
     for clase in reversed(CLASES):

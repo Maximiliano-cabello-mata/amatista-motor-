@@ -33,16 +33,19 @@ YA_LO_TENIAS = "¡Ya lo tenías!"
 
 
 def logro(numero: int, sin_pistas: bool = False) -> str:
+    """Frase de logro que rota según el número de misión; añade el elogio extra si se hizo sin pistas."""
     frase = LOGROS[(max(1, numero) - 1) % len(LOGROS)]
     return f"{frase} {LOGRO_SIN_PISTAS}" if sin_pistas else frase
 
 
 def _primero(detalles: dict) -> dict:
+    """Primer objeto fallido de los detalles del validador ({} si no hay)."""
     fallan = detalles.get("failed") or []
     return fallan[0] if fallan and isinstance(fallan[0], dict) else {}
 
 
 def _nombre(practica: Optional[PracticeDefinition], target: TargetDefinition, clave: str = "role") -> str:
+    """Nombre de la pieza para el alumno: etiqueta del rol del objetivo o «la pieza»."""
     rol = (target.params or {}).get(clave)
     if practica is not None and rol:
         return practica.role_label(rol)

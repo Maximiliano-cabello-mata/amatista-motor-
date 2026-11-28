@@ -25,6 +25,7 @@ donde = import_module(_motor.engine.__name__ + ".guion.donde")
 
 
 def _vistas(context):
+    """Recorre (ventana, área) de las vistas 3D."""
     for ventana in getattr(context.window_manager, "windows", ()) or ():
         for area in ventana.screen.areas:
             if area.type == "VIEW_3D":
@@ -32,6 +33,7 @@ def _vistas(context):
 
 
 def _primera_vista(context):
+    """La vista 3D del contexto o la primera disponible."""
     if context.area is not None and context.area.type == "VIEW_3D":
         return context.window, context.area
     return next(_vistas(context), (None, None))
@@ -51,6 +53,7 @@ def mostrar_barra(context):
 
 
 def herramienta_elegida(context, modo="OBJECT"):
+    """Id de la herramienta elegida en la barra de herramientas para el modo dado («» si no se sabe)."""
     try:
         return getattr(context.workspace.tools.from_space_view3d_mode(modo), "idname", "")
     except (AttributeError, RuntimeError, TypeError):
@@ -58,6 +61,7 @@ def herramienta_elegida(context, modo="OBJECT"):
 
 
 def _elegir(context, d):
+    """Deja elegida la herramienta en la barra de herramientas (no cambia de modo a escondidas); devuelve el texto de lo hecho."""
     ventana, area = _primera_vista(context)
     if area is None:
         return ""
@@ -80,6 +84,7 @@ def _elegir(context, d):
 
 
 def _abrir_menu(context, d):
+    """Abre el menú de la herramienta junto al ratón en la vista 3D; «» si no hay ventana."""
     if bpy.app.background or context.window is None:
         return ""
     ventana, area = _primera_vista(context)
@@ -96,6 +101,7 @@ def _abrir_menu(context, d):
 
 
 def _abrir_pestana(context, d):
+    """Abre la pestaña del editor Propiedades (o la barra lateral para «ROLES»); devuelve el texto de lo hecho."""
     if d.objetivo == "ROLES":
         hecho = False
         for _ventana, area in _vistas(context):
@@ -143,6 +149,7 @@ def se_puede_abrir(herramienta):
 
 
 def abrir_ventana(context, herramienta, nombre_sugerido=""):
+    """Abre el diálogo de la herramienta (p. ej. Guardar como con un nombre sugerido); False si no es un diálogo o falla."""
     d = donde.de(herramienta)
     if d is None or d.tipo != donde.DIALOGO:
         return False

@@ -36,6 +36,7 @@ def _caja_mundo(obj):
 
 
 def _vector(coordenadas):
+    """Crea un mathutils.Vector (importado aquí: solo existe dentro de Blender)."""
     from mathutils import Vector
 
     return Vector(coordenadas)
@@ -93,6 +94,7 @@ def _encimados(vertices):
 
 
 def _lados(vertices):
+    """Cuántos vértices hay a cada lado (negativo, positivo) de cada eje local; sirve para saber si se modeló solo una mitad."""
     lados = []
     for eje in range(3):
         negativos = sum(1 for co in vertices if co[eje] < -DISTANCIA_ENCIMADOS)
@@ -102,6 +104,7 @@ def _lados(vertices):
 
 
 def _modificadores(obj):
+    """Lee los modificadores del objeto de Blender: tipo, nombre, ejes de MIRROR, niveles de SUBSURF y si se ven en la vista."""
     detalles = []
     for m in getattr(obj, "modifiers", ()):
         ejes = (False, False, False)
@@ -115,6 +118,7 @@ def _modificadores(obj):
 
 
 def _entrada(nodo, nombres, defecto):
+    """Valor por defecto del primer socket del nodo que exista entre ``nombres`` (cambian entre versiones de Blender)."""
     for nombre in nombres:
         socket = nodo.inputs.get(nombre)
         if socket is not None and hasattr(socket, "default_value"):
@@ -123,6 +127,7 @@ def _entrada(nodo, nombres, defecto):
 
 
 def _material(mat):
+    """Lee un material de Blender como MaterialInfo: del nodo Principled BSDF si lo hay, si no de los ajustes de vista."""
     nodo = None
     arbol = getattr(mat, "node_tree", None)
     if arbol is not None and getattr(mat, "use_nodes", True):
@@ -174,6 +179,7 @@ def _fcurves(obj):
 
 
 def _animacion(obj):
+    """Lee los fotogramas clave de location/rotation_euler/scale del objeto (hasta MAX_CLAVES por canal), ordenados."""
     canales = []
     for curva in _fcurves(obj):
         if curva.data_path not in RUTAS_ANIMACION or curva.array_index > 2:
@@ -186,6 +192,7 @@ def _animacion(obj):
 
 
 def _hacia_donde(obj):
+    """Dirección hacia la que mira una cámara o luz (su -Z local en el mundo), normalizada."""
     from mathutils import Vector
 
     v = obj.matrix_world.to_3x3() @ Vector((0.0, 0.0, -1.0))
@@ -195,6 +202,10 @@ def _hacia_donde(obj):
 
 
 def capture_object(obj):
+    """Convierte un objeto de Blender en SceneObject: transformaciones, caja en el mundo, rol, etiquetas, malla viva, materiales, luz/cámara y animación.
+
+    Solo lee datos (no modifica la escena); requiere bpy/mathutils.
+    """
     rol = tagger.get_role(obj)
     datos = getattr(obj, "data", None)
     es_malla = obj.type == "MESH" and datos is not None
@@ -243,6 +254,10 @@ def capture_object(obj):
 
 
 def capture_scene(scene=None):
+    """Foto de la escena de Blender actual como SceneState (objetos no ignorados, archivo, modo, selección, cámara, render).
+
+    Se llama desde el add-on en cada evaluación; requiere bpy.
+    """
     import bpy
 
     scene = scene or bpy.context.scene

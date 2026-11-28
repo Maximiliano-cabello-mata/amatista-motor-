@@ -74,22 +74,26 @@ class Senales:
     max_operaciones: int = 60
 
     def con_operacion(self, ahora: float, idname: str) -> "Senales":
+        """Copia de las señales con una operación de Blender más (hora, idname), conservando solo las últimas ``max_operaciones``."""
         ops = self.operaciones + ((float(ahora), str(idname or "")[:64]),)
         return replace(self, operaciones=ops[-self.max_operaciones:])
 
 
 @dataclass(frozen=True)
 class Animo:
+    """Lectura del termómetro de ánimo: nivel (de NIVELES_ANIMO), puntaje y razones que lo explican."""
     nivel: str
     puntaje: float
     razones: Tuple[str, ...] = ()
 
     @property
     def indice(self) -> int:
+        """Posición del nivel en NIVELES_ANIMO (para comparar niveles de ánimo)."""
         return NIVELES_ANIMO.index(self.nivel)
 
 
 def senales_nuevas(ahora: float) -> Senales:
+    """Señales vacías para un paso que empieza en ``ahora``."""
     return Senales(inicio=ahora, ultimo_avance=ahora)
 
 
@@ -99,22 +103,27 @@ def avanzo(s: Senales, ahora: float) -> Senales:
 
 
 def fallo(s: Senales) -> Senales:
+    """Señales con un fallo más del alumno en el paso."""
     return replace(s, fallos=s.fallos + 1)
 
 
 def deshizo(s: Senales) -> Senales:
+    """Señales con un Ctrl+Z (deshacer) más."""
     return replace(s, deshacer=s.deshacer + 1)
 
 
 def retrocedio(s: Senales) -> Senales:
+    """Señales con un retroceso más (algo que ya cumplía dejó de cumplirse)."""
     return replace(s, retrocesos=s.retrocesos + 1)
 
 
 def pidio_pista(s: Senales) -> Senales:
+    """Señales con una pista pedida más."""
     return replace(s, pistas=s.pistas + 1)
 
 
 def _recientes(s: Senales, ahora: float) -> List[str]:
+    """Operaciones hechas dentro de la VENTANA de tiempo y desde el último avance (para detectar que el alumno da vueltas)."""
     return [op for t, op in s.operaciones if ahora - t <= VENTANA and t >= s.ultimo_avance]
 
 
@@ -210,6 +219,7 @@ class Luz:
 
     @property
     def nombre(self) -> str:
+        """Nombre para mostrar del nivel de luz (cuánta ayuda se ve)."""
         return NOMBRES_LUZ[self.nivel]
 
 
@@ -223,6 +233,7 @@ def madurez(fases: Iterable[str]) -> float:
 
 
 def techo_por_madurez(m: float) -> int:
+    """Nivel máximo de luz (ayuda) que corresponde a la madurez ``m`` del alumno: a más madurez, menos luz."""
     for umbral, techo in TECHOS_MADUREZ:
         if m < umbral:
             return techo

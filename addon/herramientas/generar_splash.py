@@ -25,6 +25,7 @@ FUENTES_FINAS = ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "DejaVuSans.
 
 
 def _fuente(candidatas, tam):
+    """Primera fuente TrueType disponible de la lista (o la de Pillow por defecto)."""
     for ruta in candidatas:
         try:
             return ImageFont.truetype(ruta, tam)
@@ -34,10 +35,12 @@ def _fuente(candidatas, tam):
 
 
 def _mezcla(a, b, t):
+    """Interpola dos colores RGB (t = 0..1)."""
     return tuple(int(x + (y - x) * t) for x, y in zip(a, b))
 
 
 def splash(ancho, alto, semilla=7):
+    """Dibuja la pantalla de inicio de Blender Amatista (facetas con degradado, gema y textos) con Pillow."""
     escala = ancho / 1002
     azar = random.Random(semilla)
     img = Image.new("RGB", (ancho, alto), FONDO_1)
@@ -85,6 +88,7 @@ def splash(ancho, alto, semilla=7):
 
 
 def main():
+    """Genera splash.png y splash_2x.png en la carpeta de la plantilla."""
     DESTINO.mkdir(parents=True, exist_ok=True)
     splash(1002, 500).save(DESTINO / "splash_2x.png", optimize=True)
     splash(1002, 500).resize((501, 250), Image.LANCZOS).save(DESTINO / "splash.png", optimize=True)

@@ -26,10 +26,12 @@ VERDE = (88, 214, 141)
 
 
 def lienzo():
+    """Imagen RGBA vacía de TAM × TAM píxeles."""
     return [[(0, 0, 0, 0) for _ in range(TAM)] for _ in range(TAM)]
 
 
 def dentro(px, py, puntos):
+    """True si el punto está dentro del polígono (regla par-impar)."""
     resultado = False
     j = len(puntos) - 1
     for i in range(len(puntos)):
@@ -42,6 +44,7 @@ def dentro(px, py, puntos):
 
 
 def mezclar(fondo, color, alfa):
+    """Mezcla un color sobre el fondo con ``alfa`` (composición «over»)."""
     r, g, b, a = fondo
     fa = a / 255.0
     na = alfa + fa * (1 - alfa)
@@ -52,6 +55,7 @@ def mezclar(fondo, color, alfa):
 
 
 def poligono(img, puntos, color, opacidad=1.0):
+    """Rellena un polígono con antialiasing por submuestreo."""
     xs = [p[0] for p in puntos]
     ys = [p[1] for p in puntos]
     for y in range(max(0, int(min(ys)) - 1), min(TAM, int(max(ys)) + 2)):
@@ -66,6 +70,7 @@ def poligono(img, puntos, color, opacidad=1.0):
 
 
 def circulo(img, cx, cy, radio, color, opacidad=1.0, lados=48):
+    """Rellena un círculo (polígono de ``lados`` lados)."""
     poligono(
         img,
         [(cx + radio * math.cos(2 * math.pi * k / lados), cy + radio * math.sin(2 * math.pi * k / lados)) for k in range(lados)],
@@ -75,6 +80,7 @@ def circulo(img, cx, cy, radio, color, opacidad=1.0, lados=48):
 
 
 def anillo(img, cx, cy, radio, grosor, color, lados=48):
+    """Dibuja un anillo (círculo hueco) de ``grosor``."""
     exterior = [(cx + radio * math.cos(2 * math.pi * k / lados), cy + radio * math.sin(2 * math.pi * k / lados)) for k in range(lados)]
     interior = [
         (cx + (radio - grosor) * math.cos(2 * math.pi * k / lados), cy + (radio - grosor) * math.sin(2 * math.pi * k / lados))
@@ -85,6 +91,7 @@ def anillo(img, cx, cy, radio, grosor, color, lados=48):
 
 
 def linea(img, a, b, grosor, color):
+    """Dibuja un segmento grueso como polígono."""
     dx, dy = b[0] - a[0], b[1] - a[1]
     largo = math.hypot(dx, dy) or 1
     nx, ny = -dy / largo * grosor / 2, dx / largo * grosor / 2
@@ -111,14 +118,17 @@ def gema(img, cx, cy, escala, base, claro, oscuro, filo=None):
 
 
 def check(img, color, cx=32, cy=33, s=1.0):
+    """Dibuja la marca ✓."""
     linea(img, (cx - 12 * s, cy), (cx - 3 * s, cy + 9 * s), 6 * s, color)
     linea(img, (cx - 4 * s, cy + 9 * s), (cx + 13 * s, cy - 10 * s), 6 * s, color)
 
 
 def png(img, ruta):
+    """Escribe la imagen como PNG sin dependencias (zlib + struct)."""
     filas = b"".join(b"\x00" + bytes(c for px in fila for c in px) for fila in img)
 
     def bloque(tipo, datos):
+        """Un bloque PNG: longitud, tipo, datos y CRC."""
         return struct.pack(">I", len(datos)) + tipo + datos + struct.pack(">I", zlib.crc32(tipo + datos) & 0xFFFFFFFF)
 
     contenido = (
@@ -131,6 +141,7 @@ def png(img, ruta):
 
 
 def generar():
+    """Genera todos los iconos PNG del add-on en la carpeta de iconos."""
     DESTINO.mkdir(parents=True, exist_ok=True)
     iconos = {}
 

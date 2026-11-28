@@ -11,6 +11,7 @@ import construir  # noqa: E402
 
 
 def cargar_integridad(carpeta: Path):
+    """Carga integridad.py desde una carpeta instalada."""
     spec = importlib.util.spec_from_file_location(f"integridad_{id(carpeta)}", carpeta / "integridad.py")
     modulo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modulo)
@@ -18,12 +19,14 @@ def cargar_integridad(carpeta: Path):
 
 
 def instalar(tmp_path: Path, **opciones) -> Path:
+    """Extrae la extensión construida en una carpeta temporal."""
     carpeta = tmp_path / "amatista"
     zipfile.ZipFile(io.BytesIO(construir.construir_extension(**opciones))).extractall(carpeta)
     return carpeta
 
 
 def test_copia_oficial(tmp_path):
+    """Comprueba que una copia sin cambios es «oficial» (las cachés no cuentan)."""
     carpeta = instalar(tmp_path, vinculo={"id": "v", "secreto": "s"})
     (carpeta / "__pycache__").mkdir()  # Blender crea cachés: no cuentan
     (carpeta / "__pycache__" / "x.pyc").write_bytes(b"x")
@@ -33,6 +36,7 @@ def test_copia_oficial(tmp_path):
 
 
 def test_copia_modificada_o_con_archivos_extra(tmp_path):
+    """Comprueba que se detectan archivos modificados y extra."""
     carpeta = instalar(tmp_path)
     red = carpeta / "red.py"
     red.write_text(red.read_text(encoding="utf-8") + "\n# cambio\n", encoding="utf-8")
@@ -43,5 +47,6 @@ def test_copia_modificada_o_con_archivos_extra(tmp_path):
 
 
 def test_desde_el_repositorio_es_desarrollo():
+    """Comprueba que la copia del repositorio es «desarrollo»."""
     carpeta = Path(__file__).resolve().parents[1] / "amatista_blender"
     assert cargar_integridad(carpeta).revisar()["estado"] == "desarrollo"

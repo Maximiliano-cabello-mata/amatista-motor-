@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ..models import SceneState, TargetDefinition, ValidationResult
+# [REVISION-MUERTO] ``text`` se importa pero no se usa.
 from .base import describe, number, result, select, selector, text
 
 PROPIEDADES = {"location": "ubicación", "rotation_euler": "rotación", "scale": "escala"}
@@ -10,6 +11,11 @@ ALIAS = {"location": "location", "posicion": "location", "ubicacion": "location"
 
 
 def _propiedad(target: TargetDefinition) -> str:
+    """Propiedad animada pedida en params.property (alias admitidos → location, rotation_euler o scale).
+
+    Raises:
+        ValueError: si no es una de las tres propiedades admitidas.
+    """
     valor = str(target.params.get("property", "location")).lower()
     if valor not in ALIAS:
         raise ValueError("property debe ser location, rotation_euler o scale")
@@ -17,6 +23,11 @@ def _propiedad(target: TargetDefinition) -> str:
 
 
 def _eje(target: TargetDefinition, defecto: str = "z") -> int:
+    """Índice 0/1/2 del eje pedido en params.axis («x», «y», «z»).
+
+    Raises:
+        ValueError: si el eje no es x, y ni z.
+    """
     eje = str(target.params.get("axis", defecto)).lower()
     if eje not in ("x", "y", "z"):
         raise ValueError("axis debe ser x, y o z")

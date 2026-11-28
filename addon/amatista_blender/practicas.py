@@ -80,12 +80,14 @@ CARPETAS_DESARROLLO = ("sandbox", "archivo")
 
 
 def _carpeta_cache():
+    """Carpeta de caché de prácticas descargadas en la carpeta de usuario del add-on (la crea si falta)."""
     carpeta = ajustes.carpeta_usuario() / "practicas"
     carpeta.mkdir(parents=True, exist_ok=True)
     return carpeta
 
 
 def _leer_json(ruta):
+    """Lee un JSON de disco; None si no existe o está mal formado."""
     try:
         return json.loads(Path(ruta).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -93,6 +95,7 @@ def _leer_json(ruta):
 
 
 def _meta(datos, origen):
+    """Resumen de una práctica para el catálogo (id, título, descripción, nivel, minutos, versión, curso, origen…)."""
     return {
         "id": datos.get("id"),
         "title": datos.get("title", datos.get("id")),
@@ -131,7 +134,12 @@ def catalogo():
 
 
 def refrescar_catalogo(al_terminar=None):
+    """Descarga en segundo plano la lista de prácticas de la plataforma y actualiza el catálogo del panel.
+
+    ``al_terminar`` se llama al acabar (con el error o None).
+    """
     def listo(respuesta, error, estado):
+        """Guarda el catálogo del servidor (o el error de red) y redibuja los paneles."""
         if error is None:
             ESTADO["catalogo_servidor"] = {
                 p["id"]: {
@@ -158,6 +166,7 @@ def refrescar_catalogo(al_terminar=None):
 
 
 def guardar_en_cache(datos):
+    """Guarda la definición de una práctica en la caché local (sirve sin conexión); solo avisa en consola si falla."""
     try:
         nombre = "".join(c if c.isalnum() or c in "._-" else "_" for c in datos["id"])
         (_carpeta_cache() / f"{nombre}.json").write_text(json.dumps(datos, ensure_ascii=False), encoding="utf-8")
@@ -169,11 +178,13 @@ def guardar_en_cache(datos):
 
 
 def escena(context=None):
+    """Escena de Blender del contexto dado o la actual."""
     context = context or bpy.context
     return getattr(context, "scene", None) or bpy.context.scene
 
 
 def practica_activa(context=None):
+    """Práctica abierta en la escena (PracticeDefinition), parseada desde la propiedad JSON y cacheada por hash; None si no hay."""
     sc = escena(context)
     texto = sc.amatista.practica_json if sc else ""
     if not texto:
@@ -191,6 +202,7 @@ def practica_activa(context=None):
 
 
 def practica_borrador():
+    """Práctica del borrador del Editor de texto (modo autor), o None si no hay o no compila."""
     from . import autor
 
     datos = autor.leer_borrador()
@@ -208,6 +220,7 @@ PREFIJO_ESCENA = "Amatista · "
 
 
 def _practica_de_escena(sc):
+    """Id de la práctica de la escena (la activa o la que se usó antes en ella)."""
     return sc.amatista.practica_id or sc.get(USADA, "")
 
 
@@ -305,6 +318,7 @@ def _cambio_limpio():
 
 
 def _a_modo_objeto():
+    """Vuelve a Modo Objeto si el objeto activo está en otro modo (necesario antes de cambiar de escena o armar objetos)."""
     obj = getattr(bpy.context, "active_object", None)
     if obj is not None and getattr(obj, "mode", "OBJECT") != "OBJECT":
         try:
@@ -478,6 +492,7 @@ def _abrir_teoria(practica):
 
 
 def cerrar(context):
+    """Cierra la práctica de la escena: restaura el mundo/ambiente, borra la práctica activa y limpia el estado del panel."""
     sc = escena(context)
     try:
         escenarios.restaurar_ambiente(sc)
@@ -510,6 +525,7 @@ def abrir_por_id(context, practica_id, al_terminar=None):
         return
 
     def listo(respuesta, error, estado):
+        """Al recibir la definición de la API, la activa en la escena (origen «servidor») y avisa a ``al_terminar``."""
         if error is None:
             try:
                 activar(bpy.context, respuesta["definicion"], "servidor")
@@ -525,6 +541,7 @@ def cargar_practica_actual(al_terminar=None):
     """La práctica que el alumno abrió en la plataforma (su lección actual)."""
 
     def listo(respuesta, error, estado):
+        """Si la API devolvió la práctica de la lección actual y la escena está libre o es la misma, la activa."""
         if error is None and respuesta and respuesta.get("definicion"):
             sc = bpy.context.scene
             if sc and sc.amatista.practica_id in ("", respuesta["definicion"]["id"]):
@@ -539,6 +556,7 @@ def cargar_practica_actual(al_terminar=None):
 
 
 def pistas(context=None):
+    """Pistas reveladas por objetivo {id: nivel} guardadas en la escena."""
     try:
         return {k: int(v) for k, v in json.loads(escena(context).amatista.pistas_json or "{}").items()}
     except (ValueError, AttributeError):
@@ -554,6 +572,13 @@ def capturar(sc):
 
 
 def evaluar(context=None, motivo="manual"):
+    """Evalúa la escena con el motor y actualiza todo lo que ve el alumno.
+
+    Captura la escena, ejecuta el motor, actualiza guía, acompañante, misión,
+    avisos de herramientas, píldoras y programa la sincronización. ``motivo``
+    indica qué disparó la evaluación («manual», «abrir», «guardar», «rol»…).
+    Devuelve el EvaluationReport o None si no hay práctica.
+    """
     practica = practica_activa(context)
     if practica is None:
         if not _es_ejemplo(escena(context)):
@@ -638,11 +663,13 @@ def lista_instructor(reporte=None):
 
 
 def evaluar_pronto():
+    """Programa una evaluación inmediata con un temporizador de Blender (si no hay una ya pendiente)."""
     if not bpy.app.timers.is_registered(_evaluar_ahora):
         bpy.app.timers.register(_evaluar_ahora, first_interval=0.05)
 
 
 def _evaluar_ahora():
+    """Temporizador: evalúa con motivo «abrir»; los errores se escriben en consola. No se repite."""
     try:
         evaluar(bpy.context, "abrir")
     except Exception as error:  # noqa: BLE001
@@ -664,6 +691,7 @@ def _contar_correcciones(sc, reporte):
 
 
 def _avisar_herramientas(sc, reporte):
+    """Muestra una sola vez por herramienta el aviso de que la práctica desaconseja usarla (si el alumno no lo desactivó)."""
     p = ajustes.prefs()
     if not reporte.tool_warnings or (p and not p.avisar_herramientas):
         return
@@ -679,6 +707,7 @@ _PENDIENTES = []  # temporizadores de un solo uso (diálogos): se quitan al desa
 
 
 def _temporizador(funcion, segundos):
+    """Registra un temporizador de Blender y lo recuerda en _PENDIENTES para poder cancelarlo al descargar el add-on."""
     _PENDIENTES[:] = [f for f in _PENDIENTES if bpy.app.timers.is_registered(f)] + [funcion]
     bpy.app.timers.register(funcion, first_interval=segundos)
 
@@ -689,6 +718,7 @@ def _invocar(operador, **propiedades):
         return
 
     def abrir():
+        """Ejecuta el operador en modo INVOKE en la primera ventana (desde un temporizador no hay contexto de ventana)."""
         ventana = bpy.context.window_manager.windows[0] if bpy.context.window_manager.windows else None
         if ventana is None:
             return None
@@ -704,6 +734,7 @@ def _invocar(operador, **propiedades):
 
 
 def pedir_pista(context, target_id=None):
+    """Revela la siguiente pista del objetivo (por defecto el actual), la guarda en la escena y la devuelve."""
     practica = practica_activa(context)
     if practica is None:
         return None
@@ -722,11 +753,13 @@ def pedir_pista(context, target_id=None):
 
 
 def vinculado():
+    """True si este Blender tiene un token de la cuenta de Amatista."""
     p = ajustes.prefs()
     return bool(p and p.token)
 
 
 def programar_sincronizacion(segundos=3.0):
+    """Programa el envío del progreso a la plataforma dentro de ``segundos`` (reinicia la espera); solo si está activado sincronizar solo."""
     p = ajustes.prefs()
     if not (p and p.sincronizar_solo):
         return
@@ -736,6 +769,7 @@ def programar_sincronizacion(segundos=3.0):
 
 
 def _sincronizar_programado():
+    """Temporizador: sincroniza el progreso y no se repite."""
     sincronizar(bpy.context)
     return None
 
@@ -755,6 +789,7 @@ def _foto_para_enviar(sc, practica):
 
 
 def datos_intento(context, modo="alumno"):
+    """Datos del intento que se envían a la API: práctica, versión, foto de la escena, pistas, correcciones, progreso…"""
     sc = escena(context)
     practica = practica_activa(context)
     return {
@@ -805,6 +840,7 @@ def sincronizar(context=None, forzar=False, al_terminar=None):
     enviado_completo = reporte.completed
 
     def listo(respuesta, error, estado):
+        """Al responder la API: marca guardado (y el progreso enviado) o anota el error/cola para reintentar, y redibuja."""
         ESTADO["enviando"] = False
         escena_actual = bpy.context.scene
         if error is None:
@@ -848,6 +884,7 @@ def sincronizar(context=None, forzar=False, al_terminar=None):
 
 
 def redibujar():
+    """Pide redibujar las vistas 3D y las preferencias (no hace nada en modo sin interfaz)."""
     if bpy.app.background:
         return
     for ventana in bpy.context.window_manager.windows:
@@ -879,6 +916,7 @@ def _al_renderizar(scene, *_args):
 def _al_cambiar(scene, depsgraph=None):
     # Cambiar las propiedades de Amatista en la escena también avisa al
     # depsgraph: solo cuentan los cambios en objetos, mallas y materiales.
+    """Handler depsgraph_update_post: si cambiaron objetos, mallas o materiales, marca cambios y programa una reevaluación."""
     if depsgraph is not None and not any(
         isinstance(u.id, OBSERVADOS)
         for u in depsgraph.updates
@@ -892,17 +930,20 @@ def _al_cambiar(scene, depsgraph=None):
 
 
 def _evaluar_al_guardar():
+    """Temporizador: evalúa con motivo «guardar»."""
     evaluar(bpy.context, "guardar")
     return None
 
 
 def _evaluar_al_abrir():
+    """Temporizador: evalúa con motivo «abrir»."""
     evaluar(bpy.context, "abrir")
     return None
 
 
 @persistent
 def _al_guardar(*_args):
+    """Handler save_post: marca que no hay cambios sin guardar y programa una evaluación (file.saved puede cumplirse)."""
     ESTADO["cambios_desde_guardar"] = False
     if bpy.context.scene and bpy.context.scene.amatista.practica_json:
         if not bpy.app.timers.is_registered(_evaluar_al_guardar):
@@ -911,6 +952,7 @@ def _al_guardar(*_args):
 
 @persistent
 def _al_abrir(*_args):
+    """Handler load_post: al abrir un .blend reinicia el estado, la guía y la sesión, y programa evaluación y ambiente."""
     ESTADO.update(reporte=None, clave=None, practica=None, aprobados_antes={}, sync="",
                   cambios_desde_guardar=not bpy.data.filepath)
     guia.reiniciar()
@@ -965,6 +1007,8 @@ def _vigilante():
 
 
 def register():
+    # [REVISION-BUG] (menor) se agregan sin comprobar ``if f not in lista`` (plantilla_amatista sí lo hace): si register() corre dos veces sin unregister (recarga de scripts), cada handler queda duplicado y evalúa dos veces.
+    """Registra los handlers de Blender (cambios, guardar, abrir, render) y el temporizador vigilante."""
     bpy.app.handlers.depsgraph_update_post.append(_al_cambiar)
     bpy.app.handlers.save_post.append(_al_guardar)
     bpy.app.handlers.load_post.append(_al_abrir)
@@ -974,6 +1018,7 @@ def register():
 
 
 def unregister():
+    """Quita los handlers y temporizadores registrados por el módulo."""
     for lista, funcion in (
         (bpy.app.handlers.depsgraph_update_post, _al_cambiar),
         (bpy.app.handlers.save_post, _al_guardar),

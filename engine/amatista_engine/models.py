@@ -56,6 +56,7 @@ class AnimationChannel:
 
     @property
     def values(self) -> Tuple[float, ...]:
+        """Solo los valores de los fotogramas clave, en orden (sin el número de fotograma)."""
         return tuple(v for _, v in self.keys)
 
 
@@ -74,6 +75,7 @@ class Silhouette:
 
     @property
     def transversales(self) -> Tuple[int, int]:
+        """Los dos ejes (0=X, 1=Y, 2=Z) perpendiculares al eje largo de la silueta."""
         return tuple(i for i in range(3) if i != self.eje)  # type: ignore[return-value]
 
 
@@ -118,13 +120,19 @@ class SceneObject:
 
     @property
     def role(self) -> Optional[str]:
+        """Primer rol del objeto («base», «tapa»…) o None si el alumno/motor no le asignó ninguno."""
         return self.roles[0] if self.roles else None
 
     def modifier(self, tipo: str) -> Optional[ModifierInfo]:
+        """Primer modificador del objeto con ese tipo de Blender («MIRROR», «SUBSURF»…), o None.
+
+        El tipo se compara en mayúsculas, así que «mirror» también vale.
+        """
         tipo = tipo.upper()
         return next((m for m in self.modifier_details if m.type == tipo), None)
 
     def channel(self, path: str, index: int) -> Optional[AnimationChannel]:
+        """Canal de animación de ``path`` («location», «rotation_euler», «scale») en el eje ``index``, o None."""
         return next((c for c in self.animation if c.path == path and c.index == index), None)
 
     @property
@@ -146,6 +154,12 @@ class SceneObject:
 
 @dataclass(frozen=True)
 class SceneState:
+    """Foto normalizada de la escena de Blender que evalúan los validadores.
+
+    La construye el add-on (blender/adapter.py) o se carga desde JSON en pruebas y
+    servidor; no depende de bpy. Incluye la lista de objetos, el modo de edición,
+    selección, cámara activa, motor de render, renders hechos (F12) y rango de fotogramas.
+    """
     blender_version: str
     file_path: str
     file_saved: bool
@@ -160,18 +174,22 @@ class SceneState:
     frame_range: Tuple[int, int] = (1, 250)
 
     def objects_with_role(self, role: str) -> Tuple[SceneObject, ...]:
+        """Objetos de la escena que tienen ese rol (según etiqueta del alumno o deducción del motor)."""
         return tuple(obj for obj in self.objects if role in obj.roles)
 
     def object_by_name(self, name: str) -> Optional[SceneObject]:
+        """Objeto con ese nombre exacto de Blender, o None si no existe en la foto."""
         return next((obj for obj in self.objects if obj.name == name), None)
 
     @property
     def file_name(self) -> str:
+        r"""Nombre del .blend sin carpeta (acepta rutas con «\» o «/»); vacío si nunca se guardó."""
         return self.file_path.replace("\\", "/").rsplit("/", 1)[-1]
 
 
 @dataclass(frozen=True)
 class Hint:
+    """Pista de un objetivo: ``level`` (1 = la más suave; sube al pedir más ayuda) y su texto."""
     level: int
     text: str
 
@@ -206,6 +224,13 @@ class FixDefinition:
 
 @dataclass(frozen=True)
 class TargetDefinition:
+    """Objetivo (o vigilante) de una práctica tal como lo escribe el autor en el JSON.
+
+    ``validator`` es el id registrado que lo comprueba y ``params`` sus argumentos;
+    ``weight`` cuenta para el progreso, ``requires`` ordena el recorrido (grafo de
+    objetivos), ``hints``/``messages``/``tip``/``guide`` alimentan la ayuda al alumno,
+    ``fix`` solo lo usan los vigilantes («Hazlo conmigo») y ``stage`` la parte de la ruta.
+    """
     id: str
     validator: str
     params: Dict[str, Any] = field(default_factory=dict)
@@ -323,6 +348,7 @@ class ReferenceModel:
 
     @property
     def compared(self) -> Tuple[ReferencePart, ...]:
+        """Piezas del modelo de referencia marcadas para compararse con lo que modela el alumno."""
         return tuple(p for p in self.parts if p.compare)
 
 
@@ -358,6 +384,7 @@ class StarterDefinition:
 
 @dataclass(frozen=True)
 class RoleDefinition:
+    """Rol que la práctica asigna a objetos («base», «asa»…): id interno, texto que ve el alumno y descripción."""
     id: str
     label: str
     description: str = ""
@@ -365,6 +392,12 @@ class RoleDefinition:
 
 @dataclass(frozen=True)
 class PracticeDefinition:
+    """Práctica completa ya compilada desde JSON (amatista.practice/1 o /2): lo que se evalúa y cómo se enseña.
+
+    Reúne objetivos, vigilantes, píldoras de teoría, roles, herramientas permitidas,
+    lugar en el curso, escena inicial, modelo de referencia y ejemplo resuelto. La
+    produce practice/loader.py y la consumen el motor, el add-on y el servidor.
+    """
     schema: str
     id: str
     title: str
@@ -393,15 +426,19 @@ class PracticeDefinition:
     example: Optional[ExampleDefinition] = None
 
     def target(self, target_id: str) -> Optional[TargetDefinition]:
+        """Objetivo con ese id, o None si la práctica no lo define."""
         return next((t for t in self.targets if t.id == target_id), None)
 
     def guard(self, guard_id: str) -> Optional[TargetDefinition]:
+        """Vigilante con ese id, o None si la práctica no lo define."""
         return next((g for g in self.guards if g.id == guard_id), None)
 
     def pill(self, pill_id: str) -> Optional[PillDefinition]:
+        """Píldora de teoría con ese id, o None si no existe en la práctica."""
         return next((p for p in self.pills if p.id == pill_id), None)
 
     def role_label(self, role_id: str) -> str:
+        """Texto que ve el alumno para un rol; si el rol no está declarado devuelve el propio id."""
         rol = next((r for r in self.roles if r.id == role_id), None)
         return rol.label if rol else role_id
 
@@ -427,6 +464,11 @@ class PracticeDefinition:
 
 @dataclass(frozen=True)
 class ValidationResult:
+    """Resultado de ejecutar un validador sobre la escena.
+
+    ``passed`` es True/False, o None cuando no se pudo decidir (p. ej. falta el objeto);
+    ``message`` es el texto para el alumno y ``details`` datos extra para la ayuda y la depuración.
+    """
     target_id: str
     validator: str
     passed: Optional[bool]
@@ -444,6 +486,11 @@ DESCONOCIDO = "desconocido"
 
 @dataclass(frozen=True)
 class TargetStatus:
+    """Estado de un objetivo en el recorrido del alumno (completado/actual/pendiente/bloqueado/desconocido).
+
+    Es una fila de la lista de pasos que pinta el panel del add-on; incluye peso,
+    si es opcional y cuántas pistas hay disponibles.
+    """
     target_id: str
     title: str
     status: str
@@ -456,6 +503,7 @@ class TargetStatus:
 
 @dataclass(frozen=True)
 class ToolWarning:
+    """Aviso de que el alumno usó una herramienta no permitida o desaconsejada en la práctica (``level`` = gravedad)."""
     tool_id: str
     tool_name: str
     level: int
@@ -464,6 +512,12 @@ class ToolWarning:
 
 @dataclass(frozen=True)
 class EvaluationReport:
+    """Reporte de una evaluación: progreso (0..1), resultados por objetivo y siguiente paso.
+
+    Es lo que devuelve ``engine.evaluate`` y lo que el add-on y la API muestran al
+    alumno: pasos, objetivo actual, avisos de herramientas, roles deducidos,
+    vigilantes y, si alguno falla, el id del vigilante que pausa el progreso.
+    """
     practice_id: str
     practice_title: str
     progress: float
@@ -482,9 +536,11 @@ class EvaluationReport:
 
     @property
     def paused(self) -> bool:
+        """True si un vigilante está pausando el progreso (el alumno debe arreglar algo antes de seguir)."""
         return self.paused_by is not None
 
     def result(self, target_id: str) -> Optional[ValidationResult]:
+        """Resultado de validación del objetivo con ese id, o None si no se evaluó."""
         return next((r for r in self.results if r.target_id == target_id), None)
 
     @property

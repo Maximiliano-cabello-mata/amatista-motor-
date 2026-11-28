@@ -17,6 +17,7 @@ CARPETA = Path(__file__).resolve().parent
 
 
 def leer_config():
+    """Lee config.json del paquete (servidor, plataforma…); {} si no existe o está mal formado."""
     try:
         return json.loads((CARPETA / "config.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -33,12 +34,15 @@ def prefs():
 
 
 def servidor():
+    """URL base de la API (preferencias > config.json > http://localhost:8000), sin barra final."""
     p = prefs()
+    # [REVISION-SEGURIDAD] el valor por defecto es HTTP sin cifrar; en una copia sin config.json el token se enviaría en claro (ver red.pedir).
     url = (p.servidor if p and p.servidor else CONFIG.get("servidor")) or "http://localhost:8000"
     return url.rstrip("/")
 
 
 def plataforma():
+    """URL base de la plataforma web (preferencias > config.json), sin barra final."""
     p = prefs()
     url = (p.plataforma if p and p.plataforma else CONFIG.get("plataforma")) or ""
     return url.rstrip("/")
@@ -66,6 +70,7 @@ def guardar_preferencias():
 
 
 def es_desarrollador():
+    """True si el usuario activó el modo desarrollador o su rol es profesor/admin."""
     p = prefs()
     return bool(p and (p.modo_desarrollador or p.rol in ("profesor", "admin")))
 
@@ -78,12 +83,14 @@ def sin_progreso():
 
 
 def _al_cambiar_hud(self, context):
+    """Callback de la preferencia «mostrar HUD»: enciende o apaga la tarjeta de la vista 3D."""
     from .interfaz import hud
 
     hud.activar(self.mostrar_hud)
 
 
 def _al_cambiar_enfoque(self, context):
+    """Callback de la preferencia de enfoque: reaplica el modo enfocado a la práctica abierta y avisa al enlace."""
     from . import enfoque, enlace, practicas
 
     practica = practicas.practica_activa(context)
@@ -104,6 +111,7 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
     plataforma: bpy.props.StringProperty(
         name="Plataforma", description="Dirección de la plataforma web (vacío = la del paquete descargado)"
     )
+    # [REVISION-SEGURIDAD] subtype PASSWORD solo oculta el texto en la interfaz: el token queda en claro en userpref.blend del usuario.
     token: bpy.props.StringProperty(name="Token", subtype="PASSWORD", options={"HIDDEN"})
     cuenta: bpy.props.StringProperty(name="Cuenta vinculada")
     cuenta_id: bpy.props.StringProperty()
@@ -242,6 +250,7 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
     )
 
     def draw(self, context):
+        """Preferencias del add-on (Editar › Preferencias › Add-ons › Amatista): cuenta, espacio, vista 3D, enfoque, desarrollo, copias y avanzado."""
         layout = self.layout
         _dibujar_cabecera(layout)
         _dibujar_cuenta(layout, self)
@@ -255,6 +264,7 @@ class PreferenciasAmatista(bpy.types.AddonPreferences):
 
 
 def _dibujar_cabecera(layout):
+    """Cabecera de preferencias: versión de Amatista Motor y del add-on."""
     from .interfaz import estilo
 
     cabecera = layout.row()
@@ -263,6 +273,7 @@ def _dibujar_cabecera(layout):
 
 
 def _dibujar_cuenta(layout, prefs):
+    """Caja «Cuenta»: cuenta vinculada y rol con botón para desvincular, o botón para vincular."""
     caja = layout.box()
     caja.label(text="Cuenta", icon="USER")
     if prefs.token:
@@ -277,6 +288,7 @@ def _dibujar_cuenta(layout, prefs):
 
 
 def _dibujar_espacio(layout, prefs):
+    """Caja «Amatista dentro de Blender»: espacio de trabajo, Blender Amatista y reparar el enlace amatista://."""
     caja = layout.box()
     caja.label(text="Amatista dentro de Blender", icon="WORKSPACE")
     caja.prop(prefs, "espacio_amatista")
@@ -290,6 +302,7 @@ def _dibujar_espacio(layout, prefs):
 
 
 def _dibujar_vista_3d(layout, prefs):
+    """Caja «En la vista 3D»: guion paso a paso, HUD, tarjeta compacta, brillo de herramientas y otras ayudas visuales."""
     caja = layout.box()
     caja.label(text="En la vista 3D", icon="HEART")
     caja.prop(prefs, "guion_paso_a_paso")
@@ -303,6 +316,7 @@ def _dibujar_vista_3d(layout, prefs):
 
 
 def _dibujar_enfoque(layout, prefs):
+    """Caja «Modo enfocado»: cuándo esconder lo que la práctica no usa (también se elige en la plataforma)."""
     caja = layout.box()
     caja.label(text="Modo enfocado", icon="HIDE_ON")
     caja.row().prop(prefs, "enfoque", expand=True)
@@ -312,6 +326,7 @@ def _dibujar_enfoque(layout, prefs):
 
 
 def _dibujar_desarrollo(layout, prefs):
+    """Caja «Prácticas sueltas (desarrollo)»: nivel de acompañamiento y resaltados 3D."""
     caja = layout.box()
     caja.label(text="Prácticas sueltas (desarrollo)", icon="PREFERENCES")
     caja.row().prop(prefs, "acompanamiento", expand=True)
@@ -328,6 +343,7 @@ def _dibujar_desarrollo(layout, prefs):
 
 
 def _dibujar_copias(layout):
+    """Caja «Otras copias de Amatista»: avisa si hay otras copias del add-on instaladas/encendidas."""
     from . import saneamiento
 
     copias = saneamiento.resumen()
@@ -341,6 +357,7 @@ def _dibujar_copias(layout):
 
 
 def _dibujar_avanzado(layout, prefs):
+    """Caja «Avanzado»: modo desarrollador, URLs de servidor y plataforma y el servidor en uso."""
     caja = layout.box()
     caja.label(text="Avanzado", icon="TOOL_SETTINGS")
     caja.prop(prefs, "modo_desarrollador")

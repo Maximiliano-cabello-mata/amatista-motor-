@@ -20,6 +20,7 @@ MODULO = "bl_ext.user_default.amatista"
 
 
 def main():
+    """Desactiva Amatista y borra la extensión y la plantilla Blender Amatista de la carpeta del usuario (disco); guarda preferencias."""
     import addon_utils
 
     try:

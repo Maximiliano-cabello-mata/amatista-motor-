@@ -1,4 +1,5 @@
 # Pruebas de evoluci?n de motor (motor 4, 6, 6.1, 6.2, 7).
+# [REVISION-MUERTO] imports sin uso: sys, time, _inicio_de_blender, _elegir, _aldea_del_alumno, ARCHIVO_V2. (L~151 ``p.token = \"prueba\"`` es un valor de prueba, no un secreto.)
 import traceback
 import re
 import sys
@@ -89,6 +90,7 @@ def probar_motor6(contexto):
             f"autosanación: no hay otras copias activas ({saneamiento.otras_copias()})")
 
     def huerfana(*_args):
+        """Función vacía usada como draw handler huérfano."""
         pass
 
     huerfana.__module__ = "bl_ext.user_default.amatista.taller.sesion"
@@ -498,10 +500,12 @@ def probar_motor7(contexto):
     banda_gpu, banda_bpy = banda.gpu, banda.bpy
     try:
         class ContextoFalso:
+            """Contexto que delega en el real."""
             region = SimpleNamespace(width=1200, height=700, x=0, y=0)
             area = None
 
             def __getattr__(self, nombre):
+                """Delega el atributo en el contexto real."""
                 return getattr(contexto, nombre)
 
         banda.gpu = falso

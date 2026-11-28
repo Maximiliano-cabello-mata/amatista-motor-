@@ -50,11 +50,13 @@ class Escalera:
 
     @property
     def nombre(self) -> str:
+        """Nombre para mostrar del peldaño actual de la escalera de pistas."""
         return NOMBRES[self.nivel]
 
 
 @dataclass(frozen=True)
 class Pista:
+    """Pista del taller: nivel en la escalera, título, texto, teclas, herramientas a iluminar y si ofrece la demostración."""
     nivel: int
     titulo: str
     texto: str
@@ -96,10 +98,12 @@ def avance(e: Escalera, ahora: float) -> Escalera:
 
 
 def fallo(e: Escalera) -> Escalera:
+    """Escalera con un fallo más (puede habilitar el siguiente peldaño de pistas)."""
     return replace(e, fallos=e.fallos + 1)
 
 
 def deshizo(e: Escalera) -> Escalera:
+    """Escalera con un deshacer más."""
     return replace(e, deshacer=e.deshacer + 1)
 
 

@@ -67,6 +67,7 @@ def de_quien(contexto=None):
 
 
 def me_toca(quien, contexto=None):
+    """True si la tarjeta de la vista 3D le corresponde a ``quien``."""
     return de_quien(contexto) == quien
 
 

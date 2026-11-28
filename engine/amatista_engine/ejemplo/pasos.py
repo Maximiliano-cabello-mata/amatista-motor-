@@ -46,15 +46,18 @@ MOTORES = {"CYCLES": "Cycles", "BLENDER_EEVEE_NEXT": "EEVEE", "BLENDER_EEVEE": "
 
 
 def _num(valor: float) -> str:
+    """Número con hasta 2 decimales sin ceros sobrantes, para textos del ejemplo («0.5», nunca «-0»)."""
     texto = f"{float(valor):.2f}".rstrip("0").rstrip(".")
     return texto if texto not in ("-0", "") else "0"
 
 
 def _medidas(dims: Optional[Sequence[float]]) -> str:
+    """Medidas «a × b × c m» para describir un paso; «» si no hay."""
     return " × ".join(_num(d) for d in dims) + " m" if dims else ""
 
 
 def _argumentos(args: Any) -> Dict[str, Any]:
+    """Los argumentos del paso si son un dict; {} en otro caso."""
     return args if isinstance(args, dict) else {}
 
 
@@ -178,6 +181,7 @@ def describir_paso(paso: Dict[str, Any], partes: Sequence[Dict[str, Any]] = (),
 
 def describir(pasos: Iterable[Dict[str, Any]], partes: Sequence[Dict[str, Any]] = (),
               etiquetas: Optional[Dict[str, str]] = None) -> List[str]:
+    """Descripción en lenguaje natural de cada paso del ejemplo resuelto (lo que ve el alumno al abrir el ejemplo)."""
     return [describir_paso(p, partes, etiquetas) for p in pasos if isinstance(p, dict) and len(p) == 1]
 
 
@@ -195,14 +199,17 @@ MITADES = ("x-", "x+", "y-", "y+", "z-", "z+")
 
 
 def _es_numero(x: Any) -> bool:
+    """True si es un número finito que no es bool."""
     return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
 
 def _es_entero(x: Any) -> bool:
+    """True si es un int que no es bool."""
     return isinstance(x, int) and not isinstance(x, bool)
 
 
 def _vector_ok(x: Any, largos: Sequence[int] = (3,)) -> bool:
+    """True si es una lista de números finitos con una de las longitudes permitidas."""
     return isinstance(x, list) and len(x) in largos and all(_es_numero(v) for v in x)
 
 
@@ -288,6 +295,7 @@ def revisar_argumentos(clave: str, args: Any, donde: str) -> List[str]:
 
 
 def _texto_error(error: Exception) -> str:
+    """Mensaje legible de una excepción al armar el ejemplo (para KeyError, la clave que faltó)."""
     if isinstance(error, KeyError) and error.args:
         return str(error.args[0])
     return str(error) or type(error).__name__
@@ -331,6 +339,7 @@ def revisar_pasos(pasos: Any, partes: Sequence[Dict[str, Any]] = ()) -> List[str
 
 
 def _armar(pasos: Sequence[Dict[str, Any]], partes: Sequence[Dict[str, Any]]) -> SceneState:
+    """Ejecuta los pasos del ejemplo sobre una Escena de prueba y devuelve la escena resultante (la que se espera del alumno)."""
     e = Escena()
     for i, paso in enumerate(pasos):
         clave, args = next(iter(paso.items()))
@@ -356,6 +365,7 @@ def _armar(pasos: Sequence[Dict[str, Any]], partes: Sequence[Dict[str, Any]]) ->
 
 @lru_cache(maxsize=64)
 def _armar_guardado(clave: str) -> SceneState:
+    """Versión cacheable de ``_armar``: recibe pasos y partes serializados en JSON."""
     datos = json.loads(clave)
     return _armar(datos["pasos"], datos["partes"])
 

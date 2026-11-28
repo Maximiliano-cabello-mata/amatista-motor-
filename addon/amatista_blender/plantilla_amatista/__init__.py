@@ -45,10 +45,12 @@ TEMA = {
 
 
 def _carpeta_config():
+    """Carpeta de configuración de Amatista dentro de la del usuario de Blender (la crea)."""
     return bpy.utils.user_resource("CONFIG", path="amatista", create=True)
 
 
 def _resolver(ruta):
+    """Objeto y atributo del tema de Blender a partir de una ruta con puntos («view_3d.space.gradients…»)."""
     objeto = bpy.context.preferences.themes[0]
     *partes, atributo = ruta.split(".")
     for parte in partes:
@@ -57,6 +59,7 @@ def _resolver(ruta):
 
 
 def aplicar_tema():
+    """Aplica los colores del tema Blender Amatista guardando antes los originales en disco (para restaurarlos)."""
     originales = {}
     for ruta, valor in TEMA.items():
         try:
@@ -80,6 +83,7 @@ def aplicar_tema():
 
 
 def restaurar_tema():
+    """Devuelve al tema de Blender los colores originales guardados (si hay archivo)."""
     try:
         ruta_json = os.path.join(_carpeta_config(), ARCHIVO_TEMA)
         with open(ruta_json, encoding="utf-8") as archivo:
@@ -100,6 +104,7 @@ def restaurar_tema():
 
 
 def _barra_superior(self, context):
+    """Añade a la barra superior «◆ Blender Amatista» y el botón «Mi lección» (con el título de la lección en curso)."""
     fila = self.layout.row(align=True)
     fila.label(text="◆ Blender Amatista")
     if hasattr(bpy.types, "AMATISTA_OT_taller_accion"):
@@ -117,6 +122,7 @@ def _barra_superior(self, context):
 
 
 def _encender_amatista():
+    """Activa el add-on Amatista si está instalado pero apagado."""
     import addon_utils
 
     for mod in addon_utils.modules(refresh=False):
@@ -135,6 +141,7 @@ def _encender_amatista():
 
 @persistent
 def _al_abrir(*_args):
+    """Handler al abrir: si es la escena de inicio (no un archivo del alumno), entra al espacio Amatista."""
     if bpy.data.filepath:
         return  # un archivo del alumno: se respeta como está
     if hasattr(bpy.types, "AMATISTA_OT_espacio"):
@@ -142,6 +149,7 @@ def _al_abrir(*_args):
 
 
 def register():
+    """Aplica el tema, añade la barra superior y los handlers de arranque de la plantilla."""
     aplicar_tema()
     bpy.types.TOPBAR_HT_upper_bar.prepend(_barra_superior)
     if _al_abrir not in bpy.app.handlers.load_factory_startup_post:
@@ -152,6 +160,7 @@ def register():
 
 
 def unregister():
+    """Quita la barra superior y los handlers de la plantilla."""
     try:
         bpy.types.TOPBAR_HT_upper_bar.remove(_barra_superior)
     except ValueError:

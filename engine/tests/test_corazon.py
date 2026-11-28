@@ -23,7 +23,9 @@ BLENDER = perfiles.perfil("blender")
 
 
 class Reporte:
+    """Reporte falso mínimo (results, completed…) para alimentar al director sin ejecutar el motor."""
     def __init__(self, ids, pasados=(), completo=False, mensajes=None):
+        """Crea un resultado por objetivo: aprobados los de ``pasados``, con mensajes opcionales."""
         mensajes = mensajes or {}
         self.results = tuple(ValidationResult(t, "x", t in pasados, mensajes.get(t, f"falta {t}")) for t in ids)
         self.completed = completo
@@ -33,15 +35,18 @@ class Reporte:
 
 @pytest.fixture(scope="module")
 def tren():
+    """Fixture: la práctica del tren (módulo 1)."""
     return load_practice(TREN)
 
 
 @pytest.fixture
 def ids(tren):
+    """Fixture: ids de los pasos del guion del tren, en orden."""
     return tuple(p.id for p in guion_de_practica(tren).pasos)
 
 
 def _director(tren, adaptador=None, **kw):
+    """Crea un director para la práctica con un adaptador simulado de Blender (o el dado)."""
     adaptador = adaptador or AdaptadorSimulado(BLENDER)
     return corazon.Director(tren, BLENDER, adaptador.capacidades(), **kw), adaptador
 
@@ -50,6 +55,7 @@ def _director(tren, adaptador=None, **kw):
 
 
 def test_el_contrato_tiene_version_y_el_corazon_no_importa_bpy():
+    """Comprueba la versión del contrato y que ningún módulo del corazón importa bpy."""
     assert corazon.CONTRATO == "amatista.corazon/1" and corazon.VERSION.startswith("1.")
     carpeta = Path(corazon.__file__).parent
     for archivo in carpeta.rglob("*.py"):
@@ -57,6 +63,7 @@ def test_el_contrato_tiene_version_y_el_corazon_no_importa_bpy():
 
 
 def test_cada_perfil_ubica_las_herramientas_base():
+    """Comprueba que los perfiles de Blender y A-Frame ubican todas las herramientas base y están estables."""
     todos = perfiles.todos()
     assert set(todos) == {"blender", "aframe"}
     for nombre, p in todos.items():
@@ -67,6 +74,7 @@ def test_cada_perfil_ubica_las_herramientas_base():
 
 
 def test_el_perfil_de_blender_es_la_tabla_del_guion():
+    """Comprueba que el perfil de Blender coincide con la tabla de guion/donde.py en ambos idiomas."""
     from amatista_engine.guion import donde
 
     assert set(BLENDER.lugares) == set(donde.TABLA)
@@ -79,12 +87,14 @@ def test_el_perfil_de_blender_es_la_tabla_del_guion():
 
 
 def test_ninguna_frase_de_ningun_perfil_dice_que_algo_brilla():
+    """Comprueba que ninguna frase de perfil promete que algo «brilla» o «se ilumina»."""
     for p in perfiles.todos().values():
         for lugar in p.lugares.values():
             assert not re.search(r"brilla|ilumina", p.frase(lugar), re.I), (p.software, lugar.herramienta)
 
 
 def test_la_foto_del_motor_web_es_una_escena_del_corazon():
+    """Comprueba que la foto del motor web se convierte en SceneState (ejes, etiquetas y zonas)."""
     escena = escena_desde_foto({"objetos": {"caja": {"x": 1, "y": 0.5, "z": 2, "tocado": True}},
                                 "zonas": {"meta": {"x": 0, "z": 0, "radio": 1.5}}})
     caja = next(o for o in escena.objects if o.name == "caja")
@@ -97,6 +107,7 @@ def test_la_foto_del_motor_web_es_una_escena_del_corazon():
 
 
 def test_la_senal_cae_a_decir_si_el_programa_no_sabe_hacerla():
+    """Comprueba que, si el programa no sabe ejecutar la señal, se degrada a «decir»."""
     lugar = BLENDER.lugar("transform.move")
     solo_texto = Capacidades("blender")
     s = senales.elegir(lugar, BLENDER, solo_texto, a_pedido=True)
@@ -106,6 +117,7 @@ def test_la_senal_cae_a_decir_si_el_programa_no_sabe_hacerla():
 
 
 def test_un_menu_no_se_abre_solo():
+    """Comprueba que un menú solo se abre a pedido del alumno, nunca automáticamente."""
     todo = Capacidades("blender", senales=frozenset(c.TIPOS_SENAL))
     agregar = BLENDER.lugar("object.add")
     assert senales.elegir(agregar, BLENDER, todo, a_pedido=False).tipo == c.DECIR
@@ -113,6 +125,7 @@ def test_un_menu_no_se_abre_solo():
 
 
 def test_solo_se_dice_lo_que_el_programa_confirmo():
+    """Comprueba que el texto «Te dejé…» solo aparece cuando el programa confirmó la señal."""
     s = senales.elegir(BLENDER.lugar("transform.scale"), BLENDER,
                        Capacidades("blender", senales=frozenset({c.ELEGIR_HERRAMIENTA})), a_pedido=True)
     e = senales.iniciar(s, 0)
@@ -124,6 +137,7 @@ def test_solo_se_dice_lo_que_el_programa_confirmo():
 
 
 def test_la_senal_no_caduca_por_reloj_solo_si_deja_de_ser_verdad():
+    """Comprueba que una señal vigente no caduca con el tiempo, solo cuando deja de cumplirse."""
     s = senales.elegir(BLENDER.lugar("transform.move"), BLENDER,
                        Capacidades("blender", senales=frozenset({c.ELEGIR_HERRAMIENTA})), a_pedido=True)
     e = senales.tras_ejecutar(senales.iniciar(s, 0), c.ResultadoSenal(True), 0)
@@ -137,6 +151,7 @@ def test_la_senal_no_caduca_por_reloj_solo_si_deja_de_ser_verdad():
 
 
 def test_el_andamio_se_retira_con_el_uso_y_vuelve_con_los_tropiezos():
+    """Comprueba que el escalón de ayuda baja con usos solos y sube con los tropiezos."""
     h = andamiaje.Historial()
     pasos = []
     for _ in range(5):
@@ -151,12 +166,14 @@ def test_el_andamio_se_retira_con_el_uso_y_vuelve_con_los_tropiezos():
 
 
 def test_lo_que_no_se_usa_en_una_semana_baja_un_escalon():
+    """Comprueba que una herramienta sin uso en una semana vuelve a un escalón de más ayuda."""
     u = andamiaje.Uso(solos=5, ultimo=1)
     assert andamiaje.escalon(u, 3 * andamiaje.DIA) == "reto"
     assert andamiaje.escalon(u, 8 * andamiaje.DIA) == "recordar"
 
 
 def test_el_historial_se_guarda_y_se_lee():
+    """Comprueba el ida y vuelta del historial a dict y la tolerancia a datos basura."""
     h = andamiaje.Historial()
     andamiaje.registrar(h, "object.add", con_ayuda=False, ahora=10)
     datos = json.loads(json.dumps(h.como_dict()))
@@ -169,6 +186,7 @@ def test_el_historial_se_guarda_y_se_lee():
 
 
 def test_el_director_senala_solo_la_primera_vez_y_lo_comprueba(tren, ids):
+    """Comprueba que el director señala la herramienta del primer paso y verifica la señal."""
     d, programa = _director(tren)
     t = d.ciclo(programa, Reporte(ids), 0)
     assert t.modo == c.TRABAJANDO and t.numero == 1 and t.nivel == "mostrar"
@@ -188,6 +206,7 @@ def test_el_director_senala_solo_la_primera_vez_y_lo_comprueba(tren, ids):
 
 
 def test_la_senal_del_paso_anterior_no_se_arrastra(tren, ids):
+    """Comprueba que al cambiar de paso no queda la señal del paso anterior."""
     d, programa = _director(tren)
     d.ciclo(programa, Reporte(ids, {"vagones", "ruedas", "ruedas-de-pie", "chimenea"}), 0)
     assert d.senal is not None and d.senal.senal.herramienta == "transform.scale"
@@ -197,6 +216,7 @@ def test_la_senal_del_paso_anterior_no_se_arrastra(tren, ids):
 
 
 def test_quien_ya_sabe_no_recibe_la_senal_sola(tren, ids):
+    """Comprueba que un alumno experto no recibe señal automática y solo se le ofrece pista tras un rato."""
     h = andamiaje.Historial({"transform.scale": andamiaje.Uso(solos=5, ultimo=0)})
     d, programa = _director(tren, historial=h)
     t = d.ciclo(programa, Reporte(ids, {"vagones", "ruedas", "ruedas-de-pie", "chimenea"}), 0)
@@ -207,6 +227,7 @@ def test_quien_ya_sabe_no_recibe_la_senal_sola(tren, ids):
 
 
 def test_las_pistas_son_del_paso_que_toca_y_marcan_ayuda(tren, ids):
+    """Comprueba que las pistas son del paso actual, seleccionan la pieza y cuentan como ayuda."""
     d, programa = _director(tren)
     programa.escena = SceneState(blender_version="", file_path="", file_saved=False,
                                  objects=(SceneObject("Cylinder.003", "MESH"),))
@@ -226,6 +247,7 @@ def test_las_pistas_son_del_paso_que_toca_y_marcan_ayuda(tren, ids):
 
 
 def test_terminar_y_deshacer(tren, ids):
+    """Comprueba el turno «Terminado» y que deshacer vuelve al paso y anota un tropiezo."""
     d, programa = _director(tren)
     t = d.ciclo(programa, Reporte(ids, set(ids), completo=True), 0)
     assert t.modo == c.TERMINADO and t.completo and t.ultimo.startswith("¡Terminado!")
@@ -235,6 +257,7 @@ def test_terminar_y_deshacer(tren, ids):
 
 
 def test_el_ultimo_aviso_no_desaparece_solo(tren, ids):
+    """Comprueba que el último aviso persiste con el paso del tiempo."""
     d, programa = _director(tren)
     d.ciclo(programa, Reporte(ids), 0)
     d.ciclo(programa, Reporte(ids, {"vagones"}), 1)
@@ -242,6 +265,7 @@ def test_el_ultimo_aviso_no_desaparece_solo(tren, ids):
 
 
 def test_el_turno_se_vuelve_json(tren, ids):
+    """Comprueba que el turno se serializa a JSON con contrato, señal y pasos."""
     d, programa = _director(tren)
     t = d.ciclo(programa, Reporte(ids), 0)
     datos = json.loads(json.dumps(t.como_dict(), ensure_ascii=False))
@@ -249,6 +273,7 @@ def test_el_turno_se_vuelve_json(tren, ids):
 
 
 def test_con_el_motor_de_verdad(tren):
+    """Comprueba un ciclo del director con el motor real evaluando la escena simulada."""
     d, programa = _director(tren)
     reporte = create_default_engine().evaluate(tren, programa.capturar())
     t = d.ciclo(programa, reporte, 0)
@@ -259,6 +284,7 @@ def test_con_el_motor_de_verdad(tren):
 
 
 def test_una_extension_cambia_el_comportamiento_sin_tocar_el_corazon(tren, ids):
+    """Comprueba que una extensión modifica pasos y turno y observa los eventos."""
     vistos = []
     ext = corazon.Extension("mia", aporta={
         "observadores": [lambda ev, turno: vistos.append(ev.tipo)],
@@ -275,7 +301,9 @@ def test_una_extension_cambia_el_comportamiento_sin_tocar_el_corazon(tren, ids):
 
 
 def test_una_extension_que_falla_no_rompe_nada(tren, ids):
+    """Comprueba que una extensión que lanza excepciones no rompe el turno y queda registrada."""
     def rompe(*_):
+        """Aportación de prueba que siempre falla."""
         raise RuntimeError("ups")
 
     exts = corazon.Extensiones()
@@ -286,6 +314,7 @@ def test_una_extension_que_falla_no_rompe_nada(tren, ids):
 
 
 def test_las_extensiones_piden_el_contrato_correcto():
+    """Comprueba que se rechazan extensiones de otro contrato, con puntos inexistentes o repetidas."""
     exts = corazon.Extensiones()
     with pytest.raises(extensiones.ErrorExtension, match="corazon/2"):
         exts.instalar(corazon.Extension("futura", requiere="2"))
@@ -297,6 +326,7 @@ def test_las_extensiones_piden_el_contrato_correcto():
 
 
 def test_rescate_tras_tropiezos_vuelve_a_mostrar(tren, ids):
+    """Comprueba que la extensión de rescate vuelve a «mostrar» tras tropiezos seguidos."""
     exts = corazon.Extensiones()
     exts.instalar(extensiones.crear("rescate-tras-tropiezos"))
     h = andamiaje.Historial({"object.add": andamiaje.Uso(solos=9)})
@@ -307,6 +337,7 @@ def test_rescate_tras_tropiezos_vuelve_a_mostrar(tren, ids):
 
 
 def test_vistas_espaciales_agrega_una_cuarta_pista(tren, ids):
+    """Comprueba que la extensión de vistas espaciales añade la pista «¿Desde otro ángulo?»."""
     exts = corazon.Extensiones()
     exts.instalar(extensiones.crear("vistas-espaciales"))
     d, programa = _director(tren, extensiones=exts)
@@ -320,12 +351,14 @@ def test_vistas_espaciales_agrega_una_cuarta_pista(tren, ids):
 
 
 def test_las_ramas_del_repositorio_estan_bien():
+    """Comprueba que las ramas del repositorio cargan y no tienen problemas."""
     todas = ramas.cargar_ramas(RAMAS)
     assert {"blender-principiante", "blender-reto", "aframe-web"} <= set(todas)
     assert ramas.revisar(todas) == ()
 
 
 def test_una_rama_hereda_y_quita(tren, ids):
+    """Comprueba la herencia de ramas (software, extensiones quitadas, senal_sola)."""
     todas = ramas.cargar_ramas(RAMAS)
     reto = ramas.resolver(todas["blender-reto"], todas)
     assert reto.software == "blender" and reto.senal_sola is False
@@ -336,6 +369,7 @@ def test_una_rama_hereda_y_quita(tren, ids):
 
 
 def test_una_rama_mal_escrita_se_explica():
+    """Comprueba que los errores de ramas (formato, andamio, ciclos, software) se explican."""
     with pytest.raises(ramas.ErrorRama, match="formato"):
         ramas.rama_desde_dict({"id": "x"})
     with pytest.raises(ramas.ErrorRama, match="andamio no tiene"):
@@ -352,16 +386,21 @@ def test_una_rama_mal_escrita_se_explica():
 
 
 def test_el_adaptador_simulado_cumple_el_contrato():
+    """Comprueba que el adaptador simulado pasa la conformidad para cada perfil."""
     for p in perfiles.todos().values():
         assert revisar_adaptador(AdaptadorSimulado(p)) == [], p.software
 
 
 def test_la_conformidad_encuentra_un_adaptador_mentiroso():
+    """Comprueba que la conformidad detecta un adaptador que anuncia señales que no cumple."""
     class Mentiroso(AdaptadorBase):
+        """Adaptador falso que dice hacer señales que no hace."""
         def capacidades(self):
+            """Anuncia «decir» y «elegir herramienta»."""
             return Capacidades("blender", senales=frozenset({c.DECIR, c.ELEGIR_HERRAMIENTA}))
 
         def ejecutar(self, senal):
+            """Dice que todo lo hizo (aunque no lo haga)."""
             return c.ResultadoSenal(True)  # dice que todo lo hizo
 
     problemas = revisar_adaptador(Mentiroso(BLENDER))

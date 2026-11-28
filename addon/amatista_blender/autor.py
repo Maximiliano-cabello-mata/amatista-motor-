@@ -16,11 +16,13 @@ from . import _motor, ajustes, red
 
 
 def _nombre_texto():
+    """Nombre del bloque de texto de Blender que guarda el borrador (por defecto «amatista_practica.json»)."""
     sc = bpy.context.scene
     return (sc.amatista_autor.texto if sc else "") or "amatista_practica.json"
 
 
 def texto_borrador(crear=False):
+    """Bloque de texto del borrador en bpy.data.texts (lo crea si ``crear``), o None."""
     nombre = _nombre_texto()
     texto = bpy.data.texts.get(nombre)
     if texto is None and crear:
@@ -29,6 +31,7 @@ def texto_borrador(crear=False):
 
 
 def leer_borrador():
+    """JSON del borrador como dict, o None si no hay texto o no es JSON válido."""
     texto = texto_borrador()
     if texto is None:
         return None
@@ -40,6 +43,7 @@ def leer_borrador():
 
 
 def escribir_borrador(datos):
+    """Reescribe el bloque de texto del borrador con ``datos`` en JSON con sangría; devuelve ``datos``."""
     texto = texto_borrador(crear=True)
     texto.clear()
     texto.write(json.dumps(datos, ensure_ascii=False, indent=2) + "\n")
@@ -47,6 +51,7 @@ def escribir_borrador(datos):
 
 
 def _slug(texto):
+    """Id seguro a partir de un texto: minúsculas, sin tildes, «_» entre palabras, máx. 40 («objetivo» si queda vacío)."""
     texto = texto.strip().lower()
     for a, b in (("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u"), ("ñ", "n"), ("ü", "u")):
         texto = texto.replace(a, b)
@@ -79,6 +84,11 @@ TEXTO_PRUEBAS = "amatista_pruebas.json"
 
 
 def agregar_pildora(pildora_id, titulo, texto, disparo="start", objetivo="", teclas=""):
+    """Añade una píldora de teoría al borrador con su disparo y teclas.
+
+    Raises:
+        ValueError: si no hay borrador, la píldora ya existe o faltan datos.
+    """
     datos = leer_borrador()
     if datos is None:
         raise ValueError("Primero crea o abre un borrador.")
@@ -103,6 +113,7 @@ def agregar_pildora(pildora_id, titulo, texto, disparo="start", objetivo="", tec
 
 
 def leer_pruebas(practica_id):
+    """Casos de prueba guardados en el texto «amatista_pruebas.json» para la práctica (estructura vacía si no hay)."""
     texto = bpy.data.texts.get(TEXTO_PRUEBAS)
     try:
         datos = json.loads(texto.as_string()) if texto else None
@@ -147,6 +158,7 @@ def caso_de_prueba(context, nombre):
 
 
 def borrador_desde_practica(definicion):
+    """Escribe una copia profunda de la definición de una práctica como borrador."""
     return escribir_borrador(json.loads(json.dumps(definicion)))
 
 
@@ -198,6 +210,11 @@ def parametros_desde_formulario(autor):
 
 
 def agregar_objetivo(autor):
+    """Añade al borrador el objetivo armado en el constructor del panel (id único, validador, parámetros, consejo).
+
+    Raises:
+        ValueError: si no hay borrador o faltan datos del constructor.
+    """
     datos = leer_borrador()
     if datos is None:
         raise ValueError("Primero crea o abre un borrador de práctica.")
@@ -225,6 +242,11 @@ def agregar_objetivo(autor):
 
 
 def _objetivo(datos, objetivo_id):
+    """Objetivo del borrador con ese id.
+
+    Raises:
+        ValueError: si no existe.
+    """
     for t in datos.get("targets", []):
         if t.get("id") == objetivo_id:
             return t
@@ -232,6 +254,7 @@ def _objetivo(datos, objetivo_id):
 
 
 def quitar_objetivo(objetivo_id):
+    """Quita el objetivo del borrador y lo borra de los «requires» de los demás."""
     datos = leer_borrador() or {}
     datos["targets"] = [t for t in datos.get("targets", []) if t.get("id") != objetivo_id]
     for t in datos["targets"]:
@@ -241,6 +264,7 @@ def quitar_objetivo(objetivo_id):
 
 
 def mover_objetivo(objetivo_id, paso):
+    """Mueve el objetivo ``paso`` posiciones (limitado a la lista) en el borrador."""
     datos = leer_borrador() or {}
     objetivos = datos.get("targets", [])
     indice = next((i for i, t in enumerate(objetivos) if t.get("id") == objetivo_id), None)
@@ -252,6 +276,11 @@ def mover_objetivo(objetivo_id, paso):
 
 
 def agregar_pista(objetivo_id, texto):
+    """Añade una pista al objetivo y devuelve su nivel.
+
+    Raises:
+        ValueError: si el texto está vacío o el objetivo no existe.
+    """
     if not texto.strip():
         raise ValueError("Escribe el texto de la pista.")
     datos = leer_borrador() or {}
@@ -262,6 +291,7 @@ def agregar_pista(objetivo_id, texto):
 
 
 def quitar_pista(objetivo_id, indice):
+    """Quita la pista ``indice`` del objetivo (si existe)."""
     datos = leer_borrador() or {}
     objetivo = _objetivo(datos, objetivo_id)
     pistas = objetivo.get("hints", [])
@@ -271,6 +301,7 @@ def quitar_pista(objetivo_id, indice):
 
 
 def compilar():
+    """Compila el borrador con el motor (CompileResult) o None si no hay borrador."""
     datos = leer_borrador()
     if datos is None:
         return None
@@ -317,6 +348,7 @@ def publicar(curso_id="", leccion_id="", nota="", al_terminar=None):
     }
 
     def listo(respuesta, error, estado):
+        """Si la API asignó versión, la guarda en el borrador; luego avisa a ``al_terminar``."""
         if error is None and respuesta.get("version"):
             datos = leer_borrador() or {}
             datos["version"] = respuesta["version"]
@@ -343,6 +375,11 @@ def registrar_verificacion(curso_id, leccion_id, resultado, diferencias="", al_t
 
 
 def exportar(ruta):
+    """Escribe en ``ruta`` el JSON canónico del borrador compilado.
+
+    Raises:
+        ValueError: si no hay borrador o no compila (con el primer error).
+    """
     resultado = compilar()
     if resultado is None or not resultado.ok:
         raise ValueError(resultado.errors[0] if resultado else "No hay borrador.")

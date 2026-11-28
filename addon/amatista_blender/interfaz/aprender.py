@@ -39,6 +39,7 @@ DISPARO_TEXTO = {
 
 
 def icono_visual(pildora):
+    """Icono de Blender para el visual de una píldora (imagen u otro tipo conocido; bombilla por defecto)."""
     visual = pildora.visual or ""
     if visual.startswith("image:"):
         return "IMAGE_DATA"
@@ -76,6 +77,7 @@ def tarjeta_pildora(layout, context, pildora, con_botones=True, grande=False):
 
 
 def _pregunta(layout, context, check, operador, **propiedades):
+    """Dibuja la pregunta de repaso como tarjeta con un botón por opción que llama a ``operador`` con su índice."""
     caja = estilo.tarjeta(layout, check.question, icon="QUESTION")
     col = caja.column(align=True)
     col.scale_y = 1.35
@@ -96,6 +98,7 @@ class AMATISTA_OT_pildora(bpy.types.Operator):
     pildora: bpy.props.StringProperty()
 
     def _buscar(self, context):
+        """Práctica activa y píldora pedida (o la principal del momento); (None, None) si no hay práctica."""
         practica = practicas.practica_activa(context)
         if practica is None:
             return None, None
@@ -104,9 +107,11 @@ class AMATISTA_OT_pildora(bpy.types.Operator):
         return practica, aprendizaje.pildora_principal()
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Abre el diálogo de la píldora de teoría (o termina sin diálogo en modo background); cancela si no hay píldora."""
         _, pildora = self._buscar(context)
         if pildora is None:
             return {"CANCELLED"}
@@ -116,6 +121,7 @@ class AMATISTA_OT_pildora(bpy.types.Operator):
         return context.window_manager.invoke_popup(self, width=440)
 
     def draw(self, context):
+        """Diálogo «Teoría rápida»: título y texto de la píldora y su pregunta de repaso (o «Entendido»)."""
         practica, pildora = self._buscar(context)
         if pildora is None:
             return
@@ -132,6 +138,7 @@ class AMATISTA_OT_pildora(bpy.types.Operator):
 
 
 class AMATISTA_OT_pildora_vista(bpy.types.Operator):
+    """Botón «Entendido»: marca la idea como leída (entra al repaso espaciado si tiene pregunta)."""
     bl_idname = "amatista.pildora_vista"
     bl_label = "Entendido"
     bl_description = "Marca la idea como leída (entra a tu repaso si tiene pregunta)"
@@ -139,6 +146,7 @@ class AMATISTA_OT_pildora_vista(bpy.types.Operator):
     pildora: bpy.props.StringProperty()
 
     def execute(self, context):
+        """Marca la píldora como vista en el avance del alumno y redibuja."""
         practica = practicas.practica_activa(context)
         if practica is None or not self.pildora:
             return {"CANCELLED"}
@@ -155,6 +163,7 @@ class AMATISTA_OT_responder_pildora(bpy.types.Operator):
     opcion: bpy.props.IntProperty()
 
     def execute(self, context):
+        """Registra la respuesta del alumno a la pregunta de la píldora, la marca vista y le dice si acertó."""
         practica = practicas.practica_activa(context)
         pildora = practica.pill(self.pildora) if practica else None
         if pildora is None or pildora.check is None:
@@ -178,9 +187,11 @@ class AMATISTA_OT_repaso(bpy.types.Operator):
     bl_description = "Responde lo que aprendiste en prácticas anteriores (fortalece la memoria)"
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Abre el diálogo «repaso rápido» si hay preguntas de repaso vencidas para esta práctica."""
         if not aprendizaje.repasos_pendientes(practicas.practica_activa(context)):
             return {"CANCELLED"}
         if bpy.app.background:
@@ -188,6 +199,7 @@ class AMATISTA_OT_repaso(bpy.types.Operator):
         return context.window_manager.invoke_popup(self, width=440)
 
     def draw(self, context):
+        """Diálogo «Antes de empezar: repaso rápido» con las preguntas pendientes de prácticas anteriores."""
         pendientes = aprendizaje.repasos_pendientes(practicas.practica_activa(context))
         layout = self.layout
         cabecera = layout.row()
@@ -214,6 +226,7 @@ class AMATISTA_OT_responder_repaso(bpy.types.Operator):
     opcion: bpy.props.IntProperty()
 
     def execute(self, context):
+        """Registra la respuesta del repaso (mueve la caja de Leitner) y avisa si fue correcta."""
         practica = practicas.practica_activa(context)
         pendiente = next((p for i, p in aprendizaje.repasos_pendientes(practica) if i == self.item), None)
         if pendiente is None:
@@ -239,15 +252,18 @@ class AMATISTA_OT_pausa(bpy.types.Operator):
     bl_label = "Progreso en pausa"
 
     def execute(self, context):
+        """Cerrar el diálogo no hace nada más."""
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """Abre el diálogo de pausa si un vigilante detuvo el progreso."""
         g = guia.guia_actual()
         if g is None or not g.paused or bpy.app.background:
             return {"CANCELLED"}
         return context.window_manager.invoke_popup(self, width=440)
 
     def draw(self, context):
+        """Diálogo «Tu progreso está en pausa»: qué detectó el vigilante y que, al arreglarlo, todo lo que llevaba vuelve a contar."""
         g = guia.guia_actual()
         if g is None:
             return
@@ -268,6 +284,7 @@ class AMATISTA_OT_pausa(bpy.types.Operator):
 
 
 class AMATISTA_OT_abrir_pestana(bpy.types.Operator):
+    """Botón «Muéstrame dónde está»: cambia el editor Propiedades a la pestaña de la que habla la teoría."""
     bl_idname = "amatista.abrir_pestana"
     bl_label = "Muéstrame dónde está"
     bl_description = "Cambia el panel Propiedades a la pestaña de la que habla la teoría"
@@ -275,6 +292,7 @@ class AMATISTA_OT_abrir_pestana(bpy.types.Operator):
     pestana: bpy.props.StringProperty()
 
     def execute(self, context):
+        """Abre la pestaña y avisa «Mira a la derecha»; si no hay editor Propiedades, explica dónde abrirlo."""
         if guia.abrir_pestana(context, self.pestana):
             guia.avisar("Mira a la derecha", "El panel Propiedades ya muestra esa pestaña.", "animo")
             return {"FINISHED"}
@@ -289,6 +307,7 @@ class AMATISTA_OT_pestana(bpy.types.Operator):
     pestana: bpy.props.StringProperty()
 
     def execute(self, context):
+        """Cambia la pestaña de la barra lateral de Amatista (practicar, aprender, curso…)."""
         context.window_manager.amatista.pestana = self.pestana
         return {"FINISHED"}
 

@@ -35,6 +35,7 @@ DICE_QUE_HACER = re.compile(
 
 @dataclass(frozen=True)
 class Paso:
+    """Un paso del guion: el objetivo que lo cumple, número, título, qué hacer, qué se ve al lograrlo, parte y herramienta."""
     id: str  # el objetivo de la práctica
     numero: int
     titulo: str
@@ -50,16 +51,19 @@ class Paso:
 
 @dataclass(frozen=True)
 class Guion:
+    """El guion de una práctica: sus pasos en orden de requisitos y el nivel."""
     practica_id: str
     titulo: str
     pasos: Tuple[Paso, ...]
     nivel: int = 1
 
     def paso(self, objetivo: str) -> Optional[Paso]:
+        """Paso del objetivo con ese id, o None."""
         return next((p for p in self.pasos if p.id == objetivo), None)
 
     @property
     def total(self) -> int:
+        """Número de pasos."""
         return len(self.pasos)
 
 
@@ -69,6 +73,7 @@ def _orden(objetivos) -> List:
     hechos, salida = set(), []
 
     def poner(t, camino=()):
+        """Añade el objetivo después de sus requisitos (orden topológico; ignora ciclos)."""
         if t.id in hechos or t.id in camino:
             return
         for r in t.requires:
@@ -83,6 +88,7 @@ def _orden(objetivos) -> List:
 
 
 def _etiqueta(practica, rol: str) -> str:
+    """Etiqueta del rol en la práctica (o el propio id)."""
     for r in getattr(practica, "roles", ()) or ():
         if r.id == rol:
             return r.label
@@ -90,6 +96,7 @@ def _etiqueta(practica, rol: str) -> str:
 
 
 def _primitiva(practica, objetivo) -> str:
+    """Primitiva que pide el objetivo (params.primitive o la de la pieza de referencia de su rol); «» si no se sabe."""
     p = objetivo.params or {}
     if p.get("primitive"):
         return str(p["primitive"])
@@ -106,10 +113,12 @@ NUMEROS = {1: "un", 2: "dos", 3: "tres", 4: "cuatro", 5: "cinco", 6: "seis", 7: 
 
 
 def _cuantos(n: int) -> str:
+    """Número en palabras («dos», «tres») si está en la tabla; si no, en cifras."""
     return NUMEROS.get(n, str(n))
 
 
 def _plural(palabra: str) -> str:
+    """Plural sencillo en español (+s tras vocal, +es tras consonante)."""
     if not palabra or palabra.endswith("s"):
         return palabra
     return palabra + ("s" if palabra[-1] in "aeiouáéó" else "es")
@@ -183,6 +192,7 @@ def _haz_generico(practica, t) -> str:
 
 
 def _herramienta(practica, t, herramientas_actividad: Sequence[str]) -> str:
+    """Herramienta de Blender que usa el paso (para señalarla): según el validador, el tipo de modificador o el rol."""
     if t.validator == "taller.molde":
         return next((h for h in herramientas_actividad if _donde.de(h) is not None), "")
     if t.validator == "role.count" and (not _primitiva(practica, t) or re.search(r"\brol\b|dile a amatista", t.tip, re.I)):
@@ -230,6 +240,7 @@ def guion_de_practica(practica, herramientas_actividad: Sequence[str] = (), haz_
 
 
 def resumen(g: Guion) -> Dict[str, object]:
+    """Resumen JSON del guion (práctica, título y pasos) para depuración y la API."""
     return {"practica": g.practica_id, "titulo": g.titulo,
             "pasos": [{"id": p.id, "numero": p.numero, "titulo": p.titulo, "haz": p.haz, "herramienta": p.herramienta}
                       for p in g.pasos]}

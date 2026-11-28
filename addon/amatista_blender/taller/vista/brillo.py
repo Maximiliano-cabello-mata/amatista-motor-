@@ -54,6 +54,7 @@ REGIONES = (("VIEW_3D", "TOOLS"), ("VIEW_3D", "HEADER"), ("VIEW_3D", "UI"), ("PR
 
 
 def _prefs_ok():
+    """True si el alumno no desactivó el brillo de herramientas."""
     p = ajustes.prefs()
     return p is None or getattr(p, "brillo_herramientas", True)
 
@@ -107,16 +108,19 @@ def encender_zona(zona_id, nombre, tecla="", herramienta="", segundos=DURA):
 
 
 def apagar():
+    """Apaga el brillo y redibuja."""
     if ESTADO["hasta"]:
         ESTADO.update(hasta=0.0, region="", espacio="VIEW_3D", texto="", herramienta="")
         _redibujar()
 
 
 def activo():
+    """True si hay un brillo encendido que todavía no venció."""
     return ESTADO["hasta"] > time.time()
 
 
 def _redibujar():
+    """Redibuja las áreas donde puede haber brillo."""
     if bpy.app.background:
         return
     for ventana in getattr(bpy.context.window_manager, "windows", ()) or ():
@@ -126,6 +130,7 @@ def _redibujar():
 
 
 def _latir():
+    """Temporizador de la animación del brillo (20 fps); se apaga solo al vencer."""
     _redibujar()
     if not activo():
         apagar()
@@ -134,6 +139,7 @@ def _latir():
 
 
 def _intensidad():
+    """Intensidad del brillo: pulsante, o fija si el alumno desactivó las animaciones."""
     p = ajustes.prefs()
     if p is not None and not getattr(p, "animaciones", True):
         return 0.85
@@ -141,6 +147,7 @@ def _intensidad():
 
 
 def _borde(region, grosor):
+    """Dibuja el borde brillante alrededor de la región de la interfaz que se ilumina."""
     from ...interfaz import hud
 
     shader = gpu.shader.from_builtin("UNIFORM_COLOR")
@@ -155,6 +162,7 @@ def _borde(region, grosor):
 
 
 def _me_toca(contexto):
+    """True si la vista la ocupa el taller o una ficha (los únicos que iluminan)."""
     from ...interfaz import turno
 
     return turno.de_quien(contexto) in (turno.TALLER, turno.FICHA)
@@ -200,6 +208,7 @@ def dibujar_etiqueta():
 
 
 def activar(encendido=True):
+    """Registra o quita los draw handlers del brillo en las regiones de la vista 3D (nada sin GPU o en background)."""
     from ... import saneamiento
 
     if gpu is None or bpy.app.background:

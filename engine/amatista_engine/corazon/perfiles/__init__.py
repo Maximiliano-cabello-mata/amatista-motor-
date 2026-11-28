@@ -20,17 +20,24 @@ _PERFILES: Dict[str, Perfil] = {}
 
 
 def registrar(perfil: Perfil, reemplazar: bool = False) -> None:
+    """Registra el perfil de un programa.
+
+    Raises:
+        ValueError: si ya hay uno para ese software y no se pide ``reemplazar``.
+    """
     if perfil.software in _PERFILES and not reemplazar:
         raise ValueError(f"Ya hay un perfil para {perfil.software}")
     _PERFILES[perfil.software] = perfil
 
 
 def perfil(software: str) -> Optional[Perfil]:
+    """Perfil del software («blender», «aframe»…), o None si no hay."""
     _cargar()
     return _PERFILES.get(software)
 
 
 def todos() -> Dict[str, Perfil]:
+    """Copia del registro completo de perfiles {software: Perfil}."""
     _cargar()
     return dict(_PERFILES)
 
@@ -39,6 +46,7 @@ _CARGADOS = False
 
 
 def _cargar() -> None:
+    """Carga una sola vez los perfiles incluidos (Blender y A-Frame) sin pisar los registrados a mano."""
     global _CARGADOS
     if _CARGADOS:
         return

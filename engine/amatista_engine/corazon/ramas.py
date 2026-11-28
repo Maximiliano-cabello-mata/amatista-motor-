@@ -29,11 +29,13 @@ FORMATO = "amatista.rama/1"
 
 
 class ErrorRama(ValueError):
+    """Error al leer o armar una rama (formato, id, andamio o extensiones inválidos)."""
     pass
 
 
 @dataclass(frozen=True)
 class Rama:
+    """Variante del motor descrita en JSON: software, herencia, extensiones a poner/quitar, ajustes del andamio y senal_sola."""
     id: str
     software: str
     nombre: str = ""
@@ -46,10 +48,16 @@ class Rama:
 
     @property
     def umbrales(self) -> andamiaje.Umbrales:
+        """Umbrales del andamio de esta rama."""
         return andamiaje.Umbrales.desde(self.andamio)
 
 
 def rama_desde_dict(datos: Mapping[str, Any]) -> Rama:
+    """Construye una Rama desde su JSON (``"formato": "amatista.rama/1"``).
+
+    Raises:
+        ErrorRama: formato incorrecto, sin id o claves de andamio desconocidas.
+    """
     if not isinstance(datos, Mapping) or datos.get("formato") != FORMATO:
         raise ErrorRama(f"Una rama empieza con \"formato\": \"{FORMATO}\"")
     if not datos.get("id"):
@@ -65,6 +73,11 @@ def rama_desde_dict(datos: Mapping[str, Any]) -> Rama:
 
 
 def leer_rama(ruta) -> Rama:
+    """Lee una rama desde un archivo JSON en disco.
+
+    Raises:
+        ErrorRama: si no se puede leer o el contenido no es válido.
+    """
     try:
         datos = json.loads(Path(ruta).read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
@@ -73,6 +86,11 @@ def leer_rama(ruta) -> Rama:
 
 
 def cargar_ramas(carpeta) -> Dict[str, Rama]:
+    """Lee todas las ramas ``*.json`` de una carpeta, indexadas por id.
+
+    Raises:
+        ErrorRama: si dos archivos usan el mismo id o alguno es inválido.
+    """
     salida: Dict[str, Rama] = {}
     for ruta in sorted(Path(carpeta).glob("*.json")):
         r = leer_rama(ruta)
@@ -128,6 +146,7 @@ def revisar(todas: Mapping[str, Rama]) -> Tuple[str, ...]:
 
 
 def armar_extensiones(rama: Rama, extra: Iterable[_ext.Extension] = ()) -> _ext.Extensiones:
+    """Crea el conjunto de extensiones de la rama (las incluidas por id más las ``extra``)."""
     exts = _ext.Extensiones()
     for ext_id in rama.extensiones:
         exts.instalar(_ext.crear(ext_id))

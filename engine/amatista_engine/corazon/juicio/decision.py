@@ -23,6 +23,7 @@ GIRAR, AJUSTAR_TAMANO, AGREGAR, SEGUIR, LISTO = "girar", "ajustar_tamaño", "agr
 
 @dataclass(frozen=True)
 class Decision:
+    """La única indicación que se le da al alumno: acción (GIRAR, AJUSTAR_TAMANO, AGREGAR, SEGUIR, LISTO), texto y objeto a resaltar."""
     accion: str  # GIRAR, AJUSTAR_TAMANO, AGREGAR, SEGUIR o LISTO
     texto: str  # lo que se le dice al alumno, con medidas
     objeto: str = ""  # el objeto del alumno a resaltar, si lo hay
@@ -31,15 +32,18 @@ class Decision:
 
 
 def _num(metros: float) -> str:
+    """Formatea metros con hasta 2 decimales y « m» («0.5 m»)."""
     return f"{metros:.2f}".rstrip("0").rstrip(".") + " m"
 
 
 def _quien(d: Diferencia, pieza: EstadoPieza) -> str:
+    """Cómo nombrar la pieza en el texto: «objeto» o «objeto» (etiqueta) si el nombre no coincide con el rol."""
     etiqueta = d.plano.etiqueta(pieza.grupo)
     return f"«{pieza.objeto}» ({etiqueta})" if pieza.objeto.split(".")[0].lower() != etiqueta.lower() else f"«{pieza.objeto}»"
 
 
 def _girar(d: Diferencia) -> Optional[Decision]:
+    """Regla 1: si hay una pieza con las medidas bien pero en otros ejes, pedir girarla con R."""
     pieza = next(iter(d.con_estado(GIRADA)), None)
     if pieza is None:
         return None
@@ -50,6 +54,7 @@ def _girar(d: Diferencia) -> Optional[Decision]:
 
 
 def _tamano(d: Diferencia) -> Optional[Decision]:
+    """Regla 2: si una pieza tiene un lado fuera de proporción, pedir escalarla con S en ese eje."""
     pieza = next(iter(d.con_estado(TAMANO)), None)
     if pieza is None:
         return None
@@ -61,6 +66,7 @@ def _tamano(d: Diferencia) -> Optional[Decision]:
 
 
 def _agregar(d: Diferencia) -> Optional[Decision]:
+    """Regla 3: si falta una pieza, pedir añadirla (o duplicar con Shift+D si ya hay otras del grupo), con sus medidas."""
     falta = next(iter(d.con_estado(FALTA)), None)
     if falta is None:
         return None

@@ -37,6 +37,7 @@ class Capacidades:
     idioma: str = "es"
 
     def puede(self, tipo_senal: str) -> bool:
+        """True si el programa sabe ejecutar ese tipo de señal («decir» siempre se puede)."""
         return tipo_senal == DECIR or tipo_senal in self.senales
 
 
@@ -54,6 +55,7 @@ class Perfil:
     traducir: Optional[Callable[[str, str], str]] = None
 
     def lugar(self, herramienta: str) -> Optional[Lugar]:
+        """Dónde está una herramienta en la interfaz del programa; si no hay entrada exacta, prueba con su raíz («view.numpad» → «view»)."""
         if not herramienta:
             return None
         if herramienta in self.lugares:
@@ -61,10 +63,13 @@ class Perfil:
         raiz = herramienta.split(".", 1)[0]
         return self.lugares.get(raiz)
 
+    # [REVISION-MUERTO] herramienta_para() no tiene llamadas en el repo (grep).
     def herramienta_para(self, validador: str) -> str:
+        """Herramienta del programa asociada a un validador del motor («» si el perfil no la conoce)."""
         return self.por_validador.get(validador, "")
 
     def en_pantalla(self, texto: str, idioma: str = "") -> str:
+        """Texto adaptado a cómo lo ve el alumno en pantalla (p. ej. menús en el idioma de la interfaz); si traducir falla, el original."""
         if self.traducir is None or not texto:
             return texto
         try:
@@ -88,6 +93,7 @@ class Perfil:
         return self.en_pantalla(". ".join(partes) + ".", idioma)
 
     def faltan(self, herramientas: Tuple[str, ...] = HERRAMIENTAS_BASE) -> Tuple[str, ...]:
+        """Herramientas de ``herramientas`` que el perfil no sabe ubicar (sirve para revisar perfiles incompletos)."""
         return tuple(h for h in herramientas if self.lugar(h) is None)
 
 
@@ -98,18 +104,23 @@ class Adaptador:
     perfil: Perfil
 
     def capacidades(self) -> Capacidades:  # pragma: no cover - interfaz
+        """Interfaz: qué programa es, su versión, idioma y qué señales sabe ejecutar."""
         raise NotImplementedError
 
     def capturar(self) -> SceneState:  # pragma: no cover - interfaz
+        """Interfaz: foto normalizada (SceneState) de la escena actual del programa."""
         raise NotImplementedError
 
     def ejecutar(self, senal: Senal) -> ResultadoSenal:  # pragma: no cover - interfaz
+        """Interfaz: ejecuta una señal en el programa (elegir herramienta, abrir menú…) y dice si se pudo."""
         raise NotImplementedError
 
     def comprobar(self, senal: Senal) -> bool:  # pragma: no cover - interfaz
+        """Interfaz: True si el efecto de la señal sigue visible en el programa (p. ej. la herramienta sigue elegida)."""
         raise NotImplementedError
 
     def herramienta_activa(self) -> str:  # pragma: no cover - interfaz
+        """Interfaz: id de la herramienta que el alumno tiene elegida ahora («» si no se sabe)."""
         raise NotImplementedError
 
 
@@ -122,6 +133,7 @@ class AdaptadorBase(Adaptador):
     """
 
     def __init__(self, perfil: Perfil, *, id: str = "", version: str = "", idioma: str = "es") -> None:
+        """Prepara un adaptador vacío para ``perfil``; las subclases llenan ``hacer`` (ejecutar) y ``ver`` (comprobar) por tipo de señal."""
         self.perfil = perfil
         self.id = id or perfil.software
         self._version = version
@@ -130,13 +142,16 @@ class AdaptadorBase(Adaptador):
         self.ver: Dict[str, Callable[[Senal], bool]] = {}
 
     def capacidades(self) -> Capacidades:
+        """Capacidades derivadas del perfil y de las señales registradas en ``hacer`` (más «decir»)."""
         return Capacidades(software=self.perfil.software, version=self._version,
                            senales=frozenset({DECIR, *self.hacer}), idioma=self._idioma)
 
     def capturar(self) -> SceneState:
+        """Escena vacía por defecto; los adaptadores reales devuelven la escena del programa."""
         return SceneState(blender_version="", file_path="", file_saved=False)
 
     def ejecutar(self, senal: Senal) -> ResultadoSenal:
+        """Ejecuta la señal con su función de ``hacer``; nunca lanza: los errores vuelven como ResultadoSenal fallido."""
         if senal.tipo == DECIR:
             return ResultadoSenal(True)
         hacer = self.hacer.get(senal.tipo)
@@ -148,6 +163,7 @@ class AdaptadorBase(Adaptador):
             return ResultadoSenal(False, f"error: {error}")
 
     def comprobar(self, senal: Senal) -> bool:
+        """Comprueba la señal con su función de ``ver``; False si no hay comprobación o si esta falla."""
         if senal.tipo == DECIR:
             return True
         ver = self.ver.get(senal.tipo)
@@ -159,6 +175,7 @@ class AdaptadorBase(Adaptador):
             return False
 
     def herramienta_activa(self) -> str:
+        """Por defecto no se sabe qué herramienta está elegida («»)."""
         return ""
 
 

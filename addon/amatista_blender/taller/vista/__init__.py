@@ -21,6 +21,7 @@ _MANEJADORES = []
 
 
 def redibujar():
+    """Redibuja todas las vistas 3D (nada en background)."""
     if bpy.app.background:
         return
     wm = getattr(bpy.context, "window_manager", None)
@@ -31,6 +32,7 @@ def redibujar():
 
 
 def dibujar_molde():
+    """Callback POST_VIEW: dibuja el molde de la actividad (cajas fantasma de las piezas) en la vista 3D, si le toca al taller."""
     from ...interfaz import turno
 
     contexto = bpy.context
@@ -57,16 +59,20 @@ class AMATISTA_GT_boton_taller(bpy.types.Gizmo):
     __slots__ = ("indice",)
 
     def setup(self):
+        """Inicializa el índice del botón de la tarjeta que representa este gizmo."""
         if not hasattr(self, "indice"):
             self.indice = 0
 
     def draw(self, context):
+        """No dibuja nada: el botón lo pinta la tarjeta; el gizmo solo recibe el clic."""
         pass
 
     def draw_select(self, context, select_id):
+        """Sin dibujo de selección (ver ``test_select``)."""
         pass
 
     def test_select(self, context, location):
+        """Detecta si el ratón está sobre su botón de la tarjeta (y abre la tarjeta compacta al acercarse); actualiza el hover."""
         indice = tarjeta.boton_en(context.region, location[0], location[1])
         clave = context.region.as_pointer() if context.region is not None else 0
         if tarjeta.raton(clave, location[0], location[1]) and context.area is not None:
@@ -91,12 +97,14 @@ class AMATISTA_GGT_tarjeta_taller(bpy.types.GizmoGroup):
 
     @classmethod
     def poll(cls, context):
+        """Activo cuando la tarjeta del taller, una ficha o la pastilla «Volver» ocupan la vista."""
         from ...interfaz import turno
 
         # motor 6.1: la ficha usa los mismos botones; motor 6.2: la pastilla «Volver» también
         return turno.de_quien(context) in (turno.TALLER, turno.FICHA, turno.VOLVER)
 
     def setup(self, context):
+        """Crea un gizmo por botón posible de la tarjeta, cada uno ligado al operador amatista.taller_boton."""
         for i in range(tarjeta.MAX_BOTONES):
             gz = self.gizmos.new(AMATISTA_GT_boton_taller.bl_idname)
             gz.indice = i
@@ -105,6 +113,7 @@ class AMATISTA_GGT_tarjeta_taller(bpy.types.GizmoGroup):
             propiedades.indice = i
 
     def draw_prepare(self, context):
+        """Oculta los gizmos sobrantes según cuántos botones tiene la tarjeta ahora."""
         clave = context.region.as_pointer() if context.region is not None else 0
         cuantos = len(tarjeta.BOTONES.get(clave) or ())
         for gz in self.gizmos:
@@ -115,6 +124,7 @@ CLASES = (AMATISTA_GT_boton_taller, AMATISTA_GGT_tarjeta_taller)
 
 
 def activar(encendido=True):
+    """Registra o quita los draw handlers del molde y la tarjeta y el brillo (nada sin GPU o en background)."""
     if gpu is None or bpy.app.background:
         return
     from ... import saneamiento
@@ -133,9 +143,11 @@ def activar(encendido=True):
 
 
 def register():
+    """Enciende el dibujo del taller."""
     activar(True)
 
 
 def unregister():
+    """Apaga el dibujo del taller y olvida los botones."""
     activar(False)
     tarjeta.BOTONES.clear()

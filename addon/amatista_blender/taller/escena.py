@@ -29,10 +29,12 @@ DATOS = {"cube": "Cube", "cylinder": "Cylinder", "sphere": "Sphere", "uv_sphere"
 
 
 def es_del_taller(sc):
+    """True si la escena es la mesa de trabajo del taller."""
     return bool(sc is not None and sc.get(MARCA))
 
 
 def _ventanas(context):
+    """Ventana del contexto o todas las abiertas."""
     ventana = getattr(context, "window", None) or getattr(bpy.context, "window", None)
     if ventana is not None:
         return [ventana]
@@ -40,6 +42,7 @@ def _ventanas(context):
 
 
 def _a_modo_objeto():
+    """Vuelve a Modo Objeto si el objeto activo está en otro modo."""
     obj = getattr(bpy.context, "active_object", None)
     if obj is not None and getattr(obj, "mode", "OBJECT") != "OBJECT":
         try:
@@ -150,6 +153,7 @@ def crear_pieza(sc, pieza, nombre=""):
 
 
 def _mirar(obj, punto):
+    """Orienta el objeto para que su -Z apunte al punto."""
     obj.rotation_euler = (Vector(punto) - obj.location).to_track_quat("-Z", "Y").to_euler()
 
 

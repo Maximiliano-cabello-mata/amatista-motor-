@@ -43,6 +43,7 @@ ANCHO, ALTO = 800, 500
 
 
 def _color(hexadecimal: str, alfa: float = 1.0):
+    """Color hexadecimal sRGB a RGBA lineal (lo que espera Blender), con alfa."""
     h = (hexadecimal or "#9b7bff").lstrip("#")
     srgb = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
     lineal = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in srgb]
@@ -50,6 +51,7 @@ def _color(hexadecimal: str, alfa: float = 1.0):
 
 
 def _entrada(nodo, *nombres):
+    """Primer input del nodo que exista entre ``nombres`` (cambian entre versiones de Blender), o None."""
     for nombre in nombres:
         if nombre in nodo.inputs:
             return nodo.inputs[nombre]
@@ -57,6 +59,7 @@ def _entrada(nodo, *nombres):
 
 
 def _material(bpy, nombre: str, color: str, ajustes: dict):
+    """Crea en Blender un material Principled con el color y ajustes (metálico, rugosidad, transmisión, alfa) de la pieza."""
     mat = bpy.data.materials.new(nombre)
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
@@ -78,6 +81,7 @@ def _material(bpy, nombre: str, color: str, ajustes: dict):
 
 
 def _agregar(bpy, pieza):
+    """Añade a la escena de Blender la primitiva de la pieza con sus segmentos."""
     segmentos = pieza.segments or 0
     ops = bpy.ops.mesh
     if pieza.primitive == "cube":
@@ -98,6 +102,7 @@ def _agregar(bpy, pieza):
 
 
 def _modificadores(bpy, obj, ajustes: dict):
+    """Añade a la pieza los modificadores de su presentación (bisel, subdivisión, sombreado suave, alambre)."""
     if ajustes.get("bevel"):
         m = obj.modifiers.new("Bisel", "BEVEL")
         m.width = float(ajustes["bevel"])
@@ -186,6 +191,7 @@ def armar(bpy, referencia, roles: dict):
 
 
 def _camara(bpy, referencia):
+    """Coloca una cámara que encuadra todas las mallas (o la que indique la referencia) y la deja activa."""
     from mathutils import Vector
 
     datos = referencia.camera or {}
@@ -203,6 +209,7 @@ def _camara(bpy, referencia):
 
 
 def _luces(bpy, referencia):
+    """Configura el mundo y las luces del render (las de la referencia o un sol y un relleno por defecto)."""
     from mathutils import Vector
 
     mundo = bpy.context.scene.world or bpy.data.worlds.new("Mundo")
@@ -244,6 +251,7 @@ def _luces(bpy, referencia):
 
 
 def renderizar(bpy, destino: Path, muestras: int):
+    """Renderiza la escena con Cycles en CPU a JPEG en ``destino`` (escribe en disco)."""
     escena = bpy.context.scene
     escena.render.engine = "CYCLES"
     escena.cycles.device = "CPU"
@@ -291,6 +299,7 @@ FIGURAS = ("figure.recognize", "figure.silhouette", "figure.resembles")
 
 
 def procesar(carpeta: Path, motor, render: bool, muestras: int) -> dict:
+    """Para una carpeta de práctica: escribe el plano SVG, arma la referencia en Blender, la evalúa con el motor y, si ``render``, la renderiza."""
     import bpy
     from amatista_engine.blender.adapter import capture_scene
 
@@ -327,6 +336,7 @@ def procesar(carpeta: Path, motor, render: bool, muestras: int) -> dict:
 
 
 def main(argv=None) -> int:
+    """CLI que se ejecuta dentro de Blender (``blender -b --python referencias.py -- ...``) para todas o algunas prácticas."""
     if "--" in sys.argv:  # blender -b --python referencias.py -- m1-tren
         argv = sys.argv[sys.argv.index("--") + 1:]
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])

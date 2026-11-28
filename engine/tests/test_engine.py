@@ -1,3 +1,4 @@
+"""Pruebas básicas del motor: progreso ponderado y evaluación de objetivos."""
 import unittest
 
 from amatista_engine import create_default_engine
@@ -10,7 +11,9 @@ from amatista_engine.models import (
 
 
 class EngineTests(unittest.TestCase):
+    """Casos unittest del motor (pytest los recoge por el prefijo test_)."""
     def test_progress_is_weighted(self):
+        """Comprueba que el progreso se pondera por el peso de los objetivos."""
         practice = PracticeDefinition(
             schema="amatista.practice/1",
             id="test",

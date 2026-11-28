@@ -36,6 +36,7 @@ except ImportError:  # Blender sin GPU (modo background)
 
 from ... import _motor, ajustes
 from ...interfaz import hud
+# [REVISION-MUERTO] ``datos`` no se usa en este módulo (demo y sesion sí).
 from .. import datos, demo, sesion
 
 taller = _motor.taller
@@ -93,6 +94,7 @@ def cambio_compacta():
 
 
 def _segundos_sin_novedad():
+    """Segundos desde el último cambio visible de la tarjeta (actividad, estado, piezas, pista); sirve para compactarla."""
     a = sesion.actividad()
     r = sesion.SESION["revision"]
     pieza = r.pieza_actual if r is not None else None
@@ -123,16 +125,19 @@ def compacta(clave_region):
 
 
 def animaciones():
+    """True si el alumno no desactivó las animaciones."""
     p = ajustes.prefs()
     return p is None or getattr(p, "animaciones", True)
 
 
 def _suave(t):
+    """Curva de suavizado ease-out cúbica (0..1) para la entrada de la tarjeta."""
     t = max(0.0, min(1.0, t))
     return 1 - (1 - t) ** 3
 
 
 def _con_alfa(color, alfa):
+    """Color con la transparencia multiplicada por ``alfa``."""
     return (*color[:3], color[3] * alfa if len(color) > 3 else alfa)
 
 
@@ -226,6 +231,7 @@ def _linea_accion():
 
 
 def _teclas_visibles():
+    """Teclas que la tarjeta puede mostrar: solo si la pista llegó al nivel «cómo»."""
     pista = sesion.SESION["pista"]
     if pista is not None and pista.nivel >= ayudas.COMO and pista.teclas:
         return list(pista.teclas)
@@ -233,6 +239,7 @@ def _teclas_visibles():
 
 
 def _fase_de(hid):
+    """Estado de una habilidad en el plan de la sesión, o None."""
     plan = sesion.SESION["plan"]
     for h in (plan.habilidades if plan is not None else ()):
         if h.id == hid:
@@ -241,6 +248,7 @@ def _fase_de(hid):
 
 
 def _boton(shader, x, y, ancho, alto, texto, tam, escala, activo, principal, hover, acento):
+    """Dibuja un botón de la tarjeta (principal con el color de acento, normal, en hover o desactivado)."""
     fondo = (*acento[:3], 0.95) if principal else (0.18, 0.17, 0.22, 0.95)
     if hover and activo:
         fondo = (*[min(1.0, c + 0.12) for c in fondo[:3]], fondo[3])
@@ -288,6 +296,12 @@ def _dibujar_volver(contexto, region, clave):
 
 
 def dibujar():
+    """Callback POST_PIXEL: la tarjeta del taller abajo al centro de la vista 3D.
+
+    Muestra una sola cosa a la vez: qué hacer en la actividad, el mensaje, la
+    pista y sus teclas, el logro o la pausa, con sus botones (cuyas cajas guarda
+    en BOTONES para los gizmos). Nada si no hay GPU o el alumno ocultó el HUD.
+    """
     if gpu is None:
         return
     p = ajustes.prefs()
@@ -497,6 +511,7 @@ def boton_en(region, x, y):
 
 
 def accion_de(region, indice):
+    """Acción y si está activa del botón ``indice`` dibujado en esa región; (None, False) si no existe."""
     clave = region.as_pointer() if region is not None else 0
     lista = BOTONES.get(clave) or []
     if 0 <= indice < len(lista):

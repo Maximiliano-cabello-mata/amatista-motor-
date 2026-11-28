@@ -36,19 +36,23 @@ ESTADO = {
 
 
 def activa():
+    """True si se está reproduciendo una demostración «Mira»."""
     return ESTADO["linea"] is not None
 
 
 def tiempo():
+    """Segundos transcurridos de la demostración en curso (0 si no hay)."""
     return max(0.0, time.time() - ESTADO["inicio"]) if activa() else 0.0
 
 
 def paso_actual():
+    """Paso de la demo que se está mostrando ahora, o None."""
     linea = ESTADO["linea"]
     return linea.en(tiempo()) if linea is not None else None
 
 
 def avance():
+    """Fracción reproducida de la demo (0..1)."""
     linea = ESTADO["linea"]
     if linea is None or not linea.duracion:
         return 0.0
@@ -56,16 +60,19 @@ def avance():
 
 
 def _suave(t):
+    """Curva de suavizado smoothstep (0..1) para animar movimientos de la demo."""
     t = max(0.0, min(1.0, t))
     return t * t * (3 - 2 * t)
 
 
 def _obj(nombre):
+    """Objeto real de Blender que corresponde al nombre lógico de la demo."""
     real = ESTADO["objetos"].get(nombre)
     return bpy.data.objects.get(real) if real else None
 
 
 def _marcar(obj):
+    """Marca un objeto como de la demo: ignorado por el motor, no seleccionable, con alambre y color violeta."""
     obj[IGNORAR] = 1
     obj[DEMO] = 1
     obj.hide_select = True
@@ -74,10 +81,12 @@ def _marcar(obj):
 
 
 def _escena():
+    """Escena donde se reproduce la demo (la guardada o la actual)."""
     return bpy.data.scenes.get(ESTADO["escena"]) or bpy.context.scene
 
 
 def _crear(datos, nombre_demo):
+    """Crea en la escena la primitiva de un paso «agregar» de la demo y la marca."""
     sc = _escena()
     pieza = {
         "primitive": datos.get("primitiva") or "cube",
@@ -92,6 +101,7 @@ def _crear(datos, nombre_demo):
 
 
 def _duplicar(datos):
+    """Duplica un objeto de la demo (con su malla) y lo marca; None si el original no existe."""
     origen = _obj(datos.get("objeto", ""))
     if origen is None:
         return None
@@ -113,6 +123,7 @@ def _base(i, obj):
 
 
 def _material(obj, datos, factor):
+    """Asigna/crea el material de demostración del objeto, mezclando del gris al color según ``factor`` (animación)."""
     if obj is None or obj.type != "MESH":
         return
     nombre = f"Amatista demo · {datos.get('nombre') or 'Material'}"
@@ -237,6 +248,7 @@ def _vista(paso):
 
 
 def _guardar_vista():
+    """Guarda rotación, posición y distancia de la primera vista 3D para restaurarla al acabar la demo."""
     for ventana in getattr(bpy.context.window_manager, "windows", ()) or ():
         for area in ventana.screen.areas:
             if area.type == "VIEW_3D":
@@ -246,6 +258,7 @@ def _guardar_vista():
 
 
 def _devolver_vista(vista):
+    """Restaura la vista 3D guardada por ``_guardar_vista``."""
     if vista is None:
         return
     for ventana in getattr(bpy.context.window_manager, "windows", ()) or ():
@@ -276,6 +289,7 @@ def empezar(habilidad, al_terminar=None, sc=None, pasos=None):
 
 
 def _cuadro():
+    """Temporizador de animación: aplica el estado de cada paso de la demo para el tiempo actual y redibuja."""
     linea = ESTADO["linea"]
     if linea is None:
         return None
@@ -309,6 +323,7 @@ def _cuadro():
 
 
 def borrar_objetos():
+    """Borra de Blender todos los objetos de la demo y sus mallas/materiales sin usuarios."""
     for obj in [o for o in bpy.data.objects if o.get(DEMO)]:
         datos = obj.data
         bpy.data.objects.remove(obj, do_unlink=True)
@@ -345,4 +360,5 @@ def detener(completa=False, llamar=True):
 
 
 def unregister():
+    """Detiene la demo sin llamar al aviso de fin."""
     detener(llamar=False)

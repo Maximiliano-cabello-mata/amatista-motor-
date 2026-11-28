@@ -13,16 +13,19 @@ ACCIONES = {"tool", "operator", "menu", "panel", "tab"}
 
 @pytest.fixture(scope="module")
 def herramientas():
+    """Fixture: catálogo de herramientas."""
     return ToolRegistry.default()
 
 
 def practicas():
+    """Recorre (nombre, práctica) de todas las prácticas."""
     for ruta in sorted(PRACTICAS.glob("**/practica.json")):
         yield ruta.parent.name, parse_practice(json.loads(ruta.read_text(encoding="utf-8")))
 
 
 @pytest.mark.parametrize("nombre,practica", list(practicas()))
 def test_cada_herramienta_de_una_practica_se_explica(herramientas, nombre, practica):
+    """Comprueba que cada herramienta de una práctica trae cómo usarla, error típico y acción."""
     for tool in herramientas.for_practice(practica):
         assert tool.howto and len(tool.howto) >= 2, (nombre, tool.id)
         assert tool.mistake, (nombre, tool.id)
@@ -32,6 +35,7 @@ def test_cada_herramienta_de_una_practica_se_explica(herramientas, nombre, pract
 
 
 def test_herramientas_del_paso_por_teclas_y_por_texto(herramientas):
+    """Comprueba la detección de herramientas del paso por teclas y por texto."""
     practica = parse_practice(json.loads((PRACTICAS / "principiante/m1-tren/practica.json").read_text(encoding="utf-8")))
     assert [t.id for t in herramientas.for_step(practica, [("S", "X")])] == ["transform.scale"]
     assert [t.id for t in herramientas.for_step(practica, [("Shift", "D")])] == ["object.duplicate"]
@@ -43,10 +47,12 @@ def test_herramientas_del_paso_por_teclas_y_por_texto(herramientas):
 
 
 def test_la_herramienta_se_puede_mandar_a_la_plataforma(herramientas):
+    """Comprueba la serialización de una herramienta."""
     datos = herramientas.get("transform.move").as_dict()
     assert datos["keys"] == ["G"] and datos["action"] == {"tool": "builtin.move"} and datos["howto"]
     json.dumps(datos)
 
 
 def test_el_motor_trae_el_catalogo_completo():
+    """Comprueba que el motor carga el catálogo completo de herramientas."""
     assert create_default_engine().tools.get("object.add").action == {"menu": "VIEW3D_MT_add"}

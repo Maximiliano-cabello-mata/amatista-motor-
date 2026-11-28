@@ -64,12 +64,14 @@ class Dominio:
     ayuda_max: int = 0  # la ayuda más alta usada en el último intento
 
     def a_dict(self) -> Dict[str, Any]:
+        """El dominio como dict JSON (``p`` con 4 decimales) para guardarlo en el avance del alumno."""
         salida = asdict(self)
         salida["p"] = round(self.p, 4)
         return salida
 
 
 def nuevo(param: ParametrosBKT) -> Dominio:
+    """Dominio inicial de una habilidad (probabilidad previa L0)."""
     return Dominio(p=param.L0)
 
 
@@ -93,6 +95,7 @@ def estado_desde_dict(datos: Any, param_por_habilidad: Optional[Dict[str, Parame
 
 
 def estado_a_dict(estado: Dict[str, Dominio]) -> Dict[str, Dict[str, Any]]:
+    """Estado completo del alumno {habilidad: dominio} como JSON."""
     return {hid: d.a_dict() for hid, d in estado.items()}
 
 
@@ -113,6 +116,7 @@ def dominio(d: Optional[Dominio], param: ParametrosBKT, ahora: float) -> float:
 
 
 def fase(p: float) -> str:
+    """Fase de aprendizaje según la probabilidad de dominio (nueva, acompañada, sola… hasta DOMINADA)."""
     for umbral, nombre in UMBRALES:
         if p < umbral:
             return nombre
@@ -120,6 +124,7 @@ def fase(p: float) -> str:
 
 
 def _posterior(p: float, correcto: bool, g: float, s: float) -> float:
+    """Actualización bayesiana de BKT: probabilidad de dominio tras un acierto o fallo, con adivinanza ``g`` y despiste ``s``."""
     if correcto:
         num, den = p * (1 - s), p * (1 - s) + (1 - p) * g
     else:

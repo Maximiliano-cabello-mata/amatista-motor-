@@ -42,43 +42,52 @@ ESTADO = {
 
 
 def reiniciar(ahora=None):
+    """Reinicia las señales de ánimo para un paso nuevo; lo que ya había en el historial de operadores no cuenta."""
     ahora = time.time() if ahora is None else ahora
     ESTADO.update(senales=ac.senales_nuevas(ahora), animo=None, luz=None, leido=0.0, ofrecido="", brillo_auto=False)
     ESTADO["op"] = _ultimo_operador()[0]  # lo que ya estaba en el historial no cuenta
 
 
 def _senales():
+    """Señales actuales (las crea si aún no hay)."""
     if ESTADO["senales"] is None:
         reiniciar()
     return ESTADO["senales"]
 
 
 def _poner(s):
+    """Guarda señales nuevas y fuerza que la próxima lectura del ánimo sea inmediata."""
     ESTADO["senales"] = s
     ESTADO["leido"] = 0.0  # la próxima lectura es inmediata
 
 
 def avanzo():
+    """Anota un avance del alumno."""
     _poner(ac.avanzo(_senales(), time.time()))
 
 
 def fallo():
+    """Anota un fallo."""
     _poner(ac.fallo(_senales()))
 
 
 def deshizo():
+    """Anota un deshacer."""
     _poner(ac.deshizo(_senales()))
 
 
 def retrocedio():
+    """Anota un retroceso."""
     _poner(ac.retrocedio(_senales()))
 
 
 def pidio_pista():
+    """Anota una pista pedida."""
     _poner(ac.pidio_pista(_senales()))
 
 
 def salto(veces):
+    """Fija cuántas veces se saltó pasos/actividades."""
     from dataclasses import replace
 
     _poner(replace(_senales(), saltos=int(veces or 0)))
@@ -101,6 +110,7 @@ def _ultimo_operador():
 
 
 def _anotar_operaciones(ahora):
+    """Si el último operador del historial de Blender es nuevo, lo anota como operación (para detectar que da vueltas)."""
     puntero, idname, _propiedad = _ultimo_operador()
     if puntero is not None and puntero != ESTADO["op"]:
         ESTADO["op"] = puntero
@@ -158,6 +168,7 @@ def te_toca():
 
 
 def _fases_del_curso(sesion, datos):
+    """Fases de dominio del alumno en las habilidades del curso de la actividad (para calcular su madurez)."""
     c = datos.catalogo()
     a = sesion.actividad()
     if c is None or a is None:
@@ -205,10 +216,12 @@ def calcular(ahora=None):
 
 
 def luz():
+    """Nivel de luz (ayuda visible) calculado en la última lectura."""
     return ESTADO["luz"]
 
 
 def animo():
+    """Ánimo del alumno calculado en la última lectura."""
     return ESTADO["animo"]
 
 
@@ -219,6 +232,7 @@ def pulso():
 
 
 def _brillar_zona(herramientas):
+    """Ilumina la zona de la interfaz de la primera herramienta con ficha que se pueda encender."""
     from .. import fichas
     from .vista import brillo
 

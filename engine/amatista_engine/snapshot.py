@@ -39,12 +39,19 @@ RUTAS_ANIMACION = ("location", "rotation_euler", "scale")
 
 
 def _vector(valor: Optional[Sequence[float]]):
+    """Redondea un vector a 5 decimales para el JSON compacto; None se mantiene None."""
     if valor is None:
         return None
     return [round(float(v), 5) for v in valor]
 
 
 def scene_to_dict(scene: SceneState) -> Dict[str, Any]:
+    """Convierte la escena normalizada en el JSON compacto que el add-on envía al servidor.
+
+    Usa claves cortas («n», «t», «l», «d»…) y omite lo que tiene valor por defecto
+    (rotación nula, escala 1, listas vacías) para que el envío pese poco. Recorta a
+    MAX_OBJETOS objetos. Es la operación inversa de ``scene_from_dict``.
+    """
     objetos = []
     for o in scene.objects[:MAX_OBJETOS]:
         item: Dict[str, Any] = {"n": o.name, "t": o.object_type, "l": _vector(o.location), "d": _vector(o.dimensions)}
@@ -90,10 +97,15 @@ def scene_to_dict(scene: SceneState) -> Dict[str, Any]:
 
 
 def _r(valor: float) -> float:
+    """Redondea un número a 4 decimales (materiales, luces, cámaras) para el JSON compacto."""
     return round(float(valor), 4)
 
 
 def _extras_v3(o: SceneObject, item: Dict[str, Any]) -> None:
+    """Añade a ``item`` (in situ) los campos del motor v3 del objeto: modificadores, materiales, luz, cámara, salud de malla…
+
+    Solo escribe las claves que tienen datos, para no inflar el JSON de escenas v2.
+    """
     if o.data_name:
         item["dn"] = o.data_name
     if o.modifier_details:
@@ -131,6 +143,11 @@ def _extras_v3(o: SceneObject, item: Dict[str, Any]) -> None:
 
 
 def _tupla_vector(valor, defecto):
+    """Valida y convierte un vector [x, y, z] del JSON; devuelve ``defecto`` si falta.
+
+    Raises:
+        InvalidPracticeError: si no son 3 números finitos (protege al servidor de datos manipulados).
+    """
     if valor is None:
         return defecto
     if not isinstance(valor, (list, tuple)) or len(valor) != 3:
@@ -145,6 +162,11 @@ def _tupla_vector(valor, defecto):
 
 
 def _textos(valor) -> tuple:
+    """Convierte una lista JSON en tupla de textos recortados (MAX_LISTA elementos, MAX_NOMBRE caracteres).
+
+    Raises:
+        InvalidPracticeError: si el valor no es una lista.
+    """
     if not valor:
         return ()
     if not isinstance(valor, list):
@@ -153,6 +175,11 @@ def _textos(valor) -> tuple:
 
 
 def _numero(valor, defecto: float) -> float:
+    """Valida un número finito del JSON (rechaza bool, NaN e infinitos); devuelve ``defecto`` si falta.
+
+    Raises:
+        InvalidPracticeError: si no es un número válido.
+    """
     if valor is None:
         return defecto
     if isinstance(valor, bool) or not isinstance(valor, (int, float)) or not math.isfinite(float(valor)):
@@ -161,10 +188,16 @@ def _numero(valor, defecto: float) -> float:
 
 
 def _entero(valor) -> Optional[int]:
+    """Entero no negativo del JSON, o None si falta o no es válido (no lanza error)."""
     return int(valor) if isinstance(valor, int) and not isinstance(valor, bool) and valor >= 0 else None
 
 
 def _lista_dicts(valor, maximo: int) -> list:
+    """Valida que el valor sea una lista de diccionarios y la recorta a ``maximo``; vacío si falta.
+
+    Raises:
+        InvalidPracticeError: si no es lista de diccionarios.
+    """
     if not valor:
         return []
     if not isinstance(valor, list) or not all(isinstance(x, dict) for x in valor):
@@ -173,6 +206,11 @@ def _lista_dicts(valor, maximo: int) -> list:
 
 
 def _modificadores(valor) -> tuple:
+    """Reconstruye los ModifierInfo desde la clave «md» del JSON compacto (tipo, nombre, ejes, niveles, encendido).
+
+    Raises:
+        InvalidPracticeError: si los ejes no son una lista de 3.
+    """
     salida = []
     for m in _lista_dicts(valor, MAX_LISTA):
         ejes = m.get("ax") or [0, 0, 0]
@@ -189,6 +227,11 @@ def _modificadores(valor) -> tuple:
 
 
 def _materiales(valor) -> tuple:
+    """Reconstruye los MaterialInfo desde la clave «mt» del JSON (color RGB/RGBA, metálico, rugosidad, transmisión, alfa).
+
+    Raises:
+        InvalidPracticeError: si el color no tiene 3 o 4 componentes o algún número es inválido.
+    """
     salida = []
     for m in _lista_dicts(valor, MAX_LISTA):
         color = m.get("c") or [0.8, 0.8, 0.8, 1.0]
@@ -207,6 +250,13 @@ def _materiales(valor) -> tuple:
 
 
 def _animacion(valor) -> tuple:
+    """Reconstruye los canales de animación desde la clave «an» del JSON, con los fotogramas ordenados.
+
+    Solo admite las rutas de RUTAS_ANIMACION y ejes 0..2; recorta a MAX_CANALES/MAX_CLAVES.
+
+    Raises:
+        InvalidPracticeError: si un canal o fotograma está mal formado.
+    """
     canales = []
     for c in _lista_dicts(valor, MAX_CANALES):
         ruta = str(c.get("p", ""))
@@ -243,6 +293,11 @@ def _silueta(valor) -> Optional[Silhouette]:
 
 
 def _lados(valor):
+    """Lee los lados de la malla por eje como tupla de 3 pares de enteros, o None si falta.
+
+    Raises:
+        InvalidPracticeError: si no son 3 pares de enteros no negativos.
+    """
     if valor is None:
         return None
     if not isinstance(valor, list) or len(valor) != 3:
@@ -256,6 +311,11 @@ def _lados(valor):
 
 
 def _luz(valor):
+    """Lee la luz compacta {"t": tipo, "e": energía} y devuelve (tipo, energía); (None, None) si el objeto no es luz.
+
+    Raises:
+        InvalidPracticeError: si el valor no es un diccionario.
+    """
     if not valor:
         return None, None
     if not isinstance(valor, dict):
@@ -325,6 +385,11 @@ def scene_from_dict(data: Dict[str, Any]) -> SceneState:
 
 
 def _rango_fotogramas(valor):
+    """Lee el rango de fotogramas [inicio, fin] de la escena; (1, 250) por defecto, como Blender.
+
+    Raises:
+        InvalidPracticeError: si no son dos enteros.
+    """
     if not valor:
         return (1, 250)
     if not isinstance(valor, list) or len(valor) != 2 or not all(isinstance(v, int) for v in valor):

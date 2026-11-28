@@ -49,6 +49,11 @@ BASE = ("view.navigate", "view.numpad", "object.add", "transform.move", "transfo
 
 @dataclass(frozen=True)
 class Actividad:
+    """Lo que el alumno hace ahora en el taller: mira, hazlo conmigo, hazlo tú, repaso, reto o proyecto.
+
+    Lleva la práctica generada al vuelo, el molde/piezas a revisar, qué teclas se
+    muestran, el techo de ayuda, las habilidades que entrena y su lugar en la secuencia.
+    """
     id: str  # «conmigo:bl-escalar-eje:tabla», «proyecto:blender.bp.m1», «reto:blender.bp.m1»
     tipo: str
     taller: str
@@ -74,13 +79,16 @@ class Actividad:
 
     @property
     def nombre_tipo(self) -> str:
+        """Nombre del tipo de actividad para mostrar («Mira», «Hazlo conmigo»…)."""
         return NOMBRE_TIPO[self.tipo]
 
     @property
     def revisa(self) -> bool:
+        """True si la actividad se revisa con el motor (todas menos «Mira», que es solo una demostración)."""
         return self.tipo != MIRA
 
     def a_dict(self) -> Dict[str, Any]:
+        """La actividad como dict JSON para el add-on y la API."""
         return {
             "id": self.id, "tipo": self.tipo, "nombre_tipo": self.nombre_tipo, "taller": self.taller,
             "titulo": self.titulo, "pide": self.pide, "habilidad": self.habilidad, "variacion": self.variacion,
@@ -93,6 +101,7 @@ class Actividad:
 
 @dataclass(frozen=True)
 class EstadoHabilidad:
+    """Cómo va el alumno en una habilidad: probabilidad de dominio ``p``, fase, intentos, si vio la demo y si toca repasarla."""
     id: str
     titulo: str
     p: float
@@ -108,6 +117,7 @@ class EstadoHabilidad:
         return self.fase == DOMINADA or (self.fase == SOLA and self.sin_ayuda > 0)
 
     def a_dict(self) -> Dict[str, Any]:
+        """El estado como dict JSON (``p`` redondeada a 3 decimales)."""
         return {"id": self.id, "titulo": self.titulo, "p": round(self.p, 3), "fase": self.fase,
                 "intentos": self.intentos, "vio_demo": self.vio_demo, "repaso_vencido": self.repaso_vencido,
                 "lista": self.lista}
@@ -115,6 +125,7 @@ class EstadoHabilidad:
 
 @dataclass(frozen=True)
 class Plan:
+    """El plan del taller para este alumno: actividad actual, estado de cada habilidad, repasos pendientes y si proyecto/reto están hechos."""
     taller: Taller
     actual: Optional[Actividad]
     habilidades: Tuple[EstadoHabilidad, ...]
@@ -131,13 +142,16 @@ class Plan:
 
     @property
     def proyecto_abierto(self) -> bool:
+        """True cuando todas las habilidades del taller están en fase «sola» o «dominada»: ya puede hacer el proyecto."""
         return all(h.fase in (SOLA, DOMINADA) for h in self.habilidades)
 
     @property
     def completo(self) -> bool:
+        """True si el proyecto está hecho y abierto (el taller terminó)."""
         return self.proyecto_hecho and self.proyecto_abierto
 
     def a_dict(self) -> Dict[str, Any]:
+        """El plan como dict JSON que pinta el panel del Taller en el add-on."""
         return {
             "taller": self.taller.id,
             "titulo": self.taller.titulo,
@@ -174,10 +188,12 @@ def _ayuda(fase_actual: str) -> Tuple[str, int, bool]:
 
 
 def _practica_id(tipo: str, *partes: str) -> str:
+    """Id de la práctica generada para una actividad («taller.<partes>.<tipo>», máx. 80 caracteres)."""
     return ".".join(("taller",) + tuple(p for p in partes if p) + (tipo,))[:80]
 
 
 def _variacion(h: Habilidad, indice: int) -> Tuple[Variacion, int]:
+    """Variación de la habilidad que toca según el intento (rota en círculo) y su índice."""
     i = indice % len(h.variaciones)
     return h.variaciones[i], i
 
@@ -212,12 +228,14 @@ def actividad_de_habilidad(taller: Taller, h: Habilidad, tipo: str, fase_actual:
 
 
 def _piezas_de_inicio(inicio: Dict[str, Any]) -> Tuple[Dict[str, Any], ...]:
+    """Objetos con los que empieza la escena de una actividad (copias de los dicts de «inicio.objetos»)."""
     objetos = (inicio or {}).get("objetos") or ()
     return tuple(dict(o) for o in objetos if isinstance(o, dict))
 
 
 def _actividad_reto(taller: Taller, reto: Reto, tipo: str, titulo: str, habilidades: Sequence[str], h: str = "",
                     fase_actual: str = SOLA) -> Actividad:
+    """Construye una actividad de reto o repaso: molde marcado si el reto no es libre, sin teclas visibles y con freno de ayuda."""
     marca = not reto.libre and bool(reto.piezas)
     return Actividad(
         id=f"{tipo}:{h or taller.id}" + (f":{reto.id}" if tipo == REPASO else ""), tipo=tipo, taller=taller.id,
@@ -256,6 +274,7 @@ def actividad_de_repaso(catalogo: Catalogo, taller_id: str, habilidad_id: str) -
 
 
 def actividad_de_proyecto(taller: Taller, titulo: str = "") -> Actividad:
+    """Actividad del proyecto del módulo: la práctica del proyecto, sin teclas y con ayuda limitada."""
     return Actividad(
         id=f"{PROYECTO}:{taller.id}", tipo=PROYECTO, taller=taller.id, titulo=titulo or taller.titulo,
         pide=(taller.isla.get("texto") or "Arma el proyecto del módulo: queda en tu isla."), practica_id=taller.proyecto,
@@ -265,6 +284,7 @@ def actividad_de_proyecto(taller: Taller, titulo: str = "") -> Actividad:
 
 
 def actividad_de_reto_final(taller: Taller) -> Optional[Actividad]:
+    """Actividad del reto final del módulo, o None si el taller no tiene reto."""
     if taller.reto is None:
         return None
     return _actividad_reto(taller, taller.reto, RETO, "Reto del módulo", taller.habilidades)
@@ -274,6 +294,7 @@ def actividad_de_reto_final(taller: Taller) -> Optional[Actividad]:
 
 
 def _estado_habilidades(catalogo: Catalogo, ids: Iterable[str], estado: Dict[str, Dominio], ahora: float):
+    """Estado de cada habilidad del taller (en orden de requisitos) según el modelo BKT del alumno en ``ahora``."""
     salida = []
     for hid in catalogo.orden(ids):
         h = catalogo.habilidades[hid]
@@ -286,6 +307,7 @@ def _estado_habilidades(catalogo: Catalogo, ids: Iterable[str], estado: Dict[str
 
 
 def _siguiente_de(taller: Taller, h: Habilidad, eh: EstadoHabilidad) -> Optional[Actividad]:
+    """Siguiente actividad para una habilidad según su fase: Mira (si no vio la demo), Hazlo conmigo o Hazlo tú; None si ya la domina."""
     if eh.fase == DOMINADA:
         return None
     if eh.fase == NUEVA and not eh.vio_demo and h.demo:
@@ -316,6 +338,7 @@ def planear(catalogo: Catalogo, taller_id: str, estado: Dict[str, Dominio], ahor
     candidatas: List[Actividad] = []
 
     def sumar(a: Optional[Actividad]) -> None:
+        """Añade una actividad candidata si no es None ni está repetida."""
         if a is not None and all(a.id != c.id for c in candidatas):
             candidatas.append(a)
 
@@ -429,6 +452,7 @@ def revisar_proyecto(practica, scene, con_molde: bool = True):
 
 
 def _objetivos_extra(objetivos: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Copia los objetivos extra de una variación con peso 10 y título = id por defecto."""
     salida = []
     for o in objetivos:
         nuevo = dict(o)

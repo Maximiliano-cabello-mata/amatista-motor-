@@ -39,6 +39,7 @@ VERDE, ROJO, AMARILLO, GRIS, FIN = "\033[32m", "\033[31m", "\033[33m", "\033[90m
 
 
 def _color(texto: str, color: str) -> str:
+    """Colorea el texto con códigos ANSI solo si la salida es una terminal."""
     return f"{color}{texto}{FIN}" if sys.stdout.isatty() else texto
 
 
@@ -54,6 +55,7 @@ def _carpetas(rutas: Sequence[str]) -> List[Path]:
 
 
 def _leer(ruta: Path) -> Any:
+    """Lee un JSON de disco."""
     return json.loads(ruta.read_text(encoding="utf-8"))
 
 
@@ -61,6 +63,7 @@ def _leer(ruta: Path) -> Any:
 
 
 def revisar(rutas: Sequence[str]) -> int:
+    """Comando «revisar»: compila cada práctica y muestra errores y avisos de pedagogía; devuelve el número de errores (código de salida)."""
     motor = create_default_engine()
     errores_totales = 0
     for carpeta in _carpetas(rutas):
@@ -142,6 +145,7 @@ def _ejemplo_completa(motor, practica) -> List[str]:
 
 
 def probar(rutas: Sequence[str], detalle: bool = False) -> int:
+    """Comando «probar»: ejecuta las pruebas de cada práctica (y que el ejemplo resuelto la complete); 0 si todo pasa."""
     motor = create_default_engine()
     total = fallidos = 0
     for carpeta in _carpetas(rutas):
@@ -209,6 +213,7 @@ def probar(rutas: Sequence[str], detalle: bool = False) -> int:
 
 
 def _tabla(motor, practica, escena) -> None:
+    """Imprime el reporte de una evaluación: progreso, pasos con su mensaje, vigilantes y la guía."""
     reporte = motor.evaluate(practica, escena)
     guia = build_guidance(practica, escena, reporte)
     print(_color(f"    progreso {reporte.progress:.0f} % · completada {reporte.completed}"
@@ -230,6 +235,7 @@ def _tabla(motor, practica, escena) -> None:
 
 
 def simular(ruta: str, escena: Optional[str]) -> int:
+    """Comando «simular»: evalúa una práctica con una escena JSON o con sus casos de prueba e imprime la tabla."""
     motor = create_default_engine()
     carpeta = _carpetas([ruta])[0]
     practica = parse_practice(_leer(carpeta / ARCHIVO))
@@ -248,6 +254,7 @@ def simular(ruta: str, escena: Optional[str]) -> int:
 
 
 def nueva(practica_id: str, plantilla: str, titulo: str, curso: str, modulo: int, carpeta: Optional[str]) -> int:
+    """Comando «nueva»: crea la carpeta de una práctica desde una plantilla con su archivo de pruebas; no sobrescribe."""
     destino = Path(carpeta) if carpeta else PRACTICAS / (curso.replace("blender_", "").replace("_", "-") or "otras") / (
         practica_id.split(".")[-1]
     )
@@ -276,6 +283,7 @@ def nueva(practica_id: str, plantilla: str, titulo: str, curso: str, modulo: int
 
 
 def validadores(md: Optional[str]) -> int:
+    """Comando «validadores»: lista el catálogo de validadores por categoría o lo escribe en Markdown en ``md``."""
     motor = create_default_engine()
     specs = motor.registry.specs()
     if not md:
@@ -318,6 +326,7 @@ def validadores(md: Optional[str]) -> int:
 
 
 def plan(completadas: Sequence[str]) -> int:
+    """Comando «plan»: muestra el plan de estudios con el estado de cada práctica según las completadas."""
     curriculo = load_curriculum(_leer(CURSOS))
     estado = unlock_state(curriculo, completadas)
     print(curriculo.title)
@@ -376,6 +385,7 @@ def revisar_plan(curriculo) -> List[str]:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    """Punto de entrada de ``practicas.py``: parsea los subcomandos y ejecuta el elegido."""
     parser = argparse.ArgumentParser(prog="practicas", description="Herramientas de autor de Amatista Engine")
     sub = parser.add_subparsers(dest="comando", required=True)
     n = sub.add_parser("nueva", help="crea una práctica desde una plantilla")

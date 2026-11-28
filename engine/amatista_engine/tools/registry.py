@@ -24,6 +24,7 @@ WARN = "warn"
 
 @dataclass(frozen=True)
 class Tool:
+    """Herramienta de Blender del catálogo: id, nombre, atajo, nivel mínimo, categoría, cómo detectarla, teclas, cómo usarla y error típico."""
     id: str
     name: str
     shortcut: str = ""
@@ -40,6 +41,7 @@ class Tool:
     action: Dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> Dict[str, Any]:
+        """La herramienta como dict JSON para el add-on y la API."""
         return {"id": self.id, "name": self.name, "shortcut": self.shortcut, "level": self.minimum_level,
                 "category": self.category, "description": self.description, "keys": list(self.keys),
                 "howto": list(self.howto), "mistake": self.mistake, "action": dict(self.action)}
@@ -61,11 +63,14 @@ def _en_texto(tecla: str, texto: str) -> bool:
 
 
 class ToolRegistry:
+    """Catálogo de herramientas de Blender y política de uso por práctica (permitidas o con aviso según nivel)."""
     def __init__(self, tools: Iterable[Tool] = ()) -> None:
+        """Indexa las herramientas por id."""
         self._tools: Dict[str, Tool] = {t.id: t for t in tools}
 
     @classmethod
     def default(cls) -> "ToolRegistry":
+        """Carga el catálogo incluido (tools/catalogo.json) desde disco."""
         datos = json.loads(CATALOGO.read_text(encoding="utf-8"))
         return cls(
             Tool(
@@ -85,12 +90,15 @@ class ToolRegistry:
         )
 
     def get(self, tool_id: str) -> Optional[Tool]:
+        """Herramienta por id, o None."""
         return self._tools.get(tool_id)
 
     def __contains__(self, tool_id: str) -> bool:
+        """Permite ``"bevel" in herramientas``."""
         return tool_id in self._tools
 
     def all(self) -> Tuple[Tool, ...]:
+        """Todas las herramientas ordenadas por nivel mínimo, categoría y nombre."""
         return tuple(sorted(self._tools.values(), key=lambda t: (t.minimum_level, t.category, t.name)))
 
     def for_practice(self, practice: PracticeDefinition) -> Tuple[Tool, ...]:
@@ -133,6 +141,7 @@ class ToolRegistry:
         return tuple(sorted(usados))
 
     def policy(self, practice: PracticeDefinition, tool_id: str) -> str:
+        """Política de una herramienta en la práctica: ALLOW si está permitida o es de su nivel; WARN si está en warn o es de un nivel superior."""
         tool = self.get(tool_id)
         if tool is None or tool_id in practice.allowed_tools:
             return ALLOW
@@ -141,6 +150,7 @@ class ToolRegistry:
         return ALLOW
 
     def warnings(self, practice: PracticeDefinition, used: Iterable[str]) -> Tuple[ToolWarning, ...]:
+        """Avisos (ToolWarning) por cada herramienta usada que la práctica desaconseja, para mostrarlos al alumno."""
         avisos = []
         for tool_id in used:
             if self.policy(practice, tool_id) != WARN:

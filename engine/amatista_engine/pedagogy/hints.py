@@ -17,6 +17,7 @@ NIVEL_GUIA = 3
 
 @dataclass(frozen=True)
 class HintReveal:
+    """Resultado de pedir una pista: la pista revelada (o None), nivel alcanzado y total disponible."""
     target_id: str
     hint: Optional[Hint]
     level: int  # nivel revelado tras esta petición
@@ -24,6 +25,7 @@ class HintReveal:
 
     @property
     def exhausted(self) -> bool:
+        """True si ya se revelaron todas las pistas del objetivo."""
         return self.level >= self.total
 
 
@@ -53,8 +55,10 @@ def next_hint(practice: PracticeDefinition, state: Dict[str, int], target_id: st
 
 
 def hints_used(state: Mapping[str, int]) -> int:
+    """Total de pistas pedidas en la práctica (suma de niveles por objetivo)."""
     return sum(max(0, int(n)) for n in state.values())
 
 
 def max_level(state: Mapping[str, int]) -> int:
+    """Nivel de pista más alto pedido en cualquier objetivo."""
     return max((int(n) for n in state.values()), default=0)

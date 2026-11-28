@@ -46,6 +46,7 @@ class Umbrales:
 
     @staticmethod
     def desde(datos: Optional[Mapping[str, Any]]) -> "Umbrales":
+        """Umbrales del andamio a partir de un dict (p. ej. el «andamio» de una rama); ignora claves desconocidas y convierte tipos."""
         if not datos:
             return Umbrales()
         base = Umbrales()
@@ -65,17 +66,21 @@ class Uso:
 
 @dataclass
 class Historial:
+    """Lo que el alumno ha hecho con cada herramienta (usos solos, ayudados, tropiezos, último uso); decide el escalón de ayuda."""
     usos: Dict[str, Uso] = field(default_factory=dict)
 
     def uso(self, herramienta: str) -> Uso:
+        """Uso registrado de la herramienta (vacío si nunca la usó)."""
         return self.usos.get(herramienta, Uso())
 
     def como_dict(self) -> Dict[str, Dict[str, float]]:
+        """Historial como dict ordenado y serializable (se guarda en disco entre sesiones)."""
         return {h: {"solos": u.solos, "ayudados": u.ayudados, "tropiezos": u.tropiezos, "ultimo": u.ultimo}
                 for h, u in sorted(self.usos.items())}
 
     @staticmethod
     def desde_dict(datos: Any) -> "Historial":
+        """Reconstruye el historial desde ``como_dict``; ignora entradas mal formadas en vez de fallar."""
         h = Historial()
         if not isinstance(datos, Mapping):
             return h

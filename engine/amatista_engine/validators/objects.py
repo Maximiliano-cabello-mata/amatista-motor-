@@ -6,6 +6,11 @@ from .base import count_message, count_ok, count_rule, describe, result, select,
 
 
 def object_exists(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``object.exists``: pasa si al menos un objeto cumple el selector.
+
+    Raises:
+        ValueError: si el objetivo no trae ningún selector.
+    """
     sel = selector(target)
     if not sel:
         raise ValueError("object.exists requiere params.name, role, name_prefix o type")
@@ -20,6 +25,7 @@ def object_exists(target: TargetDefinition, scene: SceneState) -> ValidationResu
 
 
 def object_count(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``object.count``: el número de objetos que cumplen el selector está entre min y max (al menos 1 por defecto)."""
     sel = selector(target)
     minimo, maximo = count_rule(target, default_min=1)
     encontrados = select(scene, sel)
@@ -38,6 +44,7 @@ def object_count(target: TargetDefinition, scene: SceneState) -> ValidationResul
 
 
 def role_exists(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``role.exists``: pasa si algún objeto tiene el rol pedido."""
     rol = text(target, "role", required=True)
     encontrados = scene.objects_with_role(rol)
     return result(
@@ -49,6 +56,7 @@ def role_exists(target: TargetDefinition, scene: SceneState) -> ValidationResult
 
 
 def role_count(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``role.count``: cuántos objetos tienen el rol (exactamente 1 si no se dan equals/min/max)."""
     rol = text(target, "role", required=True)
     if not any(k in target.params for k in ("equals", "min", "max")):
         minimo = maximo = 1

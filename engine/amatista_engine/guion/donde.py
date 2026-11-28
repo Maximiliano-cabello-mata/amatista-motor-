@@ -32,6 +32,7 @@ BARRA, MENU, PESTANA, DIALOGO, TECLA = "barra", "menu", "pestana", "dialogo", "t
 
 @dataclass(frozen=True)
 class Donde:
+    """Dónde está una herramienta como lo ve el alumno: nombre, lugar en pantalla, ruta de menú, atajo, tipo y objetivo para señalarla."""
     herramienta: str
     nombre: str
     lugar: str  # dónde está en la pantalla, en una frase («en la cabecera de la vista 3D, arriba»)
@@ -131,6 +132,7 @@ POR_VALIDADOR = {
 
 
 def de(herramienta: str) -> Optional[Donde]:
+    """Entrada de la tabla para una herramienta (las «modifier.*» comparten la de modificadores); None si no hay."""
     if not herramienta:
         return None
     if herramienta.startswith("modifier."):
@@ -169,6 +171,7 @@ def frase(d: Donde, idioma: str = "", primitiva: str = "") -> str:
 
 
 def todas() -> Tuple[Donde, ...]:
+    """Todas las entradas de la tabla de herramientas."""
     return tuple(TABLA.values())
 
 

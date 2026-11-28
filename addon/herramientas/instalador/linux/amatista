@@ -43,6 +43,7 @@ if [ ${#BLENDER[@]} -eq 0 ]; then
 fi
 
 instalar() {
+    # [REVISION-BUG] (menor) si no hay ningún amatista-*.zip, ZIP queda vacío y se llama a Blender con "" (el instalador falla con un código genérico en vez de un aviso claro).
   ZIP="$(ls "$COMUN"/amatista-*.zip 2>/dev/null | sort -V | tail -n 1)"
   "${BLENDER[@]}" --background --python-exit-code 9 --python "$COMUN/instalar_en_blender.py" -- "$ZIP"
   codigo=$?

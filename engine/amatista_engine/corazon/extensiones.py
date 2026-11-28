@@ -33,11 +33,13 @@ PUNTOS = ("validadores", "pasos", "pistas", "senal", "andamio", "turno", "observ
 
 
 def _mayor(contrato: str) -> str:
+    """Versión mayor de un contrato («amatista.corazon/1.2» → «1»)."""
     return contrato.rsplit("/", 1)[-1].split(".", 1)[0]
 
 
 @dataclass(frozen=True)
 class Extension:
+    """Una extensión del corazón: id, versión, contrato que requiere, prioridad y funciones que aporta a cada punto."""
     id: str
     version: str = "1.0.0"
     nombre: str = ""
@@ -47,6 +49,7 @@ class Extension:
     aporta: Mapping[str, Sequence[Any]] = field(default_factory=dict)
 
     def de(self, punto: str) -> Tuple[Any, ...]:
+        """Lo que aporta la extensión a un punto, siempre como tupla (acepta una función suelta o una lista)."""
         valor = self.aporta.get(punto, ())
         if callable(valor) or not isinstance(valor, (list, tuple)):
             return (valor,)
@@ -54,6 +57,7 @@ class Extension:
 
 
 class ErrorExtension(ValueError):
+    """Error al crear o instalar una extensión (id repetido, contrato incompatible, punto desconocido…)."""
     pass
 
 
@@ -65,6 +69,11 @@ class Extensiones:
     errores: List[str] = field(default_factory=list)  # lo que falló al correr (para el modo desarrollador)
 
     def instalar(self, ext: Extension) -> None:
+        """Instala una extensión y reordena por prioridad (menor corre antes).
+
+        Raises:
+            ErrorExtension: sin id, ya instalada, pide otra versión mayor del contrato o aporta a puntos inexistentes.
+        """
         if not ext.id:
             raise ErrorExtension("La extensión necesita un id")
         if any(e.id == ext.id for e in self._lista):
@@ -78,15 +87,19 @@ class Extensiones:
         self._lista.sort(key=lambda e: (e.prioridad, e.id))
 
     def quitar(self, ext_id: str) -> None:
+        """Desinstala la extensión con ese id (si no está, no hace nada)."""
         self._lista = [e for e in self._lista if e.id != ext_id]
 
     def ids(self) -> Tuple[str, ...]:
+        """Ids de las extensiones instaladas, en orden de ejecución."""
         return tuple(e.id for e in self._lista)
 
     def __contains__(self, ext_id: str) -> bool:
+        """Permite ``"vistas-espaciales" in extensiones``."""
         return ext_id in self.ids()
 
     def de(self, punto: str) -> Tuple[Tuple[str, Any], ...]:
+        """Todas las aportaciones a un punto como pares (id de extensión, función), en orden de prioridad."""
         return tuple((e.id, a) for e in self._lista for a in e.de(punto) if a is not None)
 
     def correr(self, punto: str, *args: Any) -> List[Any]:
@@ -124,6 +137,7 @@ class Extensiones:
         return None
 
     def resumen(self) -> List[Dict[str, Any]]:
+        """Lista serializable de las extensiones instaladas (id, versión, nombre y puntos), para diagnóstico."""
         return [{"id": e.id, "version": e.version, "nombre": e.nombre or e.id, "puntos": sorted(e.aporta)}
                 for e in self._lista]
 
@@ -133,7 +147,9 @@ _INCLUIDAS: Dict[str, Callable[[], Extension]] = {}
 
 
 def incluida(ext_id: str) -> Callable[[Callable[[], Extension]], Callable[[], Extension]]:
+    """Decorador que registra una fábrica de extensión incluida con el corazón bajo ``ext_id``."""
     def poner(fabrica: Callable[[], Extension]) -> Callable[[], Extension]:
+        """Guarda la fábrica en el registro de incluidas y la devuelve sin cambios."""
         _INCLUIDAS[ext_id] = fabrica
         return fabrica
 
@@ -141,6 +157,11 @@ def incluida(ext_id: str) -> Callable[[Callable[[], Extension]], Callable[[], Ex
 
 
 def crear(ext_id: str) -> Extension:
+    """Crea una extensión incluida por su id (importa ``incluidas`` para registrarlas).
+
+    Raises:
+        ErrorExtension: si no hay ninguna incluida con ese id.
+    """
     from . import incluidas  # noqa: F401 - registra las fábricas
 
     if ext_id not in _INCLUIDAS:
@@ -149,6 +170,7 @@ def crear(ext_id: str) -> Extension:
 
 
 def disponibles() -> Tuple[str, ...]:
+    """Ids de todas las extensiones incluidas con el corazón."""
     from . import incluidas  # noqa: F401
 
     return tuple(sorted(_INCLUIDAS))

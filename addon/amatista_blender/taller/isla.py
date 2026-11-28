@@ -27,12 +27,14 @@ RADIO_ISLA = 11.0
 
 
 def carpeta():
+    """Carpeta «isla» en la carpeta de usuario del add-on (la crea)."""
     ruta = ajustes.carpeta_usuario() / "isla"
     ruta.mkdir(parents=True, exist_ok=True)
     return ruta
 
 
 def _archivo(taller_id):
+    """.blend de la isla para un taller (nombre saneado)."""
     return carpeta() / (re.sub(r"[^a-z0-9._-]+", "-", taller_id.lower()) + ".blend")
 
 
@@ -84,6 +86,7 @@ def _suelo(sc):
 
 
 def _cargar(sc, taller_id, ruta, lugar):
+    """Añade a la escena los objetos del .blend guardado del proyecto en el lugar que le toca en la isla; devuelve cuántos."""
     with bpy.data.libraries.load(str(ruta), link=False) as (origen, destino):
         destino.objects = list(origen.objects)
     nuevos = [o for o in destino.objects if o is not None]
@@ -141,6 +144,7 @@ def abrir(context=None):
         except (OSError, RuntimeError) as error:
             print(f"[Amatista] No se pudo poner la pieza de {tid} en la isla: {error}")
     try:
+        # Encuadre opcional: si falla (sin vista 3D, en CI) se ignora a propósito.
         escena.encuadrar(context, [{"location": (0, 0, 0), "size": (RADIO_ISLA * 1.6,) * 3}])
     except Exception:  # noqa: BLE001
         pass
@@ -149,6 +153,8 @@ def abrir(context=None):
     return f"Tu isla tiene {puestas} pieza{'s' if puestas != 1 else ''}."
 
 
+# [REVISION-MUERTO] ruta_de no se llama en ningún archivo de amatista-motor (solo la usaba sesion.py del monorepo antiguo).
 def ruta_de(taller_id):
+    """Ruta del .blend de la isla de ese taller si existe, o None."""
     ruta = _archivo(taller_id)
     return ruta if Path(ruta).is_file() else None

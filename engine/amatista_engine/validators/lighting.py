@@ -14,6 +14,7 @@ from .base import describe, number, result, select, selector, text
 
 
 def _camara(scene: SceneState) -> Optional[SceneObject]:
+    """Cámara activa de la escena o, si no hay, la primera cámara que exista (None si ninguna)."""
     if scene.active_camera:
         cam = scene.object_by_name(scene.active_camera)
         if cam is not None:
@@ -22,12 +23,14 @@ def _camara(scene: SceneState) -> Optional[SceneObject]:
 
 
 def _centro(objetos) -> Tuple[float, float, float]:
+    """Centro de la caja que envuelve a todos los objetos dados."""
     minimos = [o.caja()[0] for o in objetos]
     maximos = [o.caja()[1] for o in objetos]
     return tuple((min(m[i] for m in minimos) + max(m[i] for m in maximos)) / 2.0 for i in range(3))
 
 
 def _sujeto(target: TargetDefinition, scene: SceneState):
+    """Selector del objetivo y los objetos que la cámara/luces deben mostrar (todas las mallas si no hay selector)."""
     sel = selector(target)
     objetos = select(scene, sel) if sel else tuple(o for o in scene.objects if o.object_type == "MESH")
     return sel, objetos
@@ -47,6 +50,7 @@ def forward_from_euler(rotation) -> Tuple[float, float, float]:
 
 
 def camera_active(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``camera.active``: pasa si la escena tiene una cámara activa; si no, explica cómo activarla o añadirla."""
     cam = scene.object_by_name(scene.active_camera) if scene.active_camera else None
     if cam is not None:
         return result(target, True, f"«{cam.name}» es la cámara activa de la escena.", {"camera": cam.name})
@@ -146,6 +150,7 @@ def three_point(target: TargetDefinition, scene: SceneState) -> ValidationResult
 
 
 def render_engine(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``render.engine``: pasa si el motor de render contiene el pedido en params.engine (EEVEE por defecto)."""
     motor = text(target, "engine") or "EEVEE"
     ok = motor.upper() in (scene.render_engine or "").upper()
     nombre = {"EEVEE": "EEVEE", "CYCLES": "Cycles", "WORKBENCH": "Workbench"}.get(motor.upper(), motor)
@@ -158,6 +163,7 @@ def render_engine(target: TargetDefinition, scene: SceneState) -> ValidationResu
 
 
 def render_done(target: TargetDefinition, scene: SceneState) -> ValidationResult:
+    """Validador ``render.done``: pasa cuando el alumno hizo al menos ``min`` renders (F12) desde que abrió la práctica."""
     minimo = int(target.params.get("min", 1))
     ok = scene.renders >= minimo
     return result(

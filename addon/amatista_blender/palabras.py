@@ -13,6 +13,7 @@ _CACHE = {"datos": None}
 
 
 def ruta_palabras(carpeta=None):
+    """Ruta del palabras.json (glosario en lenguaje simple) del paquete, o None."""
     carpeta = Path(carpeta) if carpeta is not None else temas.carpeta_paquete()
     for candidata in (carpeta / "palabras.json", carpeta / "blender" / "palabras.json"):
         if candidata.is_file():
